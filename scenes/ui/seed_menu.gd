@@ -28,19 +28,6 @@ func open(player_pos: Vector2):
 				$PanelContainer/Grid.add_child(btn)
 				btn.setup(item_type, amount)
 				btn.seed_selected.connect(_on_seed_selected)
-		
-	
-	
-	# 2. Add new buttons
-	for seed_type in Global.inventory:
-		var amount = Global.inventory[seed_type]
-		
-		if amount > 0:
-			has_seeds = true
-			var btn = seed_button_scene.instantiate()
-			$PanelContainer/Grid.add_child(btn)
-			btn.setup(seed_type, amount)
-			btn.seed_selected.connect(_on_seed_selected)
 
 	if has_seeds:
 		show() # Make it visible so Godot can calculate the layout size

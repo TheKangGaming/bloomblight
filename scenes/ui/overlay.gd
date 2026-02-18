@@ -1,6 +1,6 @@
 extends Control
 
-@onready var tool_label = $ToolBar # Or whatever your node is named
+@onready var tool_label = $ToolBar/Label # Or whatever your node is named
 
 func _process(_delta):
 	# Update the Tool Display
