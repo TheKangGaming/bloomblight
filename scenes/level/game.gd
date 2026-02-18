@@ -58,7 +58,9 @@ func _on_player_menu_requested(target_pos: Vector2):
 		
 		# save the position and open the menu
 		pending_plant_pos = target_pos
-		$CanvasLayer/SeedMenu.open() #show UI
+		
+		var screen_pos = $Objects/Player.get_global_transform_with_canvas().origin
+		$CanvasLayer/SeedMenu.open(screen_pos) #show UI
 	else:
 		print('You can only plant on watered soil!')
 		

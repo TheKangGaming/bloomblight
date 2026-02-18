@@ -7,8 +7,11 @@ signal seed_chosen(seed_type)
 func _ready() -> void:
 	hide() # Start hidden
 	
-func open():
+func open(player_pos: Vector2):
 	show()
+	
+	#move box above player's head
+	$PanelContainer.global_position = player_pos + Vector2(-20, -60)
 	
 	# clear old buttons
 	for child in $PanelContainer/Grid.get_children():
@@ -24,7 +27,7 @@ func open():
 			has_seeds = true
 			var btn = seed_button_scene.instantiate()
 			$PanelContainer/Grid.add_child(btn)
-			
+			btn.setup(seed_type, amount)
 			btn.seed_selected.connect(_on_seed_selected)
 
 	if has_seeds:
