@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://df5ugvbu32ehm"]
+
+[node name="InventorySlot" type="PanelContainer" unique_id=357949526]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="." unique_id=1163611806]
+layout_mode = 2

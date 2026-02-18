@@ -13,25 +13,28 @@ var plant_type: Global.Seeds
 # --- 2. MAP SEEDS TO ROWS ---
 # 'origin': The grid coordinate Vector2i(column, row) of the FIRST frame (Seed)
 # You need to find these X,Y coordinates in your sprite editor.
+
 const plant_data = {
-	Global.Seeds.CORN: {
-		'origin': Vector2i(3, 11), # EXAMPLE: Column 2, Row 10
+	Global.Items.CORN_SEED: { 
+		'origin': Vector2i(3, 11),
 		'max age': 5, 
 		'grow speed': 2
 	},
-	Global.Seeds.TOMATO: {
-		'origin': Vector2i(3, 15), # EXAMPLE: Column 8, Row 10
+	Global.Items.TOMATO_SEED: { 
+		'origin': Vector2i(3, 15),
 		'max age': 5, 
 		'grow speed': 2
 	},
-	Global.Seeds.PUMPKIN: {
-		'origin': Vector2i(23, 8), # EXAMPLE: Column 22, Row 10
-		'max age': 5, 
+	Global.Items.PUMPKIN_SEED: { 
+		'origin': Vector2i(23, 8), 
+		'max age': 4, 
 		'grow speed': 1
 	}
 }
 
-func setup(seed_enum: Global.Seeds, grid_position: Vector2i):
+var plant_type: Global.Items # Updated type
+
+func setup(seed_enum: Global.Items, grid_position: Vector2i):
 	# save the type of plant
 	plant_type = seed_enum
 	max_age = plant_data[seed_enum]['max age']
@@ -69,5 +72,12 @@ func _process(_delta: float) -> void:
 
 func _on_area_2d_body_entered(_body: Node2D) -> void:
 	if age >= max_age:
-		Global.add_item(plant_type)
+		# LOGIC FIX: Check the Harvest Map to see what this seed drops
+		if plant_type in Global.HARVEST_DROPS:
+			var drop = Global.HARVEST_DROPS[plant_type]
+			Global.add_item(drop)
+		else:
+			# Fallback if we forgot to add it to the map
+			Global.add_item(plant_type) 
+			
 		queue_free()

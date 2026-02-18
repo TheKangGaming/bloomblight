@@ -2,7 +2,7 @@ extends Button
 
 signal seed_selected(seed_type)
 
-var my_seed_type: Global.Seeds
+var my_seed_type: Global.Items
 
 const HFRAMES = 34
 const VFRAMES = 18
@@ -14,7 +14,7 @@ const SEED_COORDS = {
 	Global.Seeds.PUMPKIN: Vector2i(24, 17)
 }
 
-func setup(seed_type: Global.Seeds, amount: int):
+func setup(seed_type: Global.Items, amount: int):
 	my_seed_type = seed_type
 	
 	# Update the label text
