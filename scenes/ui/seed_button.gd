@@ -16,6 +16,10 @@ const SEED_COORDS = {
 
 func setup(seed_type: Global.Seeds, amount: int):
 	my_seed_type = seed_type
+	
+	# Update the label text
+	$Sprite2D/Label.text = str(amount)
+	
 	# Setup Texture
 	$Sprite2D.texture = preload("res://graphics/plants/Atlas-Props4-crops update.png")
 	$Sprite2D.hframes = HFRAMES
