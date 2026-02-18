@@ -10,7 +10,7 @@ var plant_scene:PackedScene = preload('res://scenes/level/plant.tscn')
 func _process(_delta: float) -> void:
 	var daytime_point: float = 1.0 - ($DayTimer.time_left / $DayTimer.wait_time)
 	$CanvasModulate.color = daytime_gradient.sample(daytime_point)
-	if Input.is_action_just_pressed('ui_focus_next'):
+	if Input.is_action_just_pressed('time_skip'):
 		day_switch()
 
 

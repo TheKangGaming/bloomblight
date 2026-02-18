@@ -25,14 +25,14 @@ func update_inventory():
 	# Clear existing slots
 	for child in inventory_grid.get_children():
 		child.queue_free()
-	
+	print("Updating Inventory... Total Items: ", Global.inventory.size()) # DEBUG PRINT
 	# Loop through global inventory
 	for item_enum in Global.inventory:
 		var count = Global.inventory[item_enum]
 		if count > 0:
+			var item_name = Global.Items.keys()[item_enum]
+			print("Adding slot for: ", item_name) # DEBUG PRINT
+			
 			var slot = SLOT_SCENE.instantiate()
 			inventory_grid.add_child(slot)
-			# We will assume your slot has a setup function
-			# Pass the Item Name and Count
-			var item_name = Global.Items.keys()[item_enum]
 			slot.setup(item_name, count)
