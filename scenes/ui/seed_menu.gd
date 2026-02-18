@@ -42,6 +42,13 @@ func open(player_pos: Vector2):
 		# Shift Up by the full height + padding (to sit above the head)
 		$PanelContainer.global_position.y -= $PanelContainer.size.y + 20
 		
+		$PanelContainer.pivot_offset = $PanelContainer.size / 2
+		$PanelContainer.scale = Vector2.ZERO
+		
+		var tween = create_tween()
+		tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT) # Make it bouncy!
+		tween.tween_property($PanelContainer, "scale", Vector2.ONE, 0.3)
+		
 		# 5. Focus the first button
 		$PanelContainer/Grid.get_child(0).grab_focus()
 		
