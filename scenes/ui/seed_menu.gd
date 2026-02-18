@@ -8,18 +8,14 @@ func _ready() -> void:
 	hide() # Start hidden
 	
 func open(player_pos: Vector2):
-	show()
-	
-	#move box above player's head
-	$PanelContainer.global_position = player_pos + Vector2(-20, -60)
-	
-	# clear old buttons
+	# 1. Clear old buttons first
 	for child in $PanelContainer/Grid.get_children():
 		$PanelContainer/Grid.remove_child(child)
 		child.queue_free()
 		
 	var has_seeds = false
 	
+	# 2. Add new buttons
 	for seed_type in Global.inventory:
 		var amount = Global.inventory[seed_type]
 		
@@ -31,7 +27,24 @@ func open(player_pos: Vector2):
 			btn.seed_selected.connect(_on_seed_selected)
 
 	if has_seeds:
+		show() # Make it visible so Godot can calculate the layout size
+		
+		# 3. Wait 1 frame for the Container to resize itself
+		await get_tree().process_frame
+		
+		# 4. Calculate the Center Position
+		# Start at the player's position
+		$PanelContainer.global_position = player_pos
+		
+		# Shift Left by half the width (to center horizontally)
+		$PanelContainer.global_position.x -= $PanelContainer.size.x / 2
+		
+		# Shift Up by the full height + padding (to sit above the head)
+		$PanelContainer.global_position.y -= $PanelContainer.size.y + 20
+		
+		# 5. Focus the first button
 		$PanelContainer/Grid.get_child(0).grab_focus()
+		
 	else:
 		print('no seeds to plant!')
 		hide()
