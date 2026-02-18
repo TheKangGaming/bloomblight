@@ -1,6 +1,6 @@
 extends Control
 
-@onready var inventory_grid = $Background/TabContainer/Inventory/Margin/Grid
+@onready var inventory_grid = $CenterContainer/TabContainer/Inventory/Margin/Grid
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn") 
 
 func _ready() -> void:
@@ -19,6 +19,15 @@ func toggle_menu():
 	get_tree().paused = visible # Pause the game world
 	
 	if visible:
+		# DEBUG: Force the container to "wake up"
+		var tabs = $CenterContainer/TabContainer
+		tabs.current_tab = 0
+		tabs.visible = true
+		
+		# DEBUG: Print status to console
+		print("Menu Open. TabContainer Size: ", tabs.size)
+		print("TabContainer Visible: ", tabs.visible)
+		print("Inventory Grid Path Valid: ", inventory_grid != null)
 		update_inventory()
 
 func update_inventory():
