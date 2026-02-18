@@ -33,7 +33,7 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 	# 3. THE AXE
 	if tool == player.Tools.AXE:
 		for tree in get_tree().get_nodes_in_group('Trees'):
-			if tree.position.distance_to(grid_pos) < 30:
+			if tree.global_position.distance_to(global_pos) < 30:
 				tree.hit()
 
 var pending_plant_pos: Vector2
