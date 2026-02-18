@@ -934,10 +934,10 @@ color = Color(0, 0, 0, 1)
 
 [node name="Overlay" parent="CanvasLayer" unique_id=1815707347 instance=ExtResource("9_pn0ym")]
 
-[node name="MainMenu" parent="CanvasLayer" unique_id=235357107 instance=ExtResource("9_0o7gw")]
-
 [node name="SeedMenu" parent="CanvasLayer" unique_id=1163232163 instance=ExtResource("10_0o7gw")]
 visible = false
+
+[node name="MainMenu" parent="CanvasLayer" unique_id=235357107 instance=ExtResource("9_0o7gw")]
 
 [node name="Music" type="AudioStreamPlayer" parent="." unique_id=1189758055]
 process_mode = 3
