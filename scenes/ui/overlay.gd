@@ -1,34 +1,24 @@
 extends Control
 
-@onready var player = get_tree().get_first_node_in_group("Player")
+@onready var tool_label = $ToolBar # Or whatever your node is named
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	# 1. Update the labels immediately when the game starts
-	update_ui()
+func _process(_delta):
+	# Update the Tool Display
+	var current_tool_name = "None"
 	
-	# 2. Listen for future updates
-	# We connect the Global signal to our update_ui function
-	Global.inventory_updated.connect(update_ui)
+	# We need to find the player to know what tool they are holding
+	# This assumes the player is in the "Player" group
+	var player = get_tree().get_first_node_in_group("Player")
 	
 	if player:
-		player.tool_changed.connect(_on_tool_changed)
-		
-		
-		_on_tool_changed(player.current_tool)
-		
-	
-func update_ui():
-	# 3. Set the text
-	# We access the dictionary directly
-	$MarginContainer/VBoxContainer/CornLabel.text = "Corn: " + str(Global.inventory[Global.Seeds.CORN])
-	$MarginContainer/VBoxContainer/TomatoLabel.text = "Tomato: " + str(Global.inventory[Global.Seeds.TOMATO])
-	$MarginContainer/VBoxContainer/PumpkinLabel.text = "Pumpkin: " + str(Global.inventory[Global.Seeds.PUMPKIN])
-	
-func _on_tool_changed(tool_enum: int):
-	$ToolBar/ToolDisplay/Sprite2D.frame = tool_enum
-	
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
-	pass
+		# Assuming your player script has an enum or string for current_tool
+		# You might need to adjust this depending on how you store 'current_tool' in player.gd
+		# If current_tool is an Enum (0, 1, 2), we map it to string:
+		match player.current_tool:
+			player.Tools.HOE: current_tool_name = "Hoe"
+			player.Tools.WATER: current_tool_name = "Watering Can"
+			player.Tools.AXE: current_tool_name = "Axe"
+			player.Tools.PLANT: current_tool_name = "Planting"
+			
+	if tool_label:
+		tool_label.text = "Tool: " + current_tool_name

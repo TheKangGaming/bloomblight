@@ -1,5 +1,7 @@
 extends Node
 
+signal inventory_updated
+
 # 1. THE MASTER ITEM LIST
 # We distinguish between the SEED (what you plant) and the CROP (what you eat/sell)
 enum Items {
@@ -38,11 +40,15 @@ func add_item(item_type: Items, amount: int = 1):
 		inventory[item_type] += amount
 	else:
 		inventory[item_type] = amount
+		
+	# Emit the signal so the UI knows to refresh!
+	inventory_updated.emit()
 	print("Added ", amount, " of ", Items.keys()[item_type], ". Total: ", inventory[item_type])
 
 func remove_item(item_type: Items, amount: int = 1) -> bool:
 	if inventory.get(item_type, 0) >= amount:
 		inventory[item_type] -= amount
+		inventory_updated.emit()
 		return true
 	return false
 
