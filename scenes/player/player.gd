@@ -3,14 +3,17 @@ extends CharacterBody2D
 @onready var move_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/MoveStateMachine/playback')
 @onready var tool_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/ToolStateMachine/playback')
 
-var direction: Vector2
-var last_direction: Vector2
-var speed:= 200
-var can_move : bool = true
 @export var tool_direction_offset := 24
 @export var tool_y_offset := 24
-enum Tools {HOE, AXE, WATER}
+
+var direction: Vector2
+var last_direction: Vector2 = Vector2.DOWN
+var speed:= 200
+var can_move : bool = true
 var current_tool: Tools = Tools.AXE
+
+enum Tools {HOE, AXE, WATER}
+
 const tool_connection = { 
 	Tools.HOE: 'hoe', 
 	Tools.AXE: 'axe', 
@@ -21,7 +24,6 @@ signal tool_use(tool: Tools, pos: Vector2)
 
 #signals to handle tool switching UI
 signal tool_changed(tool: Tools)
-
 
 func _physics_process(_delta: float) -> void:
 	if can_move:
@@ -37,7 +39,6 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 	animation()
 	
-
 signal toggle_menu_requested(pos: Vector2)	
 	
 func get_input():
@@ -75,19 +76,24 @@ func get_input():
 		
 		toggle_menu_requested.emit(target_pos)
 
+func _ready() -> void:
+	update_animation_blend_positions(last_direction)
+	
 func animation():
 	if direction:
 		move_state_machine.travel('move')
-		var target_vector: Vector2 = Vector2(round(direction.x), round(direction.y))
-		$AnimationTree.set('parameters/MoveStateMachine/move/blend_position', target_vector)
-		$AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', target_vector)
-		for state in tool_connection.values():
-			$AnimationTree.set('parameters/ToolStateMachine/'+ state + '/blend_position', target_vector)
-		
+		update_animation_blend_positions(direction) # Reuse the helper function
 	else:
 		move_state_machine.travel('idle')
 
-
+func update_animation_blend_positions(target_vec: Vector2):
+	var blend_pos = Vector2(round(target_vec.x), round(target_vec.y))
+	$AnimationTree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
+	$AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
+	
+	for state in tool_connection.values():
+		$AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
+		
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	can_move = true
 	
