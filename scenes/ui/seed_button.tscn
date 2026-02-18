@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://dg5fgajew1nml"]
+
+[ext_resource type="Script" uid="uid://dev1evq4cf1kn" path="res://scenes/ui/seed_button.gd" id="1_ht8dw"]
+[ext_resource type="Texture2D" uid="uid://bontbnxlphj0g" path="res://graphics/ui/seeds.png" id="2_40qgp"]
+
+[node name="SeedButton" type="Control" unique_id=823636244]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ht8dw")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=521613924]
+texture = ExtResource("2_40qgp")
+hframes = 3
+
+[node name="Label" type="Label" parent="Sprite2D" unique_id=658539363]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -48.0
+offset_top = -31.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 6
+text = "5"
