@@ -29,10 +29,10 @@ func open(player_pos: Vector2):
 	if has_seeds:
 		show() # Make it visible so Godot can calculate the layout size
 		
-		# 3. Wait 1 frame for the Container to resize itself
+		# Wait 1 frame for the Container to resize itself
 		await get_tree().process_frame
 		
-		# 4. Calculate the Center Position
+		# Calculate the Center Position
 		# Start at the player's position
 		$PanelContainer.global_position = player_pos
 		
@@ -46,10 +46,10 @@ func open(player_pos: Vector2):
 		$PanelContainer.scale = Vector2.ZERO
 		
 		var tween = create_tween()
-		tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT) # Make it bouncy!
+		tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT) # Make it bounce!
 		tween.tween_property($PanelContainer, "scale", Vector2.ONE, 0.3)
 		
-		# 5. Focus the first button
+		# Focus the first button
 		$PanelContainer/Grid.get_child(0).grab_focus()
 		
 	else:
