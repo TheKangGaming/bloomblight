@@ -1,6 +1,6 @@
 extends Control
 
-@onready var inventory_grid = $TabContainer/Inventory/Margin/Grid
+@onready var inventory_grid = $Background/TabContainer/Inventory/Margin/Grid
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn") 
 
 func _ready() -> void:
