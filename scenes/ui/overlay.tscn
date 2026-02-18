@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://bldkye3symjnw" path="res://scenes/ui/overlay.gd" id="1_qqjif"]
 [ext_resource type="LabelSettings" uid="uid://frtwqcm2k3vf" path="res://scenes/ui/inventory_text.tres" id="2_13a0v"]
 [ext_resource type="Texture2D" uid="uid://u41jedtjm8mt" path="res://graphics/ui/tools.png" id="3_gdab8"]
-[ext_resource type="Texture2D" uid="uid://bontbnxlphj0g" path="res://graphics/ui/seeds.png" id="4_qvqcw"]
 
 [node name="Overlay" type="Control" unique_id=1815707347]
 layout_mode = 3
@@ -56,15 +55,4 @@ offset_bottom = 40.0
 [node name="Sprite2D" type="Sprite2D" parent="ToolBar/ToolDisplay" unique_id=4903481]
 position = Vector2(25, 21)
 texture = ExtResource("3_gdab8")
-hframes = 3
-
-[node name="SeedDisplay" type="Control" parent="ToolBar" unique_id=1313245994]
-custom_minimum_size = Vector2(32, 32)
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Sprite2D" type="Sprite2D" parent="ToolBar/SeedDisplay" unique_id=873185755]
-position = Vector2(4, 21)
-texture = ExtResource("4_qvqcw")
 hframes = 3

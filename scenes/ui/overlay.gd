@@ -13,10 +13,10 @@ func _ready() -> void:
 	
 	if player:
 		player.tool_changed.connect(_on_tool_changed)
-		player.seed_changed.connect(_on_seed_changed)
+		
 		
 		_on_tool_changed(player.current_tool)
-		_on_seed_changed(player.current_seed)
+		
 	
 func update_ui():
 	# 3. Set the text
@@ -27,9 +27,6 @@ func update_ui():
 	
 func _on_tool_changed(tool_enum: int):
 	$ToolBar/ToolDisplay/Sprite2D.frame = tool_enum
-	
-func _on_seed_changed(seed_enum: int):
-	$ToolBar/SeedDisplay/Sprite2D.frame = seed_enum
 	
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.

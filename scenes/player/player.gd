@@ -7,7 +7,7 @@ var direction: Vector2
 var last_direction: Vector2
 var speed:= 200
 var can_move : bool = true
-@export var tool_direction_offset := 32
+@export var tool_direction_offset := 24
 @export var tool_y_offset := 24
 enum Tools {HOE, AXE, WATER}
 var current_tool: Tools = Tools.AXE
@@ -21,7 +21,6 @@ const tool_connection = {
 var current_seed: Global.Seeds = Global.Seeds.CORN
 
 signal tool_use(tool: Tools, pos: Vector2)
-signal seed_use(seed: Global.Seeds, pos: Vector2)
 
 #signals to handle tool/seed switching UI
 signal tool_changed(tool: Tools)
@@ -83,12 +82,6 @@ func get_input():
 		var target_pos = player_center + (last_direction * tool_direction_offset)
 		
 		toggle_menu_requested.emit(target_pos)
-		
-		#can_move = false
-		#direction = Vector2.ZERO
-		#seed_use.emit(current_seed, target_pos)
-		#await get_tree().create_timer(0.5).timeout
-		#can_move = true
 
 	
 func animation():
