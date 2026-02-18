@@ -13,6 +13,7 @@ grow_vertical = 2
 script = ExtResource("1_ht8dw")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=521613924]
+position = Vector2(20, 20)
 texture = ExtResource("2_40qgp")
 hframes = 3
 
@@ -22,10 +23,10 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -48.0
-offset_top = -31.0
-offset_right = -8.0
-offset_bottom = -8.0
+offset_left = -5.0
+offset_top = -11.0
+offset_right = 35.0
+offset_bottom = 12.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
