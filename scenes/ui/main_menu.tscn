@@ -5,7 +5,7 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sl1te"]
 bg_color = Color(0, 0.003921569, 0, 0.78431374)
 
-[node name="MainMenu" type="Control" unique_id=235357107]
+[node name="MainMenu" type="Control" unique_id=1252988493]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,10 +15,9 @@ grow_vertical = 2
 script = ExtResource("1_sl1te")
 
 [node name="Background" type="Panel" parent="." unique_id=1378720369]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_sl1te")
@@ -80,12 +79,12 @@ offset_right = 40.0
 offset_bottom = 23.0
 text = "Villagers Coming Soon"
 
-[node name="Control" type="Control" parent="Background/TabContainer" unique_id=704047247]
+[node name="Settings" type="Control" parent="Background/TabContainer" unique_id=704047247]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 
-[node name="Label" type="Label" parent="Background/TabContainer/Control" unique_id=1400984968]
+[node name="Label" type="Label" parent="Background/TabContainer/Settings" unique_id=1400984968]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0

@@ -940,6 +940,7 @@ color = Color(0, 0, 0, 1)
 visible = false
 
 [node name="Music" type="AudioStreamPlayer" parent="." unique_id=1189758055]
+process_mode = 3
 stream = ExtResource("9_ig4jx")
 volume_db = -15.737
 autoplay = true
