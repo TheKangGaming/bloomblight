@@ -60,8 +60,8 @@ func get_input():
 			else:
 				$Sounds/WaterSound.play()
 		
-				
-		tool_use.emit(current_tool, target_pos)
+		if current_tool != Tools.AXE:
+			tool_use.emit(current_tool, target_pos)
 		
 	if Input.is_action_just_pressed('tool_forward') or Input.is_action_just_pressed('tool_backward'):
 		var tool_direction = Input.get_axis('tool_backward', 'tool_forward') as int
@@ -92,9 +92,8 @@ func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	can_move = true
 	
 func axe_use():
-	var player_center = global_position + Vector2(0, -16)
-	var target_pos = player_center + (last_direction * tool_direction_offset)
-	tool_use.emit(current_tool, target_pos)
+	var target_pos = global_position + (last_direction * tool_direction_offset)
+	tool_use.emit(Tools.AXE, target_pos)
 	$Sounds/AxeSound.play()
 
 
