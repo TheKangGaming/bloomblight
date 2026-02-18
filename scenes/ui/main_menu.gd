@@ -22,6 +22,10 @@ func toggle_menu():
 		update_inventory()
 
 func update_inventory():
+
+	if not inventory_grid:
+		printerr("CRITICAL ERROR: Inventory Grid node not found! Check your node path.")
+		return
 	# Clear existing slots
 	for child in inventory_grid.get_children():
 		child.queue_free()
