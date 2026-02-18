@@ -1,4 +1,4 @@
-extends Control
+extends Button
 
 signal seed_selected(seed_type)
 

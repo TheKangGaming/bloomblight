@@ -12,6 +12,7 @@ func open():
 	
 	# clear old buttons
 	for child in $PanelContainer/Grid.get_children():
+		$PanelContainer/Grid.remove_child(child)
 		child.queue_free()
 		
 	var has_seeds = false

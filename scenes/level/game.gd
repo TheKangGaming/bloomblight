@@ -54,6 +54,8 @@ func _on_player_menu_requested(target_pos: Vector2):
 			if plant.grid_pos == grid_pos:
 				return
 		
+		$Objects/Player.can_move = false
+		
 		# save the position and open the menu
 		pending_plant_pos = target_pos
 		$CanvasLayer/SeedMenu.open() #show UI
