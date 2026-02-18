@@ -1,24 +1,32 @@
 extends Control
 
-@onready var tool_label = $ToolBar/Label # Or whatever your node is named
+@onready var tool_label = $ToolBar/Label
+@onready var tool_icon = $ToolBar/ToolDisplay/Sprite2D
 
 func _process(_delta):
-	# Update the Tool Display
-	var current_tool_name = "None"
-	
-	# We need to find the player to know what tool they are holding
-	# This assumes the player is in the "Player" group
 	var player = get_tree().get_first_node_in_group("Player")
 	
 	if player:
-		# Assuming your player script has an enum or string for current_tool
-		# You might need to adjust this depending on how you store 'current_tool' in player.gd
-		# If current_tool is an Enum (0, 1, 2), we map it to string:
+		# Update Text
+		var tool_name = "None"
+		var tool_frame = 0
+		
 		match player.current_tool:
-			player.Tools.HOE: current_tool_name = "Hoe"
-			player.Tools.WATER: current_tool_name = "Watering Can"
-			player.Tools.AXE: current_tool_name = "Axe"
-			player.Tools.PLANT: current_tool_name = "Planting"
+			player.Tools.HOE: 
+				tool_name = "Hoe"
+				tool_frame = 0 # 1st image in tools.png
+			player.Tools.WATER: 
+				tool_name = "Watering Can"
+				tool_frame = 2 # 2nd image
+			player.Tools.AXE: 
+				tool_name = "Axe"
+				tool_frame = 1 # 3rd image
+			player.Tools.PLANT: 
+				tool_name = "Seeds"
+				tool_frame = 3 # 4th image (if it exists)
+		
+		if tool_label:
+			tool_label.text = tool_name
 			
-	if tool_label:
-		tool_label.text = "Tool: " + current_tool_name
+		if tool_icon:
+			tool_icon.frame = tool_frame

@@ -7,6 +7,8 @@ func _ready() -> void:
 	visible = false
 	# We process input even when paused so we can close the menu
 	process_mode = Node.PROCESS_MODE_ALWAYS 
+	
+	Global.inventory_updated.connect(update_inventory)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_focus_next"): # Default TAB key in Godot
