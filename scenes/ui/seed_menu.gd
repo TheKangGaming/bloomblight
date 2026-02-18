@@ -13,7 +13,23 @@ func open(player_pos: Vector2):
 		$PanelContainer/Grid.remove_child(child)
 		child.queue_free()
 		
+	
 	var has_seeds = false
+	for item_type in Global.inventory:
+		# FIX: Only create buttons if the item is actually a seed!
+		# We check if the item is in our SEED_COORDS dictionary (from seed_button)
+		# Or you can manually check:
+		if item_type in [Global.Items.CORN_SEED, Global.Items.TOMATO_SEED, Global.Items.PUMPKIN_SEED]:
+			
+			var amount = Global.inventory[item_type]
+			if amount > 0:
+				has_seeds = true
+				var btn = seed_button_scene.instantiate()
+				$PanelContainer/Grid.add_child(btn)
+				btn.setup(item_type, amount)
+				btn.seed_selected.connect(_on_seed_selected)
+		
+	
 	
 	# 2. Add new buttons
 	for seed_type in Global.inventory:

@@ -9,9 +9,9 @@ const VFRAMES = 18
 
 # Map Seeds to their starting coordinates (Same as plant.gd)
 const SEED_COORDS = {
-	Global.Seeds.CORN: Vector2i(6, 17),
-	Global.Seeds.TOMATO: Vector2i(8, 17),
-	Global.Seeds.PUMPKIN: Vector2i(24, 17)
+	Global.Items.CORN_SEED: Vector2i(6, 17),
+	Global.Items.TOMATO_SEED: Vector2i(8, 17),
+	Global.Items.PUMPKIN_SEED: Vector2i(24, 17)
 }
 
 func setup(seed_type: Global.Items, amount: int):

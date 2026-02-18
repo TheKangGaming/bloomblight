@@ -1,7 +1,6 @@
 extends Control
 
 @onready var inventory_grid = $TabContainer/Inventory/Margin/Grid
-# You will need to create a simple "InventorySlot.tscn" scene for this
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn") 
 
 func _ready() -> void:

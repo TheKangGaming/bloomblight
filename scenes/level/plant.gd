@@ -8,7 +8,6 @@ var grid_pos: Vector2i
 var age: float
 var max_age: int
 var grow_speed: float
-var plant_type: Global.Seeds
 
 # --- 2. MAP SEEDS TO ROWS ---
 # 'origin': The grid coordinate Vector2i(column, row) of the FIRST frame (Seed)
