@@ -17,14 +17,11 @@ const tool_connection = {
 	Tools.WATER: 'water',
 }
 
-
-var current_seed: Global.Seeds = Global.Seeds.CORN
-
 signal tool_use(tool: Tools, pos: Vector2)
 
-#signals to handle tool/seed switching UI
+#signals to handle tool switching UI
 signal tool_changed(tool: Tools)
-signal seed_changed(seed: Global.Seeds)
+
 
 func _physics_process(_delta: float) -> void:
 	if can_move:
@@ -71,11 +68,6 @@ func get_input():
 		current_tool = posmod(current_tool + tool_direction, Tools.size()) as Tools
 		#emit the signal
 		tool_changed.emit(current_tool)
-		
-	if Input.is_action_just_pressed('seed_toggle'):
-		current_seed = posmod(current_seed + 1, Global.Seeds.size()) as Global.Seeds
-		#emit the signal
-		seed_changed.emit(current_seed)
 	
 	if Input.is_action_just_pressed('plant'):
 		var player_center = global_position + Vector2(0, -16)
@@ -83,7 +75,6 @@ func get_input():
 		
 		toggle_menu_requested.emit(target_pos)
 
-	
 func animation():
 	if direction:
 		move_state_machine.travel('move')
@@ -99,7 +90,6 @@ func animation():
 
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	can_move = true
-	
 	
 func axe_use():
 	var player_center = global_position + Vector2(0, -16)

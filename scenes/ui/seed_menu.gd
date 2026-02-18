@@ -59,7 +59,3 @@ func open(player_pos: Vector2):
 func _on_seed_selected(seed_type):
 	seed_chosen.emit(seed_type)
 	hide()
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
-	pass
