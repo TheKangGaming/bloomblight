@@ -2,49 +2,67 @@ extends PanelContainer
 
 @onready var icon = $Icon
 
-# 1. THE SPRITE SHEET
-const ATLAS_TEXTURE = preload("res://graphics/plants/Atlas-Props4-crops update.png")
-const TILE_SIZE = 32
+# --- TEXTURE SOURCES ---
+# 1. The Farm Sheet (Seeds & Crops)
+const SHEET_FARM = preload("res://graphics/plants/Atlas-Props4-crops update.png")
 
-# 2. MASTER COORDINATE LIST (Column X, Row Y)
-# Use the "Frame Coords" from the Inspector to fill these in.
-const ITEM_COORDS = {
-	# --- SEEDS (From previous steps) ---
-	Global.Items.CORN_SEED: Vector2i(6, 17),
-	Global.Items.TOMATO_SEED: Vector2i(8, 17),
-	Global.Items.PUMPKIN_SEED: Vector2i(24, 17),
+# 2. The Loot Sheet (Wood, etc) - UPDATE THIS PATH
+# Assuming you named it wood.png or loot.png inside graphics/loot/
+const SHEET_LOOT = preload("res://graphics/loot/loot-drops.png") 
+
+# 3. Single Images
+const IMG_APPLE = preload("res://graphics/plants/apple.png")
+const IMG_STONE_REF = preload("res://graphics/tilesets/hills.png") # Placeholder for stone
+
+# --- COORDINATES (X, Y) on the Sheets ---
+# This dictionary maps the Item Enum -> The specific sheet and coordinates
+var item_map = {}
+
+func _ready():
+	# Define where everything lives. 
+	# Format: ItemEnum : [TextureResource, Vector2i(Column, Row)]
 	
-	# --- CROPS (The harvested food) ---
-	# Usually located 4 or 5 frames to the right of the seed
-	Global.Items.CORN: Vector2i(10, 11),     # Check this on your sheet!
-	Global.Items.TOMATO: Vector2i(10, 15),  # Check this!
-	Global.Items.PUMPKIN: Vector2i(30, 8), # Check this!
+	# -- SEEDS (On Farm Sheet) --
+	item_map[Global.Items.CORN_SEED] = [SHEET_FARM, Vector2i(6, 17)]
+	item_map[Global.Items.TOMATO_SEED] = [SHEET_FARM, Vector2i(8, 17)]
+	item_map[Global.Items.PUMPKIN_SEED] = [SHEET_FARM, Vector2i(24, 17)]
 	
-	# --- RESOURCES ---
-	# Find where the Log and Apple are on the sheet and update these!
-	Global.Items.WOOD: Vector2i(0, 0),      # <--- UPDATE THIS
-	Global.Items.APPLE: Vector2i(0, 0),     # <--- UPDATE THIS
-	Global.Items.STONE: Vector2i(0, 0)      # <--- UPDATE THIS
-}
+	# -- CROPS (On Farm Sheet) --
+	item_map[Global.Items.CORN] = [SHEET_FARM, Vector2i(10, 11)]
+	item_map[Global.Items.TOMATO] = [SHEET_FARM, Vector2i(10, 15)]
+	item_map[Global.Items.PUMPKIN] = [SHEET_FARM, Vector2i(30, 8)]
+	
+	# -- LOOT (On Loot Sheet) --
+	# If wood is the 1st item on the sheet, use (0,0). If 2nd, use (1,0).
+	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)] 
+	
+	# -- STONE (Placeholder using Hills Tileset) --
+	# Grabbing a rock from the hills tileset at 0,0
+	item_map[Global.Items.STONE] = [IMG_STONE_REF, Vector2i(0, 0)]
+
 
 func setup(item_enum: Global.Items, quantity: int):
-	# A. SETUP TOOLTIP
+	# 1. Tooltip Logic
 	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
 	tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
 	
-	# B. SETUP ICON USING ATLAS
-	if item_enum in ITEM_COORDS:
+	# 2. Icon Logic
+	if item_enum == Global.Items.APPLE:
+		# Apple is a special case: Single PNG
+		icon.texture = IMG_APPLE
+		
+	elif item_enum in item_map:
+		# It's on a sprite sheet (Farm, Loot, or Stone)
+		var data = item_map[item_enum]
+		var texture_source = data[0]
+		var coords = data[1]
+		
 		var atlas = AtlasTexture.new()
-		atlas.atlas = ATLAS_TEXTURE
-		
-		# Get the grid position
-		var grid_pos = ITEM_COORDS[item_enum]
-		
-		# Create the clipping region
-		atlas.region = Rect2(grid_pos.x * TILE_SIZE, grid_pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+		atlas.atlas = texture_source
+		# Assuming 32x32 tiles. Adjust if your loot sheet is different!
+		atlas.region = Rect2(coords.x * 32, coords.y * 32, 32, 32)
 		
 		icon.texture = atlas
 	else:
-		# Fallback if we forgot to add coordinates
 		icon.texture = null
-		printerr("Missing Atlas Coords for: ", item_name)
+		printerr("No icon definition found for: ", item_name)

@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://cp8d533rk1rnl"]
+
+[ext_resource type="PackedScene" uid="uid://3k803a1f4p7k" path="res://scenes/level/farmmap.tmx" id="1_y5wde"]
+
+[node name="farmmap" unique_id=991940077 instance=ExtResource("1_y5wde")]

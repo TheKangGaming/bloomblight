@@ -1785,10 +1785,10 @@ parameters/OneShot/request = 0
 [node name="Camera2D" type="Camera2D" parent="." unique_id=376643448]
 zoom = Vector2(0.7, 0.7)
 process_callback = 0
-limit_left = -736
-limit_top = -544
-limit_right = 736
-limit_bottom = 640
+limit_left = 0
+limit_top = 0
+limit_right = 2560
+limit_bottom = 1920
 position_smoothing_enabled = true
 position_smoothing_speed = 10.0
 
@@ -1807,7 +1807,7 @@ stream = ExtResource("5_p47bc")
 stream = ExtResource("6_75vfm")
 
 [node name="StepsTimer" type="Timer" parent="Sounds" unique_id=1017426240]
-wait_time = 0.5
+wait_time = 0.4
 
 [connection signal="animation_finished" from="AnimationTree" to="." method="_on_animation_tree_animation_finished"]
 [connection signal="timeout" from="Sounds/StepsTimer" to="." method="_on_steps_timer_timeout"]
