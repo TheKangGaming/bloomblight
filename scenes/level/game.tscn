@@ -25,7 +25,7 @@ metadata/_edit_horizontal_guides_ = [1920.0, 0.0]
 y_sort_enabled = true
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-position = Vector2(1037, 1482)
+position = Vector2(1034, 1473)
 
 [node name="Tree" parent="Objects" unique_id=288341825 instance=ExtResource("5_qrcxb")]
 position = Vector2(40, 135)
