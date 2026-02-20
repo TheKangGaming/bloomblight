@@ -11,7 +11,7 @@
 [ext_resource type="AudioStream" uid="uid://dff6xghytlqqh" path="res://audio/step.mp3" id="6_75vfm"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0owmy"]
-size = Vector2(18, 15)
+size = Vector2(18, 9)
 
 [sub_resource type="Animation" id="Animation_76oj4"]
 length = 0.001
@@ -1732,6 +1732,7 @@ nodes/OneShot/position = Vector2(820, 260)
 node_connections = [&"output", 0, &"OneShot", &"OneShot", 0, &"MoveStateMachine", &"OneShot", 1, &"ToolStateMachine"]
 
 [node name="Player" type="CharacterBody2D" unique_id=474038356 groups=["Player"]]
+scale = Vector2(1.5, 1.5)
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_dovo2")
@@ -1764,7 +1765,7 @@ hframes = 6
 vframes = 16
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=202345101]
-position = Vector2(0, 5.5)
+position = Vector2(0, 8.5)
 shape = SubResource("RectangleShape2D_0owmy")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1435698803]
@@ -1783,6 +1784,7 @@ parameters/OneShot/internal_active = false
 parameters/OneShot/request = 0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=376643448]
+zoom = Vector2(0.5, 0.5)
 process_callback = 0
 limit_left = 0
 limit_top = 0
@@ -1804,6 +1806,7 @@ stream = ExtResource("5_p47bc")
 
 [node name="Steps" type="AudioStreamPlayer2D" parent="Sounds" unique_id=1917523902]
 stream = ExtResource("6_75vfm")
+max_distance = 4096.0
 
 [node name="StepsTimer" type="Timer" parent="Sounds" unique_id=1017426240]
 wait_time = 0.4

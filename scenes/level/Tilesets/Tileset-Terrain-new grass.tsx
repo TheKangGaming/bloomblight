@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.11.2" name="Tileset - Terrain - new grass2" tilewidth="32" tileheight="32" tilecount="3960" columns="55">
- <image source="../../Tilesets/Tileset-Terrain-new grass.png" width="1760" height="2304"/>
+ <image source="Tileset-Terrain-new grass.png" width="1760" height="2304"/>
  <tile id="56">
   <objectgroup draworder="index" id="2">
    <object id="1" x="1.70553" y="31.467">

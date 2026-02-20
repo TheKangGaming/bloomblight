@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.9" tiledversion="1.9.2" name="Tileset-Terrain-new grass - transparency" tilewidth="32" tileheight="32" tilecount="3960" columns="55">
- <image source="../../Tilesets/Tileset-Terrain-new grass - transparency.png" width="1760" height="2304"/>
+<tileset version="1.10" tiledversion="1.11.2" name="Tileset-Terrain-new grass - transparency" tilewidth="32" tileheight="32" tilecount="3960" columns="55">
+ <image source="Tileset-Terrain-new grass - transparency.png" width="1760" height="2304"/>
  <wangsets>
   <wangset name="wall2" type="corner" tile="277">
    <wangcolor name="grass to grass" color="#ff0000" tile="277" probability="1"/>

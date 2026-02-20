@@ -19,7 +19,7 @@ daytime_gradient = SubResource("Gradient_ig4jx")
 metadata/_edit_vertical_guides_ = [0.0, 2560.0]
 metadata/_edit_horizontal_guides_ = [1920.0, 0.0]
 
-[node name="farmmap" parent="." unique_id=991940077 instance=ExtResource("2_3ny2s")]
+[node name="World" parent="." unique_id=1529943689 instance=ExtResource("2_3ny2s")]
 
 [node name="Objects" type="Node2D" parent="." unique_id=2062830564]
 y_sort_enabled = true
