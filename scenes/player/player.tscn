@@ -1783,7 +1783,6 @@ parameters/OneShot/internal_active = false
 parameters/OneShot/request = 0
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=376643448]
-zoom = Vector2(0.8, 0.8)
 process_callback = 0
 limit_left = 0
 limit_top = 0
