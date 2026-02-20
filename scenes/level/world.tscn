@@ -2,22 +2,4 @@
 
 [ext_resource type="PackedScene" uid="uid://bi5rcv355k8pf" path="res://scenes/level/farmmap.tmx" id="1_y5wde"]
 
-[node name="World" unique_id=389530269 instance=ExtResource("1_y5wde")]
-
-[node name="Tillable" parent="." index="1" unique_id=658876195]
-visible = true
-
-[node name="PathsAndBorders" parent="." index="2" unique_id=2118760876]
-visible = true
-
-[node name="Clifs" parent="." index="3" unique_id=1244892130]
-visible = true
-
-[node name="Decoration" parent="." index="4" unique_id=1959957522]
-visible = true
-
-[node name="Overhead" parent="." index="7" unique_id=273959233]
-visible = true
-
-[node name="Overhead2" parent="." index="8" unique_id=886929406]
-visible = true
+[node name="World" unique_id=1610356381 instance=ExtResource("1_y5wde")]

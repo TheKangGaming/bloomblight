@@ -29,13 +29,16 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 	
 	# 1. THE HOE
 	if tool == player.Tools.HOE:
-		print("Hoe swung at grid: ", grid_pos) # <--- ADD THIS
-		
 		if tillable_layer.get_cell_source_id(grid_pos) != -1:
-			print("SUCCESS! Found Tillable dirt at: ", grid_pos) # <--- ADD THIS
-			soil_layer.set_cells_terrain_connect([grid_pos], 0, 0)
-		else:
-			print("FAILED: No Tillable tile found here.") # <--- ADD THISa
+			
+			# 1. Grab every dirt tile currently on the map
+			var all_dirt = soil_layer.get_used_cells()
+			
+			# 2. Add the brand new tile we just hit with the hoe
+			all_dirt.append(grid_pos)
+			
+			# 3. Tell Godot to re-calculate the connections for ALL of them together
+			soil_layer.set_cells_terrain_connect(all_dirt, 0, 0)
 			
 	# 2. THE WATERING CAN		
 	if tool == player.Tools.WATER:
