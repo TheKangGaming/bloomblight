@@ -29,9 +29,13 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 	
 	# 1. THE HOE
 	if tool == player.Tools.HOE:
-		# Check if the Tiled 'Tillable' layer has a tile here (-1 means empty)
+		print("Hoe swung at grid: ", grid_pos) # <--- ADD THIS
+		
 		if tillable_layer.get_cell_source_id(grid_pos) != -1:
+			print("SUCCESS! Found Tillable dirt at: ", grid_pos) # <--- ADD THIS
 			soil_layer.set_cells_terrain_connect([grid_pos], 0, 0)
+		else:
+			print("FAILED: No Tillable tile found here.") # <--- ADD THISa
 			
 	# 2. THE WATERING CAN		
 	if tool == player.Tools.WATER:
