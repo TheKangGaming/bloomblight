@@ -23,8 +23,10 @@ func _process(_delta: float) -> void:
 		day_switch()
 
 func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
+	# Tweak this number (16, 24, or 32) until it hits the exact tile you want
+	var adjusted_pos = global_pos + Vector2(0, 24)
 	# Convert global position to grid coordinates using the Tillable layer
-	var local_pos = tillable_layer.to_local(global_pos)
+	var local_pos = tillable_layer.to_local(adjusted_pos)
 	var grid_pos = tillable_layer.local_to_map(local_pos)
 	
 	# 1. THE HOE
@@ -58,7 +60,11 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 				tree.hit()
 
 func _on_player_menu_requested(target_pos: Vector2):
-	var local_pos = water_layer.to_local(target_pos)
+	# 1. Adjust the position
+	var adjusted_pos = target_pos + Vector2(0, 24)
+	
+	# 2. Use the ADJUSTED pos to find the grid coordinates!
+	var local_pos = water_layer.to_local(adjusted_pos)
 	var grid_pos = water_layer.local_to_map(local_pos)
 	
 	# Check if the ground is watered (-1 means empty)
@@ -68,7 +74,9 @@ func _on_player_menu_requested(target_pos: Vector2):
 				return # A plant is already here
 		
 		player.can_move = false
-		pending_plant_pos = target_pos
+		
+		# 3. Save the ADJUSTED pos so the seed plants in the right spot!
+		pending_plant_pos = adjusted_pos 
 		
 		var screen_pos = player.get_global_transform_with_canvas().origin
 		$CanvasLayer/SeedMenu.open(screen_pos)
