@@ -2608,7 +2608,8 @@ tile_set = SubResource("TileSet_d3kax")
 y_sort_enabled = true
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-position = Vector2(1034, 1473)
+position = Vector2(749, 1104)
+metadata/_edit_horizontal_guides_ = [-16.0]
 
 [node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]
 y_sort_enabled = true
