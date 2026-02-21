@@ -1912,6 +1912,7 @@ scale = Vector2(1.5, 1.5)
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_dovo2")
+metadata/_edit_horizontal_guides_ = [-16.0]
 
 [node name="Shadow" type="Sprite2D" parent="." unique_id=119437449]
 y_sort_enabled = true

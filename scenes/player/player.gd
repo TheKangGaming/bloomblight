@@ -4,7 +4,7 @@ extends CharacterBody2D
 @onready var tool_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/ToolStateMachine/playback')
 
 @export var tool_direction_offset := 24
-@export var tool_y_offset := 24
+@export var tool_y_offset := 12
 
 var direction: Vector2
 var last_direction: Vector2 = Vector2.DOWN
@@ -52,8 +52,8 @@ func get_input():
 		current_speed = walk_speed
 	
 	if Input.is_action_just_pressed('action'):
-		# 1. Find the Player's Center (Move up 16px from feet)
-		var player_center = global_position + Vector2(0, -16)
+		# 1. Find the Player's Center (Move up 14px from feet)
+		var player_center = global_position + Vector2(0, -14)
 		
 		# 2. Reach out 32px in the direction we are facing
 		var target_pos = player_center + (last_direction * tool_direction_offset)
@@ -78,7 +78,7 @@ func get_input():
 		tool_changed.emit(current_tool)
 	
 	if Input.is_action_just_pressed('plant'):
-		var player_center = global_position + Vector2(0, -16)
+		var player_center = global_position + Vector2(0, -14)
 		var target_pos = player_center + (last_direction * tool_direction_offset)
 		
 		toggle_menu_requested.emit(target_pos)
@@ -112,7 +112,7 @@ func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	
 func axe_use():
 	# 1. Find the Player's Center to match the other tools
-	var player_center = global_position + Vector2(0, -16)
+	var player_center = global_position + Vector2(0, -14)
 	
 	# 2. Reach out 32px from the center
 	var target_pos = player_center + (last_direction * tool_direction_offset)
