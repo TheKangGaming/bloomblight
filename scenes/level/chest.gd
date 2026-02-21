@@ -18,7 +18,7 @@ func _unhandled_input(event):
 
 func open_chest():
 	is_open = true
-	animation_player.play("open")
+	animation_player.play('open')
 	give_loot()
 
 func give_loot():
@@ -28,9 +28,11 @@ func give_loot():
 	# Example: Global.add_item("seeds", 5)
 
 func _on_interact_area_body_entered(body):
+	print("Something touched the chest: ", body.name)
 	# Check if the thing that entered the area is the player
 	if body.name == "Player":
 		player_in_range = true
+		print("Player is successfully in range!")
 
 func _on_interact_area_body_exited(body):
 	if body.name == "Player":
