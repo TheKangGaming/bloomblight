@@ -10,6 +10,17 @@
 [ext_resource type="AudioStream" uid="uid://b1sbhvfoqd0u1" path="res://audio/water.ogg" id="5_p47bc"]
 [ext_resource type="AudioStream" uid="uid://dff6xghytlqqh" path="res://audio/step.mp3" id="6_75vfm"]
 
+[sub_resource type="Gradient" id="Gradient_5gtgg"]
+colors = PackedColorArray(0, 0, 0, 0.5882353, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_h17s1"]
+gradient = SubResource("Gradient_5gtgg")
+width = 32
+height = 32
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.9, 0.5)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0owmy"]
 size = Vector2(18, 9)
 
@@ -1751,6 +1762,11 @@ position = Vector2(-16, -6)
 rotation = -0.414262
 texture = ExtResource("3_0owmy")
 hframes = 7
+
+[node name="Shadow" type="Sprite2D" parent="." unique_id=119437449]
+position = Vector2(0, 11.333334)
+scale = Vector2(1, 0.5)
+texture = SubResource("GradientTexture2D_h17s1")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1083410088]
 texture = ExtResource("2_75vfm")

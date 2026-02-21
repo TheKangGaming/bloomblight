@@ -7894,6 +7894,7 @@ process_mode = 3
 stream = ExtResource("9_ig4jx")
 volume_db = -15.737
 autoplay = true
+parameters/looping = false
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1575379906]
 color = Color(0.99607843, 0.9098039, 0.7176471, 1)

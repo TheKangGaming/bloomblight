@@ -15,6 +15,12 @@ var pending_plant_pos: Vector2
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
 	$CanvasLayer/SeedMenu.seed_chosen.connect(_on_seed_chosen_from_menu)
+	
+	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
+	
+func _on_seed_menu_cancelled():
+	# Give the player their movement back!
+	player.can_move = true
 
 func _process(_delta: float) -> void:
 	var daytime_point: float = 1.0 - ($DayTimer.time_left / $DayTimer.wait_time)
@@ -102,7 +108,9 @@ func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> void:
 			
 	# Spawn the plant
 	if soil_layer.get_cell_source_id(grid_pos) != -1:
-		var plant_pos = Vector2(grid_pos.x * TILE_SIZE + 16, grid_pos.y * TILE_SIZE + 16)
+		var plant_pos = soil_layer.map_to_local(grid_pos)
+		
+		plant_pos.y -= 8
 		var plant = plant_scene.instantiate() as StaticBody2D
 		plant.setup(seed_enum, grid_pos)
 		$Objects.add_child(plant)

@@ -3,6 +3,8 @@ extends Control
 var seed_button_scene = preload("res://scenes/ui/seed_button.tscn")
 
 signal seed_chosen(seed_type)
+signal menu_cancelled
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	hide() # Start hidden
@@ -58,7 +60,20 @@ func open(player_pos: Vector2):
 	else:
 		print('no seeds to plant!')
 		hide()
-		
+
+func _input(event):
+	# Only listen for inputs if the menu is actually open!
+	if visible:
+		# "ui_cancel" is Godot's default for Escape key or Gamepad B
+		# We also added a check for Right-Click just in case!
+		if event.is_action_pressed("ui_cancel") or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed):
+			
+			hide() # Close the menu visually
+			menu_cancelled.emit() # Tell the game it was cancelled
+			
+			# This stops the 'Escape' or 'Right Click' from triggering other things
+			get_viewport().set_input_as_handled()		
+
 func _on_seed_selected(seed_type):
 	seed_chosen.emit(seed_type)
 	hide()
