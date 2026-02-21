@@ -92,7 +92,7 @@ func animation():
 			move_state_machine.travel('run')
 		else:
 			# Assuming you renamed the 'move' state to 'walk' in the AnimationTree
-			move_state_machine.travel('walk') 
+			move_state_machine.travel('move') 
 			
 		update_animation_blend_positions(direction)
 	else:
@@ -111,7 +111,12 @@ func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	can_move = true
 	
 func axe_use():
-	var target_pos = global_position + (last_direction * tool_direction_offset)
+	# 1. Find the Player's Center to match the other tools
+	var player_center = global_position + Vector2(0, -16)
+	
+	# 2. Reach out 32px from the center
+	var target_pos = player_center + (last_direction * tool_direction_offset)
+	
 	tool_use.emit(Tools.AXE, target_pos)
 	$Sounds/AxeSound.play()
 
