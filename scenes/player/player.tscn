@@ -1111,6 +1111,109 @@ tracks/1/keys = {
 "values": [false, true]
 }
 
+[sub_resource type="Animation" id="Animation_5gtgg"]
+resource_name = "run_down"
+length = 0.5004759
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(-1.4901161e-08, 0.08, 0.135, 0.25, 0.33, 0.385),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [48, 49, 51, 48, 49, 51]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.25),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+
+[sub_resource type="Animation" id="Animation_fm80t"]
+resource_name = "run_left"
+length = 0.5003442
+step = 0.135
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.135, 0.25, 0.33, 0.385),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [64, 65, 70, 67, 68, 71]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_h17s1"]
+resource_name = "run_right"
+length = 0.50016075
+step = 0.135
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.135, 0.25, 0.33, 0.385),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [64, 65, 70, 67, 68, 71]
+}
+
+[sub_resource type="Animation" id="Animation_je7p5"]
+resource_name = "run_up"
+length = 0.50016075
+step = 0.135
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.135, 0.25, 0.33, 0.385),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [52, 53, 55, 52, 53, 55]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.25),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+
 [sub_resource type="Animation" id="Animation_j8g38"]
 resource_name = "sword_down"
 length = 0.8
@@ -1446,6 +1549,10 @@ _data = {
 &"move_left": SubResource("Animation_dyp2m"),
 &"move_right": SubResource("Animation_yewv4"),
 &"move_up": SubResource("Animation_atpat"),
+&"run_down": SubResource("Animation_5gtgg"),
+&"run_left": SubResource("Animation_fm80t"),
+&"run_right": SubResource("Animation_h17s1"),
+&"run_up": SubResource("Animation_je7p5"),
 &"sword_down": SubResource("Animation_j8g38"),
 &"sword_left": SubResource("Animation_tswxa"),
 &"sword_right": SubResource("Animation_aqa0x"),
@@ -1788,6 +1895,7 @@ shape = SubResource("RectangleShape2D_0owmy")
 libraries/ = SubResource("AnimationLibrary_atpat")
 
 [node name="AnimationTree" type="AnimationTree" parent="." unique_id=184387378]
+active = false
 tree_root = SubResource("AnimationNodeBlendTree_6eyoc")
 anim_player = NodePath("../AnimationPlayer")
 parameters/ToolStateMachine/axe/blend_position = Vector2(-0.368759, 0.645492)
