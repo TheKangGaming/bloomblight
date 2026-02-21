@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://cguxj7vi852u7"]
+
+[ext_resource type="Script" uid="uid://bq6u6s7aa6ytt" path="res://scenes/level/chest.gd" id="1_4rr8t"]
+[ext_resource type="Texture2D" uid="uid://d3ajj4nwf6e82" path="res://graphics/interactables/chests-opening-no horns- with squeeze fx.png" id="1_py4fq"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4rr8t"]
+size = Vector2(66, 15)
+
+[sub_resource type="Animation" id="Animation_cq732"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_uaq27"]
+resource_name = "open"
+length = 0.4508448
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_6d8py"]
+_data = {
+&"RESET": SubResource("Animation_cq732"),
+&"open": SubResource("Animation_uaq27")
+}
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yx5m8"]
+radius = 46.0
+
+[node name="Chest" type="StaticBody2D" unique_id=1601134114]
+script = ExtResource("1_4rr8t")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=109124410]
+position = Vector2(0, -28)
+texture = ExtResource("1_py4fq")
+hframes = 9
+region_rect = Rect2(257, 62, 1215, 61)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=272098761]
+position = Vector2(-1, -7.5)
+shape = SubResource("RectangleShape2D_4rr8t")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1369194094]
+libraries/ = SubResource("AnimationLibrary_6d8py")
+
+[node name="InteractArea" type="Area2D" parent="." unique_id=936450539]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=730121002]
+position = Vector2(-1, -22)
+shape = SubResource("CircleShape2D_yx5m8")

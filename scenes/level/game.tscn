@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://cp8d533rk1rnl" path="res://scenes/level/world.tscn" id="2_3ny2s"]
 [ext_resource type="TileSet" uid="uid://br05ec3t8oro3" path="res://Soil_tile_set.tres" id="3_0o7gw"]
 [ext_resource type="Texture2D" uid="uid://b4b1c3glc2saq" path="res://scenes/level/Tilesets/Tileset-Terrain-new grass.png" id="3_ig4jx"]
+[ext_resource type="PackedScene" uid="uid://cguxj7vi852u7" path="res://scenes/level/chest.tscn" id="5_lw8he"]
 [ext_resource type="PackedScene" uid="uid://doi42nnng73e" path="res://scenes/level/tree.tscn" id="5_qrcxb"]
 [ext_resource type="PackedScene" uid="uid://cl3empix6v4ne" path="res://scenes/ui/main_menu.tscn" id="9_0o7gw"]
 [ext_resource type="AudioStream" uid="uid://7a4rv3t3jhq3" path="res://audio/music.mp3" id="9_ig4jx"]
@@ -2606,6 +2607,10 @@ tile_set = SubResource("TileSet_d3kax")
 
 [node name="Objects" type="Node2D" parent="." unique_id=2062830564]
 y_sort_enabled = true
+
+[node name="Chest" parent="Objects" unique_id=1601134114 instance=ExtResource("5_lw8he")]
+y_sort_enabled = true
+position = Vector2(1678, 608)
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
 position = Vector2(749, 1104)
