@@ -22,6 +22,10 @@ func open_chest():
 	give_loot()
 
 func give_loot():
+	Global.inventory["corn_seed"] += 5
+	Global.inventory["tomato_seed"] += 5
+	Global.inventory["pumpkin_seed"] += 5
+	Global.inventory_updated.emit()
 	print("Chest opened! Loot distributed.")
 	# Here is where you will interface with your inventory!
 	# Example: Global.add_item("hoe")

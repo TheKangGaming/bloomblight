@@ -27,11 +27,11 @@ enum Tools { HOE, WATER, AXE, PLANT }
 # 4. INVENTORY
 # Keys are Items enum, Values are quantity
 var inventory = {
-	Items.CORN_SEED: 5,
-	Items.TOMATO_SEED: 5,
-	Items.PUMPKIN_SEED: 5,
+	Items.CORN_SEED: 0,
+	Items.TOMATO_SEED: 0,
+	Items.PUMPKIN_SEED: 0,
 	Items.WOOD: 0,
-	Items.APPLE: 0
+	Items.APPLE: 0,
 }
 
 # 5. HELPER FUNCTIONS
