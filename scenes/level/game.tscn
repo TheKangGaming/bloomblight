@@ -2595,7 +2595,7 @@ daytime_gradient = SubResource("Gradient_ig4jx")
 metadata/_edit_vertical_guides_ = [0.0, 2560.0]
 metadata/_edit_horizontal_guides_ = [1920.0, 0.0]
 
-[node name="World" parent="." unique_id=1610356381 instance=ExtResource("2_3ny2s")]
+[node name="World" parent="." unique_id=300117719 instance=ExtResource("2_3ny2s")]
 
 [node name="SoilLayer" type="TileMapLayer" parent="." unique_id=1724186077]
 tile_set = ExtResource("3_0o7gw")
@@ -2607,7 +2607,6 @@ tile_set = SubResource("TileSet_d3kax")
 y_sort_enabled = true
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-y_sort_enabled = true
 position = Vector2(1034, 1473)
 
 [node name="Tree" parent="Objects" unique_id=288341825 instance=ExtResource("5_qrcxb")]
