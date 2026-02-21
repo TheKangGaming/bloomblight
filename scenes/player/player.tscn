@@ -1907,6 +1907,7 @@ nodes/OneShot/position = Vector2(820, 260)
 node_connections = [&"output", 0, &"OneShot", &"OneShot", 0, &"MoveStateMachine", &"OneShot", 1, &"ToolStateMachine"]
 
 [node name="Player" type="CharacterBody2D" unique_id=474038356 groups=["Player"]]
+y_sort_enabled = true
 scale = Vector2(1.5, 1.5)
 collision_layer = 2
 collision_mask = 5
@@ -1990,7 +1991,7 @@ stream = ExtResource("6_75vfm")
 max_distance = 4096.0
 
 [node name="StepsTimer" type="Timer" parent="Sounds" unique_id=1017426240]
-wait_time = 0.4
+wait_time = 0.5
 
 [connection signal="animation_finished" from="AnimationTree" to="." method="_on_animation_tree_animation_finished"]
 [connection signal="timeout" from="Sounds/StepsTimer" to="." method="_on_steps_timer_timeout"]
