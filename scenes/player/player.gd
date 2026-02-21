@@ -8,7 +8,9 @@ extends CharacterBody2D
 
 var direction: Vector2
 var last_direction: Vector2 = Vector2.DOWN
-var speed:= 200
+@export var walk_speed := 150
+@export var run_speed := 250
+var current_speed := walk_speed
 var can_move : bool = true
 var current_tool: Tools = Tools.AXE
 
@@ -35,7 +37,7 @@ func _physics_process(_delta: float) -> void:
 	else:
 		$Sounds/StepsTimer.stop()
 		
-	velocity = direction * speed * int(can_move)
+	velocity = direction * current_speed * int(can_move)
 	move_and_slide()
 	animation()
 	
@@ -43,6 +45,11 @@ signal toggle_menu_requested(pos: Vector2)
 	
 func get_input():
 	direction = Input.get_vector('left','right','up','down')
+	
+	if Input.is_action_pressed('run'):
+		current_speed = run_speed
+	else:
+		current_speed = walk_speed
 	
 	if Input.is_action_just_pressed('action'):
 		# 1. Find the Player's Center (Move up 16px from feet)
@@ -81,8 +88,13 @@ func _ready() -> void:
 	
 func animation():
 	if direction:
-		move_state_machine.travel('move')
-		update_animation_blend_positions(direction) # Reuse the helper function
+		if current_speed == run_speed:
+			move_state_machine.travel('run')
+		else:
+			# Assuming you renamed the 'move' state to 'walk' in the AnimationTree
+			move_state_machine.travel('walk') 
+			
+		update_animation_blend_positions(direction)
 	else:
 		move_state_machine.travel('idle')
 
@@ -90,6 +102,7 @@ func update_animation_blend_positions(target_vec: Vector2):
 	var blend_pos = Vector2(round(target_vec.x), round(target_vec.y))
 	$AnimationTree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
 	$AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
+	$AnimationTree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
 	
 	for state in tool_connection.values():
 		$AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
