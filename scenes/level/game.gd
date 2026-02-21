@@ -42,9 +42,14 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 			
 	# 2. THE WATERING CAN		
 	if tool == player.Tools.WATER:
-		# Only allow watering if there is plowed soil here
-		if soil_layer.get_cell_source_id(grid_pos) != -1:
-			water_layer.set_cell(grid_pos, 0, Vector2i(0, 0))
+		# Grab the data of the specific dirt tile we clicked
+		var soil_data = soil_layer.get_cell_tile_data(grid_pos)
+		
+		# Check if there is dirt AND if we painted the 'waterable' tag on it
+		if soil_data and soil_data.get_custom_data("waterable") == true:
+			var all_water = water_layer.get_used_cells()
+			all_water.append(grid_pos)
+			water_layer.set_cells_terrain_connect(all_water, 0, 0)
 	
 	# 3. THE AXE
 	if tool == player.Tools.AXE:
