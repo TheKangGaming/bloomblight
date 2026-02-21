@@ -3,3 +3,4 @@
 [ext_resource type="PackedScene" uid="uid://bi5rcv355k8pf" path="res://scenes/level/farmmap.tmx" id="1_y5wde"]
 
 [node name="World" unique_id=300117719 instance=ExtResource("1_y5wde")]
+y_sort_enabled = true

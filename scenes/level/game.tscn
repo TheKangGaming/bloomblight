@@ -2590,12 +2590,14 @@ terrain_set_0/terrain_0/color = Color(0.19670483, 0.44949532, 1, 1)
 sources/0 = SubResource("TileSetAtlasSource_0o7gw")
 
 [node name="Game" type="Node2D" unique_id=1723638860]
+y_sort_enabled = true
 script = ExtResource("1_f2w0s")
 daytime_gradient = SubResource("Gradient_ig4jx")
 metadata/_edit_vertical_guides_ = [0.0, 2560.0]
 metadata/_edit_horizontal_guides_ = [1920.0, 0.0]
 
 [node name="World" parent="." unique_id=300117719 instance=ExtResource("2_3ny2s")]
+y_sort_enabled = true
 
 [node name="SoilLayer" type="TileMapLayer" parent="." unique_id=1724186077]
 tile_set = ExtResource("3_0o7gw")
@@ -2604,6 +2606,7 @@ tile_set = ExtResource("3_0o7gw")
 tile_set = SubResource("TileSet_d3kax")
 
 [node name="Objects" type="Node2D" parent="." unique_id=2062830564]
+y_sort_enabled = true
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
 position = Vector2(1034, 1473)
