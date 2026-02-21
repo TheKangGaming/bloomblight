@@ -1929,6 +1929,7 @@ texture = ExtResource("3_0owmy")
 hframes = 7
 
 [node name="Shadow" type="Sprite2D" parent="." unique_id=119437449]
+y_sort_enabled = true
 position = Vector2(0, 11.333334)
 scale = Vector2(1, 0.5)
 texture = SubResource("GradientTexture2D_h17s1")

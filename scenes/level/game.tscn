@@ -2610,26 +2610,32 @@ y_sort_enabled = true
 position = Vector2(1034, 1473)
 
 [node name="Tree" parent="Objects" unique_id=288341825 instance=ExtResource("5_qrcxb")]
+y_sort_enabled = true
 position = Vector2(749, 1122)
 scale = Vector2(2, 2)
 
 [node name="Tree4" parent="Objects" unique_id=496755013 instance=ExtResource("5_qrcxb")]
+y_sort_enabled = true
 position = Vector2(1777, 914)
 scale = Vector2(2, 2)
 
 [node name="Tree2" parent="Objects" unique_id=1495150000 instance=ExtResource("5_qrcxb")]
+y_sort_enabled = true
 position = Vector2(1390, 451)
 scale = Vector2(2, 2)
 
 [node name="Tree3" parent="Objects" unique_id=930810458 instance=ExtResource("5_qrcxb")]
+y_sort_enabled = true
 position = Vector2(864, 815)
 scale = Vector2(2, 2)
 
 [node name="Tree6" parent="Objects" unique_id=860554321 instance=ExtResource("5_qrcxb")]
+y_sort_enabled = true
 position = Vector2(1245, 1184)
 scale = Vector2(2, 2)
 
 [node name="Tree5" parent="Objects" unique_id=197772556 instance=ExtResource("5_qrcxb")]
+y_sort_enabled = true
 position = Vector2(1188, 424)
 scale = Vector2(2, 2)
 
