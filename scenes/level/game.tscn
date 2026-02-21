@@ -2597,7 +2597,6 @@ metadata/_edit_vertical_guides_ = [0.0, 2560.0]
 metadata/_edit_horizontal_guides_ = [1920.0, 0.0]
 
 [node name="World" parent="." unique_id=300117719 instance=ExtResource("2_3ny2s")]
-y_sort_enabled = true
 
 [node name="SoilLayer" type="TileMapLayer" parent="." unique_id=1724186077]
 tile_set = ExtResource("3_0o7gw")
@@ -2611,29 +2610,35 @@ y_sort_enabled = true
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
 position = Vector2(1034, 1473)
 
-[node name="Tree" parent="Objects" unique_id=288341825 instance=ExtResource("5_qrcxb")]
+[node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]
+y_sort_enabled = true
+
+[node name="Tree" parent="Objects/Trees" unique_id=288341825 instance=ExtResource("5_qrcxb")]
 position = Vector2(749, 1122)
-scale = Vector2(2, 2)
 
-[node name="Tree4" parent="Objects" unique_id=496755013 instance=ExtResource("5_qrcxb")]
+[node name="Tree4" parent="Objects/Trees" unique_id=496755013 instance=ExtResource("5_qrcxb")]
 position = Vector2(1777, 914)
-scale = Vector2(2, 2)
 
-[node name="Tree2" parent="Objects" unique_id=1495150000 instance=ExtResource("5_qrcxb")]
+[node name="Tree2" parent="Objects/Trees" unique_id=1495150000 instance=ExtResource("5_qrcxb")]
 position = Vector2(1390, 451)
-scale = Vector2(2, 2)
 
-[node name="Tree3" parent="Objects" unique_id=930810458 instance=ExtResource("5_qrcxb")]
-position = Vector2(864, 815)
-scale = Vector2(2, 2)
+[node name="Tree3" parent="Objects/Trees" unique_id=930810458 instance=ExtResource("5_qrcxb")]
+position = Vector2(883, 794)
 
-[node name="Tree6" parent="Objects" unique_id=860554321 instance=ExtResource("5_qrcxb")]
-position = Vector2(1245, 1184)
-scale = Vector2(2, 2)
+[node name="Tree9" parent="Objects/Trees" unique_id=2072042373 instance=ExtResource("5_qrcxb")]
+position = Vector2(761, 745)
 
-[node name="Tree5" parent="Objects" unique_id=197772556 instance=ExtResource("5_qrcxb")]
+[node name="Tree6" parent="Objects/Trees" unique_id=860554321 instance=ExtResource("5_qrcxb")]
+position = Vector2(1406, 1120)
+
+[node name="Tree7" parent="Objects/Trees" unique_id=1409322427 instance=ExtResource("5_qrcxb")]
+position = Vector2(1261, 1128)
+
+[node name="Tree8" parent="Objects/Trees" unique_id=717149509 instance=ExtResource("5_qrcxb")]
+position = Vector2(1207, 548)
+
+[node name="Tree5" parent="Objects/Trees" unique_id=197772556 instance=ExtResource("5_qrcxb")]
 position = Vector2(1188, 424)
-scale = Vector2(2, 2)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
 

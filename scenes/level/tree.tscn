@@ -10,14 +10,13 @@ shader = ExtResource("2_prtra")
 shader_parameter/progress = 0.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gk3pd"]
-size = Vector2(42, 13)
+size = Vector2(42, 14)
 
 [node name="Tree" type="StaticBody2D" unique_id=288341825 groups=["Trees"]]
 y_sort_enabled = true
 script = ExtResource("1_gk3pd")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1512423264]
-y_sort_enabled = true
 material = SubResource("ShaderMaterial_gwfrv")
 position = Vector2(0, -76.5)
 texture = ExtResource("3_prtra")
@@ -25,5 +24,5 @@ region_enabled = true
 region_rect = Rect2(525, 1859, 166, 157)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1291558273]
-position = Vector2(0, -7.5)
+position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_gk3pd")
