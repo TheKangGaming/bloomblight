@@ -34,6 +34,8 @@ var inventory = {
 	Items.APPLE: 0,
 }
 
+var unlocked_tools: Array[Tools] = []
+
 # 5. HELPER FUNCTIONS
 func add_item(item_type: Items, amount: int = 1):
 	if item_type in inventory:

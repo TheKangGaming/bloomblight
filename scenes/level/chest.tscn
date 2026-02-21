@@ -68,3 +68,15 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=730121002]
 position = Vector2(-1, -22)
 shape = SubResource("CircleShape2D_yx5m8")
+
+[node name="LootPopup" type="Label" parent="." unique_id=986611912]
+visible = false
+offset_left = -64.0
+offset_top = -85.0
+offset_right = 60.0
+offset_bottom = -62.0
+theme_override_colors/font_color = Color(0.97521156, 0.79350454, 3.85046e-07, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+text = "+ Seeds & Tools!"
+horizontal_alignment = 1
+vertical_alignment = 1

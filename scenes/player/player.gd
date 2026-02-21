@@ -52,24 +52,26 @@ func get_input():
 		current_speed = walk_speed
 	
 	if Input.is_action_just_pressed('action'):
+		if Global.unlocked_tools.has(Global.Tools.HOE):
 		# 1. Find the Player's Center (Move up 14px from feet)
-		var player_center = global_position + Vector2(0, -14)
-		
-		# 2. Reach out 32px in the direction we are facing
-		var target_pos = player_center + (last_direction * tool_direction_offset)
-		tool_state_machine.travel(tool_connection[current_tool])
-		$AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
-		can_move = false
-		if current_tool in [Tools.HOE, Tools.WATER]:
-			await $AnimationTree.animation_finished
+			var player_center = global_position + Vector2(0, -14)
 			
-			if current_tool == Tools.HOE:
-				$Sounds/HoeSound.play()
-			else:
-				$Sounds/WaterSound.play()
-		
-		if current_tool != Tools.AXE:
-			tool_use.emit(current_tool, target_pos)
+			# 2. Reach out 32px in the direction we are facing
+			var target_pos = player_center + (last_direction * tool_direction_offset)
+			tool_state_machine.travel(tool_connection[current_tool])
+			$AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+			can_move = false
+
+			if current_tool in [Tools.HOE, Tools.WATER]:
+				await $AnimationTree.animation_finished
+				
+				if current_tool == Tools.HOE:
+					$Sounds/HoeSound.play()
+				else:
+					$Sounds/WaterSound.play()
+			
+			if current_tool != Tools.AXE:
+				tool_use.emit(current_tool, target_pos)
 		
 	if Input.is_action_just_pressed('tool_forward') or Input.is_action_just_pressed('tool_backward'):
 		var tool_direction = Input.get_axis('tool_backward', 'tool_forward') as int

@@ -2613,7 +2613,7 @@ y_sort_enabled = true
 position = Vector2(1678, 608)
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-position = Vector2(1040, 1476)
+position = Vector2(1733, 646)
 metadata/_edit_horizontal_guides_ = [-16.0]
 
 [node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]

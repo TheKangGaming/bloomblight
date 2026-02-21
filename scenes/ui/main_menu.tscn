@@ -68,7 +68,7 @@ theme_override_constants/margin_bottom = 20
 
 [node name="Grid" type="GridContainer" parent="CenterContainer/TabContainer/Inventory/Margin" unique_id=581831426]
 layout_mode = 2
-columns = 5
+columns = 10
 
 [node name="Villagers" type="Control" parent="CenterContainer/TabContainer" unique_id=512211702]
 visible = false

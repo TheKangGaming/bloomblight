@@ -1920,7 +1920,7 @@ scale = Vector2(1, 0.5)
 texture = SubResource("GradientTexture2D_h17s1")
 
 [node name="ToolOrigin" type="Node2D" parent="." unique_id=1254526657]
-position = Vector2(0, -14)
+position = Vector2(0, -13)
 
 [node name="AxeSprite" type="Sprite2D" parent="ToolOrigin" unique_id=461249055]
 visible = false

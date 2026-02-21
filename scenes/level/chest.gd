@@ -1,6 +1,7 @@
 extends StaticBody2D
 
 @onready var animation_player = $AnimationPlayer
+@onready var loot_popup = $LootPopup
 
 var is_open := false
 var player_in_range := false
@@ -22,14 +23,33 @@ func open_chest():
 	give_loot()
 
 func give_loot():
-	Global.inventory["corn_seed"] += 5
-	Global.inventory["tomato_seed"] += 5
-	Global.inventory["pumpkin_seed"] += 5
-	Global.inventory_updated.emit()
 	print("Chest opened! Loot distributed.")
-	# Here is where you will interface with your inventory!
-	# Example: Global.add_item("hoe")
-	# Example: Global.add_item("seeds", 5)
+	
+	# Safely add to the inventory using your Global enums
+	Global.inventory[Global.Items.CORN_SEED] += 5
+	Global.inventory[Global.Items.TOMATO_SEED] += 5
+	Global.inventory[Global.Items.PUMPKIN_SEED] += 5
+	
+	# Give the tools by adding them to the unlocked array
+	if not Global.unlocked_tools.has(Global.Tools.HOE):
+		Global.unlocked_tools.append(Global.Tools.HOE)
+		Global.unlocked_tools.append(Global.Tools.WATER)
+		Global.unlocked_tools.append(Global.Tools.AXE)
+	
+	
+	# Emit the signal you already have set up to tell your UI to refresh!
+	Global.inventory_updated.emit()
+	
+	loot_popup.visible = true
+	
+	var tween = get_tree().create_tween()
+	
+	# Tween 1: Move the label's Y position up by 30 pixels over 1.2 seconds
+	# Using TRANS_OUT makes it decelerate smoothly as it rises
+	tween.tween_property(loot_popup, "position:y", loot_popup.position.y - 30, 2).set_trans(Tween.TRANS_SPRING)
+	
+	# Tween 2: Run in parallel (at the same time) to fade the alpha to 0.0
+	tween.parallel().tween_property(loot_popup, "modulate:a", 0.0, 2)
 
 func _on_interact_area_body_entered(body):
 	print("Something touched the chest: ", body.name)
