@@ -7,7 +7,7 @@
 size = Vector2(8, 8)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_puj2q"]
-radius = 22.022715
+radius = 32.01562
 
 [node name="Sign" type="StaticBody2D" unique_id=663850889]
 y_sort_enabled = true
@@ -21,16 +21,17 @@ position = Vector2(0, 13)
 shape = SubResource("RectangleShape2D_yqpaf")
 
 [node name="InteractArea" type="Area2D" parent="." unique_id=748186741]
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=1772050903]
 shape = SubResource("CircleShape2D_puj2q")
 
 [node name="Label" type="Label" parent="." unique_id=2071618677]
 visible = false
-offset_left = -156.0
-offset_top = -87.0
-offset_right = 158.0
-offset_bottom = -12.0
+offset_left = -157.0
+offset_top = -100.0
+offset_right = 157.0
+offset_bottom = -25.0
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Continue ahead to find some tools!"
