@@ -45,7 +45,14 @@ func _physics_process(_delta: float) -> void:
 signal toggle_menu_requested(pos: Vector2)	
 	
 func get_input():
-	direction = Input.get_vector('left','right','up','down')
+	# 1. Grab the raw input into a temporary variable first
+	var raw_input = Input.get_vector('left', 'right', 'up', 'down')
+	
+	if raw_input.length() > 0.1: 
+		direction = raw_input
+	else:
+		# The stick is resting (or just drifting slightly). Force it to a perfect stop.
+		direction = Vector2.ZERO
 	
 	if Input.is_action_pressed('run'):
 		current_speed = run_speed

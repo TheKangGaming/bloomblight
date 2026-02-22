@@ -2592,6 +2592,9 @@ terrain_set_0/terrain_0/name = "Watered Soil"
 terrain_set_0/terrain_0/color = Color(0.19670483, 0.44949532, 1, 1)
 sources/0 = SubResource("TileSetAtlasSource_0o7gw")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g35fm"]
+size = Vector2(10, 8)
+
 [node name="Game" type="Node2D" unique_id=1723638860]
 y_sort_enabled = true
 script = ExtResource("1_f2w0s")
@@ -2654,16 +2657,22 @@ sign_text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Co
 
 [node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 887)
-sign_text = "Hold Shift = Run
-E = Interact
-Space = Use Tool
+sign_text = "Hold Shift / LT on controller= Run
+E or A/B on controler = Interact
+Space / RT on controller = Use Tool
 "
 
-[node name="Sign5" type="Sprite2D" parent="Objects" unique_id=390230266]
+[node name="StaticBody2D" type="StaticBody2D" parent="Objects" unique_id=1859774796]
+
+[node name="Sign5" type="Sprite2D" parent="Objects/StaticBody2D" unique_id=390230266]
 y_sort_enabled = true
 position = Vector2(1042, 625)
 texture = ExtResource("9_g35fm")
 flip_h = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/StaticBody2D" unique_id=1483193910]
+position = Vector2(1040, 636)
+shape = SubResource("RectangleShape2D_g35fm")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
 
