@@ -4,9 +4,13 @@ extends Control
 @onready var tool_icon = $ToolBar/ToolDisplay/Sprite2D
 
 func _process(_delta):
+	if Global.unlocked_tools.is_empty():
+		$ToolBar.visible = false
+	else:
+		$ToolBar.visible = true
 	var player = get_tree().get_first_node_in_group("Player")
 	
-	if player:
+	if player and not Global.unlocked_tools.is_empty():
 		# Update Text
 		var tool_name = "None"
 		var tool_frame = 0
