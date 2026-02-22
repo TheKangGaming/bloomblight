@@ -29,7 +29,7 @@ func _process(_delta: float) -> void:
 		day_switch()
 
 func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
-	# Tweak this number (16, 24, or 32) until it hits the exact tile I want
+	# Tweak this number (16, 24, or 32) until it hits the exact tile  want
 	var adjusted_pos = global_pos + Vector2(0, 24)
 	# Convert global position to grid coordinates using the Tillable layer
 	var local_pos = tillable_layer.to_local(adjusted_pos)
@@ -62,8 +62,13 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 	# 3. THE AXE
 	if tool == player.Tools.AXE:
 		for tree in get_tree().get_nodes_in_group('Trees'):
-			if tree.global_position.distance_to(global_pos) < 30:
+			
+			# Shift the target up by 30 pixels so we are measuring from the TRUNK, not the roots
+			var trunk_pos = tree.global_position + Vector2(0, -77) 
+			
+			if trunk_pos.distance_to(global_pos) < 30:
 				tree.hit()
+				break
 
 func _on_player_menu_requested(target_pos: Vector2):
 	# 1. Adjust the position
