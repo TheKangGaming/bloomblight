@@ -28,10 +28,11 @@ shape = SubResource("CircleShape2D_puj2q")
 
 [node name="Label" type="Label" parent="." unique_id=2071618677]
 visible = false
+y_sort_enabled = true
 offset_left = -157.0
-offset_top = -100.0
+offset_top = -137.0
 offset_right = 157.0
-offset_bottom = -25.0
+offset_bottom = -62.0
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Continue ahead to find some tools!"

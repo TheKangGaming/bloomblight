@@ -2657,12 +2657,15 @@ sign_text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Co
 
 [node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 887)
-sign_text = "Hold Shift / LT on controller= Run
+sign_text = "Hold Shift or LT on controller = Run
 E or A/B on controler = Interact
-Space / RT on controller = Use Tool
+Space or RT on controller = Use Tool
+1 or LB/RB = Change Tools
+Tab = Menu
 "
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Objects" unique_id=1859774796]
+y_sort_enabled = true
 
 [node name="Sign5" type="Sprite2D" parent="Objects/StaticBody2D" unique_id=390230266]
 y_sort_enabled = true
