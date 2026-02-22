@@ -2650,6 +2650,14 @@ position = Vector2(1188, 424)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 1171)
+sign_text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Continue ahead to find some tools!"
+
+[node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
+position = Vector2(1040, 887)
+sign_text = "Hold Shift = Run
+E = Interact
+Space = Use Tool
+"
 
 [node name="Sign5" type="Sprite2D" parent="Objects" unique_id=390230266]
 y_sort_enabled = true

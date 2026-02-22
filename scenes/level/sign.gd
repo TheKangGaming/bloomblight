@@ -1,9 +1,13 @@
 extends StaticBody2D
 
+@export_multiline var sign_text: String = "Default sign text."
+
 @onready var label = $Label
 var player_in_range := false
 
 func _ready():
+	
+	label.text = sign_text
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
 
