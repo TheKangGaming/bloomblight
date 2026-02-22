@@ -9,11 +9,11 @@
 [ext_resource type="PackedScene" uid="uid://doi42nnng73e" path="res://scenes/level/tree.tscn" id="5_qrcxb"]
 [ext_resource type="PackedScene" uid="uid://cl3empix6v4ne" path="res://scenes/ui/main_menu.tscn" id="9_0o7gw"]
 [ext_resource type="Texture2D" uid="uid://vjgqm8ob04a5" path="res://graphics/interactables/sign 5.png" id="9_g35fm"]
-[ext_resource type="AudioStream" uid="uid://7a4rv3t3jhq3" path="res://audio/music.mp3" id="9_ig4jx"]
 [ext_resource type="PackedScene" uid="uid://dintbdgcfxu3b" path="res://scenes/ui/overlay.tscn" id="9_pn0ym"]
 [ext_resource type="PackedScene" uid="uid://tqhmm4hkqce0" path="res://scenes/ui/seed_menu.tscn" id="10_0o7gw"]
 [ext_resource type="TileSet" uid="uid://b8uqxw86b8u65" path="res://Epic_Tileset.tres" id="10_pn0ym"]
 [ext_resource type="PackedScene" uid="uid://82ji0j6uwvpc" path="res://scenes/level/sign.tscn" id="13_lw8he"]
+[ext_resource type="AudioStream" uid="uid://dtn14tdae0ypa" path="res://audio/Whispers_of_the_Old_Wood.mp3" id="14_g35fm"]
 
 [sub_resource type="Gradient" id="Gradient_ig4jx"]
 offsets = PackedFloat32Array(0, 0.509434, 1)
@@ -2696,13 +2696,6 @@ visible = false
 
 [node name="MainMenu" parent="CanvasLayer" unique_id=235357107 instance=ExtResource("9_0o7gw")]
 
-[node name="Music" type="AudioStreamPlayer" parent="." unique_id=1189758055]
-process_mode = 3
-stream = ExtResource("9_ig4jx")
-volume_db = -15.737
-autoplay = true
-parameters/looping = true
-
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1575379906]
 color = Color(0.99607843, 0.9098039, 0.7176471, 1)
 
@@ -2713,5 +2706,12 @@ autostart = true
 
 [node name="TestMapLayer" type="TileMapLayer" parent="." unique_id=2012858122]
 tile_set = ExtResource("10_pn0ym")
+
+[node name="WhispersOfTheOldWood" type="AudioStreamPlayer" parent="." unique_id=1998592912]
+process_mode = 3
+stream = ExtResource("14_g35fm")
+volume_db = -15.0
+autoplay = true
+parameters/looping = true
 
 [connection signal="tool_use" from="Objects/Player" to="." method="_on_player_tool_use"]
