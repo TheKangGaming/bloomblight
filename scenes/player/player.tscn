@@ -1908,7 +1908,6 @@ node_connections = [&"output", 0, &"OneShot", &"OneShot", 0, &"MoveStateMachine"
 
 [node name="Player" type="CharacterBody2D" unique_id=474038356 groups=["Player"]]
 y_sort_enabled = true
-scale = Vector2(1.5, 1.5)
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_dovo2")
@@ -1920,6 +1919,7 @@ scale = Vector2(1, 0.5)
 texture = SubResource("GradientTexture2D_h17s1")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1083410088]
+y_sort_enabled = true
 position = Vector2(0, -12)
 texture = ExtResource("2_75vfm")
 hframes = 16
@@ -1927,7 +1927,7 @@ vframes = 16
 
 [node name="ToolOrigin" type="Node2D" parent="." unique_id=1254526657]
 y_sort_enabled = true
-position = Vector2(0, -10)
+position = Vector2(0, -12)
 
 [node name="AxeSprite" type="Sprite2D" parent="ToolOrigin" unique_id=461249055]
 visible = false

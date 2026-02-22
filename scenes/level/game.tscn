@@ -2619,6 +2619,7 @@ position = Vector2(1678, 608)
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
 position = Vector2(1041, 1491)
+scale = Vector2(1.5, 1.5)
 metadata/_edit_horizontal_guides_ = [-16.0]
 
 [node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]
@@ -2664,16 +2665,16 @@ Space or RT on controller = Use Tool
 Tab = Menu
 "
 
-[node name="StaticBody2D" type="StaticBody2D" parent="Objects" unique_id=1859774796]
+[node name="RegularSign" type="StaticBody2D" parent="Objects" unique_id=1859774796]
 y_sort_enabled = true
 
-[node name="Sign5" type="Sprite2D" parent="Objects/StaticBody2D" unique_id=390230266]
+[node name="Sign5" type="Sprite2D" parent="Objects/RegularSign" unique_id=390230266]
 y_sort_enabled = true
 position = Vector2(1042, 625)
 texture = ExtResource("9_g35fm")
 flip_h = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/StaticBody2D" unique_id=1483193910]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/RegularSign" unique_id=1483193910]
 position = Vector2(1040, 636)
 shape = SubResource("RectangleShape2D_g35fm")
 
