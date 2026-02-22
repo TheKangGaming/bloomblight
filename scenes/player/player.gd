@@ -2,9 +2,10 @@ extends CharacterBody2D
 
 @onready var move_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/MoveStateMachine/playback')
 @onready var tool_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/ToolStateMachine/playback')
+@onready var tool_particles = $ToolParticles
 
 @export var tool_direction_offset := 24
-@export var tool_y_offset := 12
+@export var chest_offset := 16
 
 var direction: Vector2
 var last_direction: Vector2 = Vector2.DOWN
@@ -54,7 +55,7 @@ func get_input():
 	if Input.is_action_just_pressed('action'):
 		if Global.unlocked_tools.has(Global.Tools.HOE):
 		# 1. Find the Player's Center (Move up 14px from feet)
-			var player_center = global_position + Vector2(0, -14)
+			var player_center = global_position + Vector2(0, -chest_offset)
 			
 			# 2. Reach out 32px in the direction we are facing
 			var target_pos = player_center + (last_direction * tool_direction_offset)
@@ -67,6 +68,9 @@ func get_input():
 				
 				if current_tool == Tools.HOE:
 					$Sounds/HoeSound.play()
+					tool_particles.global_position = target_pos
+					tool_particles.color = Color("#593a28") # Dirt Brown
+					tool_particles.emitting = true
 				else:
 					$Sounds/WaterSound.play()
 			
@@ -80,7 +84,7 @@ func get_input():
 		tool_changed.emit(current_tool)
 	
 	if Input.is_action_just_pressed('plant'):
-		var player_center = global_position + Vector2(0, -14)
+		var player_center = global_position + Vector2(0, -chest_offset)
 		var target_pos = player_center + (last_direction * tool_direction_offset)
 		
 		toggle_menu_requested.emit(target_pos)
@@ -114,10 +118,14 @@ func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	
 func axe_use():
 	# 1. Find the Player's Center to match the other tools
-	var player_center = global_position + Vector2(0, -14)
+	var player_center = global_position + Vector2(0, -chest_offset)
 	
 	# 2. Reach out 32px from the center
 	var target_pos = player_center + (last_direction * tool_direction_offset)
+	
+	tool_particles.global_position = target_pos
+	tool_particles.color = Color("#e3c298") # Light Wood Beige
+	tool_particles.emitting = true
 	
 	tool_use.emit(Tools.AXE, target_pos)
 	$Sounds/AxeSound.play()

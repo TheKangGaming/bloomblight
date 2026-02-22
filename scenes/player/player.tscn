@@ -1908,19 +1908,25 @@ node_connections = [&"output", 0, &"OneShot", &"OneShot", 0, &"MoveStateMachine"
 
 [node name="Player" type="CharacterBody2D" unique_id=474038356 groups=["Player"]]
 y_sort_enabled = true
-position = Vector2(0, -7)
 scale = Vector2(1.5, 1.5)
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_dovo2")
 
 [node name="Shadow" type="Sprite2D" parent="." unique_id=119437449]
-position = Vector2(0, -1.333333)
+position = Vector2(0, -6)
 scale = Vector2(1, 0.5)
 texture = SubResource("GradientTexture2D_h17s1")
 
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1083410088]
+position = Vector2(0, -17.333334)
+texture = ExtResource("2_75vfm")
+hframes = 16
+vframes = 16
+
 [node name="ToolOrigin" type="Node2D" parent="." unique_id=1254526657]
-position = Vector2(0, -13)
+y_sort_enabled = true
+position = Vector2(0, -17)
 
 [node name="AxeSprite" type="Sprite2D" parent="ToolOrigin" unique_id=461249055]
 visible = false
@@ -1944,14 +1950,8 @@ texture = ExtResource("3_qek5x")
 hframes = 6
 vframes = 16
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1083410088]
-position = Vector2(0, -12.666667)
-texture = ExtResource("2_75vfm")
-hframes = 16
-vframes = 16
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=202345101]
-position = Vector2(0, -2.8333335)
+position = Vector2(0, -7.5000005)
 shape = SubResource("RectangleShape2D_0owmy")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1435698803]
@@ -1984,12 +1984,15 @@ position_smoothing_speed = 10.0
 
 [node name="HoeSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=487777762]
 stream = ExtResource("3_gmlin")
+max_distance = 5000.0
 
 [node name="AxeSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=221913532]
 stream = ExtResource("4_lvxji")
+max_distance = 5000.0
 
 [node name="WaterSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=413213992]
 stream = ExtResource("5_p47bc")
+max_distance = 5000.0
 
 [node name="Steps" type="AudioStreamPlayer2D" parent="Sounds" unique_id=1917523902]
 stream = ExtResource("6_75vfm")
@@ -1997,6 +2000,20 @@ max_distance = 4096.0
 
 [node name="StepsTimer" type="Timer" parent="Sounds" unique_id=1017426240]
 wait_time = 0.5
+
+[node name="ToolParticles" type="CPUParticles2D" parent="." unique_id=733753591]
+emitting = false
+amount = 6
+lifetime = 0.4
+one_shot = true
+explosiveness = 0.9
+direction = Vector2(0, 1)
+spread = 60.0
+gravity = Vector2(0, 300)
+initial_velocity_min = 50.0
+initial_velocity_max = 80.0
+scale_amount_min = 2.0
+scale_amount_max = 3.0
 
 [connection signal="animation_finished" from="AnimationTree" to="." method="_on_animation_tree_animation_finished"]
 [connection signal="timeout" from="Sounds/StepsTimer" to="." method="_on_steps_timer_timeout"]
