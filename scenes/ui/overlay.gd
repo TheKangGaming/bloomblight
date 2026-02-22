@@ -27,7 +27,7 @@ func _process(_delta):
 				tool_frame = 1 # 3rd image
 			player.Tools.PLANT: 
 				tool_name = "Seeds"
-				tool_frame = 3 # 4th image (if it exists)
+				tool_frame = 3 # 4th image
 		
 		if tool_label:
 			tool_label.text = tool_name

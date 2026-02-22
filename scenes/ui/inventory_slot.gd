@@ -6,8 +6,7 @@ extends PanelContainer
 # 1. The Farm Sheet (Seeds & Crops)
 const SHEET_FARM = preload("res://graphics/plants/Atlas-Props4-crops update.png")
 
-# 2. The Loot Sheet (Wood, etc) - UPDATE THIS PATH
-# Assuming you named it wood.png or loot.png inside graphics/loot/
+# 2. The Loot Sheet (Wood, etc)
 const SHEET_LOOT = preload("res://graphics/loot/loot-drops.png") 
 
 # 3. Single Images
@@ -33,11 +32,10 @@ func _ready():
 	item_map[Global.Items.PUMPKIN] = [SHEET_FARM, Vector2i(30, 8)]
 	
 	# -- LOOT (On Loot Sheet) --
-	# If wood is the 1st item on the sheet, use (0,0). If 2nd, use (1,0).
 	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)] 
 	
 	# -- STONE (Placeholder using Hills Tileset) --
-	# Grabbing a rock from the hills tileset at 0,0
+	
 	item_map[Global.Items.STONE] = [IMG_STONE_REF, Vector2i(0, 0)]
 
 
@@ -59,7 +57,7 @@ func setup(item_enum: Global.Items, quantity: int):
 		
 		var atlas = AtlasTexture.new()
 		atlas.atlas = texture_source
-		# Assuming 32x32 tiles. Adjust if your loot sheet is different!
+		
 		atlas.region = Rect2(coords.x * 32, coords.y * 32, 32, 32)
 		
 		icon.texture = atlas

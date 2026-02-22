@@ -7,13 +7,13 @@ var is_open := false
 var player_in_range := false
 
 func _ready():
-	# Connect the Area2D signals in code (or do it via the Node dock on the right)
+	# Connect the Area2D signals
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
 
-# _unhandled_input is great for interactions. It only fires if the UI hasn't consumed the click/button.
+
 func _unhandled_input(event):
-	# Using your existing 'action' key, or you can map a specific 'interact' key in Project Settings
+	
 	if event.is_action_pressed("interact") and player_in_range and not is_open:
 		open_chest()
 
@@ -26,7 +26,7 @@ func open_chest():
 func give_loot():
 	print("Chest opened! Loot distributed.")
 	
-	# Safely add to the inventory using your Global enums
+	# Safely add to the inventory using Global enums
 	Global.inventory[Global.Items.CORN_SEED] += 5
 	Global.inventory[Global.Items.TOMATO_SEED] += 5
 	Global.inventory[Global.Items.PUMPKIN_SEED] += 5
@@ -43,7 +43,7 @@ func give_loot():
 	
 	var tween = get_tree().create_tween()
 	
-	# Tween 1: Move the label's Y position up by 30 pixels over 1.2 seconds
+	# Tween 1: Move the label's Y position up by 30 pixels over 2 seconds
 	tween.tween_property(loot_popup, "position:y", loot_popup.position.y - 30, 2).set_trans(Tween.TRANS_SPRING)
 	
 	# Tween 2: Run in parallel (at the same time) to fade the alpha to 0.0

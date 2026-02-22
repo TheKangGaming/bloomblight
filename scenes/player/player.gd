@@ -61,10 +61,10 @@ func get_input():
 	
 	if Input.is_action_just_pressed('action'):
 		if Global.unlocked_tools.has(Global.Tools.HOE):
-		# 1. Find the Player's Center (Move up 14px from feet)
+		# 1. Find the Player's Center (Move up 16px from feet)
 			var player_center = global_position + Vector2(0, -chest_offset)
 			
-			# 2. Reach out 32px in the direction we are facing
+			# 2. Reach out 24px in the direction we are facing
 			var target_pos = player_center + (last_direction * tool_direction_offset)
 			tool_state_machine.travel(tool_connection[current_tool])
 			$AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
@@ -104,7 +104,6 @@ func animation():
 		if current_speed == run_speed:
 			move_state_machine.travel('run')
 		else:
-			# Assuming you renamed the 'move' state to 'walk' in the AnimationTree
 			move_state_machine.travel('move') 
 			
 		update_animation_blend_positions(direction)
@@ -127,7 +126,7 @@ func axe_use():
 	# 1. Find the Player's Center to match the other tools
 	var player_center = global_position + Vector2(0, -chest_offset)
 	
-	# 2. Reach out 32px from the center
+	# 2. Reach out 24px from the center
 	var target_pos = player_center + (last_direction * tool_direction_offset)
 	
 	tool_particles.global_position = target_pos

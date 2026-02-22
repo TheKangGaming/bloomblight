@@ -29,7 +29,7 @@ func _process(_delta: float) -> void:
 		day_switch()
 
 func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
-	# Tweak this number (16, 24, or 32) until it hits the exact tile you want
+	# Tweak this number (16, 24, or 32) until it hits the exact tile I want
 	var adjusted_pos = global_pos + Vector2(0, 24)
 	# Convert global position to grid coordinates using the Tillable layer
 	var local_pos = tillable_layer.to_local(adjusted_pos)

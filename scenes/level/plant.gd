@@ -1,7 +1,7 @@
 extends StaticBody2D
 
-const HFRAMES = 34 # How many growth stages (columns)
-const VFRAMES = 18  # How many types of crops (rows)
+const HFRAMES = 34 # (columns)
+const VFRAMES = 18  # (rows)
 const ATLAS_TEXTURE = preload("res://graphics/plants/Atlas-Props4-crops update.png")
 
 var grid_pos: Vector2i
@@ -11,7 +11,7 @@ var grow_speed: float
 
 # --- 2. MAP SEEDS TO ROWS ---
 # 'origin': The grid coordinate Vector2i(column, row) of the FIRST frame (Seed)
-# You need to find these X,Y coordinates in your sprite editor.
+
 
 const plant_data = {
 	Global.Items.CORN_SEED: { 
