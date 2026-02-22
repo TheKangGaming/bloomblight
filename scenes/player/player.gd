@@ -5,7 +5,7 @@ extends CharacterBody2D
 @onready var tool_particles = $ToolParticles
 
 @export var tool_direction_offset := 24
-@export var chest_offset := 16
+@export var chest_offset := 28
 
 var direction: Vector2
 var last_direction: Vector2 = Vector2.DOWN

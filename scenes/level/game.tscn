@@ -2624,6 +2624,7 @@ metadata/_edit_horizontal_guides_ = [-16.0]
 
 [node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]
 y_sort_enabled = true
+position = Vector2(-5, 78)
 
 [node name="Tree" parent="Objects/Trees" unique_id=288341825 instance=ExtResource("5_qrcxb")]
 position = Vector2(749, 1122)
