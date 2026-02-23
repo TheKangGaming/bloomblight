@@ -4,3 +4,9 @@
 
 [node name="World" unique_id=300117719 instance=ExtResource("1_y5wde")]
 y_sort_enabled = true
+
+[node name="Decoration" parent="." index="4" unique_id=1276555079]
+y_sort_enabled = true
+
+[node name="Obstacles" parent="." index="5" unique_id=1437231167]
+y_sort_enabled = true

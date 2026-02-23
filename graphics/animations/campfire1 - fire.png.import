@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dcwcdle3cjkv6"
-path="res://.godot/imported/hills.png-0dad75e4d0ad82058d476d7bb20709e6.ctex"
+uid="uid://b74qrbw1mt5vt"
+path="res://.godot/imported/campfire1 - fire.png-4aa60c62d0e9563675f703cbdcb9f68e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://graphics/tilesets/hills.png"
-dest_files=["res://.godot/imported/hills.png-0dad75e4d0ad82058d476d7bb20709e6.ctex"]
+source_file="res://graphics/animations/campfire1 - fire.png"
+dest_files=["res://.godot/imported/campfire1 - fire.png-4aa60c62d0e9563675f703cbdcb9f68e.ctex"]
 
 [params]
 

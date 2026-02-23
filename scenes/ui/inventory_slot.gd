@@ -11,7 +11,6 @@ const SHEET_LOOT = preload("res://graphics/loot/loot-drops.png")
 
 # 3. Single Images
 const IMG_APPLE = preload("res://graphics/plants/apple.png")
-const IMG_STONE_REF = preload("res://graphics/tilesets/hills.png") # Placeholder for stone
 
 # --- COORDINATES (X, Y) on the Sheets ---
 # This dictionary maps the Item Enum -> The specific sheet and coordinates
@@ -32,11 +31,8 @@ func _ready():
 	item_map[Global.Items.PUMPKIN] = [SHEET_FARM, Vector2i(30, 8)]
 	
 	# -- LOOT (On Loot Sheet) --
-	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)] 
-	
-	# -- STONE (Placeholder using Hills Tileset) --
-	
-	item_map[Global.Items.STONE] = [IMG_STONE_REF, Vector2i(0, 0)]
+	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)]
+	item_map[Global.Items.STONE] = [SHEET_LOOT, Vector2i(5, 2)] 
 
 
 func setup(item_enum: Global.Items, quantity: int):

@@ -52,11 +52,12 @@ script = ExtResource("1_4rr8t")
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=109124410]
 position = Vector2(0, -28)
 texture = ExtResource("1_py4fq")
+offset = Vector2(0, -26)
 hframes = 9
 region_rect = Rect2(257, 62, 1215, 61)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=272098761]
-position = Vector2(-1, -7.5)
+position = Vector2(0, -33)
 shape = SubResource("RectangleShape2D_4rr8t")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1369194094]
@@ -66,16 +67,16 @@ libraries/ = SubResource("AnimationLibrary_6d8py")
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=730121002]
-position = Vector2(-1, -22)
+position = Vector2(1, -51)
 shape = SubResource("CircleShape2D_yx5m8")
 
 [node name="LootPopup" type="Label" parent="." unique_id=986611912]
 visible = false
 y_sort_enabled = true
-offset_left = -64.0
-offset_top = -85.0
-offset_right = 60.0
-offset_bottom = -62.0
+offset_left = -63.0
+offset_top = -122.0
+offset_right = 61.0
+offset_bottom = -99.0
 theme_override_colors/font_color = Color(0.97521156, 0.79350454, 3.85046e-07, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 text = "+ Seeds & Tools!"

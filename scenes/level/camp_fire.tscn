@@ -1,0 +1,178 @@
+[gd_scene format=3 uid="uid://ct6ev3fanumw7"]
+
+[ext_resource type="Texture2D" uid="uid://cenjaesppd4se" path="res://scenes/level/Tilesets/Atlas-Props-sheet1.png" id="1_odedp"]
+[ext_resource type="Texture2D" uid="uid://b74qrbw1mt5vt" path="res://graphics/animations/campfire1 - fire.png" id="2_2r8nr"]
+[ext_resource type="Texture2D" uid="uid://pbp6yok1le3d" path="res://graphics/animations/campfire smoke.png" id="3_mxwju"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_tt6wo"]
+radius = 36.0
+height = 72.0
+
+[sub_resource type="Animation" id="Animation_igxve"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Fire:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Smoke:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Fire:visible")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Smoke:visible")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_u3f54"]
+resource_name = "fire_on"
+length = 0.80017453
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Fire:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5, 6, 7]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Smoke:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Fire:visible")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Smoke:visible")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_py2rd"]
+_data = {
+&"RESET": SubResource("Animation_igxve"),
+&"fire_on": SubResource("Animation_u3f54")
+}
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_odedp"]
+radius = 52.0
+
+[node name="CampFire" type="StaticBody2D" unique_id=1975501456]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1730138591]
+texture = ExtResource("1_odedp")
+offset = Vector2(0, -30)
+region_enabled = true
+region_rect = Rect2(8, 2037, 77, 59)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=91382843]
+position = Vector2(1, -30)
+shape = SubResource("CapsuleShape2D_tt6wo")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1011757065]
+libraries/ = SubResource("AnimationLibrary_py2rd")
+autoplay = &"fire_on"
+
+[node name="Fire" type="Sprite2D" parent="." unique_id=1110945039]
+position = Vector2(3, -34)
+texture = ExtResource("2_2r8nr")
+hframes = 8
+
+[node name="Smoke" type="Sprite2D" parent="." unique_id=530854756]
+position = Vector2(-1, -73)
+texture = ExtResource("3_mxwju")
+hframes = 16
+
+[node name="InteractArea" type="Area2D" parent="." unique_id=1047254318]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=1145106181]
+position = Vector2(0, -28)
+shape = SubResource("CircleShape2D_odedp")

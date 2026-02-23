@@ -38,13 +38,14 @@ func shake_tree():
 
 func become_stump():
 	is_stump = true
+	sprite.region_enabled = false
 	sprite.texture = stump_texture
 	
 	# Optional: If the stump is shorter than the tree, you might need to move it down 
 	# so it sits on the crosshair properly!
-	# sprite.position.y += 10 
+	sprite.offset.y = -14
 	
 	# Give the player wood!
-	Global.inventory[Global.Items.WOOD] += 2
+	Global.inventory[Global.Items.WOOD] += 4
 	Global.inventory_updated.emit()
 	print("Tree chopped! Got 2 wood.")

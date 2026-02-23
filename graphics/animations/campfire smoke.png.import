@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b134tjp5ngghx"
-path="res://.godot/imported/water.png-f16b26ebdd9b7656e4e746ecd4e7fc5e.ctex"
+uid="uid://pbp6yok1le3d"
+path="res://.godot/imported/campfire smoke.png-ceab3c3b85e12522f485159cef31aa7e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://graphics/tilesets/water.png"
-dest_files=["res://.godot/imported/water.png-f16b26ebdd9b7656e4e746ecd4e7fc5e.ctex"]
+source_file="res://graphics/animations/campfire smoke.png"
+dest_files=["res://.godot/imported/campfire smoke.png-ceab3c3b85e12522f485159cef31aa7e.ctex"]
 
 [params]
 

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://dvvrbwcto2adr" path="res://scenes/level/sign.gd" id="1_yqpaf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yqpaf"]
-size = Vector2(8, 8)
+size = Vector2(8, 15)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_puj2q"]
 radius = 32.01562
@@ -15,24 +15,26 @@ script = ExtResource("1_yqpaf")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=819603689]
 texture = ExtResource("1_sivc2")
+offset = Vector2(0, -16)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=500023063]
-position = Vector2(0, 13)
+position = Vector2(0, -7.5)
 shape = SubResource("RectangleShape2D_yqpaf")
 
 [node name="InteractArea" type="Area2D" parent="." unique_id=748186741]
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=1772050903]
+position = Vector2(0, -12)
 shape = SubResource("CircleShape2D_puj2q")
 
 [node name="Label" type="Label" parent="." unique_id=2071618677]
 visible = false
 y_sort_enabled = true
 offset_left = -157.0
-offset_top = -137.0
+offset_top = -149.0
 offset_right = 157.0
-offset_bottom = -62.0
+offset_bottom = -74.0
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Continue ahead to find some tools!"

@@ -2615,7 +2615,7 @@ y_sort_enabled = true
 
 [node name="Chest" parent="Objects" unique_id=1601134114 instance=ExtResource("5_lw8he")]
 y_sort_enabled = true
-position = Vector2(1678, 608)
+position = Vector2(1335, 629)
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
 position = Vector2(1041, 1491)
@@ -2654,11 +2654,11 @@ position = Vector2(1207, 548)
 position = Vector2(1188, 424)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
-position = Vector2(1040, 1171)
+position = Vector2(1040, 1192)
 sign_text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Continue ahead to find some tools!"
 
 [node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
-position = Vector2(1040, 887)
+position = Vector2(1040, 908)
 sign_text = "Hold Shift or LT on controller = Run
 E or A/B on controler = Interact
 Space or RT on controller = Use Tool
