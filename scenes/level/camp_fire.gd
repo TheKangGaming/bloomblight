@@ -55,3 +55,6 @@ func _on_interact_area_body_exited(body):
 		# Optional: Auto-extinguish if the player walks away
 		if is_lit:
 			toggle_fire(false)
+			var menu = get_tree().get_first_node_in_group("CookingMenu")
+			if menu:
+				menu.close_menu()

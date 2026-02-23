@@ -15,6 +15,7 @@ region = Rect2(744, 137, 14, 12)
 script = ExtResource("1_pkwnn")
 
 [node name="Panel" type="Panel" parent="." unique_id=292111174]
+custom_minimum_size = Vector2(75, 0)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5

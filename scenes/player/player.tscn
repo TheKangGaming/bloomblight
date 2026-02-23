@@ -1991,6 +1991,7 @@ max_distance = 5000.0
 
 [node name="AxeSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=221913532]
 stream = ExtResource("4_lvxji")
+volume_db = 10.0
 max_distance = 5000.0
 
 [node name="WaterSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=413213992]
@@ -1999,6 +2000,7 @@ max_distance = 5000.0
 
 [node name="Steps" type="AudioStreamPlayer2D" parent="Sounds" unique_id=1917523902]
 stream = ExtResource("6_75vfm")
+volume_db = -5.0
 max_distance = 4096.0
 
 [node name="StepsTimer" type="Timer" parent="Sounds" unique_id=1017426240]

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://doqp4hpntectl"]
+
+[ext_resource type="Texture2D" uid="uid://c2pmouwbepxq4" path="res://graphics/loot/loot-drops.png" id="1_227mm"]
+[ext_resource type="Script" uid="uid://uqbityg0fnt1" path="res://scenes/level/pickup.gd" id="1_yu0y8"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yu0y8"]
+
+[node name="Pickup" type="Area2D" unique_id=1340652821]
+y_sort_enabled = true
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_yu0y8")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=883200058]
+texture = ExtResource("1_227mm")
+region_enabled = true
+region_rect = Rect2(167, 136, 19, 14)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=803772669]
+shape = SubResource("CircleShape2D_yu0y8")

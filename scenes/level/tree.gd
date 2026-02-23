@@ -36,16 +36,23 @@ func shake_tree():
 	tween.tween_property(sprite, "position:x", orig_x + 4, 0.1)
 	tween.tween_property(sprite, "position:x", orig_x, 0.05)
 
+var pickup_scene = preload("res://scenes/level/pickup.tscn")
+
 func become_stump():
 	is_stump = true
-	sprite.region_enabled = false
 	sprite.texture = stump_texture
+	sprite.region_enabled = false
+	sprite.offset.y = -14 
 	
-	# Optional: If the stump is shorter than the tree, you might need to move it down 
-	# so it sits on the crosshair properly!
-	sprite.offset.y = -14
+	# Spawn a random amount of wood!
+	var wood_amount = randi_range(2, 4)
 	
-	# Give the player wood!
-	Global.inventory[Global.Items.WOOD] += 4
-	Global.inventory_updated.emit()
-	print("Tree chopped! Got 2 wood.")
+	for i in range(wood_amount):
+		var wood = pickup_scene.instantiate()
+		
+		# Add the wood to the main level (the parent of the tree) so it Y-sorts properly
+		get_parent().add_child(wood)
+		
+		# Start the wood slightly up the trunk so it doesn't spawn inside the dirt
+		wood.global_position = global_position + Vector2(0, -70)
+		wood.pop_out()

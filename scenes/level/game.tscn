@@ -2637,6 +2637,9 @@ position = Vector2(772, 969)
 [node name="Tree4" parent="Objects/Trees" unique_id=496755013 instance=ExtResource("5_qrcxb")]
 position = Vector2(1777, 853)
 
+[node name="Tree11" parent="Objects/Trees" unique_id=1547475504 instance=ExtResource("5_qrcxb")]
+position = Vector2(1661, 1063)
+
 [node name="Tree2" parent="Objects/Trees" unique_id=1495150000 instance=ExtResource("5_qrcxb")]
 position = Vector2(1390, 451)
 
