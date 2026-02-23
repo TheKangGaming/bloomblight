@@ -10,7 +10,11 @@ enum Items {
 	# Crops
 	CORN, TOMATO, PUMPKIN,
 	# Resources
-	WOOD, APPLE, STONE
+	WOOD, APPLE, STONE , WATER,
+	
+	# Food
+	
+	ROASTED_CORN, TOMATO_SOUP
 }
 
 # 2. HARVEST MAPPING
@@ -32,6 +36,15 @@ var inventory = {
 	Items.PUMPKIN_SEED: 0,
 	Items.WOOD: 0,
 	Items.APPLE: 0,
+	Items.TOMATO: 0,
+	Items.WATER: 0,
+	Items.ROASTED_CORN: 0,
+	Items.TOMATO_SOUP:0
+}
+
+var recipes = {
+	Items.ROASTED_CORN: {Items.CORN: 1, Items.WOOD: 1},
+	Items.TOMATO_SOUP: {Items.TOMATO: 2, Items.WATER: 1}
 }
 
 var unlocked_tools: Array[Tools] = []

@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://ct6ev3fanumw7"]
 
+[ext_resource type="Script" uid="uid://dal13piuqqgml" path="res://scenes/level/camp_fire.gd" id="1_2r8nr"]
 [ext_resource type="Texture2D" uid="uid://cenjaesppd4se" path="res://scenes/level/Tilesets/Atlas-Props-sheet1.png" id="1_odedp"]
 [ext_resource type="Texture2D" uid="uid://b74qrbw1mt5vt" path="res://graphics/animations/campfire1 - fire.png" id="2_2r8nr"]
 [ext_resource type="Texture2D" uid="uid://pbp6yok1le3d" path="res://graphics/animations/campfire smoke.png" id="3_mxwju"]
@@ -56,7 +57,7 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [true]
+"values": [false]
 }
 tracks/4/type = "value"
 tracks/4/imported = false
@@ -68,7 +69,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [true]
+"values": [false]
 }
 
 [sub_resource type="Animation" id="Animation_u3f54"]
@@ -146,6 +147,7 @@ _data = {
 radius = 52.0
 
 [node name="CampFire" type="StaticBody2D" unique_id=1975501456]
+script = ExtResource("1_2r8nr")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1730138591]
 texture = ExtResource("1_odedp")
@@ -162,11 +164,13 @@ libraries/ = SubResource("AnimationLibrary_py2rd")
 autoplay = &"fire_on"
 
 [node name="Fire" type="Sprite2D" parent="." unique_id=1110945039]
+visible = false
 position = Vector2(3, -34)
 texture = ExtResource("2_2r8nr")
 hframes = 8
 
 [node name="Smoke" type="Sprite2D" parent="." unique_id=530854756]
+visible = false
 position = Vector2(-1, -73)
 texture = ExtResource("3_mxwju")
 hframes = 16

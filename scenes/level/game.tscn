@@ -2593,7 +2593,7 @@ terrain_set_0/terrain_0/color = Color(0.19670483, 0.44949532, 1, 1)
 sources/0 = SubResource("TileSetAtlasSource_0o7gw")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g35fm"]
-size = Vector2(10, 8)
+size = Vector2(10, 14)
 
 [node name="Game" type="Node2D" unique_id=1723638860]
 y_sort_enabled = true
@@ -2629,8 +2629,11 @@ position = Vector2(-5, 78)
 [node name="Tree" parent="Objects/Trees" unique_id=288341825 instance=ExtResource("5_qrcxb")]
 position = Vector2(749, 1122)
 
+[node name="Tree10" parent="Objects/Trees" unique_id=1866142504 instance=ExtResource("5_qrcxb")]
+position = Vector2(772, 969)
+
 [node name="Tree4" parent="Objects/Trees" unique_id=496755013 instance=ExtResource("5_qrcxb")]
-position = Vector2(1777, 914)
+position = Vector2(1777, 853)
 
 [node name="Tree2" parent="Objects/Trees" unique_id=1495150000 instance=ExtResource("5_qrcxb")]
 position = Vector2(1390, 451)
@@ -2676,7 +2679,7 @@ texture = ExtResource("9_g35fm")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/RegularSign" unique_id=1483193910]
-position = Vector2(1040, 636)
+position = Vector2(1040, 633)
 shape = SubResource("RectangleShape2D_g35fm")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
