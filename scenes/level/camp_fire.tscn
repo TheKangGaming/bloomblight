@@ -47,30 +47,6 @@ tracks/2/keys = {
 "update": 1,
 "values": [0]
 }
-tracks/3/type = "value"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("Fire:visible")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
-tracks/4/type = "value"
-tracks/4/imported = false
-tracks/4/enabled = true
-tracks/4/path = NodePath("Smoke:visible")
-tracks/4/interp = 1
-tracks/4/loop_wrap = true
-tracks/4/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
 
 [sub_resource type="Animation" id="Animation_u3f54"]
 resource_name = "fire_on"
@@ -112,30 +88,6 @@ tracks/2/keys = {
 "update": 1,
 "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15]
 }
-tracks/3/type = "value"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("Fire:visible")
-tracks/3/interp = 1
-tracks/3/loop_wrap = true
-tracks/3/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
-tracks/4/type = "value"
-tracks/4/imported = false
-tracks/4/enabled = true
-tracks/4/path = NodePath("Smoke:visible")
-tracks/4/interp = 1
-tracks/4/loop_wrap = true
-tracks/4/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_py2rd"]
 _data = {
@@ -147,7 +99,6 @@ _data = {
 radius = 52.0
 
 [node name="CampFire" type="StaticBody2D" unique_id=1975501456]
-y_sort_enabled = true
 script = ExtResource("1_2r8nr")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1730138591]
@@ -156,24 +107,22 @@ offset = Vector2(0, -30)
 region_enabled = true
 region_rect = Rect2(8, 2037, 77, 59)
 
+[node name="Smoke" type="Sprite2D" parent="." unique_id=530854756]
+position = Vector2(-1, -73)
+texture = ExtResource("3_mxwju")
+hframes = 16
+
+[node name="Fire" type="Sprite2D" parent="." unique_id=1110945039]
+position = Vector2(3, -34)
+texture = ExtResource("2_2r8nr")
+hframes = 8
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=91382843]
 position = Vector2(1, -30)
 shape = SubResource("CapsuleShape2D_tt6wo")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1011757065]
 libraries/ = SubResource("AnimationLibrary_py2rd")
-
-[node name="Fire" type="Sprite2D" parent="." unique_id=1110945039]
-visible = false
-position = Vector2(3, -34)
-texture = ExtResource("2_2r8nr")
-hframes = 8
-
-[node name="Smoke" type="Sprite2D" parent="." unique_id=530854756]
-visible = false
-position = Vector2(-1, -73)
-texture = ExtResource("3_mxwju")
-hframes = 16
 
 [node name="InteractArea" type="Area2D" parent="." unique_id=1047254318]
 collision_mask = 2
