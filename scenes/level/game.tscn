@@ -2619,7 +2619,7 @@ y_sort_enabled = true
 position = Vector2(1335, 629)
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-position = Vector2(1041, 1491)
+position = Vector2(1463, 615)
 scale = Vector2(1.5, 1.5)
 metadata/_edit_horizontal_guides_ = [-16.0]
 
@@ -2658,7 +2658,7 @@ position = Vector2(1207, 548)
 position = Vector2(1188, 424)
 
 [node name="CampFire" parent="Objects/Trees" unique_id=1975501456 instance=ExtResource("8_g280g")]
-position = Vector2(1298, 1213)
+position = Vector2(1612, 517)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 1192)

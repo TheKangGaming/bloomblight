@@ -19,6 +19,7 @@ func _unhandled_input(event):
 		# Toggle the fire state
 		if not is_lit:
 			toggle_fire(true)
+			cooking_menu.open_menu()
 			print("Campfire lit! Ready to cook.")
 		else:
 			toggle_fire(false)
