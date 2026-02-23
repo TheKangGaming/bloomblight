@@ -39,7 +39,8 @@ var inventory = {
 	Items.TOMATO: 0,
 	Items.WATER: 0,
 	Items.ROASTED_CORN: 0,
-	Items.TOMATO_SOUP:0
+	Items.TOMATO_SOUP: 0,
+	Items.CORN: 0
 }
 
 var recipes = {

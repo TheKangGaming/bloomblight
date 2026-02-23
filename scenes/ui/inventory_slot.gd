@@ -8,8 +8,10 @@ const SHEET_FARM = preload("res://graphics/plants/Atlas-Props4-crops update.png"
 
 # 2. The Loot Sheet (Wood, etc)
 const SHEET_LOOT = preload("res://graphics/loot/loot-drops.png") 
+# 3. Props
+const SHEET_FURNITURE = preload("res://graphics/tilesets/furniture_and_props.png")
 
-# 3. Single Images
+# 4. Single Images
 const IMG_APPLE = preload("res://graphics/plants/apple.png")
 
 # --- COORDINATES (X, Y) on the Sheets ---
@@ -33,6 +35,12 @@ func _ready():
 	# -- LOOT (On Loot Sheet) --
 	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)]
 	item_map[Global.Items.STONE] = [SHEET_LOOT, Vector2i(5, 2)] 
+	
+	# Props
+	
+	item_map[Global.Items.ROASTED_CORN] = [SHEET_FURNITURE, Vector2i(23,4)]
+	item_map[Global.Items.TOMATO_SOUP] = [SHEET_FURNITURE, Vector2i(21,4)]
+	
 
 
 func setup(item_enum: Global.Items, quantity: int):

@@ -31,11 +31,18 @@ grow_vertical = 2
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
+theme_override_constants/separation = 10
 
 [node name="BtnRoastedCorn" type="Button" parent="Panel/HBoxContainer" unique_id=916249307]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 icon = SubResource("AtlasTexture_5exhc")
+icon_alignment = 1
+expand_icon = true
 
 [node name="BtnTomatoSoup" type="Button" parent="Panel/HBoxContainer" unique_id=706923647]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 icon = SubResource("AtlasTexture_8xf1h")
+icon_alignment = 1
+expand_icon = true
