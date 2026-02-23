@@ -11,7 +11,7 @@ region = Rect2(808, 137, 14, 12)
 atlas = ExtResource("2_bnbn2")
 region = Rect2(744, 137, 14, 12)
 
-[node name="CookingMenu" type="CanvasLayer" unique_id=534342953]
+[node name="CookingMenu" type="CanvasLayer" unique_id=534342953 groups=["CookingMenu"]]
 script = ExtResource("1_pkwnn")
 
 [node name="Panel" type="Panel" parent="." unique_id=292111174]

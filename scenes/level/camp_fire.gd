@@ -19,11 +19,19 @@ func _unhandled_input(event):
 		# Toggle the fire state
 		if not is_lit:
 			toggle_fire(true)
-			cooking_menu.open_menu()
 			print("Campfire lit! Ready to cook.")
+			var menu = get_tree().get_first_node_in_group("CookingMenu")
+			if menu:
+				menu.open_menu()
+				
 		else:
 			toggle_fire(false)
 			print("Campfire extinguished.")
+			
+			# Find the menu via the Group and close it!
+			var menu = get_tree().get_first_node_in_group("CookingMenu")
+			if menu:
+				menu.close_menu()
 
 func toggle_fire(on: bool):
 	is_lit = on
