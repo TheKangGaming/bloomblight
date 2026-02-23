@@ -147,6 +147,7 @@ _data = {
 radius = 52.0
 
 [node name="CampFire" type="StaticBody2D" unique_id=1975501456]
+y_sort_enabled = true
 script = ExtResource("1_2r8nr")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1730138591]
@@ -161,7 +162,6 @@ shape = SubResource("CapsuleShape2D_tt6wo")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1011757065]
 libraries/ = SubResource("AnimationLibrary_py2rd")
-autoplay = &"fire_on"
 
 [node name="Fire" type="Sprite2D" parent="." unique_id=1110945039]
 visible = false
@@ -176,6 +176,7 @@ texture = ExtResource("3_mxwju")
 hframes = 16
 
 [node name="InteractArea" type="Area2D" parent="." unique_id=1047254318]
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=1145106181]
 position = Vector2(0, -28)

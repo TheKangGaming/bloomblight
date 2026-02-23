@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://b4b1c3glc2saq" path="res://scenes/level/Tilesets/Tileset-Terrain-new grass.png" id="3_ig4jx"]
 [ext_resource type="PackedScene" uid="uid://cguxj7vi852u7" path="res://scenes/level/chest.tscn" id="5_lw8he"]
 [ext_resource type="PackedScene" uid="uid://doi42nnng73e" path="res://scenes/level/tree.tscn" id="5_qrcxb"]
+[ext_resource type="PackedScene" uid="uid://ct6ev3fanumw7" path="res://scenes/level/camp_fire.tscn" id="8_g280g"]
 [ext_resource type="PackedScene" uid="uid://cl3empix6v4ne" path="res://scenes/ui/main_menu.tscn" id="9_0o7gw"]
 [ext_resource type="Texture2D" uid="uid://vjgqm8ob04a5" path="res://graphics/interactables/sign 5.png" id="9_g35fm"]
 [ext_resource type="PackedScene" uid="uid://dintbdgcfxu3b" path="res://scenes/ui/overlay.tscn" id="9_pn0ym"]
@@ -2655,6 +2656,9 @@ position = Vector2(1207, 548)
 
 [node name="Tree5" parent="Objects/Trees" unique_id=197772556 instance=ExtResource("5_qrcxb")]
 position = Vector2(1188, 424)
+
+[node name="CampFire" parent="Objects/Trees" unique_id=1975501456 instance=ExtResource("8_g280g")]
+position = Vector2(1298, 1213)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 1192)
