@@ -46,11 +46,11 @@ func toggle_fire(on: bool):
 		anim_player.stop()
 
 func _on_interact_area_body_entered(body):
-	if body.name == "Player":
+	if body.is_in_group("Player"):
 		player_in_range = true
 
 func _on_interact_area_body_exited(body):
-	if body.name == "Player":
+	if body.is_in_group("Player"):
 		player_in_range = false
 		# Optional: Auto-extinguish if the player walks away
 		if is_lit:

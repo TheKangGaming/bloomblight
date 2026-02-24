@@ -66,7 +66,7 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 			# Shift the target up by 30 pixels so we are measuring from the TRUNK, not the roots
 			var trunk_pos = tree.global_position + Vector2(0, -77) 
 			
-			if trunk_pos.distance_to(global_pos) < 45:
+			if trunk_pos.distance_squared_to(global_pos) < 2025: 
 				tree.hit()
 				break
 

@@ -18,11 +18,11 @@ func _unhandled_input(event):
 		label.visible = !label.visible
 
 func _on_interact_area_body_entered(body):
-	if body.name == "Player":
+	if body.is_in_group("Player"):
 		player_in_range = true
 
 func _on_interact_area_body_exited(body):
-	if body.name == "Player":
+	if body.is_in_group("Player"):
 		player_in_range = false
 		# Auto-hide the text if the player walks away while reading
 		label.visible = false

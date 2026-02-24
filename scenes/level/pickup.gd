@@ -1,6 +1,7 @@
 extends Area2D
 
 var can_pickup = false
+@onready var sprite = $Sprite2D # Grab your sprite!
 
 func _ready():
 	# Connect the signal so it detects the player
@@ -21,9 +22,10 @@ func pop_out():
 	# 4. Wait for the animation to completely finish before it can be collected
 	await tween.finished
 	can_pickup = true
+	
 
 func _on_body_entered(body):
-	if can_pickup and body.name == "Player":
+	if can_pickup and body.is_in_group("Player"):
 		Global.inventory[Global.Items.WOOD] += 1
 		Global.inventory_updated.emit()
 		

@@ -51,9 +51,9 @@ func give_loot():
 
 func _on_interact_area_body_entered(body):
 	# Check if the thing that entered the area is the player
-	if body.name == "Player":
+	if body.is_in_group("Player"):
 		player_in_range = true
 
 func _on_interact_area_body_exited(body):
-	if body.name == "Player":
+	if body.is_in_group("Player"):
 		player_in_range = false
