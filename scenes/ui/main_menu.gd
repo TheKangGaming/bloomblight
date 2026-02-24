@@ -2,13 +2,13 @@ extends Control
 
 @onready var inventory_grid = $CenterContainer/TabContainer/Inventory/Margin/Grid
 @onready var tabs = $CenterContainer/TabContainer
-@onready var lbl_vit = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/LblVIT
-@onready var lbl_str = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/LblSTR
-@onready var lbl_dex = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/LblDEX
-@onready var lbl_int = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/LblINT
-@onready var lbl_spd = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/LblSPD
-@onready var lbl_mov = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/LblMOV
-@onready var lbl_food = $CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/HBoxContainer/LblFoodBuff
+@onready var lbl_vit = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/LblVIT
+@onready var lbl_str = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/LblSTR
+@onready var lbl_dex = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/LblDEX
+@onready var lbl_int = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/LblINT
+@onready var lbl_spd = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/LblSPD
+@onready var lbl_mov = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/LblMOV
+@onready var lbl_food = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsSide/HBoxContainer/LblFoodBuff
 
 # Preload the slot scene
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn")
@@ -30,7 +30,7 @@ func toggle_menu():
 	if visible:
 		# Default to Inventory tab (Index 1) for now
 		if tabs:
-			tabs.current_tab = 1
+			tabs.current_tab = 0
 		update_inventory()
 		
 
