@@ -75,11 +75,11 @@ func _on_player_menu_requested(target_pos: Vector2):
 	var adjusted_pos = target_pos + Vector2(0, 24)
 	
 	# 2. Use the ADJUSTED pos to find the grid coordinates!
-	var local_pos = water_layer.to_local(adjusted_pos)
-	var grid_pos = water_layer.local_to_map(local_pos)
+	var local_pos = soil_layer.to_local(adjusted_pos)
+	var grid_pos = soil_layer.local_to_map(local_pos)
 	
 	# Check if the ground is watered (-1 means empty)
-	if water_layer.get_cell_source_id(grid_pos) != -1: 
+	if soil_layer.get_cell_source_id(grid_pos) != -1: 
 		for plant in get_tree().get_nodes_in_group('Plants'):
 			if plant.grid_pos == grid_pos:
 				return # A plant is already here
@@ -92,7 +92,7 @@ func _on_player_menu_requested(target_pos: Vector2):
 		var screen_pos = player.get_global_transform_with_canvas().origin
 		$CanvasLayer/SeedMenu.open(screen_pos)
 	else:
-		print('You can only plant on watered soil!')
+		print('You can only plant on tilled soil!')
 		
 func _on_seed_chosen_from_menu(seed_type: int):
 	player.can_move = true
@@ -135,3 +135,11 @@ func level_reset():
 	
 	water_layer.clear()
 	$DayTimer.start()
+	
+func _on_grow_timer_timeout() -> void:
+	for plant in get_tree().get_nodes_in_group('Plants'):
+		# Check if this specific tile has water on it
+		var is_watered = water_layer.get_cell_source_id(plant.grid_pos) != -1
+		
+		# If it's watered, it grows!
+		plant.grow(is_watered)

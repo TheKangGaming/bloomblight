@@ -28,7 +28,7 @@ const plant_data = {
 	},
 	Global.Items.PUMPKIN_SEED: { 
 		'origin': Vector2i(23, 8), 
-		'max age': 4, 
+		'max age': 5, 
 		'grow speed': 1
 	}
 }

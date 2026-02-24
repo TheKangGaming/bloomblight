@@ -2714,7 +2714,7 @@ visible = false
 color = Color(0.99607843, 0.9098039, 0.7176471, 1)
 
 [node name="DayTimer" type="Timer" parent="." unique_id=1375416276]
-wait_time = 300.0
+wait_time = 600.0
 one_shot = true
 autostart = true
 
@@ -2728,4 +2728,9 @@ volume_db = -15.0
 autoplay = true
 parameters/looping = true
 
+[node name="GrowTimer" type="Timer" parent="." unique_id=330085024]
+wait_time = 120.0
+autostart = true
+
 [connection signal="tool_use" from="Objects/Player" to="." method="_on_player_tool_use"]
+[connection signal="timeout" from="GrowTimer" to="." method="_on_grow_timer_timeout"]

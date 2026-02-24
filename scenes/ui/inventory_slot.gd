@@ -2,6 +2,9 @@ extends PanelContainer
 
 @onready var icon = $Icon
 
+# We need a variable to remember what item this slot is holding!
+var stored_item_enum: Global.Items
+
 # --- TEXTURE SOURCES ---
 # 1. The Farm Sheet (Seeds & Crops)
 const SHEET_FARM = preload("res://graphics/plants/Atlas-Props4-crops update.png")
@@ -44,6 +47,8 @@ func _ready():
 
 
 func setup(item_enum: Global.Items, quantity: int):
+	
+	stored_item_enum = item_enum
 	# 1. Tooltip Logic
 	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
 	tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
@@ -68,3 +73,21 @@ func setup(item_enum: Global.Items, quantity: int):
 	else:
 		icon.texture = null
 		printerr("No icon definition found for: ", item_name)
+		
+func _gui_input(event: InputEvent) -> void:
+	# Detect a Left Mouse Button click
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		
+		# Check if we clicked a food item AND we actually have some in our inventory
+		if stored_item_enum in Global.food_stats and Global.inventory[stored_item_enum] > 0:
+			eat_food()
+
+func eat_food():
+	# 1. Consume the item (This already triggers the inventory_updated signal!)
+	Global.remove_item(stored_item_enum, 1)
+	
+	# 2. Apply the buff! We use .duplicate() so we don't accidentally alter the master food_stats list
+	Global.active_food_buff.item = stored_item_enum
+	Global.active_food_buff.stats = Global.food_stats[stored_item_enum].duplicate()
+	
+	print("Ate a delicious ", Global.Items.keys()[stored_item_enum], "!")
