@@ -1,5 +1,5 @@
 extends StaticBody2D
-
+@onready var water_layer = $SoilWaterLayer
 @onready var sparkle_fx = $SparkleFX
 
 const HFRAMES = 34 # (columns)
@@ -89,3 +89,4 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 			Global.add_item(plant_type) 
 			
 		queue_free()
+		water_layer.clear()

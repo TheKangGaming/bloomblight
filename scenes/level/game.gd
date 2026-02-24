@@ -129,13 +129,21 @@ func day_switch():
 	tween.tween_property($CanvasLayer/ColorRect, 'modulate:a', 0.0, 1.0)
 	
 func level_reset():
-	for plant in get_tree().get_nodes_in_group('Plants'):
-		# Grow if water exists at the plant's position
-		plant.grow(water_layer.get_cell_source_id(plant.grid_pos) != -1)
+	# 1. Calculate how many growth ticks are left in the current day
+	# We use float() to get accurate division, then ceil() to round up so we don't rob the player of a partial tick!
+	var remaining_time = $DayTimer.time_left
+	var tick_duration = $GrowTimer.wait_time
+	var ticks_to_simulate = int(ceil(remaining_time / tick_duration))
 	
-	water_layer.clear()
+	# 2. Instantly simulate the missed time!
+	for i in range(ticks_to_simulate):
+		_on_grow_timer_timeout() # We just call the exact function we made earlier!
+		
+	# 3. Restart the timers for the fresh morning
 	$DayTimer.start()
-	
+	$GrowTimer.start()
+	water_layer.clear()
+
 func _on_grow_timer_timeout() -> void:
 	for plant in get_tree().get_nodes_in_group('Plants'):
 		# Check if this specific tile has water on it
