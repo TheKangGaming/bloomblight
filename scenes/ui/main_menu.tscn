@@ -72,26 +72,32 @@ text = "--- STATS ---"
 
 [node name="LblVIT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=586536176]
 layout_mode = 2
+bbcode_enabled = true
 text = "VIT: 10"
 
 [node name="LblSTR" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=1126178086]
 layout_mode = 2
+bbcode_enabled = true
 text = "STR: 5"
 
 [node name="LblDEX" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=723724472]
 layout_mode = 2
+bbcode_enabled = true
 text = "DEX: 5"
 
 [node name="LblINT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=101171724]
 layout_mode = 2
+bbcode_enabled = true
 text = "INT: 5"
 
 [node name="LblSPD" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=947975247]
 layout_mode = 2
+bbcode_enabled = true
 text = "SPD: 5"
 
 [node name="LblMOV" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=395945172]
 layout_mode = 2
+bbcode_enabled = true
 text = "MOV: 4"
 
 [node name="Label2" type="Label" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=2016344533]
