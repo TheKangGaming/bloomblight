@@ -2620,7 +2620,7 @@ y_sort_enabled = true
 position = Vector2(1335, 629)
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-position = Vector2(1463, 615)
+position = Vector2(1036, 1492)
 scale = Vector2(1.5, 1.5)
 metadata/_edit_horizontal_guides_ = [-16.0]
 

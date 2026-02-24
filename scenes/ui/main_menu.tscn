@@ -58,136 +58,136 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer" unique_id=1145245835]
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer" unique_id=1488452487]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 15
 alignment = 1
 
-[node name="CharacterColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1447613036]
+[node name="CharacterColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1699871786]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="CharIamge" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=2130585838]
-custom_minimum_size = Vector2(96, 96)
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=652478579]
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "Savannah"
+horizontal_alignment = 1
+
+[node name="CharIamge" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=282487790]
+custom_minimum_size = Vector2(40, 62)
 layout_mode = 2
 texture = SubResource("AtlasTexture_1g8jr")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=1856157678]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Savannah"
-horizontal_alignment = 1
-
-[node name="StatsColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1972340568]
+[node name="StatsColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1981587412]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 5
+theme_override_constants/separation = 2
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=2063925]
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=928234126]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "--- STATS ---"
+theme_override_font_sizes/font_size = 8
+text = "- STATS -"
 horizontal_alignment = 1
 
-[node name="LblVIT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=606827553]
+[node name="LblVIT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=902142575]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "VIT: 10"
 fit_content = true
 
-[node name="LblSTR" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=2003085922]
+[node name="LblSTR" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1105434709]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "STR: 5"
 fit_content = true
 
-[node name="LblDEX" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=250093837]
+[node name="LblDEX" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1989397476]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "DEX: 5"
 fit_content = true
 
-[node name="LblINT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=313342756]
+[node name="LblINT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1871792445]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "INT: 5"
 fit_content = true
 
-[node name="LblSPD" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=2007312667]
+[node name="LblSPD" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=729639059]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "SPD: 5"
 fit_content = true
 
-[node name="LblMOV" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1257560564]
+[node name="LblMOV" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1053189907]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "MOV: 4"
 fit_content = true
 
-[node name="EquipMealColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=66628913]
+[node name="EquipMealColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1787477166]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 15
+theme_override_constants/separation = 8
 
-[node name="EquipmentSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=680301345]
+[node name="EquipmentSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=1922241565]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=253258411]
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=1278387377]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "--- EQUIPMENT ---"
+theme_override_font_sizes/font_size = 8
+text = "- EQUIPMENT -"
 horizontal_alignment = 1
 
-[node name="EquipmentSlots" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=524047688]
+[node name="EquipmentSlots" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=809947470]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 alignment = 1
 
-[node name="SlotWeapon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=14761311]
-custom_minimum_size = Vector2(32, 32)
+[node name="SlotWeapon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1796073536]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 
-[node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=464324818]
-custom_minimum_size = Vector2(32, 32)
+[node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=350771874]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 
-[node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=351365248]
-custom_minimum_size = Vector2(32, 32)
+[node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1711539566]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 
-[node name="MealSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=1861666293]
+[node name="MealSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=2087827878]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 4
 
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=2036198577]
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=422969036]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "--- ACTIVE MEAL ---"
+theme_override_font_sizes/font_size = 8
+text = "- ACTIVE MEAL -"
 horizontal_alignment = 1
 
-[node name="MealBox" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=1444665788]
+[node name="MealBox" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=418323979]
 layout_mode = 2
 alignment = 1
 
-[node name="ActiveFoodIcon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=444635573]
-custom_minimum_size = Vector2(24, 24)
+[node name="ActiveFoodIcon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=1475998150]
+custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 
-[node name="LblFoodBuff" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=83190328]
+[node name="LblFoodBuff" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=545425876]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "No meal eaten."
+theme_override_font_sizes/font_size = 6
+text = "No meal."
 
 [node name="Inventory" type="Control" parent="CenterContainer/TabContainer" unique_id=261012711]
 layout_mode = 2
