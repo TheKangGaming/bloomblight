@@ -1,5 +1,7 @@
 extends StaticBody2D
 
+@onready var sparkle_fx = $SparkleFX
+
 const HFRAMES = 34 # (columns)
 const VFRAMES = 18  # (rows)
 const ATLAS_TEXTURE = preload("res://graphics/plants/Atlas-Props4-crops update.png")
@@ -59,6 +61,12 @@ func grow(watered: bool):
 			var current_x = origin.x + int(age)
 		
 			$Sprite2D.frame_coords = Vector2i(current_x, origin.y)
+			
+			# If the plant just reached max growth, show and play the sparkles!
+		if age >= max_age:
+			if not sparkle_fx.visible:
+				sparkle_fx.visible = true
+				sparkle_fx.play("sparkle")
 	
 func _ready() -> void:
 	add_to_group('Plants')
@@ -71,6 +79,7 @@ func _process(_delta: float) -> void:
 
 func _on_area_2d_body_entered(_body: Node2D) -> void:
 	if age >= max_age:
+		
 		# LOGIC FIX: Check the Harvest Map to see what this seed drops
 		if plant_type in Global.HARVEST_DROPS:
 			var drop = Global.HARVEST_DROPS[plant_type]

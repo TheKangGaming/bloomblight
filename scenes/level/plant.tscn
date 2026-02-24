@@ -2,12 +2,136 @@
 
 [ext_resource type="Texture2D" uid="uid://lcymer2isb2i" path="res://graphics/plants/corn.png" id="1_tt4jj"]
 [ext_resource type="Script" uid="uid://dkjqog5t6i5e2" path="res://scenes/level/plant.gd" id="1_x6yfg"]
+[ext_resource type="Texture2D" uid="uid://cprno76u3qsj" path="res://graphics/animations/full grown crop sparkling fx-1-16 frames.png" id="3_w01ik"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_x6yfg"]
 size = Vector2(10, 12)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_x6yfg"]
 radius = 6.0
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_bu52u"]
+blend_mode = 1
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u7stm"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t74c0"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gatmh"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bigg5"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(288, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yvljy"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(384, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1hwye"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(480, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y87wh"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(576, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6wef8"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(672, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tqqak"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(768, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ga8fm"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(864, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ykh3a"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(960, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7fvdq"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(1056, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l5064"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(1152, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vlipx"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(1248, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0h6lv"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(1344, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_72l5t"]
+atlas = ExtResource("3_w01ik")
+region = Rect2(1440, 0, 96, 96)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_x51ed"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u7stm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t74c0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gatmh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bigg5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yvljy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1hwye")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y87wh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6wef8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tqqak")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ga8fm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ykh3a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7fvdq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l5064")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vlipx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0h6lv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_72l5t")
+}],
+"loop": true,
+"name": &"sparkle",
+"speed": 12.0
+}]
 
 [node name="Plant" type="StaticBody2D" unique_id=1208443271 groups=["Plants"]]
 script = ExtResource("1_x6yfg")
@@ -26,5 +150,12 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1821814121]
 shape = SubResource("CapsuleShape2D_x6yfg")
+
+[node name="SparkleFX" type="AnimatedSprite2D" parent="." unique_id=427231795]
+visible = false
+material = SubResource("CanvasItemMaterial_bu52u")
+sprite_frames = SubResource("SpriteFrames_x51ed")
+animation = &"sparkle"
+frame_progress = 0.69172597
 
 [connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]
