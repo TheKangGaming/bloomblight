@@ -19,17 +19,17 @@ const plant_data = {
 	Global.Items.CORN_SEED: { 
 		'origin': Vector2i(3, 11),
 		'max age': 5, 
-		'grow speed': 2
+		'grow speed': 1
 	},
 	Global.Items.TOMATO_SEED: { 
 		'origin': Vector2i(3, 15),
 		'max age': 5, 
-		'grow speed': 2
+		'grow speed': 1
 	},
 	Global.Items.PUMPKIN_SEED: { 
 		'origin': Vector2i(23, 8), 
 		'max age': 5, 
-		'grow speed': 1
+		'grow speed': 0.5
 	}
 }
 
