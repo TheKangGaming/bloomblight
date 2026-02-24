@@ -25,13 +25,14 @@ func _input(event: InputEvent) -> void:
 func toggle_menu():
 	visible = not visible
 	get_tree().paused = visible
+	update_status_page()
 	
 	if visible:
 		# Default to Inventory tab (Index 1) for now
 		if tabs:
 			tabs.current_tab = 1
 		update_inventory()
-		update_status_page()
+		
 
 func update_inventory():
 	if not inventory_grid: return
@@ -62,8 +63,6 @@ func update_status_page():
 		return stat_name + ": " + str(base_val)
 		
 	# Update all the labels
-	# Note: If you want to use the [color] tags above, make sure your labels in the UI 
-	# are RichTextLabels! If they are normal Labels, just remove the color tags from the string.
 	lbl_vit.text = format_stat.call("VIT", stats["VIT"], buff["VIT"])
 	lbl_str.text = format_stat.call("STR", stats["STR"], buff["STR"])
 	lbl_dex.text = format_stat.call("DEX", stats["DEX"], buff["DEX"])
@@ -76,4 +75,3 @@ func update_status_page():
 		lbl_food.text = "Ate a hearty meal!"
 	else:
 		lbl_food.text = "No meal eaten today."
-		
