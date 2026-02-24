@@ -70,3 +70,56 @@ func remove_item(item_type: Items, amount: int = 1) -> bool:
 
 func get_seed_count(seed_type: Items) -> int:
 	return inventory.get(seed_type, 0)
+
+# ==========================================
+# Phase 1: RPG STATS & COMBAT DATA
+# ==========================================
+
+# 1. Base Stats
+# These are the player's permanent, naked stats before any buffs or armor.
+var player_stats = {
+	"VIT": 10, # Health / Physical Defense
+	"STR": 5,  # Physical Damage
+	"DEX": 5,  # Accuracy / Crit Chance
+	"INT": 5,  # Magic Damage / Healing Power
+	"SPD": 5,  # Turn Order / Evasion
+	"MOV": 4   # Grid Movement tiles per turn
+}
+
+# 2. Equipment Slots
+# This tracks what the player is currently wearing. (null means empty)
+var equipment = {
+	"Weapon": null,
+	"Armor": null,
+	"Accessory": null
+}
+
+# 3. The Active Food Buff
+# This tracks what meal the player ate today and what temporary stats it is giving them.
+var active_food_buff = {
+	"item": null, # e.g., Items.ROASTED_CORN
+	"stats": {    # The bonus stats granted by the meal
+		"VIT": 0,
+		"STR": 0,
+		"DEX": 0,
+		"INT": 0,
+		"SPD": 0,
+		"MOV": 0
+	}
+}
+
+# 4. The Food Database
+# This tells the game exactly what stats to apply when a specific meal is eaten!
+var food_stats = {
+	Items.ROASTED_CORN: {"VIT": 2, "STR": 1, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.TOMATO_SOUP:  {"VIT": 1, "STR": 0, "DEX": 0, "INT": 2, "SPD": 1, "MOV": 0}
+	# Add future meals here (e.g., a late-game meal might give +1 MOV!)
+}
+
+# ==========================================
+# Phase 2: VILLAGER MORALE DATA
+# ==========================================
+
+# This will track the overall health of the town
+var town_morale: int = 100 # Percentage 0-100
+var villagers_fed_yesterday: bool = true
