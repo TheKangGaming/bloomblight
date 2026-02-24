@@ -39,16 +39,90 @@ layout_mode = 2
 current_tab = 1
 all_tabs_in_front = true
 
-[node name="Status" type="Control" parent="CenterContainer/TabContainer" unique_id=1608906763]
+[node name="Status" type="MarginContainer" parent="CenterContainer/TabContainer" unique_id=1787528866]
 visible = false
 layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 0
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status" unique_id=937390524]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-text = "Character Stats Coming Soon"
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Status" unique_id=1523021264]
+layout_mode = 2
+
+[node name="CharacterSide" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/HBoxContainer" unique_id=1605533648]
+layout_mode = 2
+
+[node name="CharIamge" type="TextureRect" parent="CenterContainer/TabContainer/Status/HBoxContainer/CharacterSide" unique_id=1674427440]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/HBoxContainer/CharacterSide" unique_id=1721906892]
+layout_mode = 2
+text = "Savannah"
+horizontal_alignment = 1
+
+[node name="StatsSide" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/HBoxContainer" unique_id=1263499574]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=1130040912]
+layout_mode = 2
+text = "--- STATS ---"
+
+[node name="LblVIT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=586536176]
+layout_mode = 2
+text = "VIT: 10"
+
+[node name="LblSTR" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=1126178086]
+layout_mode = 2
+text = "STR: 5"
+
+[node name="LblDEX" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=723724472]
+layout_mode = 2
+text = "DEX: 5"
+
+[node name="LblINT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=101171724]
+layout_mode = 2
+text = "INT: 5"
+
+[node name="LblSPD" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=947975247]
+layout_mode = 2
+text = "SPD: 5"
+
+[node name="LblMOV" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=395945172]
+layout_mode = 2
+text = "MOV: 4"
+
+[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=2016344533]
+layout_mode = 2
+text = "--- EQUIPMENT ---"
+
+[node name="EquipmentSlots" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=1069723609]
+layout_mode = 2
+
+[node name="SlowWeapon" type="TextureRect" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/EquipmentSlots" unique_id=565932586]
+layout_mode = 2
+
+[node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/EquipmentSlots" unique_id=1303031925]
+layout_mode = 2
+
+[node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/EquipmentSlots" unique_id=413398833]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=1658126831]
+layout_mode = 2
+text = "--- ACTIVE MEAL ---"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide" unique_id=1608412307]
+layout_mode = 2
+
+[node name="ActiveFoodIcon" type="TextureRect" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/HBoxContainer" unique_id=123709936]
+layout_mode = 2
+
+[node name="LblFoodBuff" type="Label" parent="CenterContainer/TabContainer/Status/HBoxContainer/StatsSide/HBoxContainer" unique_id=1954449098]
+layout_mode = 2
+text = "No meal eaten."
 
 [node name="Inventory" type="Control" parent="CenterContainer/TabContainer" unique_id=261012711]
 layout_mode = 2
