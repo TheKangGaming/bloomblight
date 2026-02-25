@@ -22,6 +22,7 @@ func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Global.inventory_updated.connect(update_inventory)
+	Global.stats_updated.connect(update_status_page)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_focus_next"): # Tab Key

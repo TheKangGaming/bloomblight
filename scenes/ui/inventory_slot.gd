@@ -83,11 +83,13 @@ func _gui_input(event: InputEvent) -> void:
 			eat_food()
 
 func eat_food():
+	
+	Global.active_food_buff.item = stored_item_enum
+	Global.active_food_buff.stats = Global.food_stats[stored_item_enum].duplicate()
 	# 1. Consume the item (This already triggers the inventory_updated signal!)
 	Global.remove_item(stored_item_enum, 1)
 	
 	# 2. Apply the buff! We use .duplicate() so we don't accidentally alter the master food_stats list
-	Global.active_food_buff.item = stored_item_enum
-	Global.active_food_buff.stats = Global.food_stats[stored_item_enum].duplicate()
+	Global.stats_updated.emit()
 	
 	print("Ate a delicious ", Global.Items.keys()[stored_item_enum], "!")

@@ -1,5 +1,6 @@
 extends StaticBody2D
-@onready var water_layer = $SoilWaterLayer
+
+@onready var water_layer = get_node("/root/Game/SoilWaterLayer")
 @onready var sparkle_fx = $SparkleFX
 
 const HFRAMES = 34 # (columns)

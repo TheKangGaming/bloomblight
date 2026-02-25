@@ -1,6 +1,7 @@
 extends Node
 
 signal inventory_updated
+signal stats_updated
 
 # 1. THE MASTER ITEM LIST
 # We distinguish between the SEED (what you plant) and the CROP (what you eat/sell)

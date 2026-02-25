@@ -143,6 +143,13 @@ func level_reset():
 	$DayTimer.start()
 	$GrowTimer.start()
 	water_layer.clear()
+	
+	# --- RESET FOOD BUFFS ---
+	Global.active_food_buff.item = null
+	Global.active_food_buff.stats.clear()
+	
+	# Emit the signal so the UI visually removes the meal and bonus stats!
+	Global.stats_updated.emit()
 
 func _on_grow_timer_timeout() -> void:
 	for plant in get_tree().get_nodes_in_group('Plants'):
