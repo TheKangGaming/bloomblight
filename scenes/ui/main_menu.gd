@@ -58,26 +58,29 @@ func update_inventory():
 			slot.setup(item_enum, count)
 			
 func update_status_page():
-	var stats = Global.player_stats
-	var buff = Global.active_food_buff.stats
-	
-	# A quick helper function (lambda) inside to format the text!
-	# It will output something like "STR: 5" or "STR: 5 (+2)" if you have a buff.
-	var format_stat = func(stat_name, base_val, buff_val):
+	var format_stat = func(stat_name: String, base_val: int) -> String:
+		var buff_val = 0
+		if Global.active_food_buff.item != null:
+			# .get() safely looks for the stat, returning 0 if the key is missing
+			buff_val = Global.active_food_buff.stats.get(stat_name, 0)
+			
 		if buff_val > 0:
-			return stat_name + ": " + str(base_val) + " [color=green](+" + str(buff_val) + ")[/color]"
-		return stat_name + ": " + str(base_val)
-		
-	# Update all the labels
-	lbl_vit.text = format_stat.call("VIT", stats["VIT"], buff["VIT"])
-	lbl_str.text = format_stat.call("STR", stats["STR"], buff["STR"])
-	lbl_dex.text = format_stat.call("DEX", stats["DEX"], buff["DEX"])
-	lbl_int.text = format_stat.call("INT", stats["INT"], buff["INT"])
-	lbl_spd.text = format_stat.call("SPD", stats["SPD"], buff["SPD"])
-	lbl_mov.text = format_stat.call("MOV", stats["MOV"], buff["MOV"])
+			return "%s: %d [color=green](+%d)[/color]" % [stat_name, base_val, buff_val]
+		elif buff_val < 0:
+			return "%s: %d [color=red](%d)[/color]" % [stat_name, base_val, buff_val]
+		else:
+			return "%s: %d" % [stat_name, base_val]
+
+	# --- THE FIX: We now only pass the TWO required arguments ---
+	lbl_vit.text = format_stat.call("VIT", Global.player_stats["VIT"])
+	lbl_str.text = format_stat.call("STR", Global.player_stats["STR"])
+	lbl_dex.text = format_stat.call("DEX", Global.player_stats["DEX"])
+	lbl_int.text = format_stat.call("INT", Global.player_stats["INT"])
+	lbl_spd.text = format_stat.call("SPD", Global.player_stats["SPD"])
+	lbl_mov.text = format_stat.call("MOV", Global.player_stats["MOV"])
 	
 	# Update Meal Text
 	if Global.active_food_buff.item != null:
 		lbl_food.text = "Ate a hearty meal!"
 	else:
-		lbl_food.text = "No meal eaten today."
+		lbl_food.text = "No meal."

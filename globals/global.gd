@@ -1,6 +1,7 @@
 extends Node
 
 signal inventory_updated
+@warning_ignore('unused_signal')
 signal stats_updated
 
 # 1. THE MASTER ITEM LIST
