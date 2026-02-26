@@ -158,3 +158,12 @@ func _on_grow_timer_timeout() -> void:
 		
 		# If it's watered, it grows!
 		plant.grow(is_watered)
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Pressing "C" on your keyboard triggers combat
+	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
+		print("Enemy ambushed! Transitioning to combat...")
+		
+		# Instantly swap your game scene to the battle map
+		# Note: Make sure the spelling perfectly matches your saved scene!
+		get_tree().change_scene_to_file("res://scenes/level/CombatMap_1.tscn")

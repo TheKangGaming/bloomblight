@@ -27,3 +27,4 @@ script = ExtResource("4_wu1sb")
 
 [node name="Unit" parent="." unique_id=376372171 instance=ExtResource("6_8pykb")]
 position = Vector2(73, 188)
+move_range = 4
