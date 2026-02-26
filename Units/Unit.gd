@@ -59,9 +59,14 @@ var _is_walking := false:
 @onready var _sprite: Sprite2D = $PathFollow2D/Sprite
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
-
+var is_player: bool = true
+var move_range: int = 4
 
 func _ready() -> void:
+	if is_player:
+		# Pull the base movement, PLUS any active food buffs!
+		move_range = Global.player_stats["MOV"] + Global.active_food_buff.stats.get("MOV", 0)
+	
 	set_process(false)
 	_path_follow.rotates = false
 	
