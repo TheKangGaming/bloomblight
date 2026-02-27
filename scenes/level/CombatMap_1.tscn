@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://dx3gy0hon43dj"]
 
 [ext_resource type="TileSet" uid="uid://b8uqxw86b8u65" path="res://Epic_Tileset.tres" id="1_xlj5a"]
+[ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://GameBoard/Grid.tres" id="2_gh08p"]
 [ext_resource type="Script" uid="uid://bp5i3aj61nror" path="res://GameBoard/GameBoard.gd" id="2_n7604"]
 [ext_resource type="Script" uid="uid://cy35ytutu231u" path="res://Background/Map.gd" id="3_d5mw3"]
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="3_n7604"]
@@ -91,6 +92,7 @@ sources/0 = SubResource("TileSetAtlasSource_gh08p")
 
 [node name="GameBoard" type="Node2D" parent="." unique_id=578916424]
 script = ExtResource("2_n7604")
+grid = ExtResource("2_gh08p")
 metadata/_custom_type_script = "uid://bp5i3aj61nror"
 
 [node name="Map" type="TileMapLayer" parent="GameBoard" unique_id=281735625]
