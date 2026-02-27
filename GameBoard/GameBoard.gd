@@ -84,6 +84,7 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 	var full_array := []
 	var wall_array := []
 	var stack := [cell]
+	
 	while not stack.size() == 0:
 		var current = stack.pop_back()
 		if not grid.is_within_bounds(current):
@@ -100,64 +101,79 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 		for direction in DIRECTIONS:
 			var coordinates: Vector2 = current + direction
 			
-			if _map.get_cell_source_id(coordinates) == OBSTACLE_ATLAS_ID:
+			# FIX: get_cell_source_id requires a Vector2i in Godot 4!
+			var coord_v2i = Vector2i(coordinates.x, coordinates.y)
+			if _map.get_cell_source_id(coord_v2i) == OBSTACLE_ATLAS_ID:
 				wall_array.append(coordinates)
 			
-			#if is_occupied(coordinates):
-				#continue
 			if coordinates in full_array:
 				continue
-			# Minor optimization: If this neighbor is already queued
-			#	to be checked, we don't need to queue it again
 			if coordinates in stack:
 				continue
 
 			stack.append(coordinates)
+			
 	return full_array.filter(func(i): return i not in wall_array)
 
 ## Generates a list of walkable cells based on unit movement value and tile movement cost
 func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Array:
 	var curr_unit = _units[cell]
 	var moveable_cells = [cell] # append our base cell to the array
-	var visited = [] # 2d array that keeps track of which cells we've already looked at while running the algorithm
-	var distances = [] # shows distance to each cell, might be useful. can omit if you want to
-	var previous = [] #2d array that shows you which cell you have to take to get there to get the shortest path. can omit if you want to
-	## the previous array can be used to recontruct the path alogrithm found to the previous node you were at
+	var visited = [] # 2d array that keeps track of which cells we've already looked at
+	var distances = [] # shows distance to each cell
+	var previous = [] # 2d array that shows you which cell you have to take to get there
+	
+	# OPTIMIZATION: Ensure size limits are integers
+	var size_x = int(grid.size.x)
+	var size_y = int(grid.size.y)
 	
 	## iterate over width and height of the grid
-	for y in range(grid.size.y):
+	for y in range(size_y):
 		visited.append([])
 		distances.append([])
 		previous.append([])
-		for x in range(grid.size.x):
+		for x in range(size_x):
 			visited[y].append(false)
 			distances[y].append(MAX_VALUE)
 			previous[y].append(null)
 	
 	## Make new queue
 	var queue = PriorityQueue.new()
+	queue.push(cell, 0) # starting cell
 	
-	queue.push(cell, 0) #starting cell
-	distances[cell.y][cell.x] = 0
+	# FIX: Cast coordinates to int before using as Array indexes
+	var start_x = int(cell.x)
+	var start_y = int(cell.y)
+	distances[start_y][start_x] = 0
 	
-	var tile_cost
-	var distance_to_node
 	var occupied_cells = []
 	
 	## While there is still a node in the queue, we'll keep looping
 	while not queue.is_empty():
-		var current = queue.pop() #take out the front node
-		visited[current.value.y][current.value.x] = true #mark front node as visited
+		var current = queue.pop() # take out the front node
 		
-		for direction in  DIRECTIONS:
-			var coordinates = current.value + direction #Go through all four neighbors of current node
+		# FIX: Cast to int
+		var cur_x = int(current.value.x)
+		var cur_y = int(current.value.y)
+		visited[cur_y][cur_x] = true # mark front node as visited
+		
+		for direction in DIRECTIONS:
+			var coordinates = current.value + direction 
+			
 			if grid.is_within_bounds(coordinates):
-				if visited[coordinates.y][coordinates.x]:
+				# FIX: Create integer bounds for our Godot 4 Arrays
+				var cx = int(coordinates.x)
+				var cy = int(coordinates.y)
+				
+				if visited[cy][cx]:
 					continue
 				else:
-					tile_cost = _movement_costs[coordinates.y][coordinates.x]
+					# FIX: _movement_costs is a 1D dictionary keyed by Vector2i.
+					var coord_v2i = Vector2i(cx, cy)
+					# .get() pulls the cost safely, and defaults to 1 if the tile isn't in the dict
+					var tile_cost = _movement_costs.get(coord_v2i, 1) 
 					
-					distance_to_node = current.priority + tile_cost #calculate tile cost normally
+					var distance_to_node = current.priority + tile_cost 
 					
 					if is_occupied(coordinates):
 						if curr_unit.is_enemy != _units[coordinates].is_enemy:
@@ -165,14 +181,13 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 						elif _units[coordinates].is_wait and attackable_check:
 							occupied_cells.append(coordinates)
 							
-							
-					visited[coordinates.y][coordinates.x] = true
-					distances[coordinates.y][coordinates.x] = distance_to_node
+					visited[cy][cx] = true
+					distances[cy][cx] = distance_to_node
 				
-				if distance_to_node <= max_distance: #check if node is actually reachable by our unit
-					previous[coordinates.y][coordinates.x] = current.value #mark tile we used to get here
-					moveable_cells.append(coordinates) #attach new node we are looking at as reachable
-					queue.push(coordinates, distance_to_node) #use distance as priority
+				if distance_to_node <= max_distance: # check if node is actually reachable
+					previous[cy][cx] = current.value 
+					moveable_cells.append(coordinates) 
+					queue.push(coordinates, distance_to_node) 
 	
 	return moveable_cells.filter(func(i): return i not in occupied_cells)
 
