@@ -28,7 +28,7 @@ var _prev_position
 const MAX_VALUE: int = 99999
 
 func _ready() -> void:
-	_movement_costs = _map.get_movement_costs(grid)
+	_movement_costs = _map.get_movement_costs()
 	_reinitialize()
 
 
