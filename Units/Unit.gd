@@ -99,11 +99,19 @@ func _process(delta: float) -> void:
 ## Starts walking along the `path`.
 ## `path` is an array of grid coordinates that the function converts to map coordinates.
 func walk_along(path: PackedVector2Array) -> void:
-	if path.is_empty():
+	if path.is_empty() or path.size() == 1:
+		_is_walking = false
+		walk_finished.emit()
 		return
+
+	# CRITICAL: Clear the old path before drawing the new one!
+	curve.clear_points() 
 	
-	curve.add_point(Vector2.ZERO)
+	# The first point in 'path' is our starting position, 
+	# so we don't need to manually add Vector2.ZERO.
 	for point in path:
 		curve.add_point(grid.calculate_map_position(point) - position)
+		
 	cell = path[-1]
+	_path_follow.progress = 0.0 # Reset animation progress to the start
 	_is_walking = true

@@ -105,6 +105,7 @@ script = ExtResource("4_wu1sb")
 
 [node name="UnitPath" type="TileMapLayer" parent="GameBoard" unique_id=564143316]
 use_parent_material = true
+scale = Vector2(0.4, 0.4)
 tile_set = SubResource("TileSet_wkw2y")
 script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
