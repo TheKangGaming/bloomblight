@@ -15,7 +15,9 @@ var _half_cell_size = cell_size / 2
 
 ## Returns the position of a cell's center in pixels.
 func calculate_map_position(grid_position: Vector2) -> Vector2:
-	return grid_position * cell_size + _half_cell_size
+	# By dividing cell_size dynamically here, we bypass the _half_cell_size bug entirely
+	# and guarantee it uses your correct 32x32 Inspector values!
+	return (grid_position * cell_size) + (cell_size / 2.0)
 
 
 ## Returns the coordinates of the cell on the grid given a position on the map.
