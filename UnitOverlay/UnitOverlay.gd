@@ -11,4 +11,5 @@ func draw_walkable_cells(cells: Array) -> void:
 		
 func draw_attackable_cells(cells: Array) -> void:
 	for cell in cells:
-		set_cell(cell, 1, Vector2i(0,0))
+		# (1, 0) is usually where the RED square is on the tileset image
+		set_cell(cell, 0, Vector2i(1, 0))

@@ -228,15 +228,17 @@ func _select_unit(cell: Vector2) -> void:
 	
 	
 func _hover_display(cell: Vector2) -> void:
-	var curr_unit = _units[cell]
-
-	
-	_walkable_cells = get_walkable_cells(curr_unit)
-	_attackable_cells = get_attackable_cells(curr_unit)
-	
-	_unit_overlay.draw_attackable_cells(_attackable_cells)
-	
-	_unit_overlay.draw_walkable_cells(_walkable_cells)
+	# 1. Safely check if a unit actually exists here before doing math!
+	if is_occupied(cell):
+		var curr_unit = _units[cell]
+		
+		# 2. Save them to your class variables so the game remembers them
+		_walkable_cells = get_walkable_cells(curr_unit)
+		_attackable_cells = get_attackable_cells(curr_unit)
+		
+		# 3. Draw red first, then blue on top!
+		_unit_overlay.draw_attackable_cells(_attackable_cells)
+		_unit_overlay.draw_walkable_cells(_walkable_cells)
 
 func _reset_unit() -> void:
 	if _active_unit != null and _active_unit.cell != _prev_cell:

@@ -44,6 +44,7 @@ _data = {
 [node name="Unit" type="Path2D" unique_id=376372171]
 script = ExtResource("1")
 grid = ExtResource("2")
+attack_range = 1
 
 [node name="PathFollow2D" type="PathFollow2D" parent="." unique_id=1761215674]
 rotates = false
