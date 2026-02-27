@@ -45,8 +45,7 @@ func _ready() -> void:
 
 func _process(_delta):
 	if(is_mouse):
-		if _camera.enabled:
-			_camera.enabled = false
+		_detach_camera_follow()
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		if(cell != grid_coords):
 			cell = grid_coords
@@ -71,19 +70,35 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action("ui_right"):
 		cell += Vector2.RIGHT
 		is_mouse = false
-		_camera.enabled = true
+		_attach_camera_follow()
 	elif event.is_action("ui_up"):
 		cell += Vector2.UP
 		is_mouse = false
-		_camera.enabled = true
+		_attach_camera_follow()
 	elif event.is_action("ui_left"):
 		cell += Vector2.LEFT
 		is_mouse = false
-		_camera.enabled = true
+		_attach_camera_follow()
 	elif event.is_action("ui_down"):
 		cell += Vector2.DOWN
 		is_mouse = false
-		_camera.enabled = true
+		_attach_camera_follow()
+
+
+func _detach_camera_follow() -> void:
+	if _camera.top_level:
+		return
+
+	var camera_global_position: Vector2 = _camera.global_position
+	_camera.top_level = true
+	_camera.global_position = camera_global_position
+
+
+func _attach_camera_follow() -> void:
+	if not _camera.top_level:
+		return
+
+	_camera.top_level = false
 
 
 func _draw() -> void:
