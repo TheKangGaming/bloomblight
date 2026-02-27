@@ -167,23 +167,24 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 				
 				if visited[cy][cx]:
 					continue
-				else:
-					# FIX: _movement_costs is a 1D dictionary keyed by Vector2i.
-					var coord_v2i = Vector2i(cx, cy)
-					# .get() pulls the cost safely, and defaults to 1 if the tile isn't in the dict
-					var tile_cost = _movement_costs.get(coord_v2i, 1) 
-					
-					var distance_to_node = current.priority + tile_cost 
-					
-					if is_occupied(coordinates):
-						if curr_unit.is_enemy != _units[coordinates].is_enemy:
-							distance_to_node = current.priority + MAX_VALUE
-						elif _units[coordinates].is_wait and attackable_check:
-							occupied_cells.append(coordinates)
-							
-					visited[cy][cx] = true
-					distances[cy][cx] = distance_to_node
 				
+				# Because of 'continue' above, we don't need 'else' here.
+				# FIX: _movement_costs is a 1D dictionary keyed by Vector2i.
+				var coord_v2i = Vector2i(cx, cy)
+				# .get() pulls the cost safely, and defaults to 1 if the tile isn't in the dict
+				var tile_cost = _movement_costs.get(coord_v2i, 1) 
+				
+				var distance_to_node = current.priority + tile_cost 
+				
+				if is_occupied(coordinates):
+					if curr_unit.is_enemy != _units[coordinates].is_enemy:
+						distance_to_node = current.priority + MAX_VALUE
+					elif _units[coordinates].is_wait and attackable_check:
+						occupied_cells.append(coordinates)
+						
+				visited[cy][cx] = true
+				distances[cy][cx] = distance_to_node
+			
 				if distance_to_node <= max_distance: # check if node is actually reachable
 					previous[cy][cx] = current.value 
 					moveable_cells.append(coordinates) 
