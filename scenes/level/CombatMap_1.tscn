@@ -95,8 +95,6 @@ tile_map_data = PackedByteArray("AAD+//7/AgAVAAIAAAD///7/AgAVAAIAAAAAAP7/AgAVAAI
 tile_set = ExtResource("1_xlj5a")
 script = ExtResource("3_d5mw3")
 
-[node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-
 [node name="UnitOverlay" type="TileMapLayer" parent="GameBoard" unique_id=1269314651]
 light_mask = 0
 use_parent_material = true
@@ -109,6 +107,8 @@ scale = Vector2(0.4, 0.4)
 tile_set = SubResource("TileSet_wkw2y")
 script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
+
+[node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
 
 [node name="Unit" parent="GameBoard" unique_id=376372171 instance=ExtResource("6_8pykb")]
 position = Vector2(73, 188)
