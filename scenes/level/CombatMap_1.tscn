@@ -113,6 +113,7 @@ script = ExtResource("4_wu1sb")
 use_parent_material = true
 tile_set = SubResource("TileSet_wkw2y")
 script = ExtResource("8_wkw2y")
+grid = ExtResource("2_gh08p")
 
 [node name="Unit" parent="GameBoard" unique_id=376372171 instance=ExtResource("6_8pykb")]
 position = Vector2(73, 188)
