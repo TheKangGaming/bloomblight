@@ -30,6 +30,8 @@ const MAX_VALUE: int = 99999
 func _ready() -> void:
 	_movement_costs = _map.get_movement_costs()
 	_reinitialize()
+	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
+	_cursor.moved.connect(_on_Cursor_moved)
 
 
 func _unhandled_input(event: InputEvent) -> void:

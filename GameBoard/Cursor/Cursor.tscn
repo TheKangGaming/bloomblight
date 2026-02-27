@@ -11,6 +11,7 @@ grid = ExtResource("3")
 [node name="Sprite" type="Sprite2D" parent="." unique_id=2030062350]
 position = Vector2(0.193848, 0)
 rotation = 2.35619
+scale = Vector2(0.25, 0.25)
 texture = ExtResource("2")
 offset = Vector2(-67, 0)
 
