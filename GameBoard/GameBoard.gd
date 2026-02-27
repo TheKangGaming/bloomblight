@@ -56,16 +56,15 @@ func is_occupied(cell: Vector2) -> bool:
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit.cell, unit.move_range, false)
 	
-func get_attackable_cells(unit: Unit) -> Array:
+func get_attackable_cells(walkable_cells: Array, attack_range: int) -> Array:
 	var attackable_cells = []
-	var real_walkable_cells = _dijkstra(unit.cell, unit.move_range, true)
-	
-	for curr_cell in real_walkable_cells:
-		for curr_range in range(1, unit.attack_range + 1):
-			attackable_cells = attackable_cells + _flood_fill(curr_cell, unit.attack_range)
-			
-			
-	return attackable_cells.filter(func(i): return i not in real_walkable_cells)
+	for cell in walkable_cells:
+		var flood_cells = _flood_fill(cell, attack_range)
+		for f_cell in flood_cells:
+			# Only add the cell if it's not a blue tile, and we haven't already added it!
+			if f_cell not in walkable_cells and f_cell not in attackable_cells:
+				attackable_cells.append(f_cell)
+	return attackable_cells
 
 
 ## Clears, and refills the `_units` dictionary with game objects that are on the board.
@@ -216,7 +215,7 @@ func _select_unit(cell: Vector2) -> void:
 	_prev_position = _active_unit.position
 	_active_unit.is_selected = true
 	_walkable_cells = get_walkable_cells(_active_unit)
-	_attackable_cells = get_attackable_cells(_active_unit)
+	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range)
 	
 	_unit_overlay.draw_attackable_cells(_attackable_cells)
 	
@@ -228,15 +227,19 @@ func _select_unit(cell: Vector2) -> void:
 	
 	
 func _hover_display(cell: Vector2) -> void:
-	# 1. Safely check if a unit actually exists here before doing math!
 	if is_occupied(cell):
 		var curr_unit = _units[cell]
 		
-		# 2. Save them to your class variables so the game remembers them
+		# 1. Get the blue cells
 		_walkable_cells = get_walkable_cells(curr_unit)
-		_attackable_cells = get_attackable_cells(curr_unit)
 		
-		# 3. Draw red first, then blue on top!
+		# 2. Pass those blue cells directly into the red cell math!
+		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range)
+		
+		# 3. Clear the old tiles ONCE here:
+		_unit_overlay.clear() 
+		
+		# 4. Draw the red tiles first, then the blue ones on top!
 		_unit_overlay.draw_attackable_cells(_attackable_cells)
 		_unit_overlay.draw_walkable_cells(_walkable_cells)
 
