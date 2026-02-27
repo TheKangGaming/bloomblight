@@ -35,6 +35,7 @@ var cell := Vector2.ZERO:
 		_timer.start()
 
 @onready var _timer: Timer = $Timer
+@onready var _camera: Camera2D = $Camera2D
 
 
 func _ready() -> void:
@@ -44,6 +45,8 @@ func _ready() -> void:
 
 func _process(_delta):
 	if(is_mouse):
+		if _camera.enabled:
+			_camera.enabled = false
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		if(cell != grid_coords):
 			cell = grid_coords
@@ -68,15 +71,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action("ui_right"):
 		cell += Vector2.RIGHT
 		is_mouse = false
+		_camera.enabled = true
 	elif event.is_action("ui_up"):
 		cell += Vector2.UP
 		is_mouse = false
+		_camera.enabled = true
 	elif event.is_action("ui_left"):
 		cell += Vector2.LEFT
 		is_mouse = false
+		_camera.enabled = true
 	elif event.is_action("ui_down"):
 		cell += Vector2.DOWN
 		is_mouse = false
+		_camera.enabled = true
 
 
 func _draw() -> void:
