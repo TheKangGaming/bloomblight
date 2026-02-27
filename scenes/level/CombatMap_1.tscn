@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="6_8pykb"]
 [ext_resource type="Texture2D" uid="uid://c7ywv0feplun" path="res://UnitOverlay/arrows.svg" id="7_d5mw3"]
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://GameBoard/UnitPath.gd" id="8_wkw2y"]
+[ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://GameBoard/Grid.tres" id="9_55rhp"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_d5mw3"]
 texture = ExtResource("5_hgyof")
@@ -92,6 +93,7 @@ sources/0 = SubResource("TileSetAtlasSource_gh08p")
 [node name="GameBoard" type="Node2D" parent="." unique_id=578916424]
 script = ExtResource("2_n7604")
 metadata/_custom_type_script = "uid://bp5i3aj61nror"
+grid = ExtResource("9_55rhp")
 
 [node name="Map" type="TileMapLayer" parent="GameBoard" unique_id=281735625]
 use_parent_material = true
