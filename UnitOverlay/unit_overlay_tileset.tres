@@ -5,13 +5,19 @@
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j4cdr"]
 texture = ExtResource("1_2gbig")
-texture_region_size = Vector2i(80, 80)
+texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+1:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dyssl"]
 texture = ExtResource("2_ksnwb")
-texture_region_size = Vector2i(80, 80)
+texture_region_size = Vector2i(32, 32)
 0:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+1:0/0 = 0
 
 [resource]
 tile_size = Vector2i(32, 32)
