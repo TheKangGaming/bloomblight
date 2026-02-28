@@ -1,7 +1,7 @@
 extends Control
 
-@onready var tool_label = $ToolBar/Label
-@onready var tool_icon = $ToolBar/ToolDisplay/Sprite2D
+@onready var tool_label = $ToolBar/Panel/Content/HBoxContainer/Label
+@onready var tool_icon = $ToolBar/Panel/Content/HBoxContainer/ToolDisplay/Sprite2D
 
 func _process(_delta):
 	if Global.unlocked_tools.is_empty():

@@ -2,8 +2,36 @@
 
 [ext_resource type="Script" uid="uid://cqwpum250ek35" path="res://Menus/ActionMenu.gd" id="1_ol1qx"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.0470588, 0.0666667, 0.101961, 0.92)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.709804, 0.654902, 0.466667, 0.7)
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+
 [node name="ActionMenu" type="CanvasLayer" unique_id=1672524903]
 script = ExtResource("1_ol1qx")
+
+[node name="MenuBackdrop" type="PanelContainer" parent="." unique_id=783839421]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -86.0
+offset_top = -130.0
+offset_right = 86.0
+offset_bottom = 126.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1356150704]
 anchors_preset = 8
@@ -11,42 +39,54 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -70.0
+offset_top = -106.0
+offset_right = 70.0
+offset_bottom = 106.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 6
 
 [node name="AttackButton" type="Button" parent="VBoxContainer" unique_id=2030419790]
+custom_minimum_size = Vector2(140, 30)
 layout_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Attack"
 
 [node name="ItemsButton" type="Button" parent="VBoxContainer" unique_id=919212671]
+custom_minimum_size = Vector2(140, 30)
 layout_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Items"
 
 [node name="TradeButton" type="Button" parent="VBoxContainer" unique_id=661498167]
+custom_minimum_size = Vector2(140, 30)
 layout_mode = 2
-text = "Trade
-"
+theme_override_font_sizes/font_size = 14
+text = "Trade"
 
 [node name="EmptyButton" type="Button" parent="VBoxContainer" unique_id=158301842]
+custom_minimum_size = Vector2(140, 8)
 layout_mode = 2
 focus_mode = 0
 mouse_filter = 2
-text = " "
+disabled = true
+text = ""
 
 [node name="WaitButton" type="Button" parent="VBoxContainer" unique_id=696254265]
+custom_minimum_size = Vector2(140, 30)
 layout_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Wait"
 
 [node name="CancelButton" type="Button" parent="VBoxContainer" unique_id=1003773055]
+custom_minimum_size = Vector2(140, 30)
 layout_mode = 2
+theme_override_font_sizes/font_size = 14
 text = "Cancel"
 
 [connection signal="pressed" from="VBoxContainer/AttackButton" to="." method="_on_attack_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/ItemsButton" to="." method="_on_items_pressed"]
+[connection signal="pressed" from="VBoxContainer/ItemsButton" to="." method="_on_items_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/TradeButton" to="." method="_on_trade_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/WaitButton" to="." method="_on_wait_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/CancelButton" to="." method="_on_cancel_button_pressed"]
