@@ -6,29 +6,31 @@ var is_lit := false
 @onready var fire_sprite = $Fire
 @onready var smoke_sprite = $Smoke
 @onready var anim_player = $AnimationPlayer
+@onready var feedback_label = $FeedbackLabel
+@onready var feedback_timer = $FeedbackTimer
 
 func _ready():
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
-	
+	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
+
 	# Turn fire off at the start of the game
 	toggle_fire(false)
 
 func _unhandled_input(event):
-	if event.is_action_pressed('interact') and player_in_range:
+	if event.is_action_pressed("interact") and player_in_range:
 		# Toggle the fire state
 		if not is_lit:
 			toggle_fire(true)
-			print("Campfire lit! Ready to cook.")
+			show_feedback("Campfire is lit")
 			var menu = get_tree().get_first_node_in_group("CookingMenu")
 			if menu:
 				menu.open_menu()
-				
 		else:
 			toggle_fire(false)
-			print("Campfire extinguished.")
-			
-			# Find the menu via the Group and close it!
+			show_feedback("Campfire extinguished")
+
+			# Find the menu via the Group and close it.
 			var menu = get_tree().get_first_node_in_group("CookingMenu")
 			if menu:
 				menu.close_menu()
@@ -38,8 +40,7 @@ func toggle_fire(on: bool):
 	if is_lit:
 		fire_sprite.visible = true
 		smoke_sprite.visible = true
-		# IMPORTANT: Change "burn" to whatever you named your animation!
-		anim_player.play("fire_on") 
+		anim_player.play("fire_on")
 	else:
 		fire_sprite.visible = false
 		smoke_sprite.visible = false
@@ -52,9 +53,11 @@ func _on_interact_area_body_entered(body):
 func _on_interact_area_body_exited(body):
 	if body.is_in_group("Player"):
 		player_in_range = false
-		# Optional: Auto-extinguish if the player walks away
-		if is_lit:
-			toggle_fire(false)
-			var menu = get_tree().get_first_node_in_group("CookingMenu")
-			if menu:
-				menu.close_menu()
+
+func show_feedback(message: String):
+	feedback_label.text = message
+	feedback_label.visible = true
+	feedback_timer.start()
+
+func _on_feedback_timer_timeout():
+	feedback_label.visible = false

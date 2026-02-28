@@ -124,6 +124,20 @@ shape = SubResource("CapsuleShape2D_tt6wo")
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1011757065]
 libraries/ = SubResource("AnimationLibrary_py2rd")
 
+
+[node name="FeedbackLabel" type="Label" parent="." unique_id=1903156712]
+visible = false
+offset_left = -60.0
+offset_top = -120.0
+offset_right = 60.0
+offset_bottom = -94.0
+text = "Campfire is lit"
+horizontal_alignment = 1
+
+[node name="FeedbackTimer" type="Timer" parent="." unique_id=205417133]
+wait_time = 1.2
+one_shot = true
+
 [node name="InteractArea" type="Area2D" parent="." unique_id=1047254318]
 collision_mask = 2
 
