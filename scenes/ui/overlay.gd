@@ -19,15 +19,12 @@ func _process(_delta):
 			player.Tools.HOE: 
 				tool_name = "Hoe"
 				tool_frame = 0 # 1st image in tools.png
-			player.Tools.WATER: 
-				tool_name = "Watering Can"
-				tool_frame = 2 # 2nd image
 			player.Tools.AXE: 
 				tool_name = "Axe"
-				tool_frame = 1 # 3rd image
-			player.Tools.PLANT: 
-				tool_name = "Seeds"
-				tool_frame = 3 # 4th image
+				tool_frame = 1 # 2nd image
+			player.Tools.WATER: 
+				tool_name = "Watering Can"
+				tool_frame = 2 # 3rd image
 		
 		if tool_label:
 			tool_label.text = tool_name
