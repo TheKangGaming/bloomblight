@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
-@onready var move_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/MoveStateMachine/playback')
-@onready var tool_state_machine: AnimationNodeStateMachinePlayback = $AnimationTree.get('parameters/ToolStateMachine/playback')
+@onready var move_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/MoveStateMachine/playback')
+@onready var tool_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/ToolStateMachine/playback')
 @onready var tool_particles = $ToolParticles
 
 @export var tool_direction_offset := 30
@@ -67,11 +67,11 @@ func get_input():
 			# 2. Reach out 24px in the direction we are facing
 			var target_pos = player_center + (last_direction * tool_direction_offset)
 			tool_state_machine.travel(tool_connection[current_tool])
-			$AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+			$Visuals/AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 			can_move = false
 
 			if current_tool in [Tools.HOE, Tools.WATER]:
-				await $AnimationTree.animation_finished
+				await $Visuals/AnimationTree.animation_finished
 				
 				if current_tool == Tools.HOE:
 					$Sounds/HoeSound.play()
@@ -112,12 +112,12 @@ func animation():
 
 func update_animation_blend_positions(target_vec: Vector2):
 	var blend_pos = Vector2(round(target_vec.x), round(target_vec.y))
-	$AnimationTree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
-	$AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
-	$AnimationTree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
+	$Visuals/AnimationTree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
+	$Visuals/AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
+	$Visuals/AnimationTree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
 	
 	for state in tool_connection.values():
-		$AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
+		$Visuals/AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
 		
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	can_move = true
