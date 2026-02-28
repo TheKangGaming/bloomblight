@@ -26,7 +26,15 @@ func _unhandled_input(event):
 		if not is_lit:
 			toggle_fire(true)
 			show_feedback("Campfire is lit")
-		if cooking_menu:
+			if cooking_menu:
+				cooking_menu.open_menu()
+			return
+
+		if cooking_menu and cooking_menu.visible:
+			toggle_fire(false)
+			show_feedback("Campfire extinguished")
+			cooking_menu.close_menu()
+		elif cooking_menu:
 			cooking_menu.open_menu()
 
 func toggle_fire(on: bool):
