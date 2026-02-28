@@ -10,6 +10,7 @@ var move_state_machine = null # We will set this in _ready if the tree exists
 
 ## Emitted when the unit reached the end of a path along which it was walking.
 signal walk_finished
+signal died(unit)
 
 ## Shared resource of type Grid, used to calculate map coordinates.
 @export var grid: Resource
@@ -160,3 +161,49 @@ func _load_player_stats() -> void:
 	
 	# If you want to calculate the total stats including Food Buffs later, 
 	# we will add that math right here!
+	
+	## Makes the unit physically bump into the target and deal damage!
+func attack(target: Unit) -> void:
+	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
+	
+	# 1. Play a quick physical "bump" animation using a Tween
+	if visuals_node:
+		var start_pos = visuals_node.position
+		var bump_dir = (target.position - position).normalized() * 15 # Lunge 15 pixels forward
+		
+		var tween = create_tween()
+		tween.tween_property(visuals_node, "position", start_pos + bump_dir, 0.1)
+		tween.tween_property(visuals_node, "position", start_pos, 0.15)
+		
+		# Wait for the lunge to hit before doing damage
+		await tween.finished
+		
+	# 2. Deal the damage! (Hardcoded to 5 for now, we will add STR math later!)
+	target.take_damage(5)
+
+
+## Subtracts health, flashes red, and checks for death
+func take_damage(amount: int) -> void:
+	health -= amount
+	print(name + " took " + str(amount) + " damage! HP: " + str(health) + "/" + str(max_health))
+	
+	# Flash red!
+	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
+	if visuals_node:
+		var tween = create_tween()
+		tween.tween_property(visuals_node, "modulate", Color.RED, 0.1)
+		tween.tween_property(visuals_node, "modulate", Color.WHITE, 0.1)
+		
+	# Check if dead
+	if health <= 0:
+		health = 0
+		die()
+
+
+## Emits the death signal and removes the unit from the map
+func die() -> void:
+	print(name + " has fallen in battle!")
+	died.emit(self)
+	# (We can play a fancy death animation or sound effect here later!)
+	queue_free()
+	

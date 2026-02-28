@@ -33,6 +33,13 @@ func _ready() -> void:
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
 	_cursor.moved.connect(_on_Cursor_moved)
 
+	for child in get_children():
+		if child is Unit:
+			_units[child.cell] = child
+			# (Your existing signals, if any)
+			
+			# ADD THIS LINE: Listen for their death!
+			child.died.connect(_on_unit_died)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_unit and event.is_action_pressed("ui_cancel"):
@@ -316,3 +323,10 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		_unit_overlay.clear()
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
+		
+func _on_unit_died(unit: Unit) -> void:
+	_units.erase(unit.cell)
+	
+	# If the active unit died, clear the cursor selection
+	if _active_unit == unit:
+		_clear_active_unit()
