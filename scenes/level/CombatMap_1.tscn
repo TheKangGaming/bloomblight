@@ -112,4 +112,8 @@ grid = ExtResource("2_gh08p")
 
 [node name="Unit" parent="GameBoard" unique_id=376372171 instance=ExtResource("6_8pykb")]
 position = Vector2(73, 188)
+is_player = true
+max_health = null
+health = null
 move_range = 4
+move_speed = 600.0

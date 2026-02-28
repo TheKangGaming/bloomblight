@@ -78,14 +78,16 @@ func get_seed_count(seed_type: Items) -> int:
 # ==========================================
 
 # 1. Base Stats
-# These are the player's permanent, naked stats before any buffs or armor.
 var player_stats = {
-	"VIT": 10, # Health / Physical Defense
-	"STR": 5,  # Physical Damage
-	"DEX": 5,  # Accuracy / Crit Chance
-	"INT": 5,  # Magic Damage / Healing Power
-	"SPD": 5,  # Turn Order / Evasion
-	"MOV": 4   # Grid Movement tiles per turn
+	"MAX_HP": 20,  # Max Health
+	"HP": 20,      # Current Health (This lets her stay injured after battle!)
+	"VIT": 10,     # Health / Physical Defense
+	"STR": 5,      # Physical Damage
+	"DEX": 5,      # Accuracy / Crit Chance
+	"INT": 5,      # Magic Damage / Healing Power
+	"SPD": 5,      # Turn Order / Evasion
+	"MOV": 4,      # Grid Movement tiles per turn
+	"ATK_RNG": 1   # How many tiles away she can attack (1 for melee)
 }
 
 # 2. Equipment Slots

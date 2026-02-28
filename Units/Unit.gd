@@ -15,8 +15,13 @@ signal walk_finished
 @export var grid: Resource
 
 @export var is_enemy: bool
+@export var is_player: bool = false
 
 @export var is_wait := false
+
+@export var max_health: int = 20
+@export var health: int = 20
+
 ## Distance to which the unit can walk in cells.
 @export var move_range := 6
 ## The unit's move speed when it's moving along a path.
@@ -62,7 +67,7 @@ var _is_walking := false:
 @onready var _sprite: Sprite2D = $PathFollow2D/Visuals/Sprite2D
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
-@onready var is_player: bool = false
+
 
 func _ready() -> void:
 	
@@ -73,7 +78,7 @@ func _ready() -> void:
 	
 	if is_player:
 		# Override the export with Savannah's global stats!
-		move_range = Global.player_stats["MOV"] + Global.active_food_buff.stats.get("MOV", 0)
+		_load_player_stats()
 	
 	set_process(false)
 	_path_follow.rotates = false
@@ -142,3 +147,14 @@ func walk_along(path: PackedVector2Array) -> void:
 	cell = path[-1]
 	_path_follow.progress = 0.0 # Reset animation progress to the start
 	_is_walking = true
+
+func _load_player_stats() -> void:
+	# Pull from the Global dictionary
+	max_health = Global.player_stats["MAX_HP"]
+	health = Global.player_stats["HP"]
+	
+	move_range = Global.player_stats["MOV"]
+	attack_range = Global.player_stats["ATK_RNG"]
+	
+	# If you want to calculate the total stats including Food Buffs later, 
+	# we will add that math right here!
