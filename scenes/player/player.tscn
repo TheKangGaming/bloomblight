@@ -35,6 +35,7 @@ texture = SubResource("GradientTexture2D_h17s1")
 offset = Vector2(0, -24)
 
 [node name="Visuals" parent="." unique_id=2093412421 instance=ExtResource("2_75vfm")]
+y_sort_enabled = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=202345101]
 position = Vector2(0, -13)
