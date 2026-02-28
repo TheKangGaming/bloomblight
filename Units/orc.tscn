@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://cjkgbivtnlgno"]
+
+[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_4b2u4"]
+[ext_resource type="Texture2D" path="res://graphics/enemies/orc/orc melee - anims-idle.png" id="2_j6h8o"]
+
+[node name="Orc" unique_id=376372171 instance=ExtResource("1_4b2u4")]
+is_enemy = true
+max_health = 15
+health = 15
+move_range = 3
+
+[node name="Visuals" type="Sprite2D" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1" unique_id=938986063]
+position = Vector2(-4, -38)
+texture = ExtResource("2_j6h8o")
+region_enabled = true
+region_rect = Rect2(94, 81, 55, 72)
