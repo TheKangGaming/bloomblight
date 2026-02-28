@@ -9,10 +9,6 @@ extends Resource
 ## The size of a cell in pixels.
 @export var cell_size := Vector2(80, 80)
 
-## Half of ``cell_size``
-var _half_cell_size = cell_size / 2
-
-
 ## Returns the position of a cell's center in pixels.
 func calculate_map_position(grid_position: Vector2) -> Vector2:
 	# By dividing cell_size dynamically here, we bypass the _half_cell_size bug entirely

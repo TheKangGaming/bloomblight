@@ -115,7 +115,7 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 			var coordinates: Vector2 = current + direction
 			
 			# FIX: get_cell_source_id requires a Vector2i in Godot 4!
-			var coord_v2i = Vector2i(coordinates.x, coordinates.y)
+			var coord_v2i = Vector2i(int(coordinates.x), int(coordinates.y))
 			if _map.get_cell_source_id(coord_v2i) == OBSTACLE_ATLAS_ID:
 				wall_array.append(coordinates)
 			
