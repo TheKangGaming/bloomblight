@@ -8,7 +8,9 @@ var is_lit := false
 @onready var anim_player = $AnimationPlayer
 @onready var feedback_label = $FeedbackLabel
 @onready var feedback_timer = $FeedbackTimer
-@onready var cooking_menu = get_tree().get_first_node_in_group("CookingMenu")
+
+func get_cooking_menu():
+	return get_tree().get_first_node_in_group("CookingMenu")
 
 func _ready():
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
@@ -20,6 +22,7 @@ func _ready():
 
 func _unhandled_input(event):
 	if event.is_action_pressed("interact") and player_in_range:
+		var cooking_menu = get_cooking_menu()
 		# Toggle the fire state
 		if not is_lit:
 			toggle_fire(true)
@@ -50,6 +53,7 @@ func _on_interact_area_body_entered(body):
 func _on_interact_area_body_exited(body):
 	if body.is_in_group("Player"):
 		player_in_range = false
+		var cooking_menu = get_cooking_menu()
 		if cooking_menu and cooking_menu.visible:
 			cooking_menu.close_menu()
 
