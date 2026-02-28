@@ -23,17 +23,11 @@ func _ready():
 func _unhandled_input(event):
 	if event.is_action_pressed("interact") and player_in_range:
 		var cooking_menu = get_cooking_menu()
-		# Toggle the fire state
 		if not is_lit:
 			toggle_fire(true)
 			show_feedback("Campfire is lit")
-			if cooking_menu:
-				cooking_menu.open_menu()
-		else:
-			toggle_fire(false)
-			show_feedback("Campfire extinguished")
-			if cooking_menu:
-				cooking_menu.close_menu()
+		if cooking_menu:
+			cooking_menu.open_menu()
 
 func toggle_fire(on: bool):
 	is_lit = on
