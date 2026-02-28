@@ -96,12 +96,16 @@ func _on_player_menu_requested(target_pos: Vector2):
 		
 func _on_seed_chosen_from_menu(seed_type: int):
 	player.can_move = true
-	_on_player_seed_use(seed_type, pending_plant_pos)
 	
-	Global.inventory[seed_type] -= 1
-	Global.inventory_updated.emit()
+	# Save the true/false result of the planting attempt
+	var successfully_planted = _on_player_seed_use(seed_type, pending_plant_pos)
+	
+	# Only consume the seed if the planting was actually successful
+	if successfully_planted:
+		Global.inventory[seed_type] -= 1
+		Global.inventory_updated.emit()
 
-func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> void:
+func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> bool: # Changed from void to bool
 	var local_pos = soil_layer.to_local(global_pos)
 	var grid_pos = soil_layer.local_to_map(local_pos)
 	
@@ -109,7 +113,7 @@ func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> void:
 	for plant in get_tree().get_nodes_in_group('Plants'):
 		if plant.grid_pos == grid_pos:
 			print("Tile is occupied")
-			return 
+			return false # <-- ADDED: Returns false because we couldn't plant
 			
 	# Spawn the plant
 	if soil_layer.get_cell_source_id(grid_pos) != -1:
@@ -120,6 +124,9 @@ func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> void:
 		plant.setup(seed_enum, grid_pos)
 		$Objects.add_child(plant)
 		plant.position = plant_pos
+		return true # <-- ADDED: Returns true because the plant successfully spawned!
+		
+	return false # <-- ADDED: Returns false if the tile isn't soil
 		
 func day_switch():
 	var tween = create_tween()
