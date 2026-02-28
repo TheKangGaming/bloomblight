@@ -120,6 +120,7 @@ func update_animation_blend_positions(target_vec: Vector2):
 		$Visuals/AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
 		
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
+	print("Player was successfully unlocked!")
 	can_move = true
 	
 func axe_use():
