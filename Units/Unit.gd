@@ -20,7 +20,7 @@ signal walk_finished
 ## Distance to which the unit can walk in cells.
 @export var move_range := 6
 ## The unit's move speed when it's moving along a path.
-@export var move_speed := 600.0
+@export var move_speed := 150.0
 
 @export var attack_range := 0
 ## Texture representing the unit.
