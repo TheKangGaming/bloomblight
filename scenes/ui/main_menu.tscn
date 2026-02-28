@@ -6,6 +6,44 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sl1te"]
 bg_color = Color(0, 0, 0, 0.78431374)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qmk4f"]
+bg_color = Color(0.0784314, 0.109804, 0.109804, 0.941176)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.34902, 0.537255, 0.505882, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45098)
+shadow_size = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i7nr2"]
+bg_color = Color(0.180392, 0.262745, 0.262745, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.482353, 0.729412, 0.666667, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2y0u"]
+bg_color = Color(0.137255, 0.2, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.301961, 0.478431, 0.431373, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_1g8jr"]
 atlas = ExtResource("2_fe2o3")
 region = Rect2(22, 13, 20, 31)
@@ -39,10 +77,19 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="TabContainer" type="TabContainer" parent="CenterContainer" unique_id=856739926]
-custom_minimum_size = Vector2(350, 200)
+custom_minimum_size = Vector2(560, 330)
 layout_mode = 2
 current_tab = 1
 all_tabs_in_front = true
+theme_override_colors/font_selected_color = Color(0.94902, 1, 0.905882, 1)
+theme_override_colors/font_unselected_color = Color(0.670588, 0.780392, 0.780392, 1)
+theme_override_constants/icon_separation = 8
+theme_override_constants/side_margin = 12
+theme_override_font_sizes/font_size = 14
+theme_override_styles/panel = SubResource("StyleBoxFlat_qmk4f")
+theme_override_styles/tab_focus = SubResource("StyleBoxFlat_i7nr2")
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_i7nr2")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_h2y0u")
 
 [node name="Status" type="Panel" parent="CenterContainer/TabContainer" unique_id=1792060860]
 visible = false
@@ -200,14 +247,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
 
 [node name="Grid" type="GridContainer" parent="CenterContainer/TabContainer/Inventory/Margin" unique_id=581831426]
 layout_mode = 2
-columns = 10
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 8
 
 [node name="Villagers" type="Control" parent="CenterContainer/TabContainer" unique_id=512211702]
 visible = false
