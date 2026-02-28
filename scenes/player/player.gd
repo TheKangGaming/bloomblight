@@ -98,6 +98,7 @@ func get_input():
 
 func _ready() -> void:
 	update_animation_blend_positions(last_direction)
+	$Visuals/AnimationTree.animation_finished.connect(_on_animation_tree_animation_finished)
 	
 func animation():
 	if direction:
