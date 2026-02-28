@@ -214,14 +214,27 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 
 ## Updates the _units dictionary with the target position for the unit and asks the _active_unit to walk to it.
 func _move_active_unit(new_cell: Vector2) -> void:
+	# 1. Check if the tile is valid
 	if is_occupied(new_cell) or not new_cell in _walkable_cells:
 		return
-	# warning-ignore:return_value_discarded
+	
+	# 2. Clear the blue/red visual tiles immediately so the board looks clean
+	_unit_overlay.clear()
+	_unit_path.stop()
+	
+	# 3. Tell the unit to start running!
+	_active_unit.walk_along(_unit_path.current_path)
+	
+	# 4. Wait right here until the puppet is completely finished running
+	await _active_unit.walk_finished
+	
+	# 5. Update the board's memory with her new location
 	_units.erase(_active_unit.cell)
 	_units[new_cell] = _active_unit
-	_deselect_active_unit()
-	_active_unit.walk_along(_unit_path.current_path)
-	await _active_unit.walk_finished
+	_active_unit.cell = new_cell
+	
+	# 6. POP UP THE ACTION MENU!
+	_show_action_menu()
 	
 
 
@@ -330,3 +343,38 @@ func _on_unit_died(unit: Unit) -> void:
 	# If the active unit died, clear the cursor selection
 	if _active_unit == unit:
 		_clear_active_unit()
+
+func _show_action_menu() -> void:
+	# Check if the ActionMenu actually exists on your board!
+	if has_node("ActionMenu"):
+		var action_menu = $ActionMenu
+		action_menu.show()
+		
+		# Move the menu roughly to where the unit is standing on the screen
+		var screen_pos = grid.calculate_map_position(_active_unit.cell)
+		# Shift it slightly to the right so it doesn't cover her face
+		action_menu.offset = screen_pos + Vector2(20, -20) 
+		
+		# (ActionMenu.gd currently handles disabling the cursor on _ready, 
+		# but if it's already in the scene, we might need to trigger it here!)
+		_cursor.is_active = false
+	else:
+		# FALLBACK: If you don't have the menu in the scene yet, just end the turn cleanly.
+		_clear_active_unit()
+
+
+## To be called by the Action Menu when the player chooses "Wait"
+func finish_unit_turn() -> void:
+	# Make the unit grey out to show their turn is over
+	if _active_unit:
+		var visuals = _active_unit.get_node_or_null("PathFollow2D/Visuals")
+		if visuals:
+			visuals.modulate = Color(0.5, 0.5, 0.5, 1.0) # Grey out
+		
+		_active_unit.is_wait = true
+		
+	if has_node("ActionMenu"):
+		$ActionMenu.hide()
+		
+	_clear_active_unit()
+	_cursor.is_active = true

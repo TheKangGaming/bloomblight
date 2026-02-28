@@ -17,6 +17,7 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(0.4, 0.4)
 
 [node name="AttackButton" type="Button" parent="VBoxContainer" unique_id=2030419790]
 layout_mode = 2
