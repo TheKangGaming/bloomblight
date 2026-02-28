@@ -14,9 +14,14 @@ func _ready():
 func open_menu():
 	visible = true
 	check_ingredients()
+	corn_button.grab_focus()
 
 func close_menu():
 	visible = false
+
+func _unhandled_input(event):
+	if visible and event.is_action_pressed("ui_cancel"):
+		close_menu()
 
 func check_ingredients():
 	# Check Roasted Corn (Requires 1 Corn, 1 Wood)
@@ -39,6 +44,7 @@ func _on_cook_roasted_corn():
 	
 	Global.inventory_updated.emit()
 	check_ingredients() # Re-check in case we ran out of ingredients!
+	close_menu()
 
 func _on_cook_tomato_soup():
 	print("Cooking Tomato Soup!")
@@ -48,3 +54,4 @@ func _on_cook_tomato_soup():
 	
 	Global.inventory_updated.emit()
 	check_ingredients()
+	close_menu()
