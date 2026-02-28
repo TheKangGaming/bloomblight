@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bc8xbdk71j5k8"]
+
+[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_tivjm"]
+[ext_resource type="PackedScene" uid="uid://cna6pebvulm7w" path="res://scenes/player/visuals.tscn" id="2_y51ys"]
+
+[node name="Savannah" unique_id=376372171 instance=ExtResource("1_tivjm")]
+is_player = true
+
+[node name="Visuals" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1" unique_id=2093412421 instance=ExtResource("2_y51ys")]
+position = Vector2(0, 12)
