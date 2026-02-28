@@ -90,4 +90,4 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 			Global.add_item(plant_type) 
 			
 		queue_free()
-		water_layer.clear()
+		water_layer.erase_cell(grid_pos)
