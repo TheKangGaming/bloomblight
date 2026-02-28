@@ -39,13 +39,11 @@ script = ExtResource("1_qqjif")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1514725110]
 layout_mode = 1
-anchors_preset = 1
-anchor_right = 1.0
+anchors_preset = 0
 offset_left = 8.0
 offset_top = 8.0
-offset_right = -8.0
+offset_right = 116.0
 offset_bottom = 56.0
-grow_horizontal = 2
 
 [node name="ResourcePanel" type="PanelContainer" parent="MarginContainer" unique_id=1179631838]
 layout_mode = 2
@@ -54,9 +52,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_s4new")
 [node name="InnerMargin" type="MarginContainer" parent="MarginContainer/ResourcePanel" unique_id=1032880364]
 layout_mode = 2
 theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 4
+theme_override_constants/margin_top = 3
 theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_bottom = 3
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/ResourcePanel/InnerMargin" unique_id=418200956]
 layout_mode = 2
@@ -82,7 +80,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -40.0
-offset_top = -40.0
+offset_top = -34.0
 grow_horizontal = 0
 grow_vertical = 0
 
@@ -91,35 +89,36 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -84.0
-offset_top = -40.0
+offset_left = -72.0
+offset_top = -34.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_7l8gj")
 
 [node name="ToolMargin" type="MarginContainer" parent="ToolBar/ToolPanel" unique_id=1361485189]
 layout_mode = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 3
 
 [node name="ToolRow" type="HBoxContainer" parent="ToolBar/ToolPanel/ToolMargin" unique_id=914179295]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="ToolDisplay" type="Control" parent="ToolBar/ToolPanel/ToolMargin/ToolRow" unique_id=208767227]
-custom_minimum_size = Vector2(32, 32)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="ToolBar/ToolPanel/ToolMargin/ToolRow/ToolDisplay" unique_id=4903481]
-position = Vector2(16, 16)
+position = Vector2(12, 12)
 texture = ExtResource("3_gdab8")
 hframes = 3
 
 [node name="Label" type="Label" parent="ToolBar/ToolPanel/ToolMargin/ToolRow" unique_id=1314893005]
-custom_minimum_size = Vector2(42, 0)
+custom_minimum_size = Vector2(38, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
 vertical_alignment = 1
