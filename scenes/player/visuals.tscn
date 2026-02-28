@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cna6pebvulm7w"]
 
 [ext_resource type="Texture2D" uid="uid://dy71joucadqo" path="res://graphics/characters/Savannah.png" id="1_2krxq"]
+[ext_resource type="Script" uid="uid://btgjd7ct7bspf" path="res://scenes/player/visuals.gd" id="1_e7dwf"]
 [ext_resource type="Texture2D" uid="uid://cyaxvxx6bmrwa" path="res://graphics/characters/farmer tool 001 v00.png" id="2_e7dwf"]
 [ext_resource type="Texture2D" uid="uid://bq713ru6h6wiu" path="res://graphics/characters/farmer tool 003 v00.png" id="3_nc5x7"]
 [ext_resource type="Texture2D" uid="uid://bkuptl0ddfe35" path="res://graphics/characters/farmer animations 32x32 v00.png" id="4_jbbeq"]
@@ -1888,6 +1889,7 @@ nodes/OneShot/position = Vector2(820, 260)
 node_connections = [&"output", 0, &"OneShot", &"OneShot", 0, &"MoveStateMachine", &"OneShot", 1, &"ToolStateMachine"]
 
 [node name="Visuals" type="Node2D" unique_id=2093412421]
+script = ExtResource("1_e7dwf")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1335107080]
 y_sort_enabled = true

@@ -1,7 +1,7 @@
 extends Area2D
 
 var can_pickup = false
-@onready var sprite = $Sprite2D # Grab your sprite!
+@onready var sprite = $Visuals/Sprite2D # Grab your sprite!
 
 func _ready():
 	# Connect the signal so it detects the player
