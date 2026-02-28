@@ -9,8 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://djolfa2r5b6n0" path="res://UnitOverlay/movement_overlay.png" id="5_hgyof"]
 [ext_resource type="Texture2D" uid="uid://c7ywv0feplun" path="res://UnitOverlay/arrows.svg" id="7_d5mw3"]
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://GameBoard/UnitPath.gd" id="8_wkw2y"]
-[ext_resource type="PackedScene" uid="uid://bc8xbdk71j5k8" path="res://Units/savannah.tscn" id="10_wkw2y"]
-[ext_resource type="PackedScene" uid="uid://cxgs5qyu674u3" path="res://Units/orc.tscn" id="11_qga0l"]
+[ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="10_wkw2y"]
+[ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_d5mw3"]
 texture = ExtResource("5_hgyof")
@@ -111,8 +111,8 @@ grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
 
-[node name="Savannah" parent="." unique_id=376372171 instance=ExtResource("10_wkw2y")]
+[node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("10_wkw2y")]
 position = Vector2(159, 324)
 
-[node name="Orc" parent="." unique_id=1491504891 instance=ExtResource("11_qga0l")]
+[node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 position = Vector2(182, 20)
