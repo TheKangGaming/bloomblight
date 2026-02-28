@@ -5,6 +5,9 @@
 class_name Unit
 extends Path2D
 
+@onready var animation_tree: AnimationTree = $PathFollow2D/Visuals/AnimationTree
+@onready var move_state_machine: AnimationNodeStateMachinePlayback = animation_tree.get("parameters/MoveStateMachine/playback")
+
 ## Emitted when the unit reached the end of a path along which it was walking.
 signal walk_finished
 
@@ -56,7 +59,7 @@ var _is_walking := false:
 		_is_walking = value
 		set_process(_is_walking)
 
-@onready var _sprite: Sprite2D = $PathFollow2D/Sprite
+@onready var _sprite: Sprite2D = $PathFollow2D/Visuals/Sprite2D
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
 @onready var is_player: bool = false
@@ -65,7 +68,7 @@ func _ready() -> void:
 	
 	set_process(false)
 	_path_follow = $PathFollow2D
-	_sprite = $PathFollow2D/Sprite
+	_sprite = $PathFollow2D/Visuals/Sprite2D
 	_anim_player = $AnimationPlayer
 	
 	if is_player:
@@ -82,18 +85,41 @@ func _ready() -> void:
 	# moving the unit.
 	if not Engine.is_editor_hint():
 		curve = Curve2D.new()
+		
+	# Wake up the puppet!
+	animation_tree.active = true
+	move_state_machine.travel("idle")
+	
+	# We will set a default blend position so she faces forward
+	animation_tree.set("parameters/MoveStateMachine/idle/blend_position", Vector2(0, 1))		
 
 
 func _process(delta: float) -> void:
-	_path_follow.progress += move_speed * delta
-	
-	if _path_follow.progress_ratio >= 1.0:
-		_is_walking = false
-		# Setting this value to 0.0 causes a Zero Length Interval error
-		_path_follow.progress = 0.00001
-		position = grid.calculate_map_position(cell)
-		curve.clear_points()
-		emit_signal("walk_finished")
+	if _is_walking:
+		# A. Save her current position before she steps forward
+		var old_pos = _path_follow.position
+		
+		# (Your existing movement math)
+		_path_follow.progress += move_speed * delta
+
+		# B. Calculate which direction she just stepped, and feed it to the puppet!
+		var direction = (old_pos.direction_to(_path_follow.position)).normalized()
+		if direction != Vector2.ZERO:
+			animation_tree.set("parameters/MoveStateMachine/run/blend_position", direction)
+			animation_tree.set("parameters/MoveStateMachine/idle/blend_position", direction)
+
+		# C. When she reaches the final tile...
+		if _path_follow.progress_ratio >= 1.0:
+			_is_walking = false
+			
+			# Stop the walking animation!
+			move_state_machine.travel("idle")
+			
+			# (Your existing cleanup code)
+			_path_follow.progress = 0.0
+			position = grid.calculate_map_position(cell)
+			curve.clear_points()
+			walk_finished.emit()
 
 
 ## Starts walking along the `path`.
@@ -104,11 +130,12 @@ func walk_along(path: PackedVector2Array) -> void:
 		walk_finished.emit()
 		return
 
+	# 1. Start the walk animation!
+	move_state_machine.travel("run")
+
 	# CRITICAL: Clear the old path before drawing the new one!
 	curve.clear_points() 
 	
-	# The first point in 'path' is our starting position, 
-	# so we don't need to manually add Vector2.ZERO.
 	for point in path:
 		curve.add_point(grid.calculate_map_position(point) - position)
 		
