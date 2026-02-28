@@ -5,8 +5,8 @@
 class_name Unit
 extends Path2D
 
-@onready var animation_tree: AnimationTree = $PathFollow2D/Visuals/AnimationTree
-@onready var move_state_machine: AnimationNodeStateMachinePlayback = animation_tree.get("parameters/MoveStateMachine/playback")
+@onready var animation_tree: AnimationTree = get_node_or_null("PathFollow2D/Visuals/AnimationTree")
+var move_state_machine = null # We will set this in _ready if the tree exists
 
 ## Emitted when the unit reached the end of a path along which it was walking.
 signal walk_finished
@@ -92,11 +92,11 @@ func _ready() -> void:
 		curve = Curve2D.new()
 		
 	# Wake up the puppet!
-	animation_tree.active = true
-	move_state_machine.travel("idle")
-	
-	# We will set a default blend position so she faces forward
-	animation_tree.set("parameters/MoveStateMachine/idle/blend_position", Vector2(0, 1))		
+	if animation_tree:
+		animation_tree.active = true
+		move_state_machine = animation_tree.get("parameters/MoveStateMachine/playback")
+		move_state_machine.travel("idle")
+		animation_tree.set("parameters/MoveStateMachine/idle/blend_position", Vector2(0, 1))		
 
 
 func _process(delta: float) -> void:
@@ -109,7 +109,7 @@ func _process(delta: float) -> void:
 
 		# B. Calculate which direction she just stepped, and feed it to the puppet!
 		var direction = (old_pos.direction_to(_path_follow.position)).normalized()
-		if direction != Vector2.ZERO:
+		if direction != Vector2.ZERO and animation_tree:
 			animation_tree.set("parameters/MoveStateMachine/run/blend_position", direction)
 			animation_tree.set("parameters/MoveStateMachine/idle/blend_position", direction)
 
@@ -118,7 +118,8 @@ func _process(delta: float) -> void:
 			_is_walking = false
 			
 			# Stop the walking animation!
-			move_state_machine.travel("idle")
+			if move_state_machine:
+				move_state_machine.travel("idle")
 			
 			# (Your existing cleanup code)
 			_path_follow.progress = 0.0
@@ -136,7 +137,8 @@ func walk_along(path: PackedVector2Array) -> void:
 		return
 
 	# 1. Start the walk animation!
-	move_state_machine.travel("run")
+	if move_state_machine:
+		move_state_machine.travel("run")
 
 	# CRITICAL: Clear the old path before drawing the new one!
 	curve.clear_points() 

@@ -116,4 +116,3 @@ is_player = true
 max_health = null
 health = null
 move_range = 4
-move_speed = 600.0
