@@ -56,14 +56,28 @@ func is_occupied(cell: Vector2) -> bool:
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit.cell, unit.move_range, false)
 	
+## Calculates attackable cells by extending outward from all walkable cells using math
 func get_attackable_cells(walkable_cells: Array, attack_range: int) -> Array:
 	var attackable_cells = []
+	
+	# Safety check: if they have no weapon/range, skip everything
+	if attack_range <= 0:
+		return attackable_cells
+		
 	for cell in walkable_cells:
-		var flood_cells = _flood_fill(cell, attack_range)
-		for f_cell in flood_cells:
-			# Only add the cell if it's not a blue tile, and we haven't already added it!
-			if f_cell not in walkable_cells and f_cell not in attackable_cells:
-				attackable_cells.append(f_cell)
+		# Mathematically check a grid area around each blue cell
+		for x in range(-attack_range, attack_range + 1):
+			for y in range(-attack_range, attack_range + 1):
+				
+				# If the distance is within our weapon's reach (Manhattan distance)
+				if abs(x) + abs(y) > 0 and abs(x) + abs(y) <= attack_range:
+					var target_cell = cell + Vector2(x, y)
+					
+					# If the cell exists on the map, isn't blue, and isn't already red...
+					if grid.is_within_bounds(target_cell):
+						if target_cell not in walkable_cells and target_cell not in attackable_cells:
+							attackable_cells.append(target_cell)
+							
 	return attackable_cells
 
 
@@ -235,6 +249,8 @@ func _hover_display(cell: Vector2) -> void:
 		
 		# 2. Pass those blue cells directly into the red cell math!
 		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range)
+		
+		print("Blue tiles: ", _walkable_cells.size(), " | Red tiles: ", _attackable_cells.size())
 		
 		# 3. Clear the old tiles ONCE here:
 		_unit_overlay.clear() 
