@@ -45,6 +45,9 @@ func _ready() -> void:
 	position = grid.calculate_map_position(cell)
 
 func _process(_delta):
+	if not is_active:
+		return
+	
 	if(is_mouse):
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		if(cell != grid_coords):
