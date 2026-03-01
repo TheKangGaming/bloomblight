@@ -18,8 +18,8 @@ func _on_options_button_pressed() -> void:
 
 
 func _on_end_turn_button_pressed() -> void:
-	pass # Replace with function body.
-
+	get_parent().end_player_phase()
+	_on_close_button_pressed() # Uses your existing cleanup logic!
 
 func _on_close_button_pressed() -> void:
 	
@@ -27,3 +27,4 @@ func _on_close_button_pressed() -> void:
 	#cursor.reset_cursor()
 	cursor.show()
 	queue_free()
+	

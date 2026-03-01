@@ -198,8 +198,10 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 				
 				if is_occupied(coordinates):
 					if curr_unit.is_enemy != _units[coordinates].is_enemy:
+						# Enemies block movement entirely
 						distance_to_node = current.priority + MAX_VALUE
-					elif _units[coordinates].is_wait and attackable_check:
+					else:
+						# Allies don't block pathing, but we CANNOT end our turn standing on them!
 						occupied_cells.append(coordinates)
 						
 				visited[cy][cx] = true
@@ -323,7 +325,17 @@ func _clear_active_unit() -> void:
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if not _active_unit and _units.has(cell):
-		_select_unit(cell)
+		var unit = _units[cell]
+		
+		# Check if the unit has already taken its turn!
+		if unit.is_wait:
+			# Open the pause menu so the player can easily click "End Turn"
+			var pause_menu = PauseMenu.instantiate()
+			add_child(pause_menu)
+		else:
+			# Wakey wakey, time to move!
+			_select_unit(cell)
+			
 	elif _active_unit != null: 
 		# 1. Player clicked the active unit (waiting in place without moving)
 		if is_occupied(cell) and _units[cell] == _active_unit:
@@ -333,9 +345,9 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			
 		# 2. Player clicked an empty blue tile to move
 		elif not is_occupied(cell) and _walkable_cells.has(cell):
-			# _move_active_unit already pops up the menu when the walk finishes!
 			await _move_active_unit(cell) 
 	else:
+		# Player clicked an empty tile
 		var pause_menu = PauseMenu.instantiate()
 		add_child(pause_menu)
 
@@ -396,4 +408,18 @@ func finish_unit_turn() -> void:
 		$ActionMenu.hide()
 		
 	_clear_active_unit()
+	_cursor.is_active = true
+	
+func end_player_phase() -> void:
+	# 1. Loop through all units on the board
+	for cell in _units:
+		var unit = _units[cell]
+		if unit.is_player:
+			# Wake them up!
+			unit.is_wait = false
+			var visuals = unit.get_node_or_null("PathFollow2D/Visuals")
+			if visuals:
+				visuals.modulate = Color.WHITE # Remove the grey filter
+	
+	# 2. Re-enable the cursor
 	_cursor.is_active = true

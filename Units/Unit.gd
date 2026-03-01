@@ -187,12 +187,14 @@ func take_damage(amount: int) -> void:
 	health -= amount
 	print(name + " took " + str(amount) + " damage! HP: " + str(health) + "/" + str(max_health))
 	
-	# Flash red!
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	if visuals_node:
 		var tween = create_tween()
 		tween.tween_property(visuals_node, "modulate", Color.RED, 0.1)
 		tween.tween_property(visuals_node, "modulate", Color.WHITE, 0.1)
+		
+		# CRITICAL FIX: Wait for the red flash to finish before dying!
+		await tween.finished
 		
 	# Check if dead
 	if health <= 0:

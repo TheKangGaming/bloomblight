@@ -18,7 +18,13 @@ func initialize(walkable_cells: Array) -> void:
 func draw(cell_start: Vector2, cell_end: Vector2) -> void:
 	clear()
 	current_path = _pathfinder.calculate_point_path(cell_start, cell_end)
-	set_cells_terrain_connect(current_path, 0, 0)
+	
+	# FIX: Cast the Vector2 array to a Vector2i array for Godot 4's TileMapLayer
+	var path_v2i: Array[Vector2i] = []
+	for point in current_path:
+		path_v2i.append(Vector2i(point.x, point.y))
+		
+	set_cells_terrain_connect(path_v2i, 0, 0)
 
 
 ## Stops drawing, clearing the drawn path and the `_pathfinder`.
