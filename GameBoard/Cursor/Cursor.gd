@@ -15,6 +15,7 @@ signal moved(new_cell)
 @export var ui_cooldown := 0.1
 
 var is_mouse = false
+var is_active := true
 
 ## Coordinates of the current cell the cursor is hovering.
 var cell := Vector2.ZERO:
@@ -43,12 +44,18 @@ func _ready() -> void:
 	position = grid.calculate_map_position(cell)
 
 func _process(_delta):
+	if not is_active:
+		return
+
 	if(is_mouse):
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		if(cell != grid_coords):
 			cell = grid_coords
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not is_active:
+		return
+
 	# Navigating cells with the mouse.
 	if event is InputEventMouseMotion:
 		is_mouse = true
