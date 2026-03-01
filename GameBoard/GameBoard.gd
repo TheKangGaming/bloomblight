@@ -343,6 +343,11 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 ## Updates the interactive path's drawing if there's an active and selected unit.
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected and _unit_path._pathfinder:
+		if _walkable_cells.has(new_cell):
+			_unit_path.draw(_active_unit.cell, new_cell)
+		else:
+			# If they move the mouse out of bounds, stop drawing the path
+			_unit_path.stop()
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells != []:
 		_walkable_cells.clear()
@@ -360,26 +365,20 @@ func _on_unit_died(unit: Unit) -> void:
 func _show_action_menu() -> void:
 	var action_menu
 	
-	# If the menu exists, grab it. If not, create it!
 	if has_node("ActionMenu"):
 		action_menu = $ActionMenu
 	else:
 		action_menu = ActionMenu.instantiate()
-		action_menu.name = "ActionMenu" # Name it so we can find it next time
+		action_menu.name = "ActionMenu"
+		# Optional: Add it to a dedicated UI layer if you have one, 
+		# e.g., get_node("/root/Main/CanvasLayer").add_child(action_menu)
 		add_child(action_menu)
 		
 	action_menu.show()
 	
-	# Move the menu roughly to where the unit is standing
-	var screen_pos = grid.calculate_map_position(_active_unit.cell)
+	# REMOVED: All the screen_pos and offset calculations.
+	# The menu will now rely on the static anchors you set in ActionMenu.tscn!
 	
-	# Safely handle either offset or position depending on your UI setup
-	if "offset" in action_menu:
-		action_menu.offset = screen_pos + Vector2(30, -100) # Boosted way up!
-	else:
-		action_menu.position = screen_pos + Vector2(30, -100)
-	
-	# Freeze the cursor so the player can navigate the menu
 	_cursor.is_active = false
 
 
