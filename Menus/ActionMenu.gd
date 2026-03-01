@@ -24,22 +24,25 @@ func _on_trade_button_pressed() -> void:
 
 
 func _on_wait_button_pressed() -> void:
-	# Set current to wait status
+	# 1. Tell the GameBoard to run its built-in wait logic!
+	# This will grey out the unit, clear the active unit, AND set cursor.is_active = true
+	get_parent().finish_unit_turn()
 	
-	# clear active unit
-	get_parent()._clear_active_unit()
+	# 2. Re-enable the cursor visually
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	#cursor.reset_cursor()
 	cursor.show()
+	
+	# 3. Delete the menu
 	queue_free()
 
 
 func _on_cancel_button_pressed() -> void:
-	#reset the unit's position
+	# 1. Tell the GameBoard to teleport the unit back and unfreeze the cursor
 	get_parent()._reset_unit()
 	
-	get_parent()._clear_active_unit()
+	# 2. Re-enable the cursor visually
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	#cursor.reset_cursor()
 	cursor.show()
+	
+	# 3. Delete the menu
 	queue_free()
