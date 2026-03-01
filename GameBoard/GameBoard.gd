@@ -44,7 +44,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_unit and event.is_action_pressed("ui_cancel"):
 		_deselect_active_unit()
-		_clear_active_unit()
+		_deselect_active_unit()
 
 
 func _get_configuration_warning() -> String:
@@ -143,76 +143,45 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 ## Generates a list of walkable cells based on unit movement value and tile movement cost
 func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Array:
 	var curr_unit = _units[cell]
-	var moveable_cells = [cell] # append our base cell to the array
-	var visited = [] # 2d array that keeps track of which cells we've already looked at
-	var distances = [] # shows distance to each cell
-	var previous = [] # 2d array that shows you which cell you have to take to get there
 	
-	# OPTIMIZATION: Ensure size limits are integers
-	var size_x = int(grid.size.x)
-	var size_y = int(grid.size.y)
+	# Dictionary to store the absolute shortest distance to each cell
+	var distances = {}
+	distances[cell] = 0
 	
-	## iterate over width and height of the grid
-	for y in range(size_y):
-		visited.append([])
-		distances.append([])
-		previous.append([])
-		for x in range(size_x):
-			visited[y].append(false)
-			distances[y].append(MAX_VALUE)
-			previous[y].append(null)
-	
-	## Make new queue
 	var queue = PriorityQueue.new()
 	queue.push(cell, 0) # starting cell
 	
-	# FIX: Cast coordinates to int before using as Array indexes
-	var start_x = int(cell.x)
-	var start_y = int(cell.y)
-	distances[start_y][start_x] = 0
-	
-	## While there is still a node in the queue, we'll keep looping
 	while not queue.is_empty():
-		var current = queue.pop() # take out the front node
+		var current_node = queue.pop()
+		var current_cell = current_node.value
+		var current_dist = current_node.priority
 		
-		# FIX: Cast to int
-		var cur_x = int(current.value.x)
-		var cur_y = int(current.value.y)
-		visited[cur_y][cur_x] = true # mark front node as visited
-		
+		# If we already found a shorter path to this cell, skip it
+		if current_dist > distances.get(current_cell, MAX_VALUE):
+			continue
+			
 		for direction in DIRECTIONS:
-			var coordinates = current.value + direction 
+			var neighbor = current_cell + direction 
 			
-			if grid.is_within_bounds(coordinates):
-				# FIX: Create integer bounds for our Godot 4 Arrays
-				var cx = int(coordinates.x)
-				var cy = int(coordinates.y)
+			if not grid.is_within_bounds(neighbor):
+				continue
 				
-				if visited[cy][cx]:
-					continue
+			# Enemies act as solid brick walls! 
+			if is_occupied(neighbor) and _units[neighbor].is_enemy != curr_unit.is_enemy:
+				continue
 				
-				# Because of 'continue' above, we don't need 'else' here.
-				# FIX: _movement_costs is a 1D dictionary keyed by Vector2i.
-				var coord_v2i = Vector2i(cx, cy)
-				# .get() pulls the cost safely, and defaults to 1 if the tile isn't in the dict
-				var tile_cost = _movement_costs.get(coord_v2i, 1) 
-				
-				var distance_to_node = current.priority + tile_cost 
-				
-				if is_occupied(coordinates):
-					if curr_unit.is_enemy != _units[coordinates].is_enemy:
-						# Enemies block movement entirely
-						distance_to_node = current.priority + MAX_VALUE
-						
-				visited[cy][cx] = true
-				distances[cy][cx] = distance_to_node
+			var coord_v2i = Vector2i(int(neighbor.x), int(neighbor.y))
+			var tile_cost = _movement_costs.get(coord_v2i, 1) 
+			var new_cost = current_dist + tile_cost 
 			
-				if distance_to_node <= max_distance: # check if node is actually reachable
-					previous[cy][cx] = current.value 
-					moveable_cells.append(coordinates) 
-					queue.push(coordinates, distance_to_node) 
+			# If we can reach the tile, and this is the fastest route we've found so far...
+			if new_cost <= max_distance:
+				if new_cost < distances.get(neighbor, MAX_VALUE):
+					distances[neighbor] = new_cost
+					queue.push(neighbor, new_cost) 
 	
-	return moveable_cells
+	# Return all the keys we found. These are our blue tiles!
+	return distances.keys()
 
 ## Updates the _units dictionary with the target position for the unit and asks the _active_unit to walk to it.
 func _move_active_unit(new_cell: Vector2) -> void:
@@ -304,22 +273,22 @@ func _reset_unit() -> void:
 		
 		# 4. Deselect her so the animations reset and the board forgets her
 		_deselect_active_unit()
-		_clear_active_unit()
+		_deselect_active_unit()
 		
 	# 5. CRITICAL FIX: Give control back to the player!
 	_cursor.is_active = true
 		
 ## Deselects the active unit, clearing the cells overlay and interactive path drawing.
+## Universally clears the active unit, resets their animations, and wipes the overlays.
 func _deselect_active_unit() -> void:
-	_active_unit.is_selected = false
-	_unit_overlay.clear()
-	_unit_path.stop()
-
-
-## Clears the reference to the _active_unit and the corresponding walkable cells.
-func _clear_active_unit() -> void:
+	if _active_unit:
+		_active_unit.is_selected = false
+		
 	_active_unit = null
 	_walkable_cells.clear()
+	_attackable_cells.clear()
+	_unit_overlay.clear()
+	_unit_path.stop()
 
 
 ## Selects or moves a unit based on where the cursor is.
@@ -375,7 +344,7 @@ func _on_unit_died(unit: Unit) -> void:
 	
 	# If the active unit died, clear the cursor selection
 	if _active_unit == unit:
-		_clear_active_unit()
+		_deselect_active_unit()
 
 func _show_action_menu() -> void:
 	var action_menu
@@ -410,7 +379,7 @@ func finish_unit_turn() -> void:
 	if has_node("ActionMenu"):
 		$ActionMenu.hide()
 		
-	_clear_active_unit()
+	_deselect_active_unit()
 	_cursor.is_active = true
 	
 func end_player_phase() -> void:
