@@ -29,17 +29,10 @@ const MAX_VALUE: int = 99999
 
 func _ready() -> void:
 	_movement_costs = _map.get_movement_costs()
-	_reinitialize()
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
 	_cursor.moved.connect(_on_Cursor_moved)
-
-	for child in get_children():
-		if child is Unit:
-			_units[child.cell] = child
-			# (Your existing signals, if any)
-			
-			# ADD THIS LINE: Listen for their death!
-			child.died.connect(_on_unit_died)
+	
+	_reinitialize()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_unit and event.is_action_pressed("ui_cancel"):
@@ -59,9 +52,9 @@ func is_occupied(cell: Vector2) -> bool:
 	return _units.has(cell)
 
 
-## Returns an array of cells a given unit can walk using the flood fill algorithm.
+## Returns an array of cells a given unit can walk using Dijkstra.
 func get_walkable_cells(unit: Unit) -> Array:
-	return _dijkstra(unit.cell, unit.move_range, false)
+	return _dijkstra(unit, unit.move_range, false)
 	
 ### Calculates attackable cells by extending outward from all walkable cells using math
 ## Calculates attackable cells using high-speed dictionary lookups (O(1)) instead of arrays
@@ -109,7 +102,14 @@ func _reinitialize() -> void:
 		var unit := child as Unit
 		if not unit:
 			continue
+			
+		# CRITICAL FIX: Force the cell to be a perfect integer to prevent float crashes!
+		unit.cell = unit.cell.round()
 		_units[unit.cell] = unit
+		
+		# Safely connect the died signal so memory is cleared when enemies are defeated
+		if not unit.died.is_connected(_on_unit_died):
+			unit.died.connect(_on_unit_died)
 
 
 ## Returns an array with all the coordinates of walkable cells based on the `max_distance`.
@@ -149,15 +149,16 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 	return full_array.filter(func(i): return i not in wall_array)
 
 ## Generates a list of walkable cells based on unit movement value and tile movement cost
-func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Array:
-	var curr_unit = _units[cell]
+## Generates a list of walkable cells based on unit movement value and tile movement cost
+func _dijkstra(unit: Unit, max_distance: int, attackable_check: bool) -> Array:
+	var start_cell = unit.cell.round()
 	
 	# Dictionary to store the absolute shortest distance to each cell
 	var distances = {}
-	distances[cell] = 0
+	distances[start_cell] = 0
 	
 	var queue = PriorityQueue.new()
-	queue.push(cell, 0) # starting cell
+	queue.push(start_cell, 0) # starting cell
 	
 	while not queue.is_empty():
 		var current_node = queue.pop()
@@ -174,8 +175,9 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 			if not grid.is_within_bounds(neighbor):
 				continue
 				
-			# Enemies act as solid brick walls! 
-			if is_occupied(neighbor) and _units[neighbor].is_enemy != curr_unit.is_enemy:
+			# Enemies act as solid brick walls! Use .get() for 100% safety
+			var neighbor_unit = _units.get(neighbor)
+			if neighbor_unit != null and neighbor_unit.is_enemy != unit.is_enemy:
 				continue
 				
 			var coord_v2i = Vector2i(int(neighbor.x), int(neighbor.y))
@@ -191,27 +193,32 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 	# Return all the keys we found. These are our blue tiles!
 	return distances.keys()
 
-## Updates the _units dictionary with the target position for the unit and asks the _active_unit to walk to it.
+
 ## Moves the active unit to the new cell and shows the action menu
 func _move_active_unit(new_cell: Vector2) -> void:
-	# 1. CRITICAL FIX: Validate and explicitly draw the path to the target!
+	# 1. Validate and explicitly draw the path to the target
 	if _unit_path._pathfinder == null:
 		_unit_path.initialize(_walkable_cells)
 	_unit_path.draw(_active_unit.cell, new_cell)
 	
-	# 2. Safety Check: If the path is somehow empty or doesn't reach the target, abort!
+	# 2. Safety Check: If the path is somehow empty or doesn't reach the target, abort
 	if _unit_path.current_path.is_empty() or _unit_path.current_path[-1] != new_cell:
 		return 
 	
-	# 3. Path is secure! Safe to clear memory and proceed.
+	# 3. Path is secure! Safe to clear visual memory.
 	_walkable_cells.clear()
 	_attackable_cells.clear()
 	_unit_overlay.clear()
-	
 	_cursor.is_active = false
 	
-	# 4. Walk and pop menu
-	await _active_unit.walk_along(_unit_path.current_path)
+	# 4. CRITICAL FIX: Erase the old position from the board's memory and log the new one!
+	_units.erase(_active_unit.cell)
+	_units[new_cell] = _active_unit
+	
+	# 5. Tell the unit to walk, and wait for the specific 'walk_finished' signal!
+	_active_unit.walk_along(_unit_path.current_path)
+	await _active_unit.walk_finished
+	
 	_show_action_menu()
 	
 
