@@ -64,33 +64,41 @@ func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit.cell, unit.move_range, false)
 	
 ### Calculates attackable cells by extending outward from all walkable cells using math
+## Calculates attackable cells using high-speed dictionary lookups (O(1)) instead of arrays
 func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) -> Array:
-	var attackable_cells = []
+	var attackable_dict = {}
+	var walkable_dict = {}
 	
+	# Convert our walkable array into a high-speed dictionary
+	for cell in walkable_cells:
+		walkable_dict[cell] = true
+		
 	if attack_range <= 0:
-		return attackable_cells
+		return []
 		
 	for cell in walkable_cells:
-		
-		# CRITICAL FIX: Savannah cannot initiate an attack from a tile an ally is standing on!
 		if is_occupied(cell) and _units[cell] != unit:
 			continue
 			
 		for x in range(-attack_range, attack_range + 1):
 			for y in range(-attack_range, attack_range + 1):
-				if abs(x) + abs(y) > 0 and abs(x) + abs(y) <= attack_range:
+				var distance = abs(x) + abs(y)
+				
+				if distance > 0 and distance <= attack_range:
 					var target_cell = cell + Vector2(x, y)
 					
 					if grid.is_within_bounds(target_cell):
-						if target_cell not in walkable_cells and target_cell not in attackable_cells:
+						# CRITICAL FIX: Using .has() on a dictionary is exponentially faster!
+						if not walkable_dict.has(target_cell) and not attackable_dict.has(target_cell):
 							
-							# Don't draw red attack tiles over our own allies!
 							if is_occupied(target_cell) and _units[target_cell].is_enemy == unit.is_enemy:
 								continue
 								
-							attackable_cells.append(target_cell)
+							# Add to our high-speed dictionary
+							attackable_dict[target_cell] = true
 							
-	return attackable_cells
+	# Return just the keys (the Vector2 coordinates) as an Array
+	return attackable_dict.keys()
 
 
 ## Clears, and refills the `_units` dictionary with game objects that are on the board.
@@ -184,31 +192,26 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 	return distances.keys()
 
 ## Updates the _units dictionary with the target position for the unit and asks the _active_unit to walk to it.
+## Moves the active unit to the new cell and shows the action menu
 func _move_active_unit(new_cell: Vector2) -> void:
-	# 1. Check if the tile is valid
-	if is_occupied(new_cell) or not new_cell in _walkable_cells:
-		return
+	# 1. CRITICAL FIX: Validate and explicitly draw the path to the target!
+	if _unit_path._pathfinder == null:
+		_unit_path.initialize(_walkable_cells)
+	_unit_path.draw(_active_unit.cell, new_cell)
 	
-	# CRITICAL FIX: Disable the cursor instantly so stray mouse movements 
-	# during the run animation don't crash the empty pathfinder!
+	# 2. Safety Check: If the path is somehow empty or doesn't reach the target, abort!
+	if _unit_path.current_path.is_empty() or _unit_path.current_path[-1] != new_cell:
+		return 
+	
+	# 3. Path is secure! Safe to clear memory and proceed.
+	_walkable_cells.clear()
+	_attackable_cells.clear()
+	_unit_overlay.clear()
+	
 	_cursor.is_active = false
 	
-	# 2. Clear the blue/red visual tiles immediately so the board looks clean
-	_unit_overlay.clear()
-	_unit_path.stop()
-	
-	# 3. Tell the unit to start running!
-	_active_unit.walk_along(_unit_path.current_path)
-	
-	# 4. Wait right here until the puppet is completely finished running
-	await _active_unit.walk_finished
-	
-	# 5. Update the board's memory with her new location
-	_units.erase(_active_unit.cell)
-	_units[new_cell] = _active_unit
-	_active_unit.cell = new_cell
-	
-	# 6. POP UP THE ACTION MENU!
+	# 4. Walk and pop menu
+	await _active_unit.walk_along(_unit_path.current_path)
 	_show_action_menu()
 	
 
@@ -253,6 +256,17 @@ func _hover_display(cell: Vector2) -> void:
 		# 4. Draw the red tiles first, then the blue ones on top!
 		_unit_overlay.draw_attackable_cells(_attackable_cells)
 		_unit_overlay.draw_walkable_cells(_walkable_cells)
+
+
+## Safely opens the pause menu, guaranteeing we don't stack duplicates.
+func _show_pause_menu() -> void:
+	if has_node("PauseMenu"):
+		return # Menu is already open, do nothing!
+		
+	var pause_menu = PauseMenu.instantiate()
+	pause_menu.name = "PauseMenu" # Explicitly name it so has_node() works
+	add_child(pause_menu)
+
 
 func _reset_unit() -> void:
 	# 1. Hide the menu if it's open to get it out of our way
@@ -317,8 +331,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			await _move_active_unit(cell) 
 	else:
 		# Player clicked an empty tile
-		var pause_menu = PauseMenu.instantiate()
-		add_child(pause_menu)
+		_show_pause_menu()
 
 
 ## Updates the interactive path's drawing if there's an active and selected unit.
