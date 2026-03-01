@@ -6,8 +6,15 @@ func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
 	
 	##disable the cursor
+	cursor.is_active = false
 	cursor.hide()
 	cursor.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+func _restore_cursor() -> void:
+	cursor.is_active = true
+	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	cursor.show()
 
 
 
@@ -28,9 +35,7 @@ func _on_wait_button_pressed() -> void:
 	
 	# clear active unit
 	get_parent()._clear_active_unit()
-	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	#cursor.reset_cursor()
-	cursor.show()
+	_restore_cursor()
 	queue_free()
 
 
@@ -39,7 +44,5 @@ func _on_cancel_button_pressed() -> void:
 	get_parent()._reset_unit()
 	
 	get_parent()._clear_active_unit()
-	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	#cursor.reset_cursor()
-	cursor.show()
+	_restore_cursor()
 	queue_free()
