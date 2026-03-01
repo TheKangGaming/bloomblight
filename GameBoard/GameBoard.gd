@@ -348,7 +348,7 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		else:
 			# If they move the mouse out of bounds, stop drawing the path
 			_unit_path.stop()
-		_unit_path.draw(_active_unit.cell, new_cell)
+		
 	elif _unit_overlay != null and _walkable_cells != []:
 		_walkable_cells.clear()
 		_unit_overlay.clear()
