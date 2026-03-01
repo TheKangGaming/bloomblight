@@ -311,21 +311,17 @@ func _clear_active_unit() -> void:
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if not _active_unit and _units.has(cell):
 		_select_unit(cell)
-	elif _active_unit != null: #A unit is already selected, pulls up action menu
+	elif _active_unit != null: 
+		# 1. Player clicked the active unit (waiting in place without moving)
 		if is_occupied(cell) and _units[cell] == _active_unit:
+			_unit_overlay.clear()
+			_unit_path.stop()
+			_show_action_menu()
 			
-			
-			_units.erase(_active_unit.cell)
-			_units[cell] = _active_unit
-			_deselect_active_unit()
-			_clear_active_unit()
-			
-			var action_menu = ActionMenu.instantiate()
-			add_child(action_menu)
+		# 2. Player clicked an empty blue tile to move
 		elif not is_occupied(cell) and _walkable_cells.has(cell):
-			await(_move_active_unit(cell))
-			var action_menu = ActionMenu.instantiate()
-			add_child(action_menu)
+			# _move_active_unit already pops up the menu when the walk finishes!
+			await _move_active_unit(cell) 
 	else:
 		var pause_menu = PauseMenu.instantiate()
 		add_child(pause_menu)
@@ -333,7 +329,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 ## Updates the interactive path's drawing if there's an active and selected unit.
 func _on_Cursor_moved(new_cell: Vector2) -> void:
-	if _active_unit and _active_unit.is_selected and _unit_path.pathfinder:
+	if _active_unit and _active_unit.is_selected and _unit_path._pathfinder:
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells != []:
 		_walkable_cells.clear()
@@ -349,22 +345,29 @@ func _on_unit_died(unit: Unit) -> void:
 		_clear_active_unit()
 
 func _show_action_menu() -> void:
-	# Check if the ActionMenu actually exists on your board!
+	var action_menu
+	
+	# If the menu exists, grab it. If not, create it!
 	if has_node("ActionMenu"):
-		var action_menu = $ActionMenu
-		action_menu.show()
-		
-		# Move the menu roughly to where the unit is standing on the screen
-		var screen_pos = grid.calculate_map_position(_active_unit.cell)
-		# Shift it slightly to the right so it doesn't cover her face
-		action_menu.offset = screen_pos + Vector2(20, -20) 
-		
-		# (ActionMenu.gd currently handles disabling the cursor on _ready, 
-		# but if it's already in the scene, we might need to trigger it here!)
-		_cursor.is_active = false
+		action_menu = $ActionMenu
 	else:
-		# FALLBACK: If you don't have the menu in the scene yet, just end the turn cleanly.
-		_clear_active_unit()
+		action_menu = ActionMenu.instantiate()
+		action_menu.name = "ActionMenu" # Name it so we can find it next time
+		add_child(action_menu)
+		
+	action_menu.show()
+	
+	# Move the menu roughly to where the unit is standing
+	var screen_pos = grid.calculate_map_position(_active_unit.cell)
+	
+	# Safely handle either offset or position depending on your UI setup
+	if "offset" in action_menu:
+		action_menu.offset = screen_pos + Vector2(20, -20) 
+	else:
+		action_menu.position = screen_pos + Vector2(20, -20)
+	
+	# Freeze the cursor so the player can navigate the menu
+	_cursor.is_active = false
 
 
 ## To be called by the Action Menu when the player chooses "Wait"
