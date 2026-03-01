@@ -9,13 +9,15 @@ signal accept_pressed(cell)
 ## Emitted when the cursor moved to a new cell.
 signal moved(new_cell)
 
+
+
 ## Grid resource, giving the node access to the grid size, and more.
 @export var grid: Resource
 ## Time before the cursor can move again in seconds.
 @export var ui_cooldown := 0.1
 
 var is_mouse = false
-
+var is_active: bool = true
 ## Coordinates of the current cell the cursor is hovering.
 var cell := Vector2.ZERO:
 	set(value):
@@ -49,6 +51,10 @@ func _process(_delta):
 			cell = grid_coords
 
 func _unhandled_input(event: InputEvent) -> void:
+	# ADD THIS SAFETY CHECK: Ignore everything if the cursor is frozen!
+	if not is_active:
+		return
+	
 	# Navigating cells with the mouse.
 	if event is InputEventMouseMotion:
 		is_mouse = true
