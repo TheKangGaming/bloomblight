@@ -40,11 +40,17 @@ var cell := Vector2.ZERO:
 
 
 func _ready() -> void:
+	if grid == null:
+		push_error("Cursor requires a Grid resource to function.")
+		set_process(false)
+		set_process_unhandled_input(false)
+		return
+
 	_timer.wait_time = ui_cooldown
 	cell = grid.calculate_grid_coordinates(position)
 	position = grid.calculate_map_position(cell)
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if not is_active:
 		return
 	

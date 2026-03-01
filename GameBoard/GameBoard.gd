@@ -139,7 +139,7 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Array:
 	var curr_unit = _units[cell]
 	var moveable_cells = [cell] # append our base cell to the array
-	var visited = [] # 2d array that keeps track of which cells we've already looked at
+	var visited = [] # 2d array that keeps track of which cells we've already finalized
 	var distances = [] # shows distance to each cell
 	var previous = [] # 2d array that shows you which cell you have to take to get there
 	
@@ -175,6 +175,10 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 		# FIX: Cast to int
 		var cur_x = int(current.value.x)
 		var cur_y = int(current.value.y)
+		# Dijkstra finalizes nodes only when they are popped from the queue.
+		# This allows us to update a node if we discover a cheaper path later.
+		if visited[cur_y][cur_x]:
+			continue
 		visited[cur_y][cur_x] = true # mark front node as visited
 		
 		for direction in DIRECTIONS:
@@ -202,12 +206,11 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 					elif _units[coordinates].is_wait and attackable_check:
 						occupied_cells.append(coordinates)
 						
-				visited[cy][cx] = true
-				distances[cy][cx] = distance_to_node
-			
-				if distance_to_node <= max_distance: # check if node is actually reachable
+				if distance_to_node < distances[cy][cx] and distance_to_node <= max_distance:
+					distances[cy][cx] = distance_to_node
 					previous[cy][cx] = current.value 
-					moveable_cells.append(coordinates) 
+					if not moveable_cells.has(coordinates):
+						moveable_cells.append(coordinates)
 					queue.push(coordinates, distance_to_node) 
 	
 	return moveable_cells.filter(func(i): return i not in occupied_cells)
@@ -309,6 +312,8 @@ func _reset_unit() -> void:
 		
 ## Deselects the active unit, clearing the cells overlay and interactive path drawing.
 func _deselect_active_unit() -> void:
+	if _active_unit == null:
+		return
 	_active_unit.is_selected = false
 	_unit_overlay.clear()
 	_unit_path.stop()
@@ -318,6 +323,7 @@ func _deselect_active_unit() -> void:
 func _clear_active_unit() -> void:
 	_active_unit = null
 	_walkable_cells.clear()
+	_attackable_cells.clear()
 
 
 ## Selects or moves a unit based on where the cursor is.
@@ -344,7 +350,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected and _unit_path._pathfinder:
 		_unit_path.draw(_active_unit.cell, new_cell)
-	elif _unit_overlay != null and _walkable_cells != []:
+	elif _unit_overlay != null and not _walkable_cells.is_empty():
 		_walkable_cells.clear()
 		_unit_overlay.clear()
 	if _units.has(new_cell) and _active_unit == null:
