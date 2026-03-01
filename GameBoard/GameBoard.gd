@@ -218,6 +218,10 @@ func _move_active_unit(new_cell: Vector2) -> void:
 	if is_occupied(new_cell) or not new_cell in _walkable_cells:
 		return
 	
+	# CRITICAL FIX: Disable the cursor instantly so stray mouse movements 
+	# during the run animation don't crash the empty pathfinder!
+	_cursor.is_active = false
+	
 	# 2. Clear the blue/red visual tiles immediately so the board looks clean
 	_unit_overlay.clear()
 	_unit_path.stop()
