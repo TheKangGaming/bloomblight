@@ -31,5 +31,6 @@ func draw(cell_start: Vector2, cell_end: Vector2) -> void:
 ## Stops drawing, clearing the drawn path and the `_pathfinder`.
 func stop() -> void:
 	_pathfinder = null
-	current_path = PackedVector2Array()
+	# Keep `current_path` intact so callers can consume the last computed movement route
+	# immediately after stopping the visual path rendering.
 	clear()
