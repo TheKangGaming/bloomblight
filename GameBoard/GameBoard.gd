@@ -63,26 +63,31 @@ func is_occupied(cell: Vector2) -> bool:
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit.cell, unit.move_range, false)
 	
-## Calculates attackable cells by extending outward from all walkable cells using math
-func get_attackable_cells(walkable_cells: Array, attack_range: int) -> Array:
+### Calculates attackable cells by extending outward from all walkable cells using math
+func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) -> Array:
 	var attackable_cells = []
 	
-	# Safety check: if they have no weapon/range, skip everything
 	if attack_range <= 0:
 		return attackable_cells
 		
 	for cell in walkable_cells:
-		# Mathematically check a grid area around each blue cell
+		
+		# CRITICAL FIX: Savannah cannot initiate an attack from a tile an ally is standing on!
+		if is_occupied(cell) and _units[cell] != unit:
+			continue
+			
 		for x in range(-attack_range, attack_range + 1):
 			for y in range(-attack_range, attack_range + 1):
-				
-				# If the distance is within our weapon's reach (Manhattan distance)
 				if abs(x) + abs(y) > 0 and abs(x) + abs(y) <= attack_range:
 					var target_cell = cell + Vector2(x, y)
 					
-					# If the cell exists on the map, isn't blue, and isn't already red...
 					if grid.is_within_bounds(target_cell):
 						if target_cell not in walkable_cells and target_cell not in attackable_cells:
+							
+							# Don't draw red attack tiles over our own allies!
+							if is_occupied(target_cell) and _units[target_cell].is_enemy == unit.is_enemy:
+								continue
+								
 							attackable_cells.append(target_cell)
 							
 	return attackable_cells
@@ -166,8 +171,6 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 	var start_y = int(cell.y)
 	distances[start_y][start_x] = 0
 	
-	var occupied_cells = []
-	
 	## While there is still a node in the queue, we'll keep looping
 	while not queue.is_empty():
 		var current = queue.pop() # take out the front node
@@ -200,9 +203,6 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 					if curr_unit.is_enemy != _units[coordinates].is_enemy:
 						# Enemies block movement entirely
 						distance_to_node = current.priority + MAX_VALUE
-					else:
-						# Allies don't block pathing, but we CANNOT end our turn standing on them!
-						occupied_cells.append(coordinates)
 						
 				visited[cy][cx] = true
 				distances[cy][cx] = distance_to_node
@@ -212,7 +212,7 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 					moveable_cells.append(coordinates) 
 					queue.push(coordinates, distance_to_node) 
 	
-	return moveable_cells.filter(func(i): return i not in occupied_cells)
+	return moveable_cells
 
 ## Updates the _units dictionary with the target position for the unit and asks the _active_unit to walk to it.
 func _move_active_unit(new_cell: Vector2) -> void:
@@ -255,7 +255,7 @@ func _select_unit(cell: Vector2) -> void:
 	_prev_position = _active_unit.position
 	_active_unit.is_selected = true
 	_walkable_cells = get_walkable_cells(_active_unit)
-	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range)
+	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range, _active_unit)
 	
 	_unit_overlay.draw_attackable_cells(_attackable_cells)
 	
@@ -274,7 +274,7 @@ func _hover_display(cell: Vector2) -> void:
 		_walkable_cells = get_walkable_cells(curr_unit)
 		
 		# 2. Pass those blue cells directly into the red cell math!
-		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range)
+		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range, curr_unit)
 		
 		print("Blue tiles: ", _walkable_cells.size(), " | Red tiles: ", _attackable_cells.size())
 		
@@ -354,18 +354,21 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 ## Updates the interactive path's drawing if there's an active and selected unit.
 func _on_Cursor_moved(new_cell: Vector2) -> void:
-	if _active_unit and _active_unit.is_selected and _unit_path._pathfinder:
+	if _active_unit and _active_unit.is_selected:
 		if _walkable_cells.has(new_cell):
+			if _unit_path._pathfinder == null:
+				_unit_path.initialize(_walkable_cells)
 			_unit_path.draw(_active_unit.cell, new_cell)
 		else:
-			# If they move the mouse out of bounds, stop drawing the path
 			_unit_path.stop()
-		
-	elif _unit_overlay != null and _walkable_cells != []:
-		_walkable_cells.clear()
-		_unit_overlay.clear()
-	if _units.has(new_cell) and _active_unit == null:
-		_hover_display(new_cell)
+			
+	else:
+		# CRITICAL FIX: Only show hover range if the unit hasn't taken their turn yet!
+		if _units.has(new_cell) and not _units[new_cell].is_wait:
+			_hover_display(new_cell)
+		else:
+			_unit_overlay.clear()
+			_walkable_cells.clear()
 		
 func _on_unit_died(unit: Unit) -> void:
 	_units.erase(unit.cell)
