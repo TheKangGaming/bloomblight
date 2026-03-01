@@ -284,15 +284,28 @@ func _hover_display(cell: Vector2) -> void:
 		_unit_overlay.draw_walkable_cells(_walkable_cells)
 
 func _reset_unit() -> void:
-	if _active_unit != null and _active_unit.cell != _prev_cell:
-		_active_unit.position = _prev_position
-		_units.erase(_active_unit.cell)
-		_units[_prev_cell] = _active_unit
-		_active_unit.cell = _prev_cell
+	# 1. Hide the menu if it's open to get it out of our way
+	if has_node("ActionMenu"):
+		$ActionMenu.hide()
+
+	if _active_unit != null:
+		# 2. Only physically teleport her if she actually moved away from her start tile
+		if _active_unit.cell != _prev_cell:
+			_active_unit.position = _prev_position
+			_units.erase(_active_unit.cell)
+			_units[_prev_cell] = _active_unit
+			_active_unit.cell = _prev_cell
+			
+		# 3. ALWAYS clear out these memory variables, even if she didn't move
 		_prev_cell = null
 		_prev_position = null
+		
+		# 4. Deselect her so the animations reset and the board forgets her
 		_deselect_active_unit()
 		_clear_active_unit()
+		
+	# 5. CRITICAL FIX: Give control back to the player!
+	_cursor.is_active = true
 		
 ## Deselects the active unit, clearing the cells overlay and interactive path drawing.
 func _deselect_active_unit() -> void:
@@ -362,9 +375,9 @@ func _show_action_menu() -> void:
 	
 	# Safely handle either offset or position depending on your UI setup
 	if "offset" in action_menu:
-		action_menu.offset = screen_pos + Vector2(20, -20) 
+		action_menu.offset = screen_pos + Vector2(30, -100) # Boosted way up!
 	else:
-		action_menu.position = screen_pos + Vector2(20, -20)
+		action_menu.position = screen_pos + Vector2(30, -100)
 	
 	# Freeze the cursor so the player can navigate the menu
 	_cursor.is_active = false
