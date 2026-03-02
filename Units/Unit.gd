@@ -4,7 +4,7 @@
 @tool
 class_name Unit
 extends Path2D
-
+var _hp_bar: ProgressBar
 @onready var animation_tree: AnimationTree = get_node_or_null("PathFollow2D/Visuals/AnimationTree")
 var move_state_machine = null # We will set this in _ready if the tree exists
 
@@ -88,6 +88,7 @@ func _ready() -> void:
 		queue_free()
 		return
 	
+	_setup_hp_bar()
 	_path_follow.rotates = false
 	
 	cell = grid.calculate_grid_coordinates(position)
@@ -263,6 +264,8 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 
 	health -= amount
 	
+	_update_hp_bar()
+	
 	# Pass the crit flag to the text spawner!
 	_spawn_damage_text(str(amount), is_crit, false)
 	
@@ -334,3 +337,72 @@ func _spawn_damage_text(text_value: String, is_crit: bool = false, is_miss: bool
 	
 	await tween.finished
 	label.queue_free()
+	
+## Dynamically generates a themed HP bar above the unit's head
+func _setup_hp_bar() -> void:
+	_hp_bar = ProgressBar.new()
+	_hp_bar.show_percentage = false # Hide the default Godot text
+	
+	# Sizing and positioning (Centered nicely above a 32x32 sprite)
+	_hp_bar.custom_minimum_size = Vector2(28, 6)
+	_hp_bar.position = Vector2(-14, -22) 
+	_hp_bar.z_index = 50
+	
+	# 1. The Carved Wood Background
+	var bg_style = StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.18, 0.13, 0.1) # Dark wood
+	bg_style.border_width_left = 1
+	bg_style.border_width_right = 1
+	bg_style.border_width_top = 1
+	bg_style.border_width_bottom = 1
+	bg_style.border_color = Color(0.08, 0.05, 0.03) # Darker carved border
+	bg_style.corner_radius_top_left = 2
+	bg_style.corner_radius_top_right = 2
+	bg_style.corner_radius_bottom_left = 2
+	bg_style.corner_radius_bottom_right = 2
+	_hp_bar.add_theme_stylebox_override("background", bg_style)
+	
+	# 2. The Sap Fill
+	var fill_style = StyleBoxFlat.new()
+	fill_style.corner_radius_top_left = 1
+	fill_style.corner_radius_top_right = 1
+	fill_style.corner_radius_bottom_left = 1
+	fill_style.corner_radius_bottom_right = 1
+	_hp_bar.add_theme_stylebox_override("fill", fill_style)
+	
+	_hp_bar.max_value = max_health
+	_hp_bar.value = health
+	
+	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
+	if visuals_node:
+		visuals_node.add_child(_hp_bar)
+	else:
+		add_child(_hp_bar)
+		
+	# Set the initial color
+	_update_hp_bar(true)
+
+
+## Animates the health dropping and handles the "Blight" color change
+func _update_hp_bar(instant: bool = false) -> void:
+	if not is_instance_valid(_hp_bar):
+		return
+		
+	if instant:
+		_hp_bar.value = health
+	else:
+		# Smoothly animate the health dropping over 0.3 seconds!
+		var tween = create_tween()
+		tween.tween_property(_hp_bar, "value", health, 0.3).set_trans(Tween.TRANS_SINE)
+	
+	# The Blight Check: Change the sap color if critically wounded
+	var fill_style = _hp_bar.get_theme_stylebox("fill").duplicate()
+	if float(health) / float(max_health) <= 0.3:
+		fill_style.bg_color = Color(0.6, 0.1, 0.6) # Toxic Blight Purple!
+	else:
+		if is_enemy:
+			fill_style.bg_color = Color(0.8, 0.2, 0.2) # Enemy Red
+		else:
+			fill_style.bg_color = Color(0.3, 0.8, 0.3) # Healthy Player Green
+			
+	_hp_bar.add_theme_stylebox_override("fill", fill_style)
