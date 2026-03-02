@@ -209,28 +209,30 @@ func attack(target: Unit) -> void:
 	var damage = max(1, strength - target.defense) 
 	print(name + " strikes " + target.name + " for " + str(damage) + " damage!")
 	
-	# 8. Deal the damage and flash red!
-	target.take_damage(damage)
+	# 8. Deal the damage and await the flash animation!
+	await target.take_damage(damage)
 
 ## Subtracts health, flashes red, and checks for death
 func take_damage(amount: int) -> void:
 	health -= amount
 	print(name + " took " + str(amount) + " damage! HP: " + str(health) + "/" + str(max_health))
 	
-	# Spawn the floating text! (We DO NOT 'await' this so it happens alongside the red flash)
 	_spawn_damage_text(amount)
 	
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	if visuals_node:
+		# 1. Capture whatever color the unit is right now!
+		var base_color = visuals_node.modulate 
+		
 		var tween = create_tween()
 		tween.tween_property(visuals_node, "modulate", Color.RED, 0.1)
-		tween.tween_property(visuals_node, "modulate", Color.WHITE, 0.1)
+		# 2. Tween back to the base color instead of hardcoding White
+		tween.tween_property(visuals_node, "modulate", base_color, 0.1)
 		await tween.finished
 		
 	# Check if dead
 	if health <= 0:
 		health = 0
-		# Wait just half a second so the player can see the floating text before the unit vanishes!
 		await get_tree().create_timer(0.5).timeout
 		die()
 
