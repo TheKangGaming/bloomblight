@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://GameBoard/UnitPath.gd" id="8_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="10_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
+[ext_resource type="AudioStream" uid="uid://b33052oyr1adr" path="res://audio/Music_Morningconflict.wav" id="12_qga0l"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_d5mw3"]
 texture = ExtResource("5_hgyof")
@@ -122,3 +123,8 @@ y_sort_enabled = true
 position = Vector2(360, 100)
 strength = 4
 defense = 2
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
+stream = ExtResource("12_qga0l")
+volume_db = -15.0
+autoplay = true
