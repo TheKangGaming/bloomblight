@@ -168,6 +168,20 @@ func _load_player_stats() -> void:
 	attack_range = Global.player_stats.get("ATK_RNG", attack_range)
 	
 	## Makes the unit physically bump into the target and deal damage!
+## Calculates and returns combat math without actually executing the attack
+func get_combat_stats(target: Unit) -> Dictionary:
+	var hit_chance = clamp(80 + (dexterity * 2) - (target.speed * 2), 0, 100)
+	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
+	var weapon_might = 5 # Simulating a basic Iron Axe
+	var actual_damage = max(1, (strength + weapon_might) - target.defense)
+	
+	return {
+		"hit": hit_chance,
+		"crit": crit_chance,
+		"damage": actual_damage
+	}
+	
+	
 func attack(target: Unit) -> void:
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	
@@ -209,22 +223,19 @@ func attack(target: Unit) -> void:
 			await tween.finished
 
 	# --- NEW COMBAT MATH & RNG ---
-	# 1. Calculate Hit and Crit chances (0 to 100)
-	var hit_chance = clamp(80 + (dexterity * 2) - (target.speed * 2), 0, 100)
-	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
+	# Pull the math from our helper function!
+	var stats = get_combat_stats(target)
 	
 	# 2. Roll the digital dice!
 	var hit_roll = randi() % 100
 	var crit_roll = randi() % 100
 	
-	if hit_roll < hit_chance:
-		# HIT! Calculate damage (Strength + Weapon Might - Defense)
-		var weapon_might = 5 # Simulating a basic Iron Axe
-		var actual_damage = max(1, (strength + weapon_might) - target.defense)
+	if hit_roll < stats["hit"]: # Replaced 'hit_chance'
+		var actual_damage = stats["damage"] # Replaced the raw calculation
 		
-		var is_crit = (crit_roll < crit_chance)
+		var is_crit = (crit_roll < stats["crit"]) # Replaced 'crit_chance'
 		if is_crit:
-			actual_damage *= 3 # Triple damage!
+			actual_damage *= 3 
 			print(name + " LANDS A CRITICAL HIT! " + str(actual_damage) + " damage!")
 		else:
 			print(name + " strikes " + target.name + " for " + str(actual_damage) + " damage.")
@@ -234,11 +245,8 @@ func attack(target: Unit) -> void:
 		# MISS!
 		print(name + " MISSED!")
 		target.show_miss_text()
-		
-		# Wait the exact same amount of time as the damage flash so turns don't desync!
 		await get_tree().create_timer(0.2).timeout 
 		
-	# Follow-through wait before handing the turn back
 	await get_tree().create_timer(0.2).timeout
 
 ## Subtracts health, flashes red, and checks for death

@@ -23,6 +23,8 @@ var _movement_costs
 var _prev_cell
 var _prev_position
 var _is_targeting_attack: bool = false
+var _target_unit_for_forecast: Unit = null
+var _forecast_ui_node: CanvasLayer = null
 var _valid_target_cells: Array = []
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
@@ -41,6 +43,13 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_unit and event.is_action_pressed("ui_cancel"):
+		
+		# NEW: If viewing forecast, back out to targeting mode
+		if _target_unit_for_forecast != null:
+			_target_unit_for_forecast = null
+			_hide_combat_forecast()
+			return
+			
 		if _is_targeting_attack:
 			# Player canceled targeting: clear the red tiles and bring the menu back
 			_is_targeting_attack = false
@@ -49,7 +58,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_show_action_menu() 
 		else:
 			# Player canceled moving entirely: teleport back
-			_deselect_active_unit()
+			_reset_unit()
 
 
 func _get_configuration_warning() -> String:
@@ -325,29 +334,37 @@ func _deselect_active_unit() -> void:
 
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
-	# --- 1. NEW COMBAT STATE INTERCEPT ---
+	# --- 0. CONFIRM FORECAST STATE ---
+	if _target_unit_for_forecast != null:
+		# We are currently viewing the forecast window and clicked Confirm again!
+		var target = _target_unit_for_forecast
+		_target_unit_for_forecast = null
+		_hide_combat_forecast()
+		
+		_cursor.is_active = false 
+		await execute_combat(_active_unit, target)
+		
+		_is_targeting_attack = false
+		_valid_target_cells.clear()
+		
+		if is_instance_valid(_active_unit) and _active_unit.health > 0:
+			finish_unit_turn()
+		else:
+			_deselect_active_unit()
+			_cursor.is_active = true
+		return
+
+	# --- 1. TARGETING STATE INTERCEPT ---
 	if _is_targeting_attack:
 		if cell in _valid_target_cells and is_occupied(cell):
 			var target_unit = _units[cell]
-			
-			# Ensure we are actually clicking an enemy!
 			if target_unit.is_enemy != _active_unit.is_enemy:
-				_cursor.is_active = false # Freeze input during the fight
 				
-				# NEW: Hand the fight over to the combat manager!
-				await execute_combat(_active_unit, target_unit)
+				# NEW: Don't attack yet! Lock the cursor on the enemy and open the forecast!
+				_target_unit_for_forecast = target_unit
+				_show_combat_forecast(_active_unit, target_unit)
 				
-				_is_targeting_attack = false
-				_valid_target_cells.clear()
-				
-				# End turn (Unless Savannah was killed by the counter-attack, then handle safely!)
-				if is_instance_valid(_active_unit) and _active_unit.health > 0:
-					finish_unit_turn()
-				else:
-					_deselect_active_unit()
-					_cursor.is_active = true
-				
-		return # Stop running the rest of the function if we are in targeting mode!
+		return
 		
 	# --- 2. MOVEMENT / SELECTION INTERCEPT ---
 	if not _active_unit and _units.has(cell):
@@ -634,3 +651,94 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 			
 	# Give the final animation a tiny bit of time to settle before unlocking the cursor
 	await get_tree().create_timer(0.2).timeout
+
+## Generates a classic Strategy RPG preview window on the fly
+## Generates a miniature, scaled-down Strategy RPG preview window
+func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
+	_hide_combat_forecast() 
+	
+	_forecast_ui_node = CanvasLayer.new()
+	add_child(_forecast_ui_node)
+	
+	var panel = PanelContainer.new()
+	_forecast_ui_node.add_child(panel)
+	panel.position = Vector2(10, 10) # Tucked slightly tighter into the corner
+	
+	var margin = MarginContainer.new()
+	# Halved the margins to remove the bulky borders
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 5)
+	margin.add_theme_constant_override("margin_bottom", 5)
+	panel.add_child(margin)
+	
+	var vbox = VBoxContainer.new()
+	# Force the rows to sit much closer together
+	vbox.add_theme_constant_override("separation", 1) 
+	margin.add_child(vbox)
+	
+	# 1. Attacker Stats
+	var atk_stats = attacker.get_combat_stats(defender)
+	var title = Label.new()
+	title.text = ">> " + attacker.name + " <<"
+	title.add_theme_color_override("font_color", Color.AQUA)
+	title.add_theme_font_size_override("font_size", 12) # Smaller font
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+	
+	vbox.add_child(_create_stat_row("HP", str(attacker.health) + "/" + str(attacker.max_health)))
+	vbox.add_child(_create_stat_row("DMG", str(atk_stats.damage)))
+	vbox.add_child(_create_stat_row("HIT", str(atk_stats.hit) + "%"))
+	vbox.add_child(_create_stat_row("CRIT", str(atk_stats.crit) + "%"))
+	
+	vbox.add_child(HSeparator.new())
+	
+	# 2. Defender Stats
+	var def_title = Label.new()
+	def_title.text = ">> " + defender.name + " <<"
+	def_title.add_theme_color_override("font_color", Color.ORANGE_RED)
+	def_title.add_theme_font_size_override("font_size", 12) # Smaller font
+	def_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(def_title)
+	
+	vbox.add_child(_create_stat_row("HP", str(defender.health) + "/" + str(defender.max_health)))
+	
+	var dist = _manhattan_distance(defender.cell, attacker.cell)
+	if dist <= defender.attack_range:
+		var def_stats = defender.get_combat_stats(attacker)
+		vbox.add_child(_create_stat_row("DMG", str(def_stats.damage)))
+		vbox.add_child(_create_stat_row("HIT", str(def_stats.hit) + "%"))
+		vbox.add_child(_create_stat_row("CRIT", str(def_stats.crit) + "%"))
+	else:
+		var no_counter = Label.new()
+		no_counter.text = "-- No Counter --"
+		no_counter.add_theme_color_override("font_color", Color.GRAY)
+		no_counter.add_theme_font_size_override("font_size", 10) # Smaller font
+		no_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(no_counter)
+
+
+## Helper function to create tightly packed, right-aligned stat rows
+func _create_stat_row(stat_name: String, value: String) -> HBoxContainer:
+	var hbox = HBoxContainer.new()
+	
+	var name_lbl = Label.new()
+	name_lbl.text = stat_name + ":"
+	name_lbl.custom_minimum_size = Vector2(35, 0) # Squished width
+	name_lbl.add_theme_font_size_override("font_size", 10) # Smaller font
+	
+	var val_lbl = Label.new()
+	val_lbl.text = value
+	val_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT # Pushes the numbers perfectly to the right border!
+	val_lbl.add_theme_font_size_override("font_size", 10) # Smaller font
+	
+	hbox.add_child(name_lbl)
+	hbox.add_child(val_lbl)
+	return hbox
+
+
+func _hide_combat_forecast() -> void:
+	if _forecast_ui_node:
+		_forecast_ui_node.queue_free()
+		_forecast_ui_node = null
