@@ -335,13 +335,18 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			if target_unit.is_enemy != _active_unit.is_enemy:
 				_cursor.is_active = false # Freeze input during the fight
 				
-				# FIGHT! Wait for the lunge to finish.
-				await _active_unit.attack(target_unit)
+				# NEW: Hand the fight over to the combat manager!
+				await execute_combat(_active_unit, target_unit)
 				
-				# Cleanup and automatically end the unit's turn
 				_is_targeting_attack = false
 				_valid_target_cells.clear()
-				finish_unit_turn()
+				
+				# End turn (Unless Savannah was killed by the counter-attack, then handle safely!)
+				if is_instance_valid(_active_unit) and _active_unit.health > 0:
+					finish_unit_turn()
+				else:
+					_deselect_active_unit()
+					_cursor.is_active = true
 				
 		return # Stop running the rest of the function if we are in targeting mode!
 		
@@ -560,7 +565,9 @@ func start_enemy_phase() -> void:
 		if _is_valid_attack_target(enemy, target_player):
 			var final_dist = _manhattan_distance(enemy.cell, target_player.cell)
 			if final_dist <= enemy.attack_range:
-				await enemy.attack(target_player)
+				
+				# NEW: Hand the AI fight over to the combat manager!
+				await execute_combat(enemy, target_player)
 				
 		# Add a slight delay before the next Orc takes its turn
 		await get_tree().create_timer(0.3).timeout
@@ -608,3 +615,23 @@ func enter_attack_targeting() -> void:
 	
 	# Wake the cursor back up so the player can pick a target
 	_cursor.is_active = true
+	
+## Orchestrates the turn-based combat sequence between two units
+func execute_combat(attacker: Unit, defender: Unit) -> void:
+	# 1. Initiator swings first
+	await attacker.attack(defender)
+	
+	# 2. Check if defender survived the hit
+	if is_instance_valid(defender) and defender.health > 0:
+		
+		# 3. Strategy logic: Is the attacker inside the defender's attack range?
+		var dist = _manhattan_distance(defender.cell, attacker.cell)
+		if dist <= defender.attack_range:
+			
+			# 4. Cinematic pause, then counter-attack!
+			await get_tree().create_timer(0.3).timeout
+			print(defender.name + " retaliates!")
+			await defender.attack(attacker)
+			
+	# Give the final animation a tiny bit of time to settle before unlocking the cursor
+	await get_tree().create_timer(0.2).timeout

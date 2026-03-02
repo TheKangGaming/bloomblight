@@ -217,18 +217,21 @@ func take_damage(amount: int) -> void:
 	health -= amount
 	print(name + " took " + str(amount) + " damage! HP: " + str(health) + "/" + str(max_health))
 	
+	# Spawn the floating text! (We DO NOT 'await' this so it happens alongside the red flash)
+	_spawn_damage_text(amount)
+	
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	if visuals_node:
 		var tween = create_tween()
 		tween.tween_property(visuals_node, "modulate", Color.RED, 0.1)
 		tween.tween_property(visuals_node, "modulate", Color.WHITE, 0.1)
-		
-		# CRITICAL FIX: Wait for the red flash to finish before dying!
 		await tween.finished
 		
 	# Check if dead
 	if health <= 0:
 		health = 0
+		# Wait just half a second so the player can see the floating text before the unit vanishes!
+		await get_tree().create_timer(0.5).timeout
 		die()
 
 
@@ -239,3 +242,32 @@ func die() -> void:
 	# (We can play a fancy death animation or sound effect here later!)
 	queue_free()
 	
+## Spawns a floating red damage number above the unit's head
+func _spawn_damage_text(amount: int) -> void:
+	var label = Label.new()
+	label.text = str(amount)
+	
+	# Basic styling (Red, bold outline, center aligned)
+	label.add_theme_color_override("font_color", Color.RED)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_font_size_override("font_size", 20)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# Position it slightly above the unit
+	label.position = Vector2(-20, -40)
+	label.z_index = 100 # Ensure it draws on top of everything
+	
+	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
+	if visuals_node:
+		visuals_node.add_child(label)
+	else:
+		add_child(label)
+		
+	# Tween to make it float up and fade out
+	var tween = create_tween()
+	tween.tween_property(label, "position", label.position + Vector2(0, -30), 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.2) # Fade out slightly after it starts moving
+	
+	await tween.finished
+	label.queue_free()	
