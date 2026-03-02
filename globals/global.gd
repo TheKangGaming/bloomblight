@@ -81,8 +81,9 @@ func get_seed_count(seed_type: Items) -> int:
 var player_stats = {
 	"MAX_HP": 20,  # Max Health
 	"HP": 20,      # Current Health (This lets her stay injured after battle!)
-	"VIT": 10,     # Health / Physical Defense
+	"VIT": 10,     # Determines Max HP growth on level up
 	"STR": 5,      # Physical Damage
+	"DEF": 2,      # NEW: Physical Damage Reduction
 	"DEX": 5,      # Accuracy / Crit Chance
 	"INT": 5,      # Magic Damage / Healing Power
 	"SPD": 5,      # Turn Order / Evasion

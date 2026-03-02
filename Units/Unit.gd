@@ -152,15 +152,16 @@ func walk_along(path: PackedVector2Array) -> void:
 	_is_walking = true
 
 func _load_player_stats() -> void:
-	# Pull from the Global dictionary
+	# Pull from the Global dictionary safely
 	max_health = Global.player_stats.get("MAX_HP", max_health)
 	health = Global.player_stats.get("HP", max_health)
 	
+	# Map your specific RPG stats to the combat variables
+	strength = Global.player_stats.get("STR", strength)
+	defense = Global.player_stats.get("DEF", defense) # Changed from VIT to DEF!
+	
 	move_range = Global.player_stats.get("MOV", move_range)
 	attack_range = Global.player_stats.get("ATK_RNG", attack_range)
-	
-	# If you want to calculate the total stats including Food Buffs later, 
-	# we will add that math right here!
 	
 	## Makes the unit physically bump into the target and deal damage!
 func attack(target: Unit) -> void:
