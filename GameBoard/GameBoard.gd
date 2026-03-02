@@ -448,80 +448,117 @@ func end_player_phase() -> void:
 	# 2. Trigger the Enemy Phase Logic (We will build the AI inside this!)
 	start_enemy_phase()
 
+func _manhattan_distance(from_cell: Vector2, to_cell: Vector2) -> int:
+	return int(abs(from_cell.x - to_cell.x) + abs(from_cell.y - to_cell.y))
+
+func _is_valid_attack_target(attacker: Unit, target: Unit) -> bool:
+	return is_instance_valid(target) and target.health > 0 and target.is_enemy != attacker.is_enemy
+
+func _get_legal_enemy_destinations(enemy: Unit, walkable_cells: Array) -> Array:
+	var legal_cells := [enemy.cell]
+	for cell in walkable_cells:
+		if is_occupied(cell) and _units[cell] != enemy:
+			continue
+		legal_cells.append(cell)
+	return legal_cells
+
+func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) -> Dictionary:
+	var best_choice := {
+		"target": null,
+		"cell": enemy.cell,
+		"distance": MAX_VALUE,
+		"can_attack": false,
+		"target_hp": MAX_VALUE,
+	}
+
+	for player in players:
+		if not _is_valid_attack_target(enemy, player):
+			continue
+
+		for destination in legal_destinations:
+			var dist = _manhattan_distance(destination, player.cell)
+			var can_attack_from_here = dist <= enemy.attack_range
+
+			# Priority: secure an attack this turn, then maximize proximity, then focus lower HP targets.
+			var should_replace = false
+			if can_attack_from_here and not best_choice["can_attack"]:
+				should_replace = true
+			elif can_attack_from_here == best_choice["can_attack"]:
+				if dist < best_choice["distance"]:
+					should_replace = true
+				elif dist == best_choice["distance"] and player.health < best_choice["target_hp"]:
+					should_replace = true
+
+			if should_replace:
+				best_choice = {
+					"target": player,
+					"cell": destination,
+					"distance": dist,
+					"can_attack": can_attack_from_here,
+					"target_hp": player.health,
+				}
+
+	return best_choice
+
 ## Loops through all enemies and lets them act
 func start_enemy_phase() -> void:
 	print("ENEMY PHASE START")
 	
-	# 1. Gather all living enemies and players currently on the board
+	# 1. Gather all living enemies currently on the board
 	var enemies = []
-	var players = []
 	for cell in _units:
 		var unit = _units[cell]
 		if unit.is_enemy:
 			enemies.append(unit)
-		else:
-			players.append(unit)
 			
 	# 2. Process each enemy one by one
 	for enemy in enemies:
 		# Skip if the enemy was somehow killed (future-proofing for counter-attacks)
 		if not is_instance_valid(enemy) or enemy.health <= 0:
 			continue
+
+		# Recompute players each enemy turn so we don't hold stale references after kills.
+		var players = []
+		for cell in _units:
+			var unit = _units[cell]
+			if not unit.is_enemy and unit.health > 0:
+				players.append(unit)
+
+		if players.is_empty():
+			break
 			
-		# A. Find the absolute closest player unit
-		var target_player: Unit = null
-		var distance_to_closest = 99999
-		
-		for player in players:
-			if not is_instance_valid(player) or player.health <= 0:
-				continue
-				
-			# Calculate Manhattan distance (grid steps) to the player
-			var dist = abs(enemy.cell.x - player.cell.x) + abs(enemy.cell.y - player.cell.y)
-			if dist < distance_to_closest:
-				distance_to_closest = dist
-				target_player = player
-				
-		# B. If we found a player to hunt, let's move!
-		if target_player:
-			# Get all blue tiles this enemy could theoretically walk to
-			var walkable_cells = get_walkable_cells(enemy)
-			
-			var best_cell = enemy.cell
-			var best_dist = distance_to_closest
-			
-			# C. Find which walkable cell puts the enemy closest to the target player
-			for cell in walkable_cells:
-				# You cannot end your turn standing on an ally!
-				if is_occupied(cell) and _units[cell] != enemy:
-					continue
-					
-				var dist = abs(cell.x - target_player.cell.x) + abs(cell.y - target_player.cell.y)
-				
-				# We want to minimize distance to the target
-				if dist < best_dist:
-					best_dist = dist
-					best_cell = cell
-					
-			# D. Move the Enemy!
-			if best_cell != enemy.cell:
-				# We hijack the unit_path to calculate the route, but we DON'T draw the blue line!
-				_unit_path.initialize(walkable_cells)
-				var path = _unit_path._pathfinder.calculate_point_path(enemy.cell, best_cell)
-				
-				# Update the GameBoard's dictionary memory
-				_units.erase(enemy.cell)
-				_units[best_cell] = enemy
-				
-				# Physically walk and wait for the animation to finish
-				enemy.walk_along(path)
-				await enemy.walk_finished
-			else:
-				# If they can't move, just add a tiny delay so it feels like they "thought" about it
-				await get_tree().create_timer(0.2).timeout
-				
-			# E. Attack Check! Calculate distance from the NEW position
-			var final_dist = abs(enemy.cell.x - target_player.cell.x) + abs(enemy.cell.y - target_player.cell.y)
+		# A. Build legal movement options and select the best move+target pair.
+		var walkable_cells = get_walkable_cells(enemy)
+		var legal_destinations = _get_legal_enemy_destinations(enemy, walkable_cells)
+		var decision = _pick_enemy_action(enemy, players, legal_destinations)
+
+		if decision["target"] == null:
+			await get_tree().create_timer(0.2).timeout
+			continue
+
+		var best_cell: Vector2 = decision["cell"]
+		var target_player: Unit = decision["target"]
+
+		# B. Move the Enemy!
+		if best_cell != enemy.cell:
+			# We hijack the unit_path to calculate the route, but we DON'T draw the blue line!
+			_unit_path.initialize(walkable_cells)
+			var path = _unit_path._pathfinder.calculate_point_path(enemy.cell, best_cell)
+
+			# Update the GameBoard's dictionary memory
+			_units.erase(enemy.cell)
+			_units[best_cell] = enemy
+
+			# Physically walk and wait for the animation to finish
+			enemy.walk_along(path)
+			await enemy.walk_finished
+		else:
+			# If they can't move, just add a tiny delay so it feels like they "thought" about it
+			await get_tree().create_timer(0.2).timeout
+
+		# C. Attack check using the chosen target.
+		if _is_valid_attack_target(enemy, target_player):
+			var final_dist = _manhattan_distance(enemy.cell, target_player.cell)
 			if final_dist <= enemy.attack_range:
 				await enemy.attack(target_player)
 				
