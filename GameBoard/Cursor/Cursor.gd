@@ -44,7 +44,7 @@ func _ready() -> void:
 	cell = grid.calculate_grid_coordinates(position)
 	position = grid.calculate_map_position(cell)
 
-func _process(_delta):
+func _process(_delta: float) -> void:
 	if not is_active:
 		return
 	
@@ -89,4 +89,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
+	if not grid:
+		return
 	draw_rect(Rect2(-grid.cell_size / 2, grid.cell_size), Color.ALICE_BLUE, false, 2.0)

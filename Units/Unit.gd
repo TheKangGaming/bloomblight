@@ -156,7 +156,7 @@ func walk_along(path: PackedVector2Array) -> void:
 func _load_player_stats() -> void:
 	# Pull from the Global dictionary safely
 	max_health = Global.player_stats.get("MAX_HP", max_health)
-	health = Global.player_stats.get("HP", max_health)
+	health = clampi(Global.player_stats.get("HP", max_health), 0, max_health)
 	
 	# Map your specific RPG stats to the combat variables
 	strength = Global.player_stats.get("STR", strength)
@@ -183,6 +183,9 @@ func get_combat_stats(target: Unit) -> Dictionary:
 	
 	
 func attack(target: Unit) -> void:
+	if not is_instance_valid(target) or target.health <= 0:
+		return
+
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	
 	# 1. Calculate the exact direction to the target in world space
@@ -251,6 +254,9 @@ func attack(target: Unit) -> void:
 
 ## Subtracts health, flashes red, and checks for death
 func take_damage(amount: int, is_crit: bool = false) -> void:
+	if health <= 0:
+		return
+
 	health -= amount
 	
 	# Pass the crit flag to the text spawner!
@@ -266,12 +272,19 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 		
 	if health <= 0:
 		health = 0
+
+	if is_player:
+		Global.player_stats["HP"] = health
+
+	if health <= 0:
 		await get_tree().create_timer(0.5).timeout
 		die()
 
 
 ## Emits the death signal and removes the unit from the map
 func die() -> void:
+	if is_player:
+		Global.player_stats["HP"] = 0
 	print(name + " has fallen in battle!")
 	died.emit(self)
 	# (We can play a fancy death animation or sound effect here later!)

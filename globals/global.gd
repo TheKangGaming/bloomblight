@@ -38,6 +38,7 @@ var inventory = {
 	Items.PUMPKIN_SEED: 0,
 	Items.WOOD: 0,
 	Items.APPLE: 0,
+	Items.STONE: 0,
 	Items.TOMATO: 0,
 	Items.WATER: 0,
 	Items.ROASTED_CORN: 0,
