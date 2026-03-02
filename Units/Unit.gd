@@ -17,6 +17,8 @@ signal died(unit)
 
 @export var is_enemy: bool
 @export var is_player: bool = false
+@export var strength: int = 5
+@export var defense: int = 2
 
 @export var is_wait := false
 
@@ -178,8 +180,12 @@ func attack(target: Unit) -> void:
 		# Wait for the lunge to hit before doing damage
 		await tween.finished
 		
-	# 2. Deal the damage! (Hardcoded to 5 for now, we will add STR math later!)
-	target.take_damage(5)
+	# 2. True RPG Math: STR vs DEF (Never deal less than 1 damage!)
+	var damage = max(1, strength - target.defense) 
+	print(name + " attacks " + target.name + " for " + str(damage) + " damage!")
+	
+	# 3. Deal the calculated damage!
+	target.take_damage(damage)
 
 
 ## Subtracts health, flashes red, and checks for death

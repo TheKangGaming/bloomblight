@@ -19,6 +19,8 @@ var _attackable_cells := []
 var _movement_costs
 var _prev_cell
 var _prev_position
+var _is_targeting_attack: bool = false
+var _valid_target_cells: Array = []
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -36,8 +38,15 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _active_unit and event.is_action_pressed("ui_cancel"):
-		_deselect_active_unit()
-		_deselect_active_unit()
+		if _is_targeting_attack:
+			# Player canceled targeting: clear the red tiles and bring the menu back
+			_is_targeting_attack = false
+			_valid_target_cells.clear()
+			_unit_overlay.clear()
+			_show_action_menu() 
+		else:
+			# Player canceled moving entirely: teleport back
+			_deselect_active_unit()
 
 
 func _get_configuration_warning() -> String:
@@ -314,6 +323,25 @@ func _deselect_active_unit() -> void:
 
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	# --- 1. NEW COMBAT STATE INTERCEPT ---
+	if _is_targeting_attack:
+		if cell in _valid_target_cells and is_occupied(cell):
+			var target_unit = _units[cell]
+			
+			# Ensure we are actually clicking an enemy!
+			if target_unit.is_enemy != _active_unit.is_enemy:
+				_cursor.is_active = false # Freeze input during the fight
+				
+				# FIGHT! Wait for the lunge to finish.
+				await _active_unit.attack(target_unit)
+				
+				# Cleanup and automatically end the unit's turn
+				_is_targeting_attack = false
+				_valid_target_cells.clear()
+				finish_unit_turn()
+				
+		return # Stop running the rest of the function if we are in targeting mode!
+		
 	if not _active_unit and _units.has(cell):
 		var unit = _units[cell]
 		
@@ -414,4 +442,28 @@ func end_player_phase() -> void:
 				visuals.modulate = Color.WHITE # Remove the grey filter
 	
 	# 2. Re-enable the cursor
+	_cursor.is_active = true
+	
+## Enters the targeting state, drawing red squares around the unit's current position
+func enter_attack_targeting() -> void:
+	_is_targeting_attack = true
+	_valid_target_cells.clear()
+	_unit_overlay.clear()
+	
+	var atk_range = _active_unit.attack_range
+	var center_cell = _active_unit.cell
+	
+	# Calculate attack range from where the unit is currently standing
+	for x in range(-atk_range, atk_range + 1):
+		for y in range(-atk_range, atk_range + 1):
+			var distance = abs(x) + abs(y)
+			if distance > 0 and distance <= atk_range:
+				var target_cell = center_cell + Vector2(x, y)
+				if grid.is_within_bounds(target_cell):
+					_valid_target_cells.append(target_cell)
+					
+	# Draw the red tiles (passing an empty array for the blue tiles)
+	_unit_overlay.draw_attackable_cells(_valid_target_cells)
+	
+	# Wake the cursor back up so the player can pick a target
 	_cursor.is_active = true

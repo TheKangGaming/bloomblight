@@ -12,9 +12,16 @@ func _ready() -> void:
 
 
 func _on_attack_button_pressed() -> void:
-	pass # Replace with function body.
-
-
+	# 1. Tell GameBoard to enter targeting mode!
+	get_parent().enter_attack_targeting()
+	
+	# 2. Bring the cursor visually back to the front
+	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	cursor.show()
+	
+	# 3. Delete the menu
+	queue_free()
+	
 func _on_items_button_pressed() -> void:
 	pass # Replace with function body.
 
