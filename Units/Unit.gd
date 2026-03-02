@@ -168,25 +168,49 @@ func _load_player_stats() -> void:
 func attack(target: Unit) -> void:
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	
-	# 1. Play a quick physical "bump" animation using a Tween
-	if visuals_node:
-		var start_pos = visuals_node.position
-		var bump_dir = (target.position - position).normalized() * 15 # Lunge 15 pixels forward
-		
-		var tween = create_tween()
-		tween.tween_property(visuals_node, "position", start_pos + bump_dir, 0.1)
-		tween.tween_property(visuals_node, "position", start_pos, 0.15)
-		
-		# Wait for the lunge to hit before doing damage
-		await tween.finished
-		
-	# 2. True RPG Math: STR vs DEF (Never deal less than 1 damage!)
-	var damage = max(1, strength - target.defense) 
-	print(name + " attacks " + target.name + " for " + str(damage) + " damage!")
+	# 1. Calculate the exact direction to the target in world space
+	var target_dir = (target.global_position - global_position).normalized()
 	
-	# 3. Deal the calculated damage!
-	target.take_damage(damage)
+	# 2. Check if this unit has an advanced AnimationTree (like Savannah)
+	if visuals_node and visuals_node.has_node("AnimationTree"):
+		var anim_tree = visuals_node.get_node("AnimationTree")
+		var tool_playback = anim_tree.get("parameters/ToolStateMachine/playback")
+		
+		# 3. Update the BlendSpaces so the animation knows which direction to face
+		# (We set the move state idle direction as well, so she stays facing the enemy after swinging)
+		anim_tree.set("parameters/MoveStateMachine/idle/blend_position", target_dir)
+		anim_tree.set("parameters/ToolStateMachine/axe/blend_position", target_dir)
+		
+		# 4. Tell the Tool State Machine to prepare the "axe" animation
+		if tool_playback:
+			tool_playback.travel("axe")
+			
+		# 5. CRITICAL FIX: Fire the OneShot node to push the animation to the screen!
+		anim_tree.set("parameters/OneShot/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+		
+		# 6. Wait for the visual "hit" frame (adjust this float based on your animation speed)
+		await get_tree().create_timer(0.4).timeout
+		
+		# Wait just a tiny bit more for follow-through before the turn actually ends
+		await get_tree().create_timer(0.2).timeout
+		
+	else:
+		# FALLBACK: If the unit is a simple sprite (like the Orc), use the physical bump tween
+		if visuals_node:
+			var start_pos = visuals_node.position
+			var bump_dir = target_dir * 15 
+			
+			var tween = create_tween()
+			tween.tween_property(visuals_node, "position", start_pos + bump_dir, 0.1)
+			tween.tween_property(visuals_node, "position", start_pos, 0.15)
+			await tween.finished
 
+	# 7. True RPG Math
+	var damage = max(1, strength - target.defense) 
+	print(name + " strikes " + target.name + " for " + str(damage) + " damage!")
+	
+	# 8. Deal the damage and flash red!
+	target.take_damage(damage)
 
 ## Subtracts health, flashes red, and checks for death
 func take_damage(amount: int) -> void:
