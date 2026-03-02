@@ -344,8 +344,8 @@ func _setup_hp_bar() -> void:
 	_hp_bar.show_percentage = false # Hide the default Godot text
 	
 	# Sizing and positioning (Centered nicely above a 32x32 sprite)
-	_hp_bar.custom_minimum_size = Vector2(28, 6)
-	_hp_bar.position = Vector2(-14, -22) 
+	_hp_bar.custom_minimum_size = Vector2(24, 4)
+	_hp_bar.position = Vector2(-12, -50) 
 	_hp_bar.z_index = 50
 	
 	# 1. The Carved Wood Background
