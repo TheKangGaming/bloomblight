@@ -83,6 +83,10 @@ func _ready() -> void:
 	if is_player:
 		# Override the export with Savannah's global stats!
 		_load_player_stats()
+		
+	if health <= 0:
+		queue_free()
+		return
 	
 	_path_follow.rotates = false
 	
@@ -270,13 +274,14 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 		tween.tween_property(visuals_node, "modulate", base_color, 0.1)
 		await tween.finished
 		
+	# Unified Death Block
 	if health <= 0:
 		health = 0
-
-	if is_player:
-		Global.player_stats["HP"] = health
-
-	if health <= 0:
+		
+		# Check this variable! If is_player doesn't exist, use: if not is_enemy:
+		if is_player: 
+			Global.player_stats["HP"] = health
+			
 		await get_tree().create_timer(0.5).timeout
 		die()
 
