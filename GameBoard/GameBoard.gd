@@ -306,7 +306,6 @@ func _reset_unit() -> void:
 		
 		# 4. Deselect her so the animations reset and the board forgets her
 		_deselect_active_unit()
-		_deselect_active_unit()
 		
 	# 5. CRITICAL FIX: Give control back to the player!
 	_cursor.is_active = true
@@ -460,12 +459,12 @@ func _is_valid_attack_target(attacker: Unit, target: Unit) -> bool:
 	return is_instance_valid(target) and target.health > 0 and target.is_enemy != attacker.is_enemy
 
 func _get_legal_enemy_destinations(enemy: Unit, walkable_cells: Array) -> Array:
-	var legal_cells := [enemy.cell]
+	var legal_dict := {enemy.cell: true}
 	for cell in walkable_cells:
 		if is_occupied(cell) and _units[cell] != enemy:
 			continue
-		legal_cells.append(cell)
-	return legal_cells
+		legal_dict[cell] = true
+	return legal_dict.keys()
 
 func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) -> Dictionary:
 	var best_choice := {

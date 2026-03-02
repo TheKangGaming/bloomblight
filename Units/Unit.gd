@@ -73,7 +73,6 @@ var _is_walking := false:
 
 
 func _ready() -> void:
-	
 	set_process(false)
 	_path_follow = $PathFollow2D
 	_sprite = $PathFollow2D/Visuals/Sprite2D
@@ -83,7 +82,6 @@ func _ready() -> void:
 		# Override the export with Savannah's global stats!
 		_load_player_stats()
 	
-	set_process(false)
 	_path_follow.rotates = false
 	
 	cell = grid.calculate_grid_coordinates(position)
@@ -155,11 +153,11 @@ func walk_along(path: PackedVector2Array) -> void:
 
 func _load_player_stats() -> void:
 	# Pull from the Global dictionary
-	max_health = Global.player_stats["MAX_HP"]
-	health = Global.player_stats["HP"]
+	max_health = Global.player_stats.get("MAX_HP", max_health)
+	health = Global.player_stats.get("HP", max_health)
 	
-	move_range = Global.player_stats["MOV"]
-	attack_range = Global.player_stats["ATK_RNG"]
+	move_range = Global.player_stats.get("MOV", move_range)
+	attack_range = Global.player_stats.get("ATK_RNG", attack_range)
 	
 	# If you want to calculate the total stats including Food Buffs later, 
 	# we will add that math right here!
