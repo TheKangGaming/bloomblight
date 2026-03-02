@@ -276,8 +276,6 @@ func _hover_display(cell: Vector2) -> void:
 		# 2. Pass those blue cells directly into the red cell math!
 		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range, curr_unit)
 		
-		print("Blue tiles: ", _walkable_cells.size(), " | Red tiles: ", _attackable_cells.size())
-		
 		# 3. Clear the old tiles ONCE here:
 		_unit_overlay.clear() 
 		
@@ -324,6 +322,11 @@ func _reset_unit() -> void:
 func _deselect_active_unit() -> void:
 	if _active_unit:
 		_active_unit.is_selected = false
+
+	_target_unit_for_forecast = null
+	_hide_combat_forecast()
+	_is_targeting_attack = false
+	_valid_target_cells.clear()
 		
 	_active_unit = null
 	_walkable_cells.clear()
@@ -417,6 +420,9 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		
 func _on_unit_died(unit: Unit) -> void:
 	_units.erase(unit.cell)
+	if _target_unit_for_forecast == unit:
+		_target_unit_for_forecast = null
+		_hide_combat_forecast()
 	
 	# If the active unit died, clear the cursor selection
 	if _active_unit == unit:
