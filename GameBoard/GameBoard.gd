@@ -11,6 +11,9 @@ const ActionMenu = preload("res://Menus/ActionMenu.tscn")
 ## Resource of type Grid.
 @export var grid: Resource
 
+enum TurnPhase { PLAYER, ENEMY }
+var current_phase: TurnPhase = TurnPhase.PLAYER
+
 ## Mapping of coordinates of a cell to a reference to the unit it contains.
 var _units := {}
 var _active_unit: Unit
@@ -342,16 +345,20 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				
 		return # Stop running the rest of the function if we are in targeting mode!
 		
+	# --- 2. MOVEMENT / SELECTION INTERCEPT ---
 	if not _active_unit and _units.has(cell):
 		var unit = _units[cell]
 		
-		# Check if the unit has already taken its turn!
+		# NEW: If the unit is an enemy, the player CANNOT move them!
+		if unit.is_enemy:
+			# Later, we can make clicking an enemy show their danger radius.
+			# For now, we just completely ignore the click.
+			return 
+		
+		# Check if the player unit has already taken its turn!
 		if unit.is_wait:
-			# Open the pause menu so the player can easily click "End Turn"
-			var pause_menu = PauseMenu.instantiate()
-			add_child(pause_menu)
+			_show_pause_menu()
 		else:
-			# Wakey wakey, time to move!
 			_select_unit(cell)
 			
 	elif _active_unit != null: 
@@ -430,18 +437,115 @@ func finish_unit_turn() -> void:
 	_deselect_active_unit()
 	_cursor.is_active = true
 	
+## Called when the player presses "End Turn" or all player units are exhausted
 func end_player_phase() -> void:
-	# 1. Loop through all units on the board
+	# 1. Lock the player out entirely
+	_cursor.is_active = false
+	current_phase = TurnPhase.ENEMY
+	
+	print("ENEMY PHASE START")
+	
+	# 2. Trigger the Enemy Phase Logic (We will build the AI inside this!)
+	start_enemy_phase()
+
+## Loops through all enemies and lets them act
+func start_enemy_phase() -> void:
+	print("ENEMY PHASE START")
+	
+	# 1. Gather all living enemies and players currently on the board
+	var enemies = []
+	var players = []
 	for cell in _units:
 		var unit = _units[cell]
-		if unit.is_player:
-			# Wake them up!
+		if unit.is_enemy:
+			enemies.append(unit)
+		else:
+			players.append(unit)
+			
+	# 2. Process each enemy one by one
+	for enemy in enemies:
+		# Skip if the enemy was somehow killed (future-proofing for counter-attacks)
+		if not is_instance_valid(enemy) or enemy.health <= 0:
+			continue
+			
+		# A. Find the absolute closest player unit
+		var target_player: Unit = null
+		var distance_to_closest = 99999
+		
+		for player in players:
+			if not is_instance_valid(player) or player.health <= 0:
+				continue
+				
+			# Calculate Manhattan distance (grid steps) to the player
+			var dist = abs(enemy.cell.x - player.cell.x) + abs(enemy.cell.y - player.cell.y)
+			if dist < distance_to_closest:
+				distance_to_closest = dist
+				target_player = player
+				
+		# B. If we found a player to hunt, let's move!
+		if target_player:
+			# Get all blue tiles this enemy could theoretically walk to
+			var walkable_cells = get_walkable_cells(enemy)
+			
+			var best_cell = enemy.cell
+			var best_dist = distance_to_closest
+			
+			# C. Find which walkable cell puts the enemy closest to the target player
+			for cell in walkable_cells:
+				# You cannot end your turn standing on an ally!
+				if is_occupied(cell) and _units[cell] != enemy:
+					continue
+					
+				var dist = abs(cell.x - target_player.cell.x) + abs(cell.y - target_player.cell.y)
+				
+				# We want to minimize distance to the target
+				if dist < best_dist:
+					best_dist = dist
+					best_cell = cell
+					
+			# D. Move the Enemy!
+			if best_cell != enemy.cell:
+				# We hijack the unit_path to calculate the route, but we DON'T draw the blue line!
+				_unit_path.initialize(walkable_cells)
+				var path = _unit_path._pathfinder.calculate_point_path(enemy.cell, best_cell)
+				
+				# Update the GameBoard's dictionary memory
+				_units.erase(enemy.cell)
+				_units[best_cell] = enemy
+				
+				# Physically walk and wait for the animation to finish
+				enemy.walk_along(path)
+				await enemy.walk_finished
+			else:
+				# If they can't move, just add a tiny delay so it feels like they "thought" about it
+				await get_tree().create_timer(0.2).timeout
+				
+			# E. Attack Check! Calculate distance from the NEW position
+			var final_dist = abs(enemy.cell.x - target_player.cell.x) + abs(enemy.cell.y - target_player.cell.y)
+			if final_dist <= enemy.attack_range:
+				await enemy.attack(target_player)
+				
+		# Add a slight delay before the next Orc takes its turn
+		await get_tree().create_timer(0.3).timeout
+
+	# 3. All enemies have acted! Pass the baton back to the player.
+	start_player_phase()
+
+## Wakes all player units up and hands control back to the player
+func start_player_phase() -> void:
+	print("PLAYER PHASE START")
+	current_phase = TurnPhase.PLAYER
+	
+	# Wake up all player units!
+	for cell in _units:
+		var unit = _units[cell]
+		if not unit.is_enemy: # If it's a player unit
 			unit.is_wait = false
 			var visuals = unit.get_node_or_null("PathFollow2D/Visuals")
 			if visuals:
-				visuals.modulate = Color.WHITE # Remove the grey filter
+				visuals.modulate = Color.WHITE 
 	
-	# 2. Re-enable the cursor
+	# Hand control back to the player
 	_cursor.is_active = true
 	
 ## Enters the targeting state, drawing red squares around the unit's current position
