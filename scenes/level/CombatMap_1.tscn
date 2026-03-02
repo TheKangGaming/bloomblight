@@ -116,9 +116,13 @@ grid = ExtResource("2_gh08p")
 [node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("10_wkw2y")]
 y_sort_enabled = true
 position = Vector2(366, 319)
+dexterity = null
+speed = null
 
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(360, 100)
-strength = 5
+strength = 4
 defense = 2
+dexterity = null
+speed = null

@@ -24,6 +24,8 @@ signal died(unit)
 
 @export var max_health: int = 20
 @export var health: int = 20
+@export var dexterity: int = 5
+@export var speed: int = 5
 
 ## Distance to which the unit can walk in cells.
 @export var move_range := 6
@@ -159,6 +161,8 @@ func _load_player_stats() -> void:
 	# Map your specific RPG stats to the combat variables
 	strength = Global.player_stats.get("STR", strength)
 	defense = Global.player_stats.get("DEF", defense) # Changed from VIT to DEF!
+	dexterity = Global.player_stats.get("DEX", dexterity) # NEW!
+	speed = Global.player_stats.get("SPD", speed)         # NEW!
 	
 	move_range = Global.player_stats.get("MOV", move_range)
 	attack_range = Global.player_stats.get("ATK_RNG", attack_range)
@@ -204,32 +208,54 @@ func attack(target: Unit) -> void:
 			tween.tween_property(visuals_node, "position", start_pos, 0.15)
 			await tween.finished
 
-	# 7. True RPG Math
-	var damage = max(1, strength - target.defense) 
-	print(name + " strikes " + target.name + " for " + str(damage) + " damage!")
+	# --- NEW COMBAT MATH & RNG ---
+	# 1. Calculate Hit and Crit chances (0 to 100)
+	var hit_chance = clamp(80 + (dexterity * 2) - (target.speed * 2), 0, 100)
+	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
 	
-	# 8. Deal the damage and await the flash animation!
-	await target.take_damage(damage)
+	# 2. Roll the digital dice!
+	var hit_roll = randi() % 100
+	var crit_roll = randi() % 100
+	
+	if hit_roll < hit_chance:
+		# HIT! Calculate damage (Strength + Weapon Might - Defense)
+		var weapon_might = 5 # Simulating a basic Iron Axe
+		var actual_damage = max(1, (strength + weapon_might) - target.defense)
+		
+		var is_crit = (crit_roll < crit_chance)
+		if is_crit:
+			actual_damage *= 3 # Triple damage!
+			print(name + " LANDS A CRITICAL HIT! " + str(actual_damage) + " damage!")
+		else:
+			print(name + " strikes " + target.name + " for " + str(actual_damage) + " damage.")
+			
+		await target.take_damage(actual_damage, is_crit)
+	else:
+		# MISS!
+		print(name + " MISSED!")
+		target.show_miss_text()
+		
+		# Wait the exact same amount of time as the damage flash so turns don't desync!
+		await get_tree().create_timer(0.2).timeout 
+		
+	# Follow-through wait before handing the turn back
+	await get_tree().create_timer(0.2).timeout
 
 ## Subtracts health, flashes red, and checks for death
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, is_crit: bool = false) -> void:
 	health -= amount
-	print(name + " took " + str(amount) + " damage! HP: " + str(health) + "/" + str(max_health))
 	
-	_spawn_damage_text(amount)
+	# Pass the crit flag to the text spawner!
+	_spawn_damage_text(str(amount), is_crit, false)
 	
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	if visuals_node:
-		# 1. Capture whatever color the unit is right now!
 		var base_color = visuals_node.modulate 
-		
 		var tween = create_tween()
 		tween.tween_property(visuals_node, "modulate", Color.RED, 0.1)
-		# 2. Tween back to the base color instead of hardcoding White
 		tween.tween_property(visuals_node, "modulate", base_color, 0.1)
 		await tween.finished
 		
-	# Check if dead
 	if health <= 0:
 		health = 0
 		await get_tree().create_timer(0.5).timeout
@@ -244,20 +270,31 @@ func die() -> void:
 	queue_free()
 	
 ## Spawns a floating red damage number above the unit's head
-func _spawn_damage_text(amount: int) -> void:
+func show_miss_text() -> void:
+	_spawn_damage_text("MISS", false, true)
+
+## Spawns dynamic floating combat text above the unit's head
+func _spawn_damage_text(text_value: String, is_crit: bool = false, is_miss: bool = false) -> void:
 	var label = Label.new()
-	label.text = str(amount)
+	label.text = text_value
 	
-	# Basic styling (Red, bold outline, center aligned)
-	label.add_theme_color_override("font_color", Color.RED)
+	# Dynamic Styling based on the RNG outcome!
+	if is_miss:
+		label.add_theme_color_override("font_color", Color.LIGHT_GRAY)
+		label.add_theme_font_size_override("font_size", 16)
+	elif is_crit:
+		label.add_theme_color_override("font_color", Color.GOLD)
+		label.add_theme_font_size_override("font_size", 28)
+	else:
+		label.add_theme_color_override("font_color", Color.RED)
+		label.add_theme_font_size_override("font_size", 20)
+		
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 4)
-	label.add_theme_font_size_override("font_size", 20)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	
-	# Position it slightly above the unit
 	label.position = Vector2(-20, -40)
-	label.z_index = 100 # Ensure it draws on top of everything
+	label.z_index = 100 
 	
 	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
 	if visuals_node:
@@ -265,10 +302,9 @@ func _spawn_damage_text(amount: int) -> void:
 	else:
 		add_child(label)
 		
-	# Tween to make it float up and fade out
 	var tween = create_tween()
 	tween.tween_property(label, "position", label.position + Vector2(0, -30), 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.2) # Fade out slightly after it starts moving
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.6).set_delay(0.2) 
 	
 	await tween.finished
-	label.queue_free()	
+	label.queue_free()
