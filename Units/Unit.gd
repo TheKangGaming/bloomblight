@@ -159,20 +159,28 @@ func walk_along(path: PackedVector2Array) -> void:
 	_is_walking = true
 
 func _load_player_stats() -> void:
-	# Pull from the Global dictionary safely
-	max_health = Global.player_stats.get("MAX_HP", max_health)
-	health = clampi(Global.player_stats.get("HP", max_health), 0, max_health)
+	# 1. Extract the active buffs (defaulting to 0 if none exist)
+	var buffs = Global.active_food_buff.get("stats", {})
 	
-	# Map your specific RPG stats to the combat variables
-	strength = Global.player_stats.get("STR", strength)
-	defense = Global.player_stats.get("DEF", defense) # Changed from VIT to DEF!
-	dexterity = Global.player_stats.get("DEX", dexterity) # NEW!
-	speed = Global.player_stats.get("SPD", speed)         # NEW!
+	# 2. Pull base HP, and add the VIT buff! (Assuming 1 VIT = 2 Max HP)
+	var bonus_hp_from_food = buffs.get("VIT", 0) * 2 
 	
-	move_range = Global.player_stats.get("MOV", move_range)
+	max_health = Global.player_stats.get("MAX_HP", max_health) + bonus_hp_from_food
+	
+	# We also need to add that bonus HP to her current health, 
+	# otherwise she enters the battle with a larger max bar, but "missing" health!
+	health = clampi(Global.player_stats.get("HP", max_health) + bonus_hp_from_food, 0, max_health)
+	
+	# 3. Map the rest of your specific RPG stats!
+	strength = Global.player_stats.get("STR", strength) + buffs.get("STR", 0)
+	defense = Global.player_stats.get("DEF", defense) + buffs.get("DEF", 0) 
+	dexterity = Global.player_stats.get("DEX", dexterity) + buffs.get("DEX", 0) 
+	speed = Global.player_stats.get("SPD", speed) + buffs.get("SPD", 0)         
+	move_range = Global.player_stats.get("MOV", move_range) + buffs.get("MOV", 0)
+	
 	attack_range = Global.player_stats.get("ATK_RNG", attack_range)
 	
-	## Makes the unit physically bump into the target and deal damage!
+
 ## Calculates and returns combat math without actually executing the attack
 func get_combat_stats(target: Unit) -> Dictionary:
 	var hit_chance = clamp(80 + (dexterity * 2) - (target.speed * 2), 0, 100)
