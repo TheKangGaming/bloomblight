@@ -26,6 +26,8 @@ var _is_targeting_attack: bool = false
 var _target_unit_for_forecast: Unit = null
 var _forecast_ui_node: CanvasLayer = null
 var _valid_target_cells: Array = []
+var _attack_offsets_cache := {}
+var _phase_banner_layer: CanvasLayer = null
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -86,6 +88,7 @@ func get_walkable_cells(unit: Unit) -> Array:
 func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) -> Array:
 	var attackable_dict = {}
 	var walkable_dict = {}
+	var attack_offsets = _get_attack_offsets(attack_range)
 	
 	# Convert our walkable array into a high-speed dictionary
 	for cell in walkable_cells:
@@ -97,23 +100,19 @@ func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) 
 	for cell in walkable_cells:
 		if is_occupied(cell) and _units[cell] != unit:
 			continue
-			
-		for x in range(-attack_range, attack_range + 1):
-			for y in range(-attack_range, attack_range + 1):
-				var distance = abs(x) + abs(y)
-				
-				if distance > 0 and distance <= attack_range:
-					var target_cell = cell + Vector2(x, y)
-					
-					if grid.is_within_bounds(target_cell):
-						# CRITICAL FIX: Using .has() on a dictionary is exponentially faster!
-						if not walkable_dict.has(target_cell) and not attackable_dict.has(target_cell):
-							
-							if is_occupied(target_cell) and _units[target_cell].is_enemy == unit.is_enemy:
-								continue
-								
-							# Add to our high-speed dictionary
-							attackable_dict[target_cell] = true
+
+		for offset in attack_offsets:
+			var target_cell = cell + offset
+
+			if grid.is_within_bounds(target_cell):
+				# CRITICAL FIX: Using .has() on a dictionary is exponentially faster!
+				if not walkable_dict.has(target_cell) and not attackable_dict.has(target_cell):
+
+					if is_occupied(target_cell) and _units[target_cell].is_enemy == unit.is_enemy:
+						continue
+
+					# Add to our high-speed dictionary
+					attackable_dict[target_cell] = true
 							
 	# Return just the keys (the Vector2 coordinates) as an Array
 	return attackable_dict.keys()
@@ -467,14 +466,7 @@ func finish_unit_turn() -> void:
 	_deselect_active_unit()
 	
 	# --- NEW: Check if all player units have acted ---
-	var all_done = true
-	for cell in _units:
-		var unit = _units[cell]
-		if not unit.is_enemy and not unit.is_wait:
-			all_done = false
-			break
-			
-	if all_done:
+	if _are_all_player_units_waiting():
 		end_player_phase()
 	else:
 		_cursor.is_active = true
@@ -639,15 +631,13 @@ func enter_attack_targeting() -> void:
 	
 	var atk_range = _active_unit.attack_range
 	var center_cell = _active_unit.cell
+	var attack_offsets = _get_attack_offsets(atk_range)
 	
 	# Calculate attack range from where the unit is currently standing
-	for x in range(-atk_range, atk_range + 1):
-		for y in range(-atk_range, atk_range + 1):
-			var distance = abs(x) + abs(y)
-			if distance > 0 and distance <= atk_range:
-				var target_cell = center_cell + Vector2(x, y)
-				if grid.is_within_bounds(target_cell):
-					_valid_target_cells.append(target_cell)
+	for offset in attack_offsets:
+		var target_cell = center_cell + offset
+		if grid.is_within_bounds(target_cell):
+			_valid_target_cells.append(target_cell)
 					
 	# Draw the red tiles (passing an empty array for the blue tiles)
 	_unit_overlay.draw_attackable_cells(_valid_target_cells)
@@ -769,10 +759,14 @@ func _hide_combat_forecast() -> void:
 ## Generates a cinematic banner that sweeps across the screen
 func _show_phase_banner(text: String, bg_color: Color) -> void:
 	_cursor.is_active = false # Lock input while animating
+
+	if is_instance_valid(_phase_banner_layer):
+		_phase_banner_layer.queue_free()
+		_phase_banner_layer = null
 	
-	var canvas = CanvasLayer.new()
-	canvas.layer = 100 # Ensure it sits above all other UI
-	add_child(canvas)
+	_phase_banner_layer = CanvasLayer.new()
+	_phase_banner_layer.layer = 100 # Ensure it sits above all other UI
+	add_child(_phase_banner_layer)
 	
 	var screen_size = get_viewport_rect().size
 	
@@ -783,7 +777,7 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 	
 	# Start completely off-screen to the right
 	band.position = Vector2(screen_size.x, (screen_size.y / 2.0) - 50)
-	canvas.add_child(band)
+	_phase_banner_layer.add_child(band)
 	
 	var label = Label.new()
 	label.text = text
@@ -808,4 +802,29 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 	tween.tween_property(band, "position:x", end_x, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	
 	await tween.finished
-	canvas.queue_free()
+	if is_instance_valid(_phase_banner_layer):
+		_phase_banner_layer.queue_free()
+		_phase_banner_layer = null
+
+func _get_attack_offsets(attack_range: int) -> Array:
+	if attack_range <= 0:
+		return []
+
+	if _attack_offsets_cache.has(attack_range):
+		return _attack_offsets_cache[attack_range]
+
+	var offsets: Array = []
+	for x in range(-attack_range, attack_range + 1):
+		for y in range(-attack_range, attack_range + 1):
+			var distance = abs(x) + abs(y)
+			if distance > 0 and distance <= attack_range:
+				offsets.append(Vector2(x, y))
+
+	_attack_offsets_cache[attack_range] = offsets
+	return offsets
+
+func _are_all_player_units_waiting() -> bool:
+	for unit in _units.values():
+		if not unit.is_enemy and not unit.is_wait:
+			return false
+	return true
