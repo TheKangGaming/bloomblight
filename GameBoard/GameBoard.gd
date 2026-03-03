@@ -29,6 +29,7 @@ var _forecast_ui_node: CanvasLayer = null
 var _valid_target_cells: Array = []
 var _attack_offsets_cache := {}
 var _phase_banner_layer: CanvasLayer = null
+var _battle_ended: bool = false
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -423,15 +424,21 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 			_walkable_cells.clear()
 		
 func _on_unit_died(unit: Unit) -> void:
+	# 1. The Double-Trigger Fix! 
+	# If we already erased this unit, ignore the second death signal!
+	if not _units.has(unit.cell):
+		return
+		
+	# --- Your Existing UI Cleanup ---
 	_units.erase(unit.cell)
 	if _target_unit_for_forecast == unit:
 		_target_unit_for_forecast = null
 		_hide_combat_forecast()
 	
-	# If the active unit died, clear the cursor selection
 	if _active_unit == unit:
 		_deselect_active_unit()
-
+		
+	# --- Win/Loss Logic ---
 	if unit.is_enemy:
 		_enemies_defeated += 1
 		
@@ -836,6 +843,10 @@ func _are_all_player_units_waiting() -> bool:
 	return true
 
 func _check_win_loss() -> void:
+	# 2. Stop the game from spawning multiple UI screens!
+	if _battle_ended:
+		return 
+		
 	var players_alive = false
 	var enemies_alive = false
 	
@@ -848,33 +859,44 @@ func _check_win_loss() -> void:
 			
 	# Trigger the stylish screen if a condition is met
 	if not enemies_alive:
+		_battle_ended = true
 		_show_results_screen(true)
 	elif not players_alive:
+		_battle_ended = true
 		_show_results_screen(false)
 
+
 func _show_results_screen(is_victory: bool) -> void:
-	_cursor.is_active = false # Lock player input
+	_cursor.is_active = false 
+	
+	# 3. Fade Out Map Music! 
+	# This searches the Map for the AudioStreamPlayer and tweens it to silence
+	for child in get_parent().get_children():
+		if child is AudioStreamPlayer and child.playing:
+			var bgm_tween = create_tween()
+			bgm_tween.tween_property(child, "volume_db", -80.0, 1.5)
+			bgm_tween.tween_callback(child.stop)
 	
 	var canvas = CanvasLayer.new()
-	canvas.layer = 120 # Sit above all other UI
+	canvas.layer = 120 
 	add_child(canvas)
 	
-	# 1. The Dark Cinematic Overlay
 	var bg = ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.0) # Start transparent
+	bg.color = Color(0, 0, 0, 0.0) 
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	canvas.add_child(bg)
 	
-	# 2. Play the Fanfare!
+	# 4. Volume Control for the Fanfare!
 	var audio = AudioStreamPlayer.new()
 	if is_victory:
 		audio.stream = load("res://audio/Music_Victory03.wav")
 	else:
 		audio.stream = load("res://audio/Music_Defeat03.wav")
+		
+	audio.volume_db = -12.0 # Tweak this negative number to make it quieter! (-15, -20, etc.)
 	canvas.add_child(audio)
 	audio.play()
 	
-	# 3. Build the Text Layout
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_CENTER)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -896,19 +918,22 @@ func _show_results_screen(is_victory: bool) -> void:
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats)
 	
+	# 5. A Much Bigger, Unmissable Button
 	var btn = Button.new()
 	btn.text = "Return to Farm"
 	btn.add_theme_font_size_override("font_size", 32)
+	btn.custom_minimum_size = Vector2(300, 60) # Forces the button to be nice and wide
 	btn.pressed.connect(_on_return_button_pressed)
 	vbox.add_child(btn)
 	
-	# 4. Animate the Fade-In
 	vbox.modulate.a = 0
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(bg, "color:a", 0.85, 1.5)
 	tween.tween_property(vbox, "modulate:a", 1.0, 1.5)
-
+	
 func _on_return_button_pressed() -> void:
 	# Tell the global state we are coming back from a fight!
 	Global.returning_from_combat = true
+	
+	# Load the farm scene! (Make sure this exact path matches your project)
 	get_tree().change_scene_to_file("res://scenes/level/game.tscn")

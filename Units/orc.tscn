@@ -4,9 +4,8 @@
 [ext_resource type="Texture2D" uid="uid://cgwqw43fglj7u" path="res://graphics/enemies/orc/orc melee - anims-idle.png" id="2_j6h8o"]
 
 [node name="Orc" unique_id=376372171 instance=ExtResource("1_4b2u4")]
+scale = Vector2(0.8, 0.8)
 is_enemy = true
-strength = null
-defense = null
 max_health = 15
 health = 15
 move_range = 3
