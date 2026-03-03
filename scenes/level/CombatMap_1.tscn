@@ -12,7 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="10_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
 [ext_resource type="AudioStream" uid="uid://b33052oyr1adr" path="res://audio/Music_Morningconflict.wav" id="12_qga0l"]
-[ext_resource type="Script" uid="uid://nd7u3c8y1uhy" path="res://GameBoard/MapGenerator.gd" id="13_sfjbq"]
+[ext_resource type="Script" path="res://GameBoard/MapGenerator.gd" id="13_sfjbq"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 
@@ -338,13 +338,16 @@ metadata/_edit_vertical_guides_ = [768.0]
 metadata/_edit_horizontal_guides_ = [352.0]
 
 [node name="Ground_Layer" type="TileMapLayer" parent="." unique_id=744419462]
+visible = false
 tile_set = SubResource("TileSet_vtv1r")
 
 [node name="Elevated_Layer" type="TileMapLayer" parent="." unique_id=1526227229]
+visible = false
 z_index = 1
 tile_set = SubResource("TileSet_vtv1r")
 
 [node name="Water_Layer" type="TileMapLayer" parent="." unique_id=726337511]
+visible = false
 z_index = -1
 tile_set = SubResource("TileSet_vtv1r")
 

@@ -36,9 +36,9 @@ const MAX_VALUE: int = 99999
 
 func _ready() -> void:
 	
-	var generator = $"../MapDirector" # Ensure this name matches the node you added!
-	if generator:
-		generator.generate_new_map()
+	##var generator = $"../MapDirector" # Ensure this name matches the node you added!
+	##if generator:
+		##generator.generate_new_map()
 	_movement_costs = _map.get_movement_costs()
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
 	_cursor.moved.connect(_on_Cursor_moved)
