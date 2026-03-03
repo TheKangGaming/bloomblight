@@ -165,12 +165,16 @@ func _load_player_stats() -> void:
 	
 	# 2. Pull base HP, and add the VIT buff! (Assuming 1 VIT = 2 Max HP)
 	var bonus_hp_from_food = _get_bonus_hp_from_food(buffs)
+	var saved_hp = int(Global.player_stats.get("HP", max_health))
 	
 	max_health = Global.player_stats.get("MAX_HP", max_health) + bonus_hp_from_food
-	
-	# We also need to add that bonus HP to her current health, 
-	# otherwise she enters the battle with a larger max bar, but "missing" health!
-	health = clampi(Global.player_stats.get("HP", max_health) + bonus_hp_from_food, 0, max_health)
+
+	# Saved HP is stored as an unbuffed value when above the bonus threshold,
+	# but it is kept as-is when total HP is at/below bonus so low HP carries over.
+	if saved_hp > bonus_hp_from_food:
+		health = clampi(saved_hp + bonus_hp_from_food, 0, max_health)
+	else:
+		health = clampi(saved_hp, 0, max_health)
 	
 	# 3. Map the rest of your specific RPG stats!
 	strength = Global.player_stats.get("STR", strength) + buffs.get("STR", 0)
@@ -192,8 +196,15 @@ func _sync_player_hp_to_global() -> void:
 	if not is_player:
 		return
 
+	var bonus_hp_from_food = _get_bonus_hp_from_food()
 	var base_max_hp = int(Global.player_stats.get("MAX_HP", max_health))
-	var unbuffed_hp = clampi(health - _get_bonus_hp_from_food(), 0, base_max_hp)
+	var unbuffed_hp := 0
+	if health > bonus_hp_from_food:
+		unbuffed_hp = health - bonus_hp_from_food
+	else:
+		# Preserve sub-bonus HP values exactly so we do not heal between combats.
+		unbuffed_hp = health
+	unbuffed_hp = clampi(unbuffed_hp, 0, base_max_hp)
 	Global.player_stats["HP"] = unbuffed_hp
 	
 
