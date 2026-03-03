@@ -454,7 +454,6 @@ func _show_action_menu() -> void:
 
 ## To be called by the Action Menu when the player chooses "Wait"
 func finish_unit_turn() -> void:
-	# Make the unit grey out to show their turn is over
 	if _active_unit:
 		var visuals = _active_unit.get_node_or_null("PathFollow2D/Visuals")
 		if visuals:
@@ -466,7 +465,19 @@ func finish_unit_turn() -> void:
 		$ActionMenu.hide()
 		
 	_deselect_active_unit()
-	_cursor.is_active = true
+	
+	# --- NEW: Check if all player units have acted ---
+	var all_done = true
+	for cell in _units:
+		var unit = _units[cell]
+		if not unit.is_enemy and not unit.is_wait:
+			all_done = false
+			break
+			
+	if all_done:
+		end_player_phase()
+	else:
+		_cursor.is_active = true
 	
 ## Called when the player presses "End Turn" or all player units are exhausted
 func end_player_phase() -> void:
@@ -533,7 +544,8 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 
 ## Loops through all enemies and lets them act
 func start_enemy_phase() -> void:
-	print("ENEMY PHASE START")
+	# Fire the Red Banner!
+	await _show_phase_banner("ENEMY PHASE", Color(0.8, 0.1, 0.1))
 	
 	# 1. Gather all living enemies currently on the board
 	var enemies = []
@@ -603,19 +615,20 @@ func start_enemy_phase() -> void:
 
 ## Wakes all player units up and hands control back to the player
 func start_player_phase() -> void:
-	print("PLAYER PHASE START")
 	current_phase = TurnPhase.PLAYER
+	
+	# Fire the Blue Banner!
+	await _show_phase_banner("PLAYER PHASE", Color(0.1, 0.4, 0.8))
 	
 	# Wake up all player units!
 	for cell in _units:
 		var unit = _units[cell]
-		if not unit.is_enemy: # If it's a player unit
+		if not unit.is_enemy: 
 			unit.is_wait = false
 			var visuals = unit.get_node_or_null("PathFollow2D/Visuals")
 			if visuals:
 				visuals.modulate = Color.WHITE 
 	
-	# Hand control back to the player
 	_cursor.is_active = true
 	
 ## Enters the targeting state, drawing red squares around the unit's current position
@@ -752,3 +765,47 @@ func _hide_combat_forecast() -> void:
 	if _forecast_ui_node:
 		_forecast_ui_node.queue_free()
 		_forecast_ui_node = null
+
+## Generates a cinematic banner that sweeps across the screen
+func _show_phase_banner(text: String, bg_color: Color) -> void:
+	_cursor.is_active = false # Lock input while animating
+	
+	var canvas = CanvasLayer.new()
+	canvas.layer = 100 # Ensure it sits above all other UI
+	add_child(canvas)
+	
+	var screen_size = get_viewport_rect().size
+	
+	var band = ColorRect.new()
+	band.color = bg_color
+	band.color.a = 0.8
+	band.size = Vector2(screen_size.x, 100)
+	
+	# Start completely off-screen to the right
+	band.position = Vector2(screen_size.x, (screen_size.y / 2.0) - 50)
+	canvas.add_child(band)
+	
+	var label = Label.new()
+	label.text = text
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 48)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 8)
+	band.add_child(label)
+	
+	var tween = create_tween()
+	var center_x = 0
+	var end_x = -screen_size.x
+	
+	# Slide in fast
+	tween.tween_property(band, "position:x", center_x, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# Hold for the player to read
+	tween.tween_interval(1.0)
+	# Slide out fast
+	tween.tween_property(band, "position:x", end_x, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	
+	await tween.finished
+	canvas.queue_free()
