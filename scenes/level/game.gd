@@ -18,6 +18,16 @@ func _ready() -> void:
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
 	
+	if Global.returning_from_combat:
+		Global.returning_from_combat = false
+		_jump_time_to_night()
+
+## Forces the day to progress
+func _jump_time_to_night() -> void:
+	print("Returning from combat: Fast-forwarding time!")
+	# Jump straight to the next day and grow the crops!
+	day_switch()
+	
 func _on_seed_menu_cancelled():
 	# Give the player their movement back!
 	player.can_move = true

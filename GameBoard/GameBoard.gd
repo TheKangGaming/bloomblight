@@ -16,6 +16,7 @@ var current_phase: TurnPhase = TurnPhase.PLAYER
 
 ## Mapping of coordinates of a cell to a reference to the unit it contains.
 var _units := {}
+var _enemies_defeated: int = 0
 var _active_unit: Unit
 var _walkable_cells := []
 var _attackable_cells := []

@@ -4,6 +4,9 @@ signal inventory_updated
 @warning_ignore('unused_signal')
 signal stats_updated
 
+var returning_from_combat: bool = false
+
+
 # 1. THE MASTER ITEM LIST
 # We distinguish between the SEED (what you plant) and the CROP (what you eat/sell)
 enum Items {
