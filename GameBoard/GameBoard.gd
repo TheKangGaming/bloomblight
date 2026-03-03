@@ -432,6 +432,11 @@ func _on_unit_died(unit: Unit) -> void:
 	if _active_unit == unit:
 		_deselect_active_unit()
 
+	if unit.is_enemy:
+		_enemies_defeated += 1
+		
+	_check_win_loss()
+	
 func _show_action_menu() -> void:
 	var action_menu
 	
@@ -829,3 +834,81 @@ func _are_all_player_units_waiting() -> bool:
 		if not unit.is_enemy and not unit.is_wait:
 			return false
 	return true
+
+func _check_win_loss() -> void:
+	var players_alive = false
+	var enemies_alive = false
+	
+	# Scan the remaining units on the board
+	for cell in _units:
+		if _units[cell].is_enemy:
+			enemies_alive = true
+		else:
+			players_alive = true
+			
+	# Trigger the stylish screen if a condition is met
+	if not enemies_alive:
+		_show_results_screen(true)
+	elif not players_alive:
+		_show_results_screen(false)
+
+func _show_results_screen(is_victory: bool) -> void:
+	_cursor.is_active = false # Lock player input
+	
+	var canvas = CanvasLayer.new()
+	canvas.layer = 120 # Sit above all other UI
+	add_child(canvas)
+	
+	# 1. The Dark Cinematic Overlay
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.0) # Start transparent
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(bg)
+	
+	# 2. Play the Fanfare!
+	var audio = AudioStreamPlayer.new()
+	if is_victory:
+		audio.stream = load("res://audio/Music_Victory03.wav")
+	else:
+		audio.stream = load("res://audio/Music_Defeat03.wav")
+	canvas.add_child(audio)
+	audio.play()
+	
+	# 3. Build the Text Layout
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 20)
+	canvas.add_child(vbox)
+	
+	var title = Label.new()
+	title.text = "VICTORY!" if is_victory else "DEFEAT..."
+	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2) if is_victory else Color(0.8, 0.2, 0.2))
+	title.add_theme_color_override("font_outline_color", Color.BLACK)
+	title.add_theme_constant_override("outline_size", 8)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+	
+	var stats = Label.new()
+	stats.text = "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
+	stats.add_theme_font_size_override("font_size", 24)
+	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(stats)
+	
+	var btn = Button.new()
+	btn.text = "Return to Farm"
+	btn.add_theme_font_size_override("font_size", 32)
+	btn.pressed.connect(_on_return_button_pressed)
+	vbox.add_child(btn)
+	
+	# 4. Animate the Fade-In
+	vbox.modulate.a = 0
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(bg, "color:a", 0.85, 1.5)
+	tween.tween_property(vbox, "modulate:a", 1.0, 1.5)
+
+func _on_return_button_pressed() -> void:
+	# Tell the global state we are coming back from a fight!
+	Global.returning_from_combat = true
+	get_tree().change_scene_to_file("res://scenes/level/game.tscn")
