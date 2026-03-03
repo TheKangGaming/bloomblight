@@ -5,6 +5,7 @@
 class_name Unit
 extends Path2D
 var _hp_bar: ProgressBar
+var _hp_fill_style: StyleBoxFlat
 @onready var animation_tree: AnimationTree = get_node_or_null("PathFollow2D/Visuals/AnimationTree")
 var move_state_machine = null # We will set this in _ready if the tree exists
 
@@ -163,7 +164,7 @@ func _load_player_stats() -> void:
 	var buffs = Global.active_food_buff.get("stats", {})
 	
 	# 2. Pull base HP, and add the VIT buff! (Assuming 1 VIT = 2 Max HP)
-	var bonus_hp_from_food = buffs.get("VIT", 0) * 2 
+	var bonus_hp_from_food = _get_bonus_hp_from_food(buffs)
 	
 	max_health = Global.player_stats.get("MAX_HP", max_health) + bonus_hp_from_food
 	
@@ -179,6 +180,21 @@ func _load_player_stats() -> void:
 	move_range = Global.player_stats.get("MOV", move_range) + buffs.get("MOV", 0)
 	
 	attack_range = Global.player_stats.get("ATK_RNG", attack_range)
+
+
+func _get_bonus_hp_from_food(buffs: Dictionary = {}) -> int:
+	if buffs.is_empty():
+		buffs = Global.active_food_buff.get("stats", {})
+	return int(buffs.get("VIT", 0)) * 2
+
+
+func _sync_player_hp_to_global() -> void:
+	if not is_player:
+		return
+
+	var base_max_hp = int(Global.player_stats.get("MAX_HP", max_health))
+	var unbuffed_hp = clampi(health - _get_bonus_hp_from_food(), 0, base_max_hp)
+	Global.player_stats["HP"] = unbuffed_hp
 	
 
 ## Calculates and returns combat math without actually executing the attack
@@ -271,6 +287,9 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 		return
 
 	health -= amount
+	health = clampi(health, 0, max_health)
+
+	_sync_player_hp_to_global()
 	
 	_update_hp_bar()
 	
@@ -289,10 +308,6 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 	if health <= 0:
 		health = 0
 		
-		# Check this variable! If is_player doesn't exist, use: if not is_enemy:
-		if is_player: 
-			Global.player_stats["HP"] = health
-			
 		await get_tree().create_timer(0.5).timeout
 		die()
 
@@ -371,12 +386,12 @@ func _setup_hp_bar() -> void:
 	_hp_bar.add_theme_stylebox_override("background", bg_style)
 	
 	# 2. The Sap Fill
-	var fill_style = StyleBoxFlat.new()
-	fill_style.corner_radius_top_left = 1
-	fill_style.corner_radius_top_right = 1
-	fill_style.corner_radius_bottom_left = 1
-	fill_style.corner_radius_bottom_right = 1
-	_hp_bar.add_theme_stylebox_override("fill", fill_style)
+	_hp_fill_style = StyleBoxFlat.new()
+	_hp_fill_style.corner_radius_top_left = 1
+	_hp_fill_style.corner_radius_top_right = 1
+	_hp_fill_style.corner_radius_bottom_left = 1
+	_hp_fill_style.corner_radius_bottom_right = 1
+	_hp_bar.add_theme_stylebox_override("fill", _hp_fill_style)
 	
 	_hp_bar.max_value = max_health
 	_hp_bar.value = health
@@ -404,13 +419,14 @@ func _update_hp_bar(instant: bool = false) -> void:
 		tween.tween_property(_hp_bar, "value", health, 0.3).set_trans(Tween.TRANS_SINE)
 	
 	# The Blight Check: Change the sap color if critically wounded
-	var fill_style = _hp_bar.get_theme_stylebox("fill").duplicate()
+	if max_health <= 0:
+		_hp_fill_style.bg_color = Color(0.2, 0.2, 0.2)
+		return
+
 	if float(health) / float(max_health) <= 0.3:
-		fill_style.bg_color = Color(0.6, 0.1, 0.6) # Toxic Blight Purple!
+		_hp_fill_style.bg_color = Color(0.6, 0.1, 0.6) # Toxic Blight Purple!
 	else:
 		if is_enemy:
-			fill_style.bg_color = Color(0.8, 0.2, 0.2) # Enemy Red
+			_hp_fill_style.bg_color = Color(0.8, 0.2, 0.2) # Enemy Red
 		else:
-			fill_style.bg_color = Color(0.3, 0.8, 0.3) # Healthy Player Green
-			
-	_hp_bar.add_theme_stylebox_override("fill", fill_style)
+			_hp_fill_style.bg_color = Color(0.3, 0.8, 0.3) # Healthy Player Green

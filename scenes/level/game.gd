@@ -153,7 +153,7 @@ func level_reset():
 	
 	# --- RESET FOOD BUFFS ---
 	Global.active_food_buff.item = null
-	Global.active_food_buff.stats.clear()
+	Global.active_food_buff.stats = {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0}
 	
 	# Emit the signal so the UI visually removes the meal and bonus stats!
 	Global.stats_updated.emit()

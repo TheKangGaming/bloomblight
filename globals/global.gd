@@ -107,6 +107,7 @@ var active_food_buff = {
 	"stats": {    # The bonus stats granted by the meal
 		"VIT": 0,
 		"STR": 0,
+		"DEF": 0,
 		"DEX": 0,
 		"INT": 0,
 		"SPD": 0,
@@ -117,8 +118,8 @@ var active_food_buff = {
 # 4. The Food Database
 # This tells the game exactly what stats to apply when a specific meal is eaten!
 var food_stats = {
-	Items.ROASTED_CORN: {"VIT": 2, "STR": 2, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
-	Items.TOMATO_SOUP:  {"VIT": 0, "STR": 0, "DEX": 1, "INT": 2, "SPD": 1, "MOV": 0}
+	Items.ROASTED_CORN: {"VIT": 2, "STR": 2, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.TOMATO_SOUP:  {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 1, "INT": 2, "SPD": 1, "MOV": 0}
 	# Add future meals here (e.g., a late-game meal might give +1 MOV!)
 }
 
