@@ -1,6 +1,6 @@
 extends StaticBody2D
 
-@onready var water_layer = get_node("/root/Game/SoilWaterLayer")
+@onready var water_layer: TileMapLayer = _resolve_water_layer()
 @onready var sparkle_fx = $SparkleFX
 
 const HFRAMES = 34 # (columns)
@@ -35,6 +35,14 @@ const plant_data = {
 }
 
 var plant_type: Global.Items # Updated type
+
+func _resolve_water_layer() -> TileMapLayer:
+	var current_scene := get_tree().current_scene
+	if current_scene == null:
+		return null
+
+	# Keep this flexible so harvesting still works if the farm scene node name changes.
+	return current_scene.get_node_or_null("SoilWaterLayer")
 
 func setup(seed_enum: Global.Items, grid_position: Vector2i):
 	# save the type of plant
@@ -73,11 +81,6 @@ func _ready() -> void:
 	add_to_group('Plants')
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
-	pass
-
-
 func _on_area_2d_body_entered(_body: Node2D) -> void:
 	if age >= max_age:
 		
@@ -93,4 +96,5 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 			Global.advance_tutorial()
 			
 		queue_free()
-		water_layer.erase_cell(grid_pos)
+		if water_layer:
+			water_layer.erase_cell(grid_pos)

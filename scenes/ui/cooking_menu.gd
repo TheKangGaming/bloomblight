@@ -14,7 +14,10 @@ func _ready():
 func open_menu():
 	visible = true
 	check_ingredients()
-	corn_button.grab_focus()
+	if not corn_button.disabled:
+		corn_button.grab_focus()
+	elif not soup_button.disabled:
+		soup_button.grab_focus()
 
 func close_menu():
 	visible = false
@@ -24,38 +27,38 @@ func _unhandled_input(event):
 		close_menu()
 
 func check_ingredients():
-	# Check Roasted Corn (Requires 1 Corn, 1 Wood)
-	var has_corn = Global.inventory[Global.Items.CORN] >= 1
-	var has_wood = Global.inventory[Global.Items.WOOD] >= 1
-	corn_button.disabled = not (has_corn and has_wood)
-	
-	# Check Tomato Soup (Requires 2 Tomatoes, 1 Water)
-	var has_tomatoes = Global.inventory[Global.Items.TOMATO] >= 2
-	var has_water = Global.inventory[Global.Items.WATER] >= 1
-	soup_button.disabled = not (has_tomatoes and has_water)
+	corn_button.disabled = not _can_cook(Global.Items.ROASTED_CORN)
+	soup_button.disabled = not _can_cook(Global.Items.TOMATO_SOUP)
 
-func _on_cook_roasted_corn():
-	print("Cooking Roasted Corn!")
-	# Subtract ingredients
-	Global.inventory[Global.Items.CORN] -= 1
-	Global.inventory[Global.Items.WOOD] -= 1
-	# Add cooked food
-	Global.inventory[Global.Items.ROASTED_CORN] += 1
-	
+func _can_cook(recipe_output: Global.Items) -> bool:
+	if not Global.recipes.has(recipe_output):
+		return false
+
+	for ingredient in Global.recipes[recipe_output]:
+		var required_amount: int = Global.recipes[recipe_output][ingredient]
+		if Global.inventory.get(ingredient, 0) < required_amount:
+			return false
+
+	return true
+
+func _craft_item(recipe_output: Global.Items) -> void:
+	if not _can_cook(recipe_output):
+		return
+
+	for ingredient in Global.recipes[recipe_output]:
+		Global.inventory[ingredient] -= Global.recipes[recipe_output][ingredient]
+
+	Global.inventory[recipe_output] = Global.inventory.get(recipe_output, 0) + 1
 	Global.inventory_updated.emit()
+
 	if Global.tutorial_step == 11:
 		Global.advance_tutorial()
-	check_ingredients() # Re-check in case we ran out of ingredients!
-	close_menu()
 
-func _on_cook_tomato_soup():
-	print("Cooking Tomato Soup!")
-	Global.inventory[Global.Items.TOMATO] -= 2
-	Global.inventory[Global.Items.WATER] -= 1
-	Global.inventory[Global.Items.TOMATO_SOUP] += 1
-	
-	Global.inventory_updated.emit()
-	if Global.tutorial_step == 11:
-		Global.advance_tutorial()
 	check_ingredients()
 	close_menu()
+
+func _on_cook_roasted_corn():
+	_craft_item(Global.Items.ROASTED_CORN)
+
+func _on_cook_tomato_soup():
+	_craft_item(Global.Items.TOMATO_SOUP)
