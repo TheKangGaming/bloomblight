@@ -15,7 +15,7 @@ var last_battle_result := {
 # --- TUTORIAL SYSTEM ---
 signal tutorial_updated(text: String)
 var tutorial_step: int = 0
-const MAX_TUTORIAL_STEP := 3
+const MAX_TUTORIAL_STEP := 14
 
 ## Progresses to the next quest and tells the UI to update
 func advance_tutorial() -> void:
@@ -28,8 +28,8 @@ func update_tutorial_ui() -> void:
 		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
 		1: tutorial_updated.emit("Quest: Walk up to the sign and read it. (Press E)")
 		2: tutorial_updated.emit("Quest: Open the nearby chest. Follow the signs!")
-		3: tutorial_updated.emit("Quest: Equip your Hoe (Press 1).")
-		4: tutorial_updated.emit("Quest: Plow some soil (Click on the dirt).")
+		3: tutorial_updated.emit("Quest: Equip your Hoe (Scroll Mouse Wheel or Press 1).")
+		4: tutorial_updated.emit("Quest: Plow some soil (Press Space on the dirt).")
 		5: tutorial_updated.emit("Quest: Plant a seed (Press E near plowed soil).")
 		6: tutorial_updated.emit("Quest: Equip your Watering Can and water the seed!")
 		7: tutorial_updated.emit("Quest: Equip your Axe and chop a tree for Wood.")
