@@ -232,17 +232,22 @@ func _show_combat_intro() -> void:
 	overlay.color = Color(0, 0, 0, 0)
 
 	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.custom_minimum_size = Vector2(560, 300)
+	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	panel.offset_left = 48
+	panel.offset_top = 32
+	panel.offset_right = -48
+	panel.offset_bottom = -32
 	panel.modulate.a = 0.0
 
 	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 24)
 	margin.add_theme_constant_override("margin_right", 24)
 	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_bottom", 20)
 
 	var content := VBoxContainer.new()
+	content.set_anchors_preset(Control.PRESET_FULL_RECT)
 	content.add_theme_constant_override("separation", 14)
 
 	var title := Label.new()
@@ -250,17 +255,20 @@ func _show_combat_intro() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
 
-	var body := Label.new()
-	body.text = "For this demo battle, your character is cloned so you can fight a copy of yourself.\n\n" + \
-		"Your clone is a ranged attacker. That means they can strike from farther away, so staying out in the open can be dangerous. " + \
-		"Use cover, position carefully, and watch their attack range before ending your turn.\n\nGood luck!"
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var body := RichTextLabel.new()
+	body.fit_content = false
+	body.scroll_active = true
+	body.bbcode_enabled = false
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.text = "For this demo battle, a clone of your character fights WITH you against the Orcs.\n\n" + \
+		"Your clone is a ranged attacker, which means they can hit enemies from farther away than melee units. " + \
+		"Try to let your clone pressure enemies from distance while you choose safe positions and avoid standing in open danger zones.\n\n" + \
+		"Good luck - press the button below when you're ready."
 
 	var begin_button := Button.new()
 	begin_button.text = "Begin Battle"
 	begin_button.custom_minimum_size = Vector2(0, 44)
-	begin_button.pressed.connect(_on_combat_intro_begin_pressed.bind(overlay))
+	begin_button.pressed.connect(_on_combat_intro_begin_pressed.bind(overlay, panel))
 
 	content.add_child(title)
 	content.add_child(body)
@@ -276,10 +284,10 @@ func _show_combat_intro() -> void:
 	tween.tween_property(overlay, "color:a", 0.78, 0.35)
 	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.35)
 
-func _on_combat_intro_begin_pressed(overlay: ColorRect) -> void:
+func _on_combat_intro_begin_pressed(overlay: ColorRect, panel: PanelContainer) -> void:
 	var tween := create_tween()
 	tween.tween_property(overlay, "color:a", 0.0, 0.25)
-	tween.parallel().tween_property(overlay.get_node("PanelContainer"), "modulate:a", 0.0, 0.2)
+	tween.parallel().tween_property(panel, "modulate:a", 0.0, 0.2)
 	await tween.finished
 
 	if is_instance_valid(overlay):
