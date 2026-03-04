@@ -3,6 +3,7 @@ extends Node
 signal inventory_updated
 @warning_ignore('unused_signal')
 signal stats_updated
+var saved_farm_scene: Node = null
 
 var returning_from_combat: bool = false
 var last_battle_result := {

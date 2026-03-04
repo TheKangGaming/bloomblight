@@ -967,18 +967,28 @@ func _show_results_screen(is_victory: bool) -> void:
 func _on_return_button_pressed(btn: Button) -> void:
 	btn.disabled = true
 
-	# Persist a tiny summary so the farm scene can react or log to the journal later.
+	# Persist a tiny summary so the farm scene can unpack the loot!
 	Global.last_battle_result = {
 		"victory": _are_all_players_alive(),
 		"enemies_defeated": _enemies_defeated,
 		"returned_at_unix": Time.get_unix_time_from_system()
 	}
 
-	# Tell the global state we are coming back from a fight!
-	Global.returning_from_combat = true
+	# 1. Retrieve the frozen farm from the vault
+	if Global.saved_farm_scene:
+		# 2. Plug it back into the game world!
+		get_tree().root.add_child(Global.saved_farm_scene)
+		get_tree().current_scene = Global.saved_farm_scene
+		
+		# 3. Trigger the time jump directly on the farm
+		if Global.saved_farm_scene.has_method("_jump_time_to_night"):
+			Global.saved_farm_scene._jump_time_to_night()
+			
+		# 4. Empty the vault
+		Global.saved_farm_scene = null
 
-	# Load the farm scene! (Make sure this exact path matches your project)
-	get_tree().change_scene_to_file("res://scenes/level/game.tscn")
+	# 5. Destroy the Combat Map
+	get_parent().queue_free()
 
 func _are_all_players_alive() -> bool:
 	for unit in _units.values():

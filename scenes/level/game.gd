@@ -24,11 +24,17 @@ func _ready() -> void:
 		print("Returned from combat. Victory: %s, Enemies defeated: %d" % [str(result.get("victory", false)), int(result.get("enemies_defeated", 0))])
 		_jump_time_to_night()
 
-## Forces the day to progress
+## Fast-forwards time to the evening and forces crops to grow!
 func _jump_time_to_night() -> void:
-	print("Returning from combat: Fast-forwarding time!")
-	# Jump straight to the next day and grow the crops!
-	day_switch()
+	print("Returning from combat: Fast-forwarding time to Evening!")
+	
+	if has_node("DayTimer"): 
+		# Setting the timer to a very small number (like 5 seconds) forces the math 
+		# in your _process function to equal 0.9+, triggering the dark Evening/Night colors!
+		$DayTimer.start(5.0) 
+		
+	# Force the plants to grow
+	_on_grow_timer_timeout()
 	
 func _on_seed_menu_cancelled():
 	# Give the player their movement back!
@@ -181,8 +187,18 @@ func _on_grow_timer_timeout() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Pressing "C" on your keyboard triggers combat
 	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
-		print("Enemy ambushed! Transitioning to combat...")
+		# 1. Load the combat board into memory
+		var combat_scene = load("res://scenes/level/CombatMap_1.tscn").instantiate()
 		
-		# Instantly swap your game scene to the battle map
-		# Note: Make sure the spelling perfectly matches your saved scene!
-		get_tree().change_scene_to_file("res://scenes/level/CombatMap_1.tscn")
+		var farm = get_tree().current_scene
+		
+		# 2. Put the farm in the memory vault so it doesn't get deleted
+		Global.saved_farm_scene = farm
+		
+		# 3. Add the Combat board to the game
+		get_tree().root.add_child(combat_scene)
+		get_tree().current_scene = combat_scene
+		
+		# 4. UNPLUG THE FARM
+		# This instantly stops all audio, cameras, and UI without deleting your crops!
+		get_tree().root.remove_child(farm)
