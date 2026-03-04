@@ -99,7 +99,7 @@ func get_input():
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed('tool_forward'):
 		cycle_tool(1)
-		get_viewport().set_input_as_handled()
+		get_viewport().set_input_as_handled()		
 	elif event.is_action_pressed('tool_backward'):
 		cycle_tool(-1)
 		get_viewport().set_input_as_handled()
@@ -107,7 +107,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func cycle_tool(tool_direction: int) -> void:
 	current_tool = posmod(current_tool + tool_direction, Tools.size()) as Tools
 	tool_changed.emit(current_tool)
-
+	if Global.tutorial_step == 3 and Global.current_tool == "Hoe": 
+		Global.advance_tutorial()
 func _ready() -> void:
 	update_animation_blend_positions(last_direction)
 	$Visuals/AnimationTree.animation_finished.connect(_on_animation_tree_animation_finished)
