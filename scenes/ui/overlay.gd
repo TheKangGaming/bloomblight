@@ -24,7 +24,7 @@ func _try_bind_to_player_signal() -> void:
 	if not player_ref.is_connected("tool_changed", Callable(self, "_on_player_tool_changed")):
 		player_ref.connect("tool_changed", Callable(self, "_on_player_tool_changed"))
 
-func _on_player_tool_changed(tool: int) -> void:
+func _on_player_tool_changed(tool: Global.Tools) -> void:
 	_update_tool_display(tool)
 
 ## Builds a golden text box in the top-left corner
@@ -98,7 +98,7 @@ func _process(_delta):
 	if player_ref:
 		_update_tool_display(player_ref.current_tool)
 
-func _update_tool_display(tool: int) -> void:
+func _update_tool_display(tool: Global.Tools) -> void:
 	if tool == last_tool:
 		return
 	last_tool = tool
@@ -107,13 +107,13 @@ func _update_tool_display(tool: int) -> void:
 	var tool_frame = 0
 
 	match tool:
-		0:
+		Global.Tools.HOE:
 			tool_name = "Hoe"
 			tool_frame = 0
-		1:
+		Global.Tools.AXE:
 			tool_name = "Axe"
 			tool_frame = 1
-		2:
+		Global.Tools.WATER:
 			tool_name = "Watering Can"
 			tool_frame = 2
 

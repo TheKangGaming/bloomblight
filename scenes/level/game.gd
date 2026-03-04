@@ -61,7 +61,7 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed('time_skip'):
 		day_switch()
 
-func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
+func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 	# Tweak this number (16, 24, or 32) until it hits the exact tile  want
 	var adjusted_pos = global_pos + Vector2(0, 24)
 	# Convert global position to grid coordinates using the Tillable layer
@@ -69,7 +69,7 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 	var grid_pos = tillable_layer.local_to_map(local_pos)
 	
 	# 1. THE HOE
-	if tool == player.Tools.HOE:
+	if tool == Global.Tools.HOE:
 		if tillable_layer.get_cell_source_id(grid_pos) != -1:
 			
 			# 1. Grab every dirt tile currently on the map
@@ -84,7 +84,7 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 				Global.advance_tutorial()
 			
 	# 2. THE WATERING CAN		
-	if tool == player.Tools.WATER:
+	if tool == Global.Tools.WATER:
 		# Grab the data of the specific dirt tile we clicked
 		var soil_data = soil_layer.get_cell_tile_data(grid_pos)
 		
@@ -97,7 +97,7 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 				Global.advance_tutorial()
 	
 	# 3. THE AXE
-	if tool == player.Tools.AXE:
+	if tool == Global.Tools.AXE:
 		for tree in get_tree().get_nodes_in_group('Trees'):
 			
 			# Shift the target up by 30 pixels so we are measuring from the TRUNK, not the roots
