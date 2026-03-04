@@ -22,18 +22,15 @@ func _ready() -> void:
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
 
-func apply_combat_time_passage(elapsed_seconds: float) -> void:
-	if elapsed_seconds <= 0.0:
-		return
-
+func apply_combat_time_passage(_elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer
 	var grow_timer = $GrowTimer
 	var day_time_left = day_timer.time_left
 	var grow_time_left = max(grow_timer.time_left, 0.001)
 	var grow_interval = _grow_timer_cycle_seconds
 
-	# We only simulate crop ticks during the remaining day.
-	var simulated_seconds = min(elapsed_seconds, day_time_left)
+	# Combat should fast-forward the farm to night, but never into a new day.
+	var simulated_seconds = day_time_left
 	if simulated_seconds <= 0.0:
 		day_timer.start(0.01)
 		day_timer.wait_time = _day_timer_cycle_seconds
@@ -48,25 +45,10 @@ func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	for _i in range(ticks_to_simulate):
 		_on_grow_timer_timeout()
 
-	var new_day_time_left = max(day_time_left - simulated_seconds, 0.0)
-	if new_day_time_left <= 0.0:
-		day_timer.start(0.01)
-		day_timer.wait_time = _day_timer_cycle_seconds
-		grow_timer.stop()
-		grow_timer.wait_time = _grow_timer_cycle_seconds
-		return
-
-	var new_grow_time_left: float
-	if ticks_to_simulate == 0:
-		new_grow_time_left = max(grow_time_left - simulated_seconds, 0.001)
-	else:
-		var consumed_after_first_tick = simulated_seconds - grow_time_left
-		var cycle_progress = fposmod(consumed_after_first_tick, grow_interval)
-		new_grow_time_left = grow_interval if is_zero_approx(cycle_progress) else (grow_interval - cycle_progress)
-
-	day_timer.start(new_day_time_left)
+	# Leave the scene at night with the next day not yet started.
+	day_timer.start(0.01)
 	day_timer.wait_time = _day_timer_cycle_seconds
-	grow_timer.start(max(new_grow_time_left, 0.001))
+	grow_timer.stop()
 	grow_timer.wait_time = _grow_timer_cycle_seconds
 	
 func _on_seed_menu_cancelled():
