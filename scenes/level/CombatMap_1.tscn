@@ -383,11 +383,21 @@ position = Vector2(376, 444)
 
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
-position = Vector2(371, 249.99998)
+position = Vector2(375, 212)
 strength = 4
 dexterity = 4
 speed = 4
 move_range = 4
+
+[node name="Ranged Clone" parent="GameBoard" unique_id=1597076890 instance=ExtResource("10_wkw2y")]
+position = Vector2(333, 476)
+attack_range = 2
+
+[node name="Orc2" parent="GameBoard" unique_id=1345977684 instance=ExtResource("11_qga0l")]
+position = Vector2(272, 143)
+
+[node name="Orc3" parent="GameBoard" unique_id=1083859874 instance=ExtResource("11_qga0l")]
+position = Vector2(509, 147)
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")

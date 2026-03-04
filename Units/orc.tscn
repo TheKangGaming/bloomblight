@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://cgwqw43fglj7u" path="res://graphics/enemies/orc/orc melee - anims-idle.png" id="2_j6h8o"]
 
 [node name="Orc" unique_id=376372171 instance=ExtResource("1_4b2u4")]
-scale = Vector2(0.8, 0.8)
 is_enemy = true
 max_health = 15
 health = 15
@@ -16,7 +15,8 @@ scale = Vector2(0.5813953, 0.3)
 [node name="Visuals" type="Node2D" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1" unique_id=938986063]
 
 [node name="Sprite2D" type="Sprite2D" parent="PathFollow2D/Visuals" index="0" unique_id=2024484056]
-position = Vector2(-4, -36)
+position = Vector2(-4, -29)
+scale = Vector2(0.8, 0.8)
 texture = ExtResource("2_j6h8o")
 region_enabled = true
 region_rect = Rect2(94, 81, 55, 72)
