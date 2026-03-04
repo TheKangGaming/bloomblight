@@ -329,7 +329,6 @@ func die() -> void:
 	if is_player:
 		Global.player_stats["HP"] = 0
 	print(name + " has fallen in battle!")
-	died.emit(self)
 	# (We can play a fancy death animation or sound effect here later!)
 	queue_free()
 	

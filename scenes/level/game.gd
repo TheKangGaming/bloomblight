@@ -20,6 +20,8 @@ func _ready() -> void:
 	
 	if Global.returning_from_combat:
 		Global.returning_from_combat = false
+		var result = Global.last_battle_result
+		print("Returned from combat. Victory: %s, Enemies defeated: %d" % [str(result.get("victory", false)), int(result.get("enemies_defeated", 0))])
 		_jump_time_to_night()
 
 ## Forces the day to progress

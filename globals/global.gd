@@ -5,6 +5,11 @@ signal inventory_updated
 signal stats_updated
 
 var returning_from_combat: bool = false
+var last_battle_result := {
+	"victory": false,
+	"enemies_defeated": 0,
+	"returned_at_unix": 0
+}
 
 
 # 1. THE MASTER ITEM LIST

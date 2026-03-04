@@ -29,6 +29,7 @@ var _forecast_ui_node: CanvasLayer = null
 var _valid_target_cells: Array = []
 var _attack_offsets_cache := {}
 var _phase_banner_layer: CanvasLayer = null
+var _results_canvas: CanvasLayer = null
 var _battle_ended: bool = false
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
@@ -342,6 +343,9 @@ func _deselect_active_unit() -> void:
 
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	if _battle_ended:
+		return
+
 	# --- 0. CONFIRM FORECAST STATE ---
 	if _target_unit_for_forecast != null:
 		# We are currently viewing the forecast window and clicked Confirm again!
@@ -466,6 +470,9 @@ func _show_action_menu() -> void:
 
 ## To be called by the Action Menu when the player chooses "Wait"
 func finish_unit_turn() -> void:
+	if _battle_ended:
+		return
+
 	if _active_unit:
 		var visuals = _active_unit.get_node_or_null("PathFollow2D/Visuals")
 		if visuals:
@@ -486,6 +493,9 @@ func finish_unit_turn() -> void:
 	
 ## Called when the player presses "End Turn" or all player units are exhausted
 func end_player_phase() -> void:
+	if _battle_ended:
+		return
+
 	# 1. Lock the player out entirely
 	_cursor.is_active = false
 	current_phase = TurnPhase.ENEMY
@@ -549,8 +559,13 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 
 ## Loops through all enemies and lets them act
 func start_enemy_phase() -> void:
+	if _battle_ended:
+		return
+
 	# Fire the Red Banner!
 	await _show_phase_banner("ENEMY PHASE", Color(0.8, 0.1, 0.1))
+	if _battle_ended:
+		return
 	
 	# 1. Gather all living enemies currently on the board
 	var enemies = []
@@ -561,6 +576,8 @@ func start_enemy_phase() -> void:
 			
 	# 2. Process each enemy one by one
 	for enemy in enemies:
+		if _battle_ended:
+			return
 		# Skip if the enemy was somehow killed (future-proofing for counter-attacks)
 		if not is_instance_valid(enemy) or enemy.health <= 0:
 			continue
@@ -616,10 +633,14 @@ func start_enemy_phase() -> void:
 		await get_tree().create_timer(0.3).timeout
 
 	# 3. All enemies have acted! Pass the baton back to the player.
-	start_player_phase()
+	if not _battle_ended:
+		start_player_phase()
 
 ## Wakes all player units up and hands control back to the player
 func start_player_phase() -> void:
+	if _battle_ended:
+		return
+
 	current_phase = TurnPhase.PLAYER
 	
 	# Fire the Blue Banner!
@@ -660,8 +681,13 @@ func enter_attack_targeting() -> void:
 	
 ## Orchestrates the turn-based combat sequence between two units
 func execute_combat(attacker: Unit, defender: Unit) -> void:
+	if _battle_ended or not is_instance_valid(attacker) or not is_instance_valid(defender):
+		return
+
 	# 1. Initiator swings first
 	await attacker.attack(defender)
+	if _battle_ended or not is_instance_valid(attacker):
+		return
 	
 	# 2. Check if defender survived the hit
 	if is_instance_valid(defender) and defender.health > 0:
@@ -877,14 +903,17 @@ func _show_results_screen(is_victory: bool) -> void:
 			bgm_tween.tween_property(child, "volume_db", -80.0, 1.5)
 			bgm_tween.tween_callback(child.stop)
 	
-	var canvas = CanvasLayer.new()
-	canvas.layer = 120 
-	add_child(canvas)
+	if is_instance_valid(_results_canvas):
+		_results_canvas.queue_free()
+
+	_results_canvas = CanvasLayer.new()
+	_results_canvas.layer = 120 
+	add_child(_results_canvas)
 	
 	var bg = ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.0) 
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	canvas.add_child(bg)
+	_results_canvas.add_child(bg)
 	
 	# 4. Volume Control for the Fanfare!
 	var audio = AudioStreamPlayer.new()
@@ -894,14 +923,14 @@ func _show_results_screen(is_victory: bool) -> void:
 		audio.stream = load("res://audio/Music_Defeat03.wav")
 		
 	audio.volume_db = -12.0 # Tweak this negative number to make it quieter! (-15, -20, etc.)
-	canvas.add_child(audio)
+	_results_canvas.add_child(audio)
 	audio.play()
 	
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_CENTER)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 20)
-	canvas.add_child(vbox)
+	_results_canvas.add_child(vbox)
 	
 	var title = Label.new()
 	title.text = "VICTORY!" if is_victory else "DEFEAT..."
@@ -923,7 +952,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	btn.text = "Return to Farm"
 	btn.add_theme_font_size_override("font_size", 32)
 	btn.custom_minimum_size = Vector2(300, 60) # Forces the button to be nice and wide
-	btn.pressed.connect(_on_return_button_pressed)
+	btn.pressed.connect(_on_return_button_pressed.bind(btn))
 	vbox.add_child(btn)
 	
 	vbox.modulate.a = 0
@@ -931,9 +960,24 @@ func _show_results_screen(is_victory: bool) -> void:
 	tween.tween_property(bg, "color:a", 0.85, 1.5)
 	tween.tween_property(vbox, "modulate:a", 1.0, 1.5)
 	
-func _on_return_button_pressed() -> void:
+func _on_return_button_pressed(btn: Button) -> void:
+	btn.disabled = true
+
+	# Persist a tiny summary so the farm scene can react or log to the journal later.
+	Global.last_battle_result = {
+		"victory": _are_all_players_alive(),
+		"enemies_defeated": _enemies_defeated,
+		"returned_at_unix": Time.get_unix_time_from_system()
+	}
+
 	# Tell the global state we are coming back from a fight!
 	Global.returning_from_combat = true
-	
+
 	# Load the farm scene! (Make sure this exact path matches your project)
 	get_tree().change_scene_to_file("res://scenes/level/game.tscn")
+
+func _are_all_players_alive() -> bool:
+	for unit in _units.values():
+		if not unit.is_enemy:
+			return true
+	return false
