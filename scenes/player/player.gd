@@ -90,17 +90,23 @@ func get_input():
 			if current_tool != Tools.AXE:
 				tool_use.emit(current_tool, target_pos)
 		
-	if Input.is_action_just_pressed('tool_forward') or Input.is_action_just_pressed('tool_backward'):
-		var tool_direction = Input.get_axis('tool_backward', 'tool_forward') as int
-		current_tool = posmod(current_tool + tool_direction, Tools.size()) as Tools
-		#emit the signal
-		tool_changed.emit(current_tool)
-	
 	if Input.is_action_just_pressed('plant'):
 		var player_center = global_position + Vector2(0, -chest_offset)
 		var target_pos = player_center + (last_direction * tool_direction_offset)
 		
 		toggle_menu_requested.emit(target_pos)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed('tool_forward'):
+		cycle_tool(1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed('tool_backward'):
+		cycle_tool(-1)
+		get_viewport().set_input_as_handled()
+
+func cycle_tool(tool_direction: int) -> void:
+	current_tool = posmod(current_tool + tool_direction, Tools.size()) as Tools
+	tool_changed.emit(current_tool)
 
 func _ready() -> void:
 	update_animation_blend_positions(last_direction)
