@@ -14,6 +14,7 @@ var pending_plant_pos: Vector2
 var _day_timer_cycle_seconds := 0.0
 var _grow_timer_cycle_seconds := 0.0
 var _combat_intro_active: bool = false
+var _combat_transition_active: bool = false
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -298,11 +299,36 @@ func _on_combat_intro_begin_pressed(overlay: ColorRect, panel: PanelContainer) -
 	_enter_combat_map()
 
 func _enter_combat_map() -> void:
+	if _combat_transition_active:
+		return
+	_combat_transition_active = true
+
 	if Global.tutorial_step == 13:
 		Global.advance_tutorial()
 
+	# Cinematic handoff: fade out the farm and its music before the scene swap.
+	var fade_rect := ColorRect.new()
+	fade_rect.name = "CombatSceneTransition"
+	fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	fade_rect.color = Color(0, 0, 0, 0)
+	$CanvasLayer.add_child(fade_rect)
+
+	var farm_music: AudioStreamPlayer = $WhispersOfTheOldWood if has_node("WhispersOfTheOldWood") else null
+	var fade_out := create_tween()
+	fade_out.set_ease(Tween.EASE_IN_OUT)
+	fade_out.set_trans(Tween.TRANS_SINE)
+	fade_out.tween_property(fade_rect, "color:a", 1.0, 0.45)
+	if is_instance_valid(farm_music):
+		fade_out.parallel().tween_property(farm_music, "volume_db", -48.0, 0.4)
+	await fade_out.finished
+
 	# 1. Load the combat board into memory
 	var combat_scene = load("res://scenes/level/CombatMap_1.tscn").instantiate()
+	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
+	if is_instance_valid(combat_music):
+		combat_music.autoplay = false
+		combat_music.volume_db = -40.0
 
 	var farm = get_tree().current_scene
 	Global.begin_combat_transition()
@@ -317,3 +343,34 @@ func _enter_combat_map() -> void:
 	# 4. UNPLUG THE FARM
 	# This instantly stops all audio, cameras, and UI without deleting your crops!
 	get_tree().root.remove_child(farm)
+
+	# Ensure the combat scene is initialized before we focus gameplay elements.
+	await get_tree().process_frame
+
+	# Start combat music with a gentle fade-in.
+	if is_instance_valid(combat_music):
+		combat_music.play()
+		var combat_fade := create_tween()
+		combat_fade.set_ease(Tween.EASE_OUT)
+		combat_fade.set_trans(Tween.TRANS_SINE)
+		combat_fade.tween_property(combat_music, "volume_db", -15.0, 1.5)
+
+	# Center player attention immediately on Savannah.
+	var board: Node = combat_scene.get_node_or_null("GameBoard")
+	var savannah: Unit = combat_scene.get_node_or_null("GameBoard/Savannah") as Unit
+	var cursor: Cursor = combat_scene.get_node_or_null("GameBoard/Cursor") as Cursor
+	if board != null and savannah != null and cursor != null:
+		cursor.cell = savannah.cell.round()
+		cursor.is_active = true
+
+	# Reveal the battlefield from black after focus has been set.
+	var reveal := create_tween()
+	reveal.set_ease(Tween.EASE_IN_OUT)
+	reveal.set_trans(Tween.TRANS_SINE)
+	reveal.tween_property(fade_rect, "color:a", 0.0, 0.35)
+	await reveal.finished
+
+	if is_instance_valid(fade_rect):
+		fade_rect.queue_free()
+
+	_combat_transition_active = false
