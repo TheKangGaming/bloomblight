@@ -301,9 +301,9 @@ func _show_pause_menu() -> void:
 
 
 func _reset_unit() -> void:
-	# 1. Hide the menu if it's open to get it out of our way
+	# 1. Remove the menu if it's open so it can't keep the cursor disabled.
 	if has_node("ActionMenu"):
-		$ActionMenu.hide()
+		$ActionMenu.queue_free()
 
 	if _active_unit != null:
 		# 2. Only physically teleport her if she actually moved away from her start tile
@@ -321,7 +321,13 @@ func _reset_unit() -> void:
 		_deselect_active_unit()
 		
 	# 5. CRITICAL FIX: Give control back to the player!
+	_cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	_cursor.show()
 	_cursor.is_active = true
+
+
+func _is_distance_in_attack_range(distance: int, attack_range: int) -> bool:
+	return attack_range > 0 and distance == attack_range
 		
 ## Deselects the active unit, clearing the cells overlay and interactive path drawing.
 ## Universally clears the active unit, resets their animations, and wipes the overlays.
@@ -534,7 +540,7 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 
 		for destination in legal_destinations:
 			var dist = _manhattan_distance(destination, player.cell)
-			var can_attack_from_here = dist <= enemy.attack_range
+			var can_attack_from_here = _is_distance_in_attack_range(dist, enemy.attack_range)
 
 			# Priority: secure an attack this turn, then maximize proximity, then focus lower HP targets.
 			var should_replace = false
@@ -624,7 +630,7 @@ func start_enemy_phase() -> void:
 		# C. Attack check using the chosen target.
 		if _is_valid_attack_target(enemy, target_player):
 			var final_dist = _manhattan_distance(enemy.cell, target_player.cell)
-			if final_dist <= enemy.attack_range:
+			if _is_distance_in_attack_range(final_dist, enemy.attack_range):
 				
 				# NEW: Hand the AI fight over to the combat manager!
 				await execute_combat(enemy, target_player)
@@ -694,7 +700,7 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 		
 		# 3. Strategy logic: Is the attacker inside the defender's attack range?
 		var dist = _manhattan_distance(defender.cell, attacker.cell)
-		if dist <= defender.attack_range:
+		if _is_distance_in_attack_range(dist, defender.attack_range):
 			
 			# 4. Cinematic pause, then counter-attack!
 			await get_tree().create_timer(0.3).timeout
@@ -756,7 +762,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	vbox.add_child(_create_stat_row("HP", str(defender.health) + "/" + str(defender.max_health)))
 	
 	var dist = _manhattan_distance(defender.cell, attacker.cell)
-	if dist <= defender.attack_range:
+	if _is_distance_in_attack_range(dist, defender.attack_range):
 		var def_stats = defender.get_combat_stats(attacker)
 		vbox.add_child(_create_stat_row("DMG", str(def_stats.damage)))
 		vbox.add_child(_create_stat_row("HIT", str(def_stats.hit) + "%"))
@@ -856,7 +862,7 @@ func _get_attack_offsets(attack_range: int) -> Array:
 	for x in range(-attack_range, attack_range + 1):
 		for y in range(-attack_range, attack_range + 1):
 			var distance = abs(x) + abs(y)
-			if distance > 0 and distance <= attack_range:
+			if distance == attack_range:
 				offsets.append(Vector2(x, y))
 
 	_attack_offsets_cache[attack_range] = offsets

@@ -391,6 +391,7 @@ move_range = 4
 
 [node name="Ranged Clone" parent="GameBoard" unique_id=1597076890 instance=ExtResource("10_wkw2y")]
 position = Vector2(333, 476)
+is_player = false
 attack_range = 2
 
 [node name="Orc2" parent="GameBoard" unique_id=1345977684 instance=ExtResource("11_qga0l")]
