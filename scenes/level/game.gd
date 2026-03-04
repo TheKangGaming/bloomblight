@@ -303,19 +303,29 @@ func _enter_combat_map() -> void:
 		return
 	_combat_transition_active = true
 
+	var scene_tree := get_tree()
+	if scene_tree == null:
+		_combat_transition_active = false
+		return
+
 	if Global.tutorial_step == 13:
 		Global.advance_tutorial()
 
-	# Cinematic handoff: fade out the farm and its music before the scene swap.
+	# Keep transition UI alive even after the farm scene is detached.
+	var transition_layer := CanvasLayer.new()
+	transition_layer.layer = 100
+	transition_layer.name = "CombatSceneTransitionLayer"
+	scene_tree.root.add_child(transition_layer)
+
 	var fade_rect := ColorRect.new()
 	fade_rect.name = "CombatSceneTransition"
 	fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
 	fade_rect.color = Color(0, 0, 0, 0)
-	$CanvasLayer.add_child(fade_rect)
+	transition_layer.add_child(fade_rect)
 
 	var farm_music: AudioStreamPlayer = $WhispersOfTheOldWood if has_node("WhispersOfTheOldWood") else null
-	var fade_out := create_tween()
+	var fade_out := scene_tree.create_tween()
 	fade_out.set_ease(Tween.EASE_IN_OUT)
 	fade_out.set_trans(Tween.TRANS_SINE)
 	fade_out.tween_property(fade_rect, "color:a", 1.0, 0.45)
@@ -330,27 +340,27 @@ func _enter_combat_map() -> void:
 		combat_music.autoplay = false
 		combat_music.volume_db = -40.0
 
-	var farm = get_tree().current_scene
+	var farm = scene_tree.current_scene
 	Global.begin_combat_transition()
 
 	# 2. Put the farm in the memory vault so it doesn't get deleted
 	Global.saved_farm_scene = farm
 
 	# 3. Add the Combat board to the game
-	get_tree().root.add_child(combat_scene)
-	get_tree().current_scene = combat_scene
+	scene_tree.root.add_child(combat_scene)
+	scene_tree.current_scene = combat_scene
 
 	# 4. UNPLUG THE FARM
 	# This instantly stops all audio, cameras, and UI without deleting your crops!
-	get_tree().root.remove_child(farm)
+	scene_tree.root.remove_child(farm)
 
 	# Ensure the combat scene is initialized before we focus gameplay elements.
-	await get_tree().process_frame
+	await scene_tree.process_frame
 
 	# Start combat music with a gentle fade-in.
 	if is_instance_valid(combat_music):
 		combat_music.play()
-		var combat_fade := create_tween()
+		var combat_fade := scene_tree.create_tween()
 		combat_fade.set_ease(Tween.EASE_OUT)
 		combat_fade.set_trans(Tween.TRANS_SINE)
 		combat_fade.tween_property(combat_music, "volume_db", -15.0, 1.5)
@@ -364,13 +374,13 @@ func _enter_combat_map() -> void:
 		cursor.is_active = true
 
 	# Reveal the battlefield from black after focus has been set.
-	var reveal := create_tween()
+	var reveal := scene_tree.create_tween()
 	reveal.set_ease(Tween.EASE_IN_OUT)
 	reveal.set_trans(Tween.TRANS_SINE)
 	reveal.tween_property(fade_rect, "color:a", 0.0, 0.35)
 	await reveal.finished
 
-	if is_instance_valid(fade_rect):
-		fade_rect.queue_free()
+	if is_instance_valid(transition_layer):
+		transition_layer.queue_free()
 
 	_combat_transition_active = false
