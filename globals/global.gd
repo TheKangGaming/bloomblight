@@ -15,7 +15,7 @@ var last_battle_result := {
 # --- TUTORIAL SYSTEM ---
 signal tutorial_updated(text: String)
 var tutorial_step: int = 0
-const MAX_TUTORIAL_STEP := 3
+const MAX_TUTORIAL_STEP := 14
 
 ## Progresses to the next quest and tells the UI to update
 func advance_tutorial() -> void:

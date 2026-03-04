@@ -106,6 +106,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func cycle_tool(tool_direction: int) -> void:
 	current_tool = posmod(current_tool + tool_direction, Tools.size()) as Tools
+	if Global.tutorial_step == 3 and current_tool == Tools.HOE:
+		Global.advance_tutorial()
 	tool_changed.emit(current_tool)
 	if Global.tutorial_step == 3 and Global.current_tool == "Hoe": 
 		Global.advance_tutorial()
