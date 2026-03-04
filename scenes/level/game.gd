@@ -80,6 +80,8 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 			
 			# 3. Tell Godot to re-calculate the connections for ALL of them together
 			soil_layer.set_cells_terrain_connect(all_dirt, 0, 0)
+			if Global.tutorial_step == 4:
+				Global.advance_tutorial()
 			
 	# 2. THE WATERING CAN		
 	if tool == player.Tools.WATER:
@@ -91,6 +93,8 @@ func _on_player_tool_use(tool: int, global_pos: Vector2) -> void:
 			var all_water = water_layer.get_used_cells()
 			all_water.append(grid_pos)
 			water_layer.set_cells_terrain_connect(all_water, 0, 0)
+			if Global.tutorial_step == 6:
+				Global.advance_tutorial()
 	
 	# 3. THE AXE
 	if tool == player.Tools.AXE:
@@ -135,6 +139,8 @@ func _on_seed_chosen_from_menu(seed_type: int):
 	
 	# Only consume the seed if the planting was actually successful
 	if successfully_planted:
+		if Global.tutorial_step == 5:
+			Global.advance_tutorial()
 		Global.inventory[seed_type] -= 1
 		Global.inventory_updated.emit()
 
