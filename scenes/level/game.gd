@@ -17,24 +17,47 @@ func _ready() -> void:
 	$CanvasLayer/SeedMenu.seed_chosen.connect(_on_seed_chosen_from_menu)
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
-	
-	if Global.returning_from_combat:
-		Global.returning_from_combat = false
-		var result = Global.last_battle_result
-		print("Returned from combat. Victory: %s, Enemies defeated: %d" % [str(result.get("victory", false)), int(result.get("enemies_defeated", 0))])
-		_jump_time_to_night()
 
-## Fast-forwards time to the evening and forces crops to grow!
-func _jump_time_to_night() -> void:
-	print("Returning from combat: Fast-forwarding time to Evening!")
-	
-	if has_node("DayTimer"): 
-		# Setting the timer to a very small number (like 5 seconds) forces the math 
-		# in your _process function to equal 0.9+, triggering the dark Evening/Night colors!
-		$DayTimer.start(5.0) 
-		
-	# Force the plants to grow
-	_on_grow_timer_timeout()
+func apply_combat_time_passage(elapsed_seconds: float) -> void:
+	if elapsed_seconds <= 0.0:
+		return
+
+	var day_timer = $DayTimer
+	var grow_timer = $GrowTimer
+	var day_time_left = day_timer.time_left
+	var grow_time_left = max(grow_timer.time_left, 0.001)
+	var grow_interval = grow_timer.wait_time
+
+	# We only simulate crop ticks during the remaining day.
+	var simulated_seconds = min(elapsed_seconds, day_time_left)
+	if simulated_seconds <= 0.0:
+		day_timer.start(0.01)
+		grow_timer.stop()
+		return
+
+	var ticks_to_simulate := 0
+	if simulated_seconds >= grow_time_left:
+		ticks_to_simulate = 1 + int(floor((simulated_seconds - grow_time_left) / grow_interval))
+
+	for _i in range(ticks_to_simulate):
+		_on_grow_timer_timeout()
+
+	var new_day_time_left = max(day_time_left - simulated_seconds, 0.0)
+	if new_day_time_left <= 0.0:
+		day_timer.start(0.01)
+		grow_timer.stop()
+		return
+
+	var new_grow_time_left: float
+	if ticks_to_simulate == 0:
+		new_grow_time_left = max(grow_time_left - simulated_seconds, 0.001)
+	else:
+		var consumed_after_first_tick = simulated_seconds - grow_time_left
+		var cycle_progress = fposmod(consumed_after_first_tick, grow_interval)
+		new_grow_time_left = grow_interval if is_zero_approx(cycle_progress) else (grow_interval - cycle_progress)
+
+	day_timer.start(new_day_time_left)
+	grow_timer.start(max(new_grow_time_left, 0.001))
 	
 func _on_seed_menu_cancelled():
 	# Give the player their movement back!
@@ -191,6 +214,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var combat_scene = load("res://scenes/level/CombatMap_1.tscn").instantiate()
 		
 		var farm = get_tree().current_scene
+		Global.begin_combat_transition()
 		
 		# 2. Put the farm in the memory vault so it doesn't get deleted
 		Global.saved_farm_scene = farm

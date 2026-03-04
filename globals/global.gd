@@ -12,6 +12,21 @@ var last_battle_result := {
 	"returned_at_unix": 0
 }
 
+var combat_transition := {
+	"started_at_unix": 0.0
+}
+
+func begin_combat_transition() -> void:
+	combat_transition.started_at_unix = Time.get_unix_time_from_system()
+
+func consume_combat_elapsed_seconds() -> float:
+	if combat_transition.started_at_unix <= 0.0:
+		return 0.0
+
+	var elapsed = max(Time.get_unix_time_from_system() - combat_transition.started_at_unix, 0.0)
+	combat_transition.started_at_unix = 0.0
+	return elapsed
+
 
 # 1. THE MASTER ITEM LIST
 # We distinguish between the SEED (what you plant) and the CROP (what you eat/sell)

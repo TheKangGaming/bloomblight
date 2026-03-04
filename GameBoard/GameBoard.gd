@@ -974,6 +974,8 @@ func _on_return_button_pressed(btn: Button) -> void:
 	}
 
 	if Global.saved_farm_scene:
+		var elapsed_seconds = Global.consume_combat_elapsed_seconds()
+
 		# 1. Plug the farm back in
 		get_tree().root.add_child(Global.saved_farm_scene)
 		get_tree().current_scene = Global.saved_farm_scene
@@ -981,9 +983,9 @@ func _on_return_button_pressed(btn: Button) -> void:
 		# 2. WAIT ONE FRAME FOR GROUPS TO RE-REGISTER
 		await get_tree().process_frame 
 		
-		# 3. Now it is safe to trigger the time jump!
-		if Global.saved_farm_scene.has_method("_jump_time_to_night"):
-			Global.saved_farm_scene._jump_time_to_night()
+		# 3. Now it is safe to apply elapsed farm time.
+		if Global.saved_farm_scene.has_method("apply_combat_time_passage"):
+			Global.saved_farm_scene.apply_combat_time_passage(elapsed_seconds)
 			
 		Global.saved_farm_scene = null
 
