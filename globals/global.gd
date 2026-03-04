@@ -48,6 +48,8 @@ var combat_transition := {
 	"started_at_unix": 0.0
 }
 
+var has_seen_combat_intro: bool = false
+
 func begin_combat_transition() -> void:
 	combat_transition.started_at_unix = Time.get_unix_time_from_system()
 

@@ -13,6 +13,7 @@ var plant_scene:PackedScene = preload('res://scenes/level/plant.tscn')
 var pending_plant_pos: Vector2
 var _day_timer_cycle_seconds := 0.0
 var _grow_timer_cycle_seconds := 0.0
+var _combat_intro_active: bool = false
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -212,22 +213,99 @@ func _on_grow_timer_timeout() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Pressing "C" on your keyboard triggers combat
 	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
-		if Global.tutorial_step == 13:
-			Global.advance_tutorial()
+		if _combat_intro_active:
+			return
 
-		# 1. Load the combat board into memory
-		var combat_scene = load("res://scenes/level/CombatMap_1.tscn").instantiate()
-		
-		var farm = get_tree().current_scene
-		Global.begin_combat_transition()
-		
-		# 2. Put the farm in the memory vault so it doesn't get deleted
-		Global.saved_farm_scene = farm
-		
-		# 3. Add the Combat board to the game
-		get_tree().root.add_child(combat_scene)
-		get_tree().current_scene = combat_scene
-		
-		# 4. UNPLUG THE FARM
-		# This instantly stops all audio, cameras, and UI without deleting your crops!
-		get_tree().root.remove_child(farm)
+		if not Global.has_seen_combat_intro:
+			_show_combat_intro()
+			return
+
+		_enter_combat_map()
+
+func _show_combat_intro() -> void:
+	_combat_intro_active = true
+
+	var overlay := ColorRect.new()
+	overlay.name = "CombatIntroOverlay"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.color = Color(0, 0, 0, 0)
+
+	var panel := PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(560, 300)
+	panel.modulate.a = 0.0
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 14)
+
+	var title := Label.new()
+	title.text = "Battle Briefing"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+
+	var body := Label.new()
+	body.text = "For this demo battle, your character is cloned so you can fight a copy of yourself.\n\n" + \
+		"Your clone is a ranged attacker. That means they can strike from farther away, so staying out in the open can be dangerous. " + \
+		"Use cover, position carefully, and watch their attack range before ending your turn.\n\nGood luck!"
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+
+	var begin_button := Button.new()
+	begin_button.text = "Begin Battle"
+	begin_button.custom_minimum_size = Vector2(0, 44)
+	begin_button.pressed.connect(_on_combat_intro_begin_pressed.bind(overlay))
+
+	content.add_child(title)
+	content.add_child(body)
+	content.add_child(begin_button)
+	margin.add_child(content)
+	panel.add_child(margin)
+	overlay.add_child(panel)
+	$CanvasLayer.add_child(overlay)
+
+	begin_button.grab_focus()
+
+	var tween := create_tween()
+	tween.tween_property(overlay, "color:a", 0.78, 0.35)
+	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.35)
+
+func _on_combat_intro_begin_pressed(overlay: ColorRect) -> void:
+	var tween := create_tween()
+	tween.tween_property(overlay, "color:a", 0.0, 0.25)
+	tween.parallel().tween_property(overlay.get_node("PanelContainer"), "modulate:a", 0.0, 0.2)
+	await tween.finished
+
+	if is_instance_valid(overlay):
+		overlay.queue_free()
+
+	Global.has_seen_combat_intro = true
+	_combat_intro_active = false
+	_enter_combat_map()
+
+func _enter_combat_map() -> void:
+	if Global.tutorial_step == 13:
+		Global.advance_tutorial()
+
+	# 1. Load the combat board into memory
+	var combat_scene = load("res://scenes/level/CombatMap_1.tscn").instantiate()
+
+	var farm = get_tree().current_scene
+	Global.begin_combat_transition()
+
+	# 2. Put the farm in the memory vault so it doesn't get deleted
+	Global.saved_farm_scene = farm
+
+	# 3. Add the Combat board to the game
+	get_tree().root.add_child(combat_scene)
+	get_tree().current_scene = combat_scene
+
+	# 4. UNPLUG THE FARM
+	# This instantly stops all audio, cameras, and UI without deleting your crops!
+	get_tree().root.remove_child(farm)
