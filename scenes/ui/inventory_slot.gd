@@ -87,6 +87,9 @@ func eat_food():
 	if not Global.remove_item(stored_item_enum, 1):
 		return
 
+	if Global.tutorial_step == 12:
+		Global.advance_tutorial()
+
 	Global.active_food_buff.item = stored_item_enum
 	Global.active_food_buff.stats = Global.food_stats[stored_item_enum].duplicate()
 	

@@ -212,6 +212,9 @@ func _on_grow_timer_timeout() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Pressing "C" on your keyboard triggers combat
 	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
+		if Global.tutorial_step == 13:
+			Global.advance_tutorial()
+
 		# 1. Load the combat board into memory
 		var combat_scene = load("res://scenes/level/CombatMap_1.tscn").instantiate()
 		

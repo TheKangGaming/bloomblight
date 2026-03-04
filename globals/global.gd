@@ -15,7 +15,7 @@ var last_battle_result := {
 # --- TUTORIAL SYSTEM ---
 signal tutorial_updated(text: String)
 var tutorial_step: int = 0
-const MAX_TUTORIAL_STEP := 14
+const MAX_TUTORIAL_STEP := 15
 
 ## Progresses to the next quest and tells the UI to update
 func advance_tutorial() -> void:
@@ -40,6 +40,7 @@ func update_tutorial_ui() -> void:
 		12: tutorial_updated.emit("Quest: Open inventory (Tab) and eat the meal.")
 		13: tutorial_updated.emit("Quest: Press C to enter your first Battle!")
 		14: tutorial_updated.emit("Quest: Defeat the enemy and return to the farm!")
+		15: tutorial_updated.emit("") # An empty string will hide the UI!
 		_:
 			tutorial_updated.emit("") # An empty string will hide the UI!
 

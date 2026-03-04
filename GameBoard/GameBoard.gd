@@ -973,6 +973,9 @@ func _on_return_button_pressed(btn: Button) -> void:
 		"returned_at_unix": Time.get_unix_time_from_system()
 	}
 
+	if Global.tutorial_step == 14 and Global.last_battle_result.victory:
+		Global.advance_tutorial()
+
 	if Global.saved_farm_scene:
 		var elapsed_seconds = Global.consume_combat_elapsed_seconds()
 
