@@ -926,15 +926,19 @@ func _show_results_screen(is_victory: bool) -> void:
 	_results_canvas.add_child(audio)
 	audio.play()
 	
+	# 3. Build the Text Layout
 	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	
+	# NEW: Forces the container to respect screen boundaries!
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT) 
+	
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 20)
 	_results_canvas.add_child(vbox)
 	
 	var title = Label.new()
 	title.text = "VICTORY!" if is_victory else "DEFEAT..."
-	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_font_size_override("font_size", 32)
 	title.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2) if is_victory else Color(0.8, 0.2, 0.2))
 	title.add_theme_color_override("font_outline_color", Color.BLACK)
 	title.add_theme_constant_override("outline_size", 8)
@@ -943,14 +947,14 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 	var stats = Label.new()
 	stats.text = "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
-	stats.add_theme_font_size_override("font_size", 24)
+	stats.add_theme_font_size_override("font_size", 16)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats)
 	
 	# 5. A Much Bigger, Unmissable Button
 	var btn = Button.new()
 	btn.text = "Return to Farm"
-	btn.add_theme_font_size_override("font_size", 32)
+	btn.add_theme_font_size_override("font_size", 20)
 	btn.custom_minimum_size = Vector2(300, 60) # Forces the button to be nice and wide
 	btn.pressed.connect(_on_return_button_pressed.bind(btn))
 	vbox.add_child(btn)

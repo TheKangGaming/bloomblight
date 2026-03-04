@@ -2595,7 +2595,7 @@ terrain_set_0/terrain_0/color = Color(0.19670483, 0.44949532, 1, 1)
 sources/0 = SubResource("TileSetAtlasSource_0o7gw")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g35fm"]
-size = Vector2(10, 14)
+size = Vector2(10, 18)
 
 [node name="Game" type="Node2D" unique_id=1723638860]
 y_sort_enabled = true
@@ -2687,7 +2687,7 @@ texture = ExtResource("9_g35fm")
 flip_h = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/RegularSign" unique_id=1483193910]
-position = Vector2(1040, 633)
+position = Vector2(1040, 632)
 shape = SubResource("RectangleShape2D_g35fm")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
