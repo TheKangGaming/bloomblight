@@ -31,7 +31,13 @@ signal tool_changed(tool: Tools)
 func _physics_process(_delta: float) -> void:
 	if can_move:
 		get_input()
+		
 	if direction:
+		# --- NEW: Tutorial Check! ---
+		if Global.tutorial_step == 0:
+			Global.advance_tutorial()
+		# ----------------------------
+			
 		last_direction = direction
 		if not $Sounds/StepsTimer.time_left:
 			$Sounds/StepsTimer.start()

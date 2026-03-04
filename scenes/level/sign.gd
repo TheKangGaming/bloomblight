@@ -16,6 +16,9 @@ func _unhandled_input(event):
 	if event.is_action_pressed("interact") and player_in_range:
 		# This toggles the label: If it's visible, it hides it. If hidden, it shows it.
 		label.visible = !label.visible
+		
+		if Global.tutorial_step == 1:
+			Global.advance_tutorial()
 
 func _on_interact_area_body_entered(body):
 	if body.is_in_group("Player"):

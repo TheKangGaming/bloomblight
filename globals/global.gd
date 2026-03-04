@@ -12,6 +12,22 @@ var last_battle_result := {
 	"returned_at_unix": 0
 }
 
+# --- TUTORIAL SYSTEM ---
+signal tutorial_updated(text: String)
+var tutorial_step: int = 0
+
+## Progresses to the next quest and tells the UI to update
+func advance_tutorial() -> void:
+	tutorial_step += 1
+	update_tutorial_ui()
+
+## Broadcasts the current quest text to the screen
+func update_tutorial_ui() -> void:
+	match tutorial_step:
+		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
+		1: tutorial_updated.emit("Quest: Walk up to the sign and read it.")
+		2: tutorial_updated.emit("") # An empty string will hide the UI!
+
 var combat_transition := {
 	"started_at_unix": 0.0
 }
