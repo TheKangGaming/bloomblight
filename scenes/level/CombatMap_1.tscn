@@ -389,6 +389,9 @@ dexterity = 4
 speed = 4
 move_range = 4
 
+[node name="Savannah2" parent="GameBoard" unique_id=1112254464 instance=ExtResource("10_wkw2y")]
+position = Vector2(262, 447)
+
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
 volume_db = -15.0
