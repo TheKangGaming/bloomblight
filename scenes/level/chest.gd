@@ -12,9 +12,15 @@ func _ready():
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
 
 
+func _is_interact_press(event: InputEvent) -> bool:
+	if not event.is_action_pressed("interact"):
+		return false
+	if event is InputEventKey and event.echo:
+		return false
+	return true
+
 func _unhandled_input(event):
-	
-	if event.is_action_just_pressed("interact") and player_in_range and not is_open:
+	if _is_interact_press(event) and player_in_range and not is_open:
 		open_chest()
 		if Global.tutorial_step == 2:
 			Global.advance_tutorial()

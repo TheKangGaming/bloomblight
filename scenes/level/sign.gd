@@ -11,9 +11,16 @@ func _ready():
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
 
+func _is_interact_press(event: InputEvent) -> bool:
+	if not event.is_action_pressed("interact"):
+		return false
+	if event is InputEventKey and event.echo:
+		return false
+	return true
+
 func _unhandled_input(event):
 	# Using your action key to read the sign
-	if event.is_action_just_pressed("interact") and player_in_range:
+	if _is_interact_press(event) and player_in_range:
 		# This toggles the label: If it's visible, it hides it. If hidden, it shows it.
 		label.visible = !label.visible
 		
