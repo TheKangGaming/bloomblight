@@ -26,8 +26,20 @@ func advance_tutorial() -> void:
 func update_tutorial_ui() -> void:
 	match tutorial_step:
 		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
-		1: tutorial_updated.emit("Quest: Walk up to the sign and read it. Press E")
+		1: tutorial_updated.emit("Quest: Walk up to the sign and read it. (Press E)")
 		2: tutorial_updated.emit("Quest: Open the nearby chest. Follow the signs!")
+		3: tutorial_updated.emit("Quest: Equip your Hoe (Press 1).")
+		4: tutorial_updated.emit("Quest: Plow some soil (Click on the dirt).")
+		5: tutorial_updated.emit("Quest: Plant a seed (Press E near plowed soil).")
+		6: tutorial_updated.emit("Quest: Equip your Watering Can and water the seed!")
+		7: tutorial_updated.emit("Quest: Equip your Axe and chop a tree for Wood.")
+		8: tutorial_updated.emit("Quest: Press T to skip to the next day.")
+		9: tutorial_updated.emit("Quest: Harvest your fully grown crop (Walk over it).")
+		10: tutorial_updated.emit("Quest: Walk up to the Campfire and turn it on.")
+		11: tutorial_updated.emit("Quest: Cook a meal using your harvested crop!")
+		12: tutorial_updated.emit("Quest: Open inventory (Tab) and eat the meal.")
+		13: tutorial_updated.emit("Quest: Press C to enter your first Battle!")
+		14: tutorial_updated.emit("Quest: Defeat the enemy and return to the farm!")
 		_:
 			tutorial_updated.emit("") # An empty string will hide the UI!
 
