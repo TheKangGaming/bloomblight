@@ -26,6 +26,8 @@ func _unhandled_input(event):
 		if not is_lit:
 			toggle_fire(true)
 			show_feedback("Campfire is lit")
+			if Global.tutorial_step == 10:
+				Global.advance_tutorial()
 			if cooking_menu:
 				cooking_menu.open_menu()
 			return

@@ -88,6 +88,9 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 		else:
 			# Fallback if we forgot to add it to the map
 			Global.add_item(plant_type) 
+
+		if Global.tutorial_step == 9:
+			Global.advance_tutorial()
 			
 		queue_free()
 		water_layer.erase_cell(grid_pos)

@@ -43,6 +43,8 @@ func _on_cook_roasted_corn():
 	Global.inventory[Global.Items.ROASTED_CORN] += 1
 	
 	Global.inventory_updated.emit()
+	if Global.tutorial_step == 11:
+		Global.advance_tutorial()
 	check_ingredients() # Re-check in case we ran out of ingredients!
 	close_menu()
 
@@ -53,5 +55,7 @@ func _on_cook_tomato_soup():
 	Global.inventory[Global.Items.TOMATO_SOUP] += 1
 	
 	Global.inventory_updated.emit()
+	if Global.tutorial_step == 11:
+		Global.advance_tutorial()
 	check_ingredients()
 	close_menu()

@@ -59,6 +59,8 @@ func _process(_delta: float) -> void:
 	var daytime_point: float = 1.0 - ($DayTimer.time_left / _day_timer_cycle_seconds)
 	$CanvasModulate.color = daytime_gradient.sample(daytime_point)
 	if Input.is_action_just_pressed('time_skip'):
+		if Global.tutorial_step == 8:
+			Global.advance_tutorial()
 		day_switch()
 
 func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:

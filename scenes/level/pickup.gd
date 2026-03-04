@@ -28,6 +28,8 @@ func _on_body_entered(body):
 	if can_pickup and body.is_in_group("Player"):
 		Global.inventory[Global.Items.WOOD] += 1
 		Global.inventory_updated.emit()
+		if Global.tutorial_step == 7:
+			Global.advance_tutorial()
 		
 		# Destroy the physical item once collected
 		queue_free()
