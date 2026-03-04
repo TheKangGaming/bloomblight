@@ -4,6 +4,7 @@ extends Control
 @onready var tool_icon = $ToolBar/ToolDisplay/Sprite2D
 
 var quest_label: Label
+var quest_ui_root: Control
 var quest_tween: Tween
 var player_ref: Node = null
 var last_tool: int = -1
@@ -35,18 +36,18 @@ func _setup_quest_ui() -> void:
 	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(280, 0)
+	panel.custom_minimum_size = Vector2(160, 0)
 	panel.self_modulate = Color(1, 1, 1, 0.9)
 
 	var content = MarginContainer.new()
-	content.add_theme_constant_override("margin_top", 8)
-	content.add_theme_constant_override("margin_bottom", 8)
-	content.add_theme_constant_override("margin_left", 12)
-	content.add_theme_constant_override("margin_right", 12)
+	content.add_theme_constant_override("margin_top", 4)
+	content.add_theme_constant_override("margin_bottom", 4)
+	content.add_theme_constant_override("margin_left", 8)
+	content.add_theme_constant_override("margin_right", 8)
 
 	quest_label = Label.new()
 	quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quest_label.add_theme_font_size_override("font_size", 14)
+	quest_label.add_theme_font_size_override("font_size", 8)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
 	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	quest_label.add_theme_constant_override("outline_size", 2)
@@ -56,6 +57,9 @@ func _setup_quest_ui() -> void:
 	panel.add_child(content)
 	margin.add_child(panel)
 	add_child(margin)
+	quest_ui_root = margin
+	quest_ui_root.modulate.a = 0.0
+	quest_ui_root.visible = false
 
 ## Updates the text and animates it
 func _on_tutorial_updated(text: String) -> void:
@@ -64,11 +68,20 @@ func _on_tutorial_updated(text: String) -> void:
 	quest_tween = create_tween()
 
 	if text == "":
-		quest_tween.tween_property(quest_label, "modulate:a", 0.0, 0.35)
-	else:
-		quest_label.text = text
-		quest_label.modulate.a = 0.0
-		quest_tween.tween_property(quest_label, "modulate:a", 1.0, 0.25)
+		if quest_ui_root and quest_ui_root.visible:
+			quest_tween.tween_property(quest_ui_root, "modulate:a", 0.0, 0.25)
+			quest_tween.tween_callback(Callable(self, "_hide_quest_ui"))
+		return
+
+	quest_label.text = text
+	if quest_ui_root:
+		quest_ui_root.visible = true
+		quest_ui_root.modulate.a = 0.0
+	quest_tween.tween_property(quest_ui_root, "modulate:a", 1.0, 0.2)
+
+func _hide_quest_ui() -> void:
+	if quest_ui_root:
+		quest_ui_root.visible = false
 
 func _process(_delta):
 	var should_show_toolbar = not Global.unlocked_tools.is_empty()
