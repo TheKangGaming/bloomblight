@@ -21,6 +21,12 @@ const tool_connection = {
 	Global.Tools.WATER: 'water',
 }
 
+const TOOL_CYCLE_ORDER: Array[Global.Tools] = [
+	Global.Tools.HOE,
+	Global.Tools.WATER,
+	Global.Tools.AXE,
+]
+
 signal tool_use(tool: Global.Tools, pos: Vector2)
 
 #signals to handle tool switching UI
@@ -103,7 +109,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func cycle_tool(tool_direction: int) -> void:
-	current_tool = posmod(current_tool + tool_direction, Global.Tools.size()) as Global.Tools
+	var available_tools: Array[Global.Tools] = []
+	for tool in TOOL_CYCLE_ORDER:
+		if Global.unlocked_tools.has(tool):
+			available_tools.append(tool)
+
+	if available_tools.is_empty():
+		return
+
+	var current_index = available_tools.find(current_tool)
+	if current_index == -1:
+		current_index = 0
+	else:
+		current_index = posmod(current_index + tool_direction, available_tools.size())
+
+	current_tool = available_tools[current_index]
 	if Global.tutorial_step == 3 and current_tool == Global.Tools.HOE:
 		Global.advance_tutorial()
 	tool_changed.emit(current_tool)
