@@ -3,76 +3,108 @@ extends Control
 @onready var tool_label = $ToolBar/Label
 @onready var tool_icon = $ToolBar/ToolDisplay/Sprite2D
 
-# Add this variable at the top of your script
 var quest_label: Label
+var quest_tween: Tween
+var player_ref: Node = null
+var last_tool: int = -1
+var toolbar_visible_state := true
 
 func _ready() -> void:
-	# ... keep your existing ready code here ...
-	
-	# 1. Build the Quest UI
 	_setup_quest_ui()
-	
-	# 2. Connect to the Global tutorial system
-	Global.tutorial_updated.connect(_on_tutorial_updated)
-	
-	# 3. Fire the very first quest!
+	if not Global.tutorial_updated.is_connected(_on_tutorial_updated):
+		Global.tutorial_updated.connect(_on_tutorial_updated)
+	player_ref = get_tree().get_first_node_in_group("Player")
+	_try_bind_to_player_signal()
 	Global.update_tutorial_ui()
+
+func _try_bind_to_player_signal() -> void:
+	if not player_ref or not player_ref.has_signal("tool_changed"):
+		return
+	if not player_ref.is_connected("tool_changed", Callable(self, "_on_player_tool_changed")):
+		player_ref.connect("tool_changed", Callable(self, "_on_player_tool_changed"))
+
+func _on_player_tool_changed(tool: int) -> void:
+	_update_tool_display(tool)
 
 ## Builds a golden text box in the top-left corner
 func _setup_quest_ui() -> void:
 	var margin = MarginContainer.new()
+	margin.name = "QuestUI"
 	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_left", 20)
 	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(280, 0)
+	panel.self_modulate = Color(1, 1, 1, 0.9)
+
+	var content = MarginContainer.new()
+	content.add_theme_constant_override("margin_top", 8)
+	content.add_theme_constant_override("margin_bottom", 8)
+	content.add_theme_constant_override("margin_left", 12)
+	content.add_theme_constant_override("margin_right", 12)
+
 	quest_label = Label.new()
-	quest_label.add_theme_font_size_override("font_size", 8)
-	quest_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2)) # A nice golden yellow
+	quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_label.add_theme_font_size_override("font_size", 14)
+	quest_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
 	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	quest_label.add_theme_constant_override("outline_size", 6)
+	quest_label.add_theme_constant_override("outline_size", 2)
 	quest_label.text = ""
-	
-	margin.add_child(quest_label)
+
+	content.add_child(quest_label)
+	panel.add_child(content)
+	margin.add_child(panel)
 	add_child(margin)
 
 ## Updates the text and animates it
 func _on_tutorial_updated(text: String) -> void:
+	if quest_tween:
+		quest_tween.kill()
+	quest_tween = create_tween()
+
 	if text == "":
-		# If the text is empty, the tutorial is over. Fade it out!
-		var tween = create_tween()
-		tween.tween_property(quest_label, "modulate:a", 0.0, 1.0)
+		quest_tween.tween_property(quest_label, "modulate:a", 0.0, 0.35)
 	else:
-		# Update text and fade it in
 		quest_label.text = text
 		quest_label.modulate.a = 0.0
-		var tween = create_tween()
-		tween.tween_property(quest_label, "modulate:a", 1.0, 0.5)
+		quest_tween.tween_property(quest_label, "modulate:a", 1.0, 0.25)
 
 func _process(_delta):
-	if Global.unlocked_tools.is_empty():
-		$ToolBar.visible = false
-	else:
-		$ToolBar.visible = true
-	var player = get_tree().get_first_node_in_group("Player")
-	
-	if player and not Global.unlocked_tools.is_empty():
-		# Update Text
-		var tool_name = "None"
-		var tool_frame = 0
-		
-		match player.current_tool:
-			player.Tools.HOE: 
-				tool_name = "Hoe"
-				tool_frame = 0 # 1st image in tools.png
-			player.Tools.AXE: 
-				tool_name = "Axe"
-				tool_frame = 1 # 2nd image
-			player.Tools.WATER: 
-				tool_name = "Watering Can"
-				tool_frame = 2 # 3rd image
-		
-		if tool_label:
-			tool_label.text = tool_name
-			
-		if tool_icon:
-			tool_icon.frame = tool_frame
+	var should_show_toolbar = not Global.unlocked_tools.is_empty()
+	if toolbar_visible_state != should_show_toolbar:
+		toolbar_visible_state = should_show_toolbar
+		$ToolBar.visible = should_show_toolbar
+
+	if not should_show_toolbar:
+		return
+
+	if not player_ref:
+		player_ref = get_tree().get_first_node_in_group("Player")
+		_try_bind_to_player_signal()
+	if player_ref:
+		_update_tool_display(player_ref.current_tool)
+
+func _update_tool_display(tool: int) -> void:
+	if tool == last_tool:
+		return
+	last_tool = tool
+
+	var tool_name = "None"
+	var tool_frame = 0
+
+	match tool:
+		0:
+			tool_name = "Hoe"
+			tool_frame = 0
+		1:
+			tool_name = "Axe"
+			tool_frame = 1
+		2:
+			tool_name = "Watering Can"
+			tool_frame = 2
+
+	if tool_label:
+		tool_label.text = tool_name
+	if tool_icon:
+		tool_icon.frame = tool_frame
