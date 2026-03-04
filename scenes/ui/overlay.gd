@@ -26,7 +26,7 @@ func _setup_quest_ui() -> void:
 	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	
 	quest_label = Label.new()
-	quest_label.add_theme_font_size_override("font_size", 24)
+	quest_label.add_theme_font_size_override("font_size", 8)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2)) # A nice golden yellow
 	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	quest_label.add_theme_constant_override("outline_size", 6)

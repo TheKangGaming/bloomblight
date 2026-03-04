@@ -25,8 +25,9 @@ func advance_tutorial() -> void:
 func update_tutorial_ui() -> void:
 	match tutorial_step:
 		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
-		1: tutorial_updated.emit("Quest: Walk up to the sign and read it.")
-		2: tutorial_updated.emit("") # An empty string will hide the UI!
+		1: tutorial_updated.emit("Quest: Walk up to the sign and read it. Press E")
+		2: tutorial_updated.emit("Quest: Open the nearby chest. Follow the signs!")
+		3: tutorial_updated.emit("") # An empty string will hide the UI!
 
 var combat_transition := {
 	"started_at_unix": 0.0

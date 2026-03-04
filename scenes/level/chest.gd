@@ -16,6 +16,8 @@ func _unhandled_input(event):
 	
 	if event.is_action_pressed("interact") and player_in_range and not is_open:
 		open_chest()
+		if Global.tutorial_step == 2:
+			Global.advance_tutorial()
 
 func open_chest():
 	is_open = true
