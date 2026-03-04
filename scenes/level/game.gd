@@ -11,10 +11,14 @@ var plant_scene:PackedScene = preload('res://scenes/level/plant.tscn')
 @onready var water_layer = $SoilWaterLayer
 
 var pending_plant_pos: Vector2
+var _day_timer_cycle_seconds := 0.0
+var _grow_timer_cycle_seconds := 0.0
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
 	$CanvasLayer/SeedMenu.seed_chosen.connect(_on_seed_chosen_from_menu)
+	_day_timer_cycle_seconds = $DayTimer.wait_time
+	_grow_timer_cycle_seconds = $GrowTimer.wait_time
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
 
@@ -26,13 +30,15 @@ func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	var grow_timer = $GrowTimer
 	var day_time_left = day_timer.time_left
 	var grow_time_left = max(grow_timer.time_left, 0.001)
-	var grow_interval = grow_timer.wait_time
+	var grow_interval = _grow_timer_cycle_seconds
 
 	# We only simulate crop ticks during the remaining day.
 	var simulated_seconds = min(elapsed_seconds, day_time_left)
 	if simulated_seconds <= 0.0:
 		day_timer.start(0.01)
+		day_timer.wait_time = _day_timer_cycle_seconds
 		grow_timer.stop()
+		grow_timer.wait_time = _grow_timer_cycle_seconds
 		return
 
 	var ticks_to_simulate := 0
@@ -45,7 +51,9 @@ func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	var new_day_time_left = max(day_time_left - simulated_seconds, 0.0)
 	if new_day_time_left <= 0.0:
 		day_timer.start(0.01)
+		day_timer.wait_time = _day_timer_cycle_seconds
 		grow_timer.stop()
+		grow_timer.wait_time = _grow_timer_cycle_seconds
 		return
 
 	var new_grow_time_left: float
@@ -57,14 +65,16 @@ func apply_combat_time_passage(elapsed_seconds: float) -> void:
 		new_grow_time_left = grow_interval if is_zero_approx(cycle_progress) else (grow_interval - cycle_progress)
 
 	day_timer.start(new_day_time_left)
+	day_timer.wait_time = _day_timer_cycle_seconds
 	grow_timer.start(max(new_grow_time_left, 0.001))
+	grow_timer.wait_time = _grow_timer_cycle_seconds
 	
 func _on_seed_menu_cancelled():
 	# Give the player their movement back!
 	player.can_move = true
 
 func _process(_delta: float) -> void:
-	var daytime_point: float = 1.0 - ($DayTimer.time_left / $DayTimer.wait_time)
+	var daytime_point: float = 1.0 - ($DayTimer.time_left / _day_timer_cycle_seconds)
 	$CanvasModulate.color = daytime_gradient.sample(daytime_point)
 	if Input.is_action_just_pressed('time_skip'):
 		day_switch()
@@ -180,7 +190,7 @@ func level_reset():
 	# 1. Calculate how many growth ticks are left in the current day
 	# We use float() to get accurate division, then ceil() to round up so we don't rob the player of a partial tick!
 	var remaining_time = $DayTimer.time_left
-	var tick_duration = $GrowTimer.wait_time
+	var tick_duration = _grow_timer_cycle_seconds
 	var ticks_to_simulate = int(ceil(remaining_time / tick_duration))
 	
 	# 2. Instantly simulate the missed time!
@@ -189,7 +199,9 @@ func level_reset():
 		
 	# 3. Restart the timers for the fresh morning
 	$DayTimer.start()
+	$DayTimer.wait_time = _day_timer_cycle_seconds
 	$GrowTimer.start()
+	$GrowTimer.wait_time = _grow_timer_cycle_seconds
 	water_layer.clear()
 	
 	# --- RESET FOOD BUFFS ---
