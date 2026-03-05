@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="ClassData" format=3]
+
+[ext_resource type="Script" path="res://Units/class_data.gd" id="1_class"]
+
+[resource]
+script = ExtResource("1_class")
+metadata_name = "Archer"
+role = "Ranged sniper with high accuracy/evasion but low frontline durability"
+default_weapon_profile = &"bow_basic"
+primary_damage_stat = &"strength"
+secondary_stat = &"dexterity"
+base_stats = {
+"attack_range": 2,
+"defense": 3,
+"dexterity": 8,
+"intelligence": 2,
+"magic_defense": 3,
+"max_health": 18,
+"move_range": 5,
+"speed": 7,
+"strength": 5
+}
+growth_rates = {
+"attack_range": 0,
+"defense": 20,
+"dexterity": 70,
+"intelligence": 10,
+"magic_defense": 20,
+"max_health": 50,
+"move_range": 0,
+"speed": 60,
+"strength": 40
+}
+stat_caps = {
+"attack_range": 2,
+"defense": 18,
+"dexterity": 30,
+"intelligence": 15,
+"magic_defense": 18,
+"max_health": 50,
+"move_range": 5,
+"speed": 28,
+"strength": 22
+}
+minimum_gain_intervals = {}

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="ClassData" format=3]
+
+[ext_resource type="Script" path="res://Units/class_data.gd" id="1_class"]
+
+[resource]
+script = ExtResource("1_class")
+metadata_name = "Warrior"
+role = "Brutal shock-trooper that trades defense for massive HP and strength"
+default_weapon_profile = &"axe_basic"
+primary_damage_stat = &"strength"
+secondary_stat = &"max_health"
+base_stats = {
+"attack_range": 1,
+"defense": 3,
+"dexterity": 4,
+"intelligence": 1,
+"magic_defense": 2,
+"max_health": 24,
+"move_range": 5,
+"speed": 5,
+"strength": 8
+}
+growth_rates = {
+"attack_range": 0,
+"defense": 15,
+"dexterity": 30,
+"intelligence": 5,
+"magic_defense": 10,
+"max_health": 85,
+"move_range": 0,
+"speed": 40,
+"strength": 70
+}
+stat_caps = {
+"attack_range": 1,
+"defense": 15,
+"dexterity": 20,
+"intelligence": 10,
+"magic_defense": 14,
+"max_health": 80,
+"move_range": 5,
+"speed": 24,
+"strength": 30
+}
+minimum_gain_intervals = {}

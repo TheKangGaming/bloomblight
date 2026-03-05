@@ -1,9 +1,45 @@
-[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://hdund85ck7m8"]
+[gd_resource type="Resource" script_class="ClassData" format=3]
 
-[ext_resource type="Script" uid="uid://cs3pmkl8vpsw2" path="res://Units/class_data.gd" id="1_ncyay"]
+[ext_resource type="Script" path="res://Units/class_data.gd" id="1_class"]
 
 [resource]
-script = ExtResource("1_ncyay")
-tags = PackedStringArray()
-role = "fighter"
-metadata/_custom_type_script = "uid://cs3pmkl8vpsw2"
+script = ExtResource("1_class")
+metadata_name = "Deserter"
+role = "Jack-of-all-trades frontline skirmisher"
+default_weapon_profile = &"sword_basic"
+primary_damage_stat = &"strength"
+secondary_stat = &"speed"
+base_stats = {
+"attack_range": 1,
+"defense": 5,
+"dexterity": 5,
+"intelligence": 5,
+"magic_defense": 5,
+"max_health": 20,
+"move_range": 5,
+"speed": 6,
+"strength": 6
+}
+growth_rates = {
+"attack_range": 0,
+"defense": 40,
+"dexterity": 45,
+"intelligence": 40,
+"magic_defense": 40,
+"max_health": 65,
+"move_range": 0,
+"speed": 50,
+"strength": 50
+}
+stat_caps = {
+"attack_range": 1,
+"defense": 22,
+"dexterity": 22,
+"intelligence": 20,
+"magic_defense": 22,
+"max_health": 60,
+"move_range": 5,
+"speed": 25,
+"strength": 25
+}
+minimum_gain_intervals = {}

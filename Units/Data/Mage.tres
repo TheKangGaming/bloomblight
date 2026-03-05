@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="ClassData" format=3]
+
+[ext_resource type="Script" path="res://Units/class_data.gd" id="1_class"]
+
+[resource]
+script = ExtResource("1_class")
+metadata_name = "Mage"
+role = "Glass cannon that melts armor with intelligence-based magic damage"
+default_weapon_profile = &"tome_basic"
+primary_damage_stat = &"intelligence"
+secondary_stat = &"speed"
+base_stats = {
+"attack_range": 2,
+"defense": 2,
+"dexterity": 5,
+"intelligence": 9,
+"magic_defense": 6,
+"max_health": 16,
+"move_range": 5,
+"speed": 6,
+"strength": 1
+}
+growth_rates = {
+"attack_range": 0,
+"defense": 15,
+"dexterity": 40,
+"intelligence": 75,
+"magic_defense": 35,
+"max_health": 40,
+"move_range": 0,
+"speed": 50,
+"strength": 5
+}
+stat_caps = {
+"attack_range": 2,
+"defense": 15,
+"dexterity": 22,
+"intelligence": 30,
+"magic_defense": 24,
+"max_health": 40,
+"move_range": 5,
+"speed": 25,
+"strength": 10
+}
+minimum_gain_intervals = {}
