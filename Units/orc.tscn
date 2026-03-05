@@ -2,12 +2,22 @@
 
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_4b2u4"]
 [ext_resource type="Texture2D" uid="uid://cgwqw43fglj7u" path="res://graphics/enemies/orc/orc melee - anims-idle.png" id="2_j6h8o"]
+[ext_resource type="Script" path="res://data/stats/unit_stats.gd" id="3"]
+
+[sub_resource type="Resource" id="UnitStats_orc"]
+script = ExtResource("3")
+hp = 15
+max_hp = 15
+str = 5
+def = 2
+dex = 5
+spd = 5
+mov = 3
+atk_rng = 1
 
 [node name="Orc" unique_id=376372171 instance=ExtResource("1_4b2u4")]
 is_enemy = true
-max_health = 15
-health = 15
-move_range = 3
+current_stats = SubResource("UnitStats_orc")
 
 [node name="Shadow" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="0" unique_id=2038595384]
 scale = Vector2(0.5813953, 0.3)
