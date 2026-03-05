@@ -19,10 +19,17 @@ const IMG_APPLE = preload("res://graphics/plants/apple.png")
 
 # --- COORDINATES (X, Y) on the Sheets ---
 # This dictionary maps the Item Enum -> The specific sheet and coordinates
-var item_map = {}
+var item_map: Dictionary = {}
+var _focus_tooltip: PopupPanel
+const FOCUS_TINT := Color(1.0, 0.95, 0.72, 1.0)
+const DEFAULT_TINT := Color(1, 1, 1, 1)
 
 func _ready():
 	focus_mode = Control.FOCUS_ALL
+	focus_entered.connect(_on_focus_entered)
+	focus_exited.connect(_on_focus_exited)
+	mouse_entered.connect(_on_focus_entered)
+	mouse_exited.connect(_on_focus_exited)
 
 	# Define where everything lives. 
 	# Format: ItemEnum : [TextureResource, Vector2i(Column, Row)]
@@ -54,6 +61,8 @@ func setup(item_enum: Global.Items, quantity: int):
 	# 1. Tooltip Logic
 	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
 	tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
+	if has_focus() and is_instance_valid(_focus_tooltip):
+		_show_focus_tooltip()
 	
 	# 2. Icon Logic
 	if item_enum == Global.Items.APPLE:
@@ -76,6 +85,76 @@ func setup(item_enum: Global.Items, quantity: int):
 		icon.texture = null
 		printerr("No icon definition found for: ", item_name)
 		
+
+func _exit_tree() -> void:
+	_hide_focus_tooltip(true)
+
+func _on_focus_entered() -> void:
+	self_modulate = FOCUS_TINT
+	_show_focus_tooltip()
+
+func _on_focus_exited() -> void:
+	self_modulate = DEFAULT_TINT
+	_hide_focus_tooltip()
+
+func _show_focus_tooltip() -> void:
+	if tooltip_text.is_empty():
+		return
+
+	var popup := _get_or_create_focus_tooltip()
+	var text_label: Label = popup.get_node("Margin/Text") as Label
+	text_label.text = tooltip_text
+	popup.reset_size()
+
+	var slot_rect: Rect2 = get_global_rect()
+	var popup_size: Vector2 = popup.size
+	var viewport_size: Vector2 = get_viewport_rect().size
+
+	var target_position := slot_rect.position + Vector2(slot_rect.size.x + 8.0, 0.0)
+	if target_position.x + popup_size.x > viewport_size.x:
+		target_position.x = slot_rect.position.x - popup_size.x - 8.0
+	if target_position.y + popup_size.y > viewport_size.y:
+		target_position.y = max(8.0, viewport_size.y - popup_size.y - 8.0)
+	target_position.y = max(8.0, target_position.y)
+
+	popup.position = target_position.round()
+	popup.popup()
+
+func _hide_focus_tooltip(force_free: bool = false) -> void:
+	if not is_instance_valid(_focus_tooltip):
+		return
+
+	_focus_tooltip.hide()
+	if force_free:
+		_focus_tooltip.queue_free()
+		_focus_tooltip = null
+
+func _get_or_create_focus_tooltip() -> PopupPanel:
+	if is_instance_valid(_focus_tooltip):
+		return _focus_tooltip
+
+	var popup := PopupPanel.new()
+	popup.name = "FocusTooltip"
+	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	popup.visible = false
+
+	var margin := MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_bottom", 6)
+
+	var text_label := Label.new()
+	text_label.name = "Text"
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	margin.add_child(text_label)
+	popup.add_child(margin)
+
+	get_tree().root.add_child(popup)
+	_focus_tooltip = popup
+	return _focus_tooltip
+
 func _gui_input(event: InputEvent) -> void:
 	# Detect a Left Mouse Button click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
