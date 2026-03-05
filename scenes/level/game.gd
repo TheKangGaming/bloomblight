@@ -230,11 +230,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 		if is_instance_valid(_combat_intro_body):
 			if event.is_action_pressed("ui_up") or event.is_action_pressed("up"):
-				_scroll_combat_intro_text(-24.0)
+				_scroll_combat_intro_text(-10.0)
 				get_viewport().set_input_as_handled()
 				return
 			if event.is_action_pressed("ui_down") or event.is_action_pressed("down"):
-				_scroll_combat_intro_text(24.0)
+				_scroll_combat_intro_text(10.0)
 				get_viewport().set_input_as_handled()
 				return
 
