@@ -199,14 +199,20 @@ func _initialize_unit_data() -> void:
 
 
 func _load_player_stats() -> void:
-	var buffs: Dictionary = Global.active_food_buff.get("stats", {})
-	current_stats.apply_player_snapshot(Global.player_stats, buffs)
+	Global.ensure_player_stat_formats()
+	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
+	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
+	current_stats.apply_player_snapshot(permanent_stats, temporary_modifiers)
 
 
 func _sync_player_hp_to_global() -> void:
 	if not is_player:
 		return
-	current_stats.sync_player_hp_to(Global.player_stats, Global.active_food_buff.get("stats", {}))
+
+	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
+	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
+	current_stats.sync_player_hp_to(permanent_stats, temporary_modifiers)
+	Global.set_player_unbuffed_hp(int(permanent_stats.get("HP", current_stats.hp)))
 
 
 ## Calculates and returns combat math without actually executing the attack
@@ -329,7 +335,7 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 func die() -> void:
 	died.emit(self)
 	if is_player:
-		Global.player_stats["HP"] = 0
+		Global.set_player_unbuffed_hp(0)
 	print(name + " has fallen in battle!")
 	# (We can play a fancy death animation or sound effect here later!)
 	queue_free()
