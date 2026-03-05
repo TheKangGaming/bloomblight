@@ -22,6 +22,8 @@ const IMG_APPLE = preload("res://graphics/plants/apple.png")
 var item_map = {}
 
 func _ready():
+	focus_mode = Control.FOCUS_ALL
+
 	# Define where everything lives. 
 	# Format: ItemEnum : [TextureResource, Vector2i(Column, Row)]
 	
@@ -77,10 +79,15 @@ func setup(item_enum: Global.Items, quantity: int):
 func _gui_input(event: InputEvent) -> void:
 	# Detect a Left Mouse Button click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		
-		# Check if we clicked a food item AND we actually have some in our inventory
-		if stored_item_enum in Global.food_stats and Global.inventory[stored_item_enum] > 0:
-			eat_food()
+		_try_interact()
+
+	if event.is_action_pressed("ui_accept"):
+		_try_interact()
+
+func _try_interact() -> void:
+	# Check if we selected a food item AND we actually have some in our inventory.
+	if stored_item_enum in Global.food_stats and Global.inventory[stored_item_enum] > 0:
+		eat_food()
 
 func eat_food():
 	# 1. Consume the item first (This already triggers the inventory_updated signal!)

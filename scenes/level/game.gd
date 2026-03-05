@@ -15,6 +15,9 @@ var _day_timer_cycle_seconds := 0.0
 var _grow_timer_cycle_seconds := 0.0
 var _combat_intro_active: bool = false
 var _combat_transition_active: bool = false
+var _combat_intro_overlay: ColorRect
+var _combat_intro_panel: PanelContainer
+var _combat_intro_begin_button: Button
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -212,6 +215,13 @@ func _on_grow_timer_timeout() -> void:
 		plant.grow(is_watered)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _combat_intro_active:
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+			if is_instance_valid(_combat_intro_begin_button):
+				_on_combat_intro_begin_pressed(_combat_intro_overlay, _combat_intro_panel)
+				get_viewport().set_input_as_handled()
+			return
+
 	# Pressing "C" on your keyboard triggers combat
 	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
 		if _combat_intro_active:
@@ -225,6 +235,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _show_combat_intro() -> void:
 	_combat_intro_active = true
+
+	if is_instance_valid(_combat_intro_overlay):
+		_combat_intro_overlay.queue_free()
 
 	var overlay := ColorRect.new()
 	overlay.name = "CombatIntroOverlay"
@@ -278,6 +291,9 @@ func _show_combat_intro() -> void:
 	panel.add_child(margin)
 	overlay.add_child(panel)
 	$CanvasLayer.add_child(overlay)
+	_combat_intro_overlay = overlay
+	_combat_intro_panel = panel
+	_combat_intro_begin_button = begin_button
 
 	begin_button.grab_focus()
 
@@ -286,6 +302,8 @@ func _show_combat_intro() -> void:
 	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.35)
 
 func _on_combat_intro_begin_pressed(overlay: ColorRect, panel: PanelContainer) -> void:
+	if not _combat_intro_active:
+		return
 	var tween := create_tween()
 	tween.tween_property(overlay, "color:a", 0.0, 0.25)
 	tween.parallel().tween_property(panel, "modulate:a", 0.0, 0.2)
@@ -293,6 +311,10 @@ func _on_combat_intro_begin_pressed(overlay: ColorRect, panel: PanelContainer) -
 
 	if is_instance_valid(overlay):
 		overlay.queue_free()
+
+	_combat_intro_overlay = null
+	_combat_intro_panel = null
+	_combat_intro_begin_button = null
 
 	Global.has_seen_combat_intro = true
 	_combat_intro_active = false

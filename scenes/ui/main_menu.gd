@@ -17,6 +17,12 @@ extends Control
 
 # Preload the slot scene
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn")
+const TAB_PREV_ACTIONS: Array[StringName] = [&"tool_backward", &"ui_page_up"]
+const TAB_NEXT_ACTIONS: Array[StringName] = [&"tool_forward", &"ui_page_down"]
+const NAV_LEFT_ACTIONS: Array[StringName] = [&"left", &"ui_left"]
+const NAV_RIGHT_ACTIONS: Array[StringName] = [&"right", &"ui_right"]
+const NAV_UP_ACTIONS: Array[StringName] = [&"up", &"ui_up"]
+const NAV_DOWN_ACTIONS: Array[StringName] = [&"down", &"ui_down"]
 
 func _ready() -> void:
 	visible = false
@@ -29,6 +35,21 @@ func _input(event: InputEvent) -> void:
 		toggle_menu()
 	elif visible and event.is_action_pressed("ui_cancel"): # Escape / Controller B
 		toggle_menu()
+	elif visible:
+		if _is_action_pressed(event, TAB_PREV_ACTIONS):
+			_switch_tab(-1)
+			get_viewport().set_input_as_handled()
+		elif _is_action_pressed(event, TAB_NEXT_ACTIONS):
+			_switch_tab(1)
+			get_viewport().set_input_as_handled()
+		elif _is_action_pressed(event, NAV_LEFT_ACTIONS):
+			_move_focus(Vector2.LEFT)
+		elif _is_action_pressed(event, NAV_RIGHT_ACTIONS):
+			_move_focus(Vector2.RIGHT)
+		elif _is_action_pressed(event, NAV_UP_ACTIONS):
+			_move_focus(Vector2.UP)
+		elif _is_action_pressed(event, NAV_DOWN_ACTIONS):
+			_move_focus(Vector2.DOWN)
 
 func toggle_menu():
 	visible = not visible
@@ -40,6 +61,94 @@ func toggle_menu():
 		if tabs:
 			tabs.current_tab = 1
 		update_inventory()
+		_focus_first_interactable()
+
+func _is_action_pressed(event: InputEvent, actions: Array[StringName]) -> bool:
+	for action in actions:
+		if InputMap.has_action(action) and event.is_action_pressed(action):
+			return true
+	return false
+
+func _switch_tab(delta: int) -> void:
+	if tabs == null:
+		return
+
+	var count := tabs.get_tab_count()
+	if count <= 0:
+		return
+
+	tabs.current_tab = wrapi(tabs.current_tab + delta, 0, count)
+	_focus_first_interactable()
+
+func _focus_first_interactable() -> void:
+	for candidate in _get_tab_focusable_controls():
+		candidate.grab_focus()
+		return
+
+func _move_focus(direction: Vector2) -> void:
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if not (focus_owner is Control) or not visible or not _is_in_current_tab(focus_owner):
+		_focus_first_interactable()
+		return
+
+	var controls := _get_tab_focusable_controls()
+	if controls.is_empty():
+		return
+
+	var current_center := _control_center(focus_owner)
+	var best: Control = null
+	var best_score := INF
+
+	for candidate in controls:
+		if candidate == focus_owner:
+			continue
+		var offset := _control_center(candidate) - current_center
+		if offset == Vector2.ZERO:
+			continue
+		if direction.dot(offset.normalized()) <= 0.45:
+			continue
+
+		var score := offset.length_squared()
+		if score < best_score:
+			best_score = score
+			best = candidate
+
+	if best:
+		best.grab_focus()
+
+func _get_tab_focusable_controls() -> Array[Control]:
+	var result: Array[Control] = []
+	if tabs == null:
+		return result
+
+	var tab_content := tabs.get_current_tab_control()
+	if tab_content == null:
+		return result
+
+	_collect_focusable_controls(tab_content, result)
+	return result
+
+func _collect_focusable_controls(node: Node, result: Array[Control]) -> void:
+	if node is Control:
+		var control := node as Control
+		if control.visible and control.focus_mode != Control.FOCUS_NONE:
+			result.append(control)
+
+	for child in node.get_children():
+		_collect_focusable_controls(child, result)
+
+func _is_in_current_tab(control: Control) -> bool:
+	if tabs == null:
+		return false
+
+	var tab_content := tabs.get_current_tab_control()
+	if tab_content == null:
+		return false
+
+	return tab_content == control or tab_content.is_ancestor_of(control)
+
+func _control_center(control: Control) -> Vector2:
+	return control.get_global_rect().get_center()
 		
 
 func update_inventory():
@@ -58,6 +167,9 @@ func update_inventory():
 			
 			# UPDATE: Pass the ENUM, not the Name string
 			slot.setup(item_enum, count)
+
+	if visible and tabs and tabs.current_tab == 1:
+		_focus_first_interactable()
 			
 func update_status_page():
 	var format_stat = func(stat_name: String, base_val: int) -> String:
