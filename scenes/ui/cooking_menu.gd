@@ -6,6 +6,12 @@ extends CanvasLayer
 func _ready():
 	# Hide the menu when the game starts
 	visible = false
+
+	# Ensure gamepad/keyboard focus navigation works between recipe buttons
+	corn_button.focus_mode = Control.FOCUS_ALL
+	soup_button.focus_mode = Control.FOCUS_ALL
+	corn_button.focus_neighbor_right = corn_button.get_path_to(soup_button)
+	soup_button.focus_neighbor_left = soup_button.get_path_to(corn_button)
 	
 	# Connect the buttons
 	corn_button.pressed.connect(_on_cook_roasted_corn)

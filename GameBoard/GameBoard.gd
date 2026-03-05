@@ -272,6 +272,48 @@ func _select_unit(cell: Vector2) -> void:
 	_unit_path.initialize(_walkable_cells)
 	
 	
+
+func _get_attack_cells_from_origin(origin: Vector2, attack_range: int) -> Dictionary:
+	var cells: Dictionary = {}
+	for offset in _get_attack_offsets(attack_range):
+		var target_cell = origin + offset
+		if grid.is_within_bounds(target_cell):
+			cells[target_cell] = true
+	return cells
+
+func _find_attack_origin_for_target(target_cell: Vector2) -> Variant:
+	if _active_unit == null:
+		return null
+
+	var attack_range = _active_unit.attack_range
+	if attack_range <= 0:
+		return null
+
+	var best_cell: Variant = null
+	var best_distance := INF
+	for candidate in _walkable_cells:
+		if candidate != _active_unit.cell and is_occupied(candidate):
+			continue
+
+		var dist := _manhattan_distance(candidate, target_cell)
+		if not _is_distance_in_attack_range(dist, attack_range):
+			continue
+
+		var move_distance := _manhattan_distance(_active_unit.cell, candidate)
+		if move_distance < best_distance:
+			best_distance = move_distance
+			best_cell = candidate
+
+	return best_cell
+
+func _begin_attack_preview_on_target(target_unit: Unit) -> void:
+	_target_unit_for_forecast = target_unit
+	_is_targeting_attack = true
+	_valid_target_cells = _get_attack_cells_from_origin(_active_unit.cell, _active_unit.attack_range).keys()
+	_unit_overlay.clear()
+	_unit_overlay.draw_attackable_cells(_valid_target_cells)
+	_show_combat_forecast(_active_unit, target_unit)
+
 func _hover_display(cell: Vector2) -> void:
 	if is_occupied(cell):
 		var curr_unit = _units[cell]
@@ -377,11 +419,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		if cell in _valid_target_cells and is_occupied(cell):
 			var target_unit = _units[cell]
 			if target_unit.is_enemy != _active_unit.is_enemy:
-				
-				# NEW: Don't attack yet! Lock the cursor on the enemy and open the forecast!
-				_target_unit_for_forecast = target_unit
-				_show_combat_forecast(_active_unit, target_unit)
-				
+				_begin_attack_preview_on_target(target_unit)
 		return
 		
 	# --- 2. MOVEMENT / SELECTION INTERCEPT ---
@@ -407,7 +445,19 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			_unit_path.stop()
 			_show_action_menu()
 			
-		# 2. Player clicked an empty blue tile to move
+		# 2. Player clicked an enemy directly while still in move phase.
+		elif is_occupied(cell):
+			var target_unit = _units[cell]
+			if target_unit.is_enemy != _active_unit.is_enemy:
+				var attack_from_cell = _find_attack_origin_for_target(cell)
+				if attack_from_cell != null:
+					if attack_from_cell != _active_unit.cell:
+						await _move_active_unit(attack_from_cell)
+						if has_node("ActionMenu"):
+							$ActionMenu.hide()
+					_begin_attack_preview_on_target(target_unit)
+
+		# 3. Player clicked an empty blue tile to move
 		elif not is_occupied(cell) and _walkable_cells.has(cell):
 			await _move_active_unit(cell) 
 	else:
