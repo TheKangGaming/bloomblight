@@ -95,6 +95,9 @@ func _move_focus(direction: Vector2) -> void:
 	if controls.is_empty():
 		return
 
+	if _move_grid_focus_if_possible(focus_owner, controls, direction):
+		return
+
 	var current_center := _control_center(focus_owner)
 	var best: Control = null
 	var best_score := INF
@@ -105,7 +108,7 @@ func _move_focus(direction: Vector2) -> void:
 		var offset := _control_center(candidate) - current_center
 		if offset == Vector2.ZERO:
 			continue
-		if direction.dot(offset.normalized()) <= 0.45:
+		if direction.dot(offset.normalized()) <= 0.25:
 			continue
 
 		var score := offset.length_squared()
@@ -115,6 +118,54 @@ func _move_focus(direction: Vector2) -> void:
 
 	if best:
 		best.grab_focus()
+		return
+
+	_move_focus_linear(focus_owner, controls, direction)
+
+
+func _move_grid_focus_if_possible(focus_owner: Control, controls: Array[Control], direction: Vector2) -> bool:
+	if tabs == null or tabs.current_tab != 1 or inventory_grid == null:
+		return false
+
+	var current_index := controls.find(focus_owner)
+	if current_index == -1:
+		return false
+
+	var columns := max(inventory_grid.columns, 1)
+	var target_index := current_index
+
+	if direction == Vector2.LEFT:
+		target_index = max(current_index - 1, 0)
+	elif direction == Vector2.RIGHT:
+		target_index = min(current_index + 1, controls.size() - 1)
+	elif direction == Vector2.UP:
+		target_index = max(current_index - columns, 0)
+	elif direction == Vector2.DOWN:
+		target_index = min(current_index + columns, controls.size() - 1)
+
+	if target_index == current_index:
+		return false
+
+	controls[target_index].grab_focus()
+	return true
+
+func _move_focus_linear(focus_owner: Control, controls: Array[Control], direction: Vector2) -> void:
+	var current_index := controls.find(focus_owner)
+	if current_index == -1:
+		_focus_first_interactable()
+		return
+
+	var step := 0
+	if direction == Vector2.LEFT or direction == Vector2.UP:
+		step = -1
+	elif direction == Vector2.RIGHT or direction == Vector2.DOWN:
+		step = 1
+
+	if step == 0:
+		return
+
+	var target_index := wrapi(current_index + step, 0, controls.size())
+	controls[target_index].grab_focus()
 
 func _get_tab_focusable_controls() -> Array[Control]:
 	var result: Array[Control] = []
