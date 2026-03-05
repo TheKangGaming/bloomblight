@@ -33,8 +33,10 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu_toggle"): # Tab / Controller Menu Toggle
 		toggle_menu()
+		get_viewport().set_input_as_handled()
 	elif visible and event.is_action_pressed("ui_cancel"): # Escape / Controller B
 		toggle_menu()
+		get_viewport().set_input_as_handled()
 	elif visible:
 		if _is_action_pressed(event, TAB_PREV_ACTIONS):
 			_switch_tab(-1)
@@ -52,6 +54,15 @@ func _input(event: InputEvent) -> void:
 			_move_focus(Vector2.UP)
 		elif _is_action_pressed(event, NAV_DOWN_ACTIONS):
 			_move_focus(Vector2.DOWN)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("menu_toggle"):
+		toggle_menu()
+		get_viewport().set_input_as_handled()
+	elif visible and event.is_action_pressed("ui_cancel"):
+		toggle_menu()
+		get_viewport().set_input_as_handled()
 
 func toggle_menu():
 	visible = not visible
