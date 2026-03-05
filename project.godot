@@ -22,6 +22,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Global="*uid://bcq8tavlkaxyr"
+ProgressionService="*res://systems/progression/progression_service.gd"
 
 [display]
 

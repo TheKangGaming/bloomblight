@@ -141,6 +141,36 @@ func apply_player_snapshot(player_stats: Dictionary, buffs: Dictionary = {}) -> 
 	clamp_to_caps()
 
 
+func apply_auto_levels(level_count: int) -> Dictionary:
+	var total_gains := {
+		"MAX_HP": 0,
+		"STR": 0,
+		"DEF": 0,
+		"DEX": 0,
+		"INT": 0,
+		"SPD": 0,
+		"MOV": 0,
+		"ATK_RNG": 0,
+	}
+
+	for _level in range(maxi(level_count, 0)):
+		for growth_key in growth_rates.keys():
+			var normalized_key := _normalize_growth_key(String(growth_key))
+			if normalized_key.is_empty():
+				continue
+
+			var chance_percent := int(growth_rates[growth_key])
+			if not ProgressionService.roll_growth(chance_percent):
+				continue
+
+			total_gains[normalized_key] = int(total_gains.get(normalized_key, 0)) + 1
+			set(_growth_key_to_property(normalized_key), int(get(_growth_key_to_property(normalized_key))) + 1)
+
+	clamp_to_caps()
+	hp = max_hp
+	return total_gains
+
+
 func sync_player_hp_to(player_stats: Dictionary, buffs: Dictionary = {}) -> void:
 	var bonus_hp := int(buffs.get("VIT", 0)) * 2
 	var base_max_hp := int(player_stats.get("MAX_HP", max_hp))
@@ -161,3 +191,59 @@ func _extract_value(stats: Dictionary, primary_key: String, fallback: int) -> in
 			return int(stats[key])
 
 	return fallback
+
+
+func _normalize_growth_key(raw_key: String) -> String:
+	if raw_key == "HP":
+		return "MAX_HP"
+	if raw_key == "health":
+		return "MAX_HP"
+	if raw_key == "max_health":
+		return "MAX_HP"
+
+	if raw_key == "MAX_HP" or raw_key == "STR" or raw_key == "DEF" or raw_key == "DEX" or raw_key == "INT" or raw_key == "SPD" or raw_key == "MOV" or raw_key == "ATK_RNG":
+		return raw_key
+
+	if _ALIASES.has(raw_key):
+		var alias_key := String(_ALIASES[raw_key])
+		match alias_key:
+			"max_hp":
+				return "MAX_HP"
+			"str":
+				return "STR"
+			"def":
+				return "DEF"
+			"dex":
+				return "DEX"
+			"int_stat":
+				return "INT"
+			"spd":
+				return "SPD"
+			"mov":
+				return "MOV"
+			"atk_rng":
+				return "ATK_RNG"
+
+	return ""
+
+
+func _growth_key_to_property(growth_key: String) -> String:
+	match growth_key:
+		"MAX_HP":
+			return "max_hp"
+		"STR":
+			return "str"
+		"DEF":
+			return "def"
+		"DEX":
+			return "dex"
+		"INT":
+			return "int_stat"
+		"SPD":
+			return "spd"
+		"MOV":
+			return "mov"
+		"ATK_RNG":
+			return "atk_rng"
+		_:
+			return ""
