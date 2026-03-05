@@ -17,6 +17,22 @@ signal died(unit)
 @export var grid: Resource
 
 @export var is_enemy: bool
+
+@export var character_data: CharacterData
+
+const STAT_KEYS := [
+	"max_health",
+	"strength",
+	"defense",
+	"dexterity",
+	"speed",
+	"move_range",
+	"attack_range",
+]
+
+var effective_growth_rates: Dictionary = {}
+var effective_stat_caps: Dictionary = {}
+
 @export var is_player: bool = false
 @export var strength: int = 5
 @export var defense: int = 2
@@ -81,6 +97,8 @@ func _ready() -> void:
 	_sprite = $PathFollow2D/Visuals/Sprite2D
 	_anim_player = $AnimationPlayer
 	
+	_initialize_unit_data()
+
 	if is_player:
 		# Override the export with Savannah's global stats!
 		_load_player_stats()
@@ -158,6 +176,38 @@ func walk_along(path: PackedVector2Array) -> void:
 	cell = path[-1]
 	_path_follow.progress = 0.0 # Reset animation progress to the start
 	_is_walking = true
+
+func _initialize_unit_data() -> void:
+	if character_data == null or character_data.class_data == null:
+		return
+
+	var class_info := character_data.class_data
+	var personal_bases: Dictionary = character_data.personal_base_bonuses
+	var personal_growths: Dictionary = character_data.personal_growth_bonuses
+	var resolved_bases: Dictionary = {}
+
+	for stat_key in STAT_KEYS:
+		var class_base := class_info.get_base_stat(stat_key, int(get(stat_key)))
+		var personal_base := int(personal_bases.get(stat_key, 0))
+		resolved_bases[stat_key] = class_base + personal_base
+
+		effective_growth_rates[stat_key] = clampi(
+			class_info.get_growth_rate(stat_key, 0) + int(personal_growths.get(stat_key, 0)),
+			0,
+			100
+		)
+		effective_stat_caps[stat_key] = class_info.get_stat_cap(stat_key, 0)
+
+	max_health = int(resolved_bases.get("max_health", max_health))
+	health = int(resolved_bases.get("health", max_health))
+	strength = int(resolved_bases.get("strength", strength))
+	defense = int(resolved_bases.get("defense", defense))
+	dexterity = int(resolved_bases.get("dexterity", dexterity))
+	speed = int(resolved_bases.get("speed", speed))
+	move_range = int(resolved_bases.get("move_range", move_range))
+	attack_range = int(resolved_bases.get("attack_range", attack_range))
+	health = clampi(health, 0, max_health)
+
 
 func _load_player_stats() -> void:
 	# 1. Extract the active buffs (defaulting to 0 if none exist)
