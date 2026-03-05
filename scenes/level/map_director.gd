@@ -33,7 +33,8 @@ func configure_enemy_spawn(enemy: Unit) -> void:
 	if leveled_stats == null:
 		return
 
-	enemy.current_stats = leveled_stats
+	enemy.apply_runtime_stats(leveled_stats)
+	enemy.level = target_level
 	enemy.set_meta("map_director_scaled", true)
 	enemy.set_meta("map_director_target_level", target_level)
 
@@ -55,7 +56,7 @@ func _on_tree_node_added(node: Node) -> void:
 
 
 func _compute_enemy_target_level(enemy: Unit) -> int:
-	var computed_level := base_level
+	var computed_level := enemy.level if enemy != null and enemy.level > 0 else base_level
 	if use_player_level:
 		computed_level = _resolve_player_level()
 

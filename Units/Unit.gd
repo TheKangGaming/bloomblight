@@ -20,6 +20,7 @@ signal died(unit)
 @export var is_enemy: bool
 @export var character_data: CharacterData
 @export var current_stats: UnitStats
+@export var level: int = 1
 
 @export var is_player: bool = false
 @export var is_wait := false
@@ -140,6 +141,15 @@ func _ready() -> void:
 		move_state_machine = animation_tree.get("parameters/MoveStateMachine/playback")
 		move_state_machine.travel("idle")
 		animation_tree.set("parameters/MoveStateMachine/idle/blend_position", Vector2(0, 1))
+
+
+func apply_runtime_stats(new_stats: UnitStats) -> void:
+	if new_stats == null:
+		return
+
+	current_stats = new_stats.clone()
+	if _hp_bar != null and is_instance_valid(_hp_bar):
+		_update_hp_bar(true)
 
 
 func _process(delta: float) -> void:
