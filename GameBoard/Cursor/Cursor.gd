@@ -37,9 +37,13 @@ var cell := Vector2.ZERO:
 		_timer.start()
 
 @onready var _timer: Timer = $Timer
+@onready var _left_action: StringName = _resolve_input_action("left", "ui_left")
+@onready var _right_action: StringName = _resolve_input_action("right", "ui_right")
+@onready var _up_action: StringName = _resolve_input_action("up", "ui_up")
+@onready var _down_action: StringName = _resolve_input_action("down", "ui_down")
 @onready var _move_deadzone := maxf(
-	maxf(InputMap.action_get_deadzone("left"), InputMap.action_get_deadzone("right")),
-	maxf(InputMap.action_get_deadzone("up"), InputMap.action_get_deadzone("down"))
+	maxf(InputMap.action_get_deadzone(_left_action), InputMap.action_get_deadzone(_right_action)),
+	maxf(InputMap.action_get_deadzone(_up_action), InputMap.action_get_deadzone(_down_action))
 )
 
 
@@ -63,8 +67,14 @@ func _process(_delta: float) -> void:
 			cell = grid_coords
 
 
+func _resolve_input_action(preferred: StringName, fallback: StringName) -> StringName:
+	if InputMap.has_action(preferred):
+		return preferred
+	return fallback
+
+
 func _poll_directional_input() -> void:
-	var input_vector := Input.get_vector("left", "right", "up", "down", _move_deadzone)
+	var input_vector := Input.get_vector(_left_action, _right_action, _up_action, _down_action, _move_deadzone)
 	if input_vector.is_zero_approx() or not _timer.is_stopped():
 		return
 
