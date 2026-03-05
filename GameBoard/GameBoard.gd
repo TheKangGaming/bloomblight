@@ -782,11 +782,11 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 			defender_countered = true
 
 	# 5. Follow-up strike from the faster unit, if still alive and in range.
-	if _can_unit_follow_up(attacker, defender):
+	if is_instance_valid(attacker) and is_instance_valid(defender) and _can_unit_follow_up(attacker, defender):
 		await get_tree().create_timer(0.2).timeout
 		print(attacker.name + " follows up!")
 		await attacker.attack(defender)
-	elif defender_countered and _can_unit_follow_up(defender, attacker):
+	elif defender_countered and is_instance_valid(defender) and is_instance_valid(attacker) and _can_unit_follow_up(defender, attacker):
 		await get_tree().create_timer(0.2).timeout
 		print(defender.name + " follows up!")
 		await defender.attack(attacker)
