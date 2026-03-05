@@ -64,9 +64,9 @@ func open(player_pos: Vector2):
 func _input(event):
 	# Only listen for inputs if the menu is actually open!
 	if visible:
-		# "ui_cancel" is Godot's default for Escape key or Gamepad B
+		# "cancel" maps to Escape/B for consistent menu backing out
 		# We also added a check for Right-Click just in case!
-		if event.is_action_pressed("ui_cancel") or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed):
+		if event.is_action_pressed("cancel") or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed):
 			
 			hide() # Close the menu visually
 			menu_cancelled.emit() # Tell the game it was cancelled

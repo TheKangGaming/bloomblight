@@ -29,8 +29,9 @@ func close_menu():
 	visible = false
 
 func _unhandled_input(event):
-	if visible and event.is_action_pressed("ui_cancel"):
+	if visible and event.is_action_pressed("cancel"):
 		close_menu()
+		get_viewport().set_input_as_handled()
 
 func check_ingredients():
 	corn_button.disabled = not _can_cook(Global.Items.ROASTED_CORN)

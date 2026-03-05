@@ -9,6 +9,12 @@ func _ready() -> void:
 	cursor.hide()
 	cursor.process_mode = Node.PROCESS_MODE_DISABLED
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("cancel"):
+		_on_close_button_pressed()
+		get_viewport().set_input_as_handled()
+
+
 func _on_units_button_pressed() -> void:
 	pass # Replace with function body.
 

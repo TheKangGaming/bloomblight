@@ -4,7 +4,7 @@
 class_name Cursor
 extends Node2D
 
-## Emitted when clicking on the currently hovered cell or when pressing "ui_accept".
+## Emitted when clicking on the currently hovered cell or when pressing the confirm action.
 signal accept_pressed(cell)
 ## Emitted when the cursor moved to a new cell.
 signal moved(new_cell)
@@ -45,7 +45,7 @@ func _ready() -> void:
 	position = grid.calculate_map_position(cell)
 
 func _is_accept_event(event: InputEvent) -> bool:
-	return event.is_action_pressed("click") or event.is_action_pressed("ui_accept") or event.is_action_pressed("interact") or event.is_action_pressed("plant")
+	return event.is_action_pressed("click") or event.is_action_pressed("confirm")
 
 func _process(_delta: float) -> void:
 	if not is_active:

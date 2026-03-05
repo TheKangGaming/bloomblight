@@ -51,7 +51,7 @@ func _ready() -> void:
 	_reinitialize()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _active_unit and event.is_action_pressed("ui_cancel"):
+	if _active_unit and event.is_action_pressed("cancel"):
 		
 		# NEW: If viewing forecast, back out to targeting mode
 		if _target_unit_for_forecast != null:
