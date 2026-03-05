@@ -6,6 +6,7 @@ extends Node2D
 
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
+const FOLLOW_UP_SPEED_DIFF := 4
 const PauseMenu = preload("res://Menus/PauseMenu.tscn")
 const ActionMenu = preload("res://Menus/ActionMenu.tscn")
 ## Resource of type Grid.
@@ -766,17 +767,29 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 	if _battle_ended or not is_instance_valid(attacker):
 		return
 	
+	var defender_countered := false
+
 	# 2. Check if defender survived the hit
 	if is_instance_valid(defender) and defender.health > 0:
 		
 		# 3. Strategy logic: Is the attacker inside the defender's attack range?
-		var dist = _manhattan_distance(defender.cell, attacker.cell)
-		if _is_distance_in_attack_range(dist, defender.attack_range):
+		if _can_unit_attack_target(defender, attacker):
 			
 			# 4. Cinematic pause, then counter-attack!
 			await get_tree().create_timer(0.3).timeout
 			print(defender.name + " retaliates!")
 			await defender.attack(attacker)
+			defender_countered = true
+
+	# 5. Follow-up strike from the faster unit, if still alive and in range.
+	if _can_unit_follow_up(attacker, defender):
+		await get_tree().create_timer(0.2).timeout
+		print(attacker.name + " follows up!")
+		await attacker.attack(defender)
+	elif defender_countered and _can_unit_follow_up(defender, attacker):
+		await get_tree().create_timer(0.2).timeout
+		print(defender.name + " follows up!")
+		await defender.attack(attacker)
 			
 	# Give the final animation a tiny bit of time to settle before unlocking the cursor
 	await get_tree().create_timer(0.2).timeout
@@ -816,7 +829,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	vbox.add_child(title)
 	
 	vbox.add_child(_create_stat_row("HP", str(attacker.health) + "/" + str(attacker.max_health)))
-	vbox.add_child(_create_stat_row("DMG", str(atk_stats["damage"])))
+	vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(attacker, defender, atk_stats["damage"])))
 	vbox.add_child(_create_stat_row("HIT", str(atk_stats["hit"]) + "%"))
 	vbox.add_child(_create_stat_row("CRIT", str(atk_stats["crit"]) + "%"))
 	
@@ -835,7 +848,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	var dist = _manhattan_distance(defender.cell, attacker.cell)
 	if _is_distance_in_attack_range(dist, defender.attack_range):
 		var def_stats = defender.get_combat_stats(attacker)
-		vbox.add_child(_create_stat_row("DMG", str(def_stats["damage"])))
+		vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(defender, attacker, def_stats["damage"])))
 		vbox.add_child(_create_stat_row("HIT", str(def_stats["hit"]) + "%"))
 		vbox.add_child(_create_stat_row("CRIT", str(def_stats["crit"]) + "%"))
 	else:
@@ -871,6 +884,30 @@ func _hide_combat_forecast() -> void:
 	if _forecast_ui_node:
 		_forecast_ui_node.queue_free()
 		_forecast_ui_node = null
+
+
+func _can_unit_attack_target(unit: Unit, target: Unit) -> bool:
+	if not is_instance_valid(unit) or not is_instance_valid(target):
+		return false
+	if unit.health <= 0 or target.health <= 0:
+		return false
+
+	var dist = _manhattan_distance(unit.cell, target.cell)
+	return _is_distance_in_attack_range(dist, unit.attack_range)
+
+
+func _can_unit_follow_up(unit: Unit, target: Unit) -> bool:
+	if not _can_unit_attack_target(unit, target):
+		return false
+
+	return (unit.speed - target.speed) >= FOLLOW_UP_SPEED_DIFF
+
+
+func _format_forecast_damage(unit: Unit, target: Unit, base_damage: int) -> String:
+	if _can_unit_follow_up(unit, target):
+		return str(base_damage) + " x2"
+
+	return str(base_damage)
 
 ## Generates a cinematic banner that sweeps across the screen
 func _show_phase_banner(text: String, bg_color: Color) -> void:
