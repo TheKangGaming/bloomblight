@@ -169,6 +169,18 @@ var player_stats = {
 	"ATK_RNG": 1   # How many tiles away she can attack (1 for melee)
 }
 
+const PLAYER_GROWTH_RATES := {
+	"MAX_HP": 80,
+	"VIT": 55,
+	"STR": 45,
+	"DEF": 35,
+	"DEX": 45,
+	"INT": 30,
+	"SPD": 40,
+	"MOV": 10,
+	"ATK_RNG": 0
+}
+
 # 1A. Permanent stats are split into immutable base values and level-derived gains.
 # `current_hp` is unbuffed HP so temporary buffs can come and go safely.
 var player_permanent_stats = {
@@ -317,6 +329,40 @@ func set_player_unbuffed_hp(new_hp: int) -> void:
 	var permanent := get_player_permanent_totals()
 	player_permanent_stats.current_hp = clampi(new_hp, 0, int(permanent.get("MAX_HP", 0)))
 	_sync_legacy_player_stats_snapshot()
+
+
+func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
+	ensure_player_stat_formats()
+
+	var gained_stats := _build_stat_template()
+	for _level in range(maxi(level_count, 0)):
+		for stat_name in growth_rates.keys():
+			var normalized_stat := String(stat_name)
+			if normalized_stat == "HP":
+				normalized_stat = "MAX_HP"
+
+			if not player_permanent_stats.level_derived.has(normalized_stat):
+				continue
+
+			if not _roll_growth(int(growth_rates[stat_name])):
+				continue
+
+			player_permanent_stats.level_derived[normalized_stat] = int(player_permanent_stats.level_derived.get(normalized_stat, 0)) + 1
+			gained_stats[normalized_stat] = int(gained_stats.get(normalized_stat, 0)) + 1
+
+	var permanent := _compute_permanent_totals()
+	player_permanent_stats.current_hp = int(permanent.get("MAX_HP", player_permanent_stats.current_hp))
+	_sync_legacy_player_stats_snapshot()
+	return gained_stats
+
+
+func _roll_growth(chance_percent: int) -> bool:
+	var progression_service := get_node_or_null("/root/ProgressionService")
+	if progression_service != null and progression_service.has_method("roll_growth"):
+		return bool(progression_service.call("roll_growth", chance_percent))
+
+	var clamped_chance := clampi(chance_percent, 0, 100)
+	return randf() < (clamped_chance / 100.0)
 
 
 func _sync_legacy_player_stats_snapshot() -> void:
