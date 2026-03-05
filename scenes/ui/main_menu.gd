@@ -1,7 +1,7 @@
 extends Control
 
-@onready var inventory_grid = $CenterContainer/TabContainer/Inventory/Margin/Grid
-@onready var tabs = $CenterContainer/TabContainer
+@onready var inventory_grid: GridContainer = $CenterContainer/TabContainer/Inventory/Margin/Grid
+@onready var tabs: TabContainer = $CenterContainer/TabContainer
 
 
 # Column 2: Stats
@@ -131,7 +131,7 @@ func _move_grid_focus_if_possible(focus_owner: Control, controls: Array[Control]
 	if current_index == -1:
 		return false
 
-	var columns := max(inventory_grid.columns, 1)
+	var columns: int = maxi(inventory_grid.columns, 1)
 	var target_index := current_index
 
 	if direction == Vector2.LEFT:
