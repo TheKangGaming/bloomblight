@@ -239,7 +239,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 
 
-	if event is InputEventJoypadButton and event.pressed and not event.echo and event.button_index == JOY_BUTTON_Y:
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_Y:
 		if not _combat_intro_active:
 			_show_combat_intro()
 			get_viewport().set_input_as_handled()
