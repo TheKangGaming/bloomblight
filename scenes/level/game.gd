@@ -230,13 +230,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 		if is_instance_valid(_combat_intro_body):
 			if event.is_action_pressed("ui_up") or event.is_action_pressed("up"):
-				_combat_intro_body.scroll_vertical = maxi(_combat_intro_body.scroll_vertical - 24, 0)
+				_scroll_combat_intro_text(-24.0)
 				get_viewport().set_input_as_handled()
 				return
 			if event.is_action_pressed("ui_down") or event.is_action_pressed("down"):
-				_combat_intro_body.scroll_vertical += 24
+				_scroll_combat_intro_text(24.0)
 				get_viewport().set_input_as_handled()
 				return
+
+
+	if event is InputEventJoypadButton and event.pressed and not event.echo and event.button_index == JOY_BUTTON_Y:
+		if not _combat_intro_active:
+			_show_combat_intro()
+			get_viewport().set_input_as_handled()
+		return
 
 	# Pressing "C" on your keyboard triggers combat
 	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
@@ -248,6 +255,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 
 		_enter_combat_map()
+
+
+func _scroll_combat_intro_text(delta: float) -> void:
+	if not is_instance_valid(_combat_intro_body):
+		return
+
+	var scroll_bar: VScrollBar = _combat_intro_body.get_v_scroll_bar()
+	if not is_instance_valid(scroll_bar):
+		return
+
+	var target_value: float = clampf(scroll_bar.value + delta, scroll_bar.min_value, scroll_bar.max_value)
+	scroll_bar.value = target_value
 
 func _show_combat_intro() -> void:
 	_combat_intro_active = true
