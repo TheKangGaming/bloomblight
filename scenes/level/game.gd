@@ -270,6 +270,8 @@ func _scroll_combat_intro_text(delta: float) -> void:
 
 func _show_combat_intro() -> void:
 	_combat_intro_active = true
+	if is_instance_valid(player):
+		player.can_move = false
 
 	if is_instance_valid(_combat_intro_overlay):
 		_combat_intro_overlay.queue_free()
@@ -359,6 +361,8 @@ func _close_combat_intro() -> void:
 	_combat_intro_begin_button = null
 	_combat_intro_body = null
 	_combat_intro_active = false
+	if is_instance_valid(player):
+		player.can_move = true
 
 func _enter_combat_map() -> void:
 	if _combat_transition_active:
