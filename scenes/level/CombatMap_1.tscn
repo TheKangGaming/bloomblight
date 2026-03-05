@@ -12,7 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="10_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
 [ext_resource type="AudioStream" uid="uid://b33052oyr1adr" path="res://audio/Music_Morningconflict.wav" id="12_qga0l"]
-[ext_resource type="Script" path="res://GameBoard/MapGenerator.gd" id="13_sfjbq"]
+[ext_resource type="Script" uid="uid://drvu56wd8e480" path="res://scenes/level/map_director.gd" id="13_sfjbq"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 
@@ -384,17 +384,10 @@ position = Vector2(376, 444)
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(375, 212)
-strength = 4
-dexterity = 4
-speed = 4
-move_range = 4
 
 [node name="Ranged Clone" parent="GameBoard" unique_id=1597076890 instance=ExtResource("10_wkw2y")]
 position = Vector2(333, 476)
 is_player = false
-strength = 3
-dexterity = 7
-attack_range = 2
 
 [node name="Orc2" parent="GameBoard" unique_id=1345977684 instance=ExtResource("11_qga0l")]
 position = Vector2(272, 143)
@@ -407,8 +400,5 @@ stream = ExtResource("12_qga0l")
 volume_db = -15.0
 autoplay = true
 
-[node name="MapDirector" type="Node" parent="." unique_id=1086377815 node_paths=PackedStringArray("water_layer", "ground_layer", "elevated_layer")]
+[node name="MapDirector" type="Node" parent="." unique_id=1086377815]
 script = ExtResource("13_sfjbq")
-water_layer = NodePath("../Water_Layer")
-ground_layer = NodePath("../Ground_Layer")
-elevated_layer = NodePath("../Elevated_Layer")

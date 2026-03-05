@@ -10,6 +10,7 @@ signal stats_updated
 var saved_farm_scene: Node = null
 
 var returning_from_combat: bool = false
+var player_level: int = 1
 var last_battle_result := {
 	"victory": false,
 	"enemies_defeated": 0,
@@ -331,11 +332,20 @@ func set_player_unbuffed_hp(new_hp: int) -> void:
 	_sync_legacy_player_stats_snapshot()
 
 
+func get_player_level() -> int:
+	return maxi(player_level, 1)
+
+
+func set_player_level(new_level: int) -> void:
+	player_level = maxi(new_level, 1)
+
+
 func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
 	ensure_player_stat_formats()
+	var resolved_levels := maxi(level_count, 0)
 
 	var gained_stats := _build_stat_template()
-	for _level in range(maxi(level_count, 0)):
+	for _level in range(resolved_levels):
 		for stat_name in growth_rates.keys():
 			var normalized_stat := String(stat_name)
 			if normalized_stat == "HP":
@@ -352,6 +362,7 @@ func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYE
 
 	var permanent := _compute_permanent_totals()
 	player_permanent_stats.current_hp = int(permanent.get("MAX_HP", player_permanent_stats.current_hp))
+	player_level = maxi(player_level + resolved_levels, 1)
 	_sync_legacy_player_stats_snapshot()
 	return gained_stats
 

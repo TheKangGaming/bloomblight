@@ -20,6 +20,7 @@ signal died(unit)
 @export var is_enemy: bool
 @export var character_data: CharacterData
 @export var current_stats: UnitStats
+@export var level: int = 1
 
 @export var is_player: bool = false
 @export var is_wait := false
@@ -142,6 +143,15 @@ func _ready() -> void:
 		animation_tree.set("parameters/MoveStateMachine/idle/blend_position", Vector2(0, 1))
 
 
+func apply_runtime_stats(new_stats: UnitStats) -> void:
+	if new_stats == null:
+		return
+
+	current_stats = new_stats.clone()
+	if _hp_bar != null and is_instance_valid(_hp_bar):
+		_update_hp_bar(true)
+
+
 func _process(delta: float) -> void:
 	if _is_walking:
 		# A. Save her current position before she steps forward
@@ -196,10 +206,17 @@ func walk_along(path: PackedVector2Array) -> void:
 
 func _initialize_unit_data() -> void:
 	current_stats.apply_class_progression(character_data)
+	if not is_player and character_data != null and level > 1:
+		current_stats.apply_auto_levels(level - 1)
 
 
 func _load_player_stats() -> void:
 	Global.ensure_player_stat_formats()
+	var global_player_level := Global.get_player_level()
+	if level > global_player_level:
+		Global.apply_player_auto_levels(level - global_player_level)
+	global_player_level = Global.get_player_level()
+	level = global_player_level
 	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
 	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
 	current_stats.apply_player_snapshot(permanent_stats, temporary_modifiers)
