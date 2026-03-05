@@ -18,6 +18,7 @@ var _combat_transition_active: bool = false
 var _combat_intro_overlay: ColorRect
 var _combat_intro_panel: PanelContainer
 var _combat_intro_begin_button: Button
+var _combat_intro_body: RichTextLabel
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -222,6 +223,21 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			return
 
+		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
+			_close_combat_intro()
+			get_viewport().set_input_as_handled()
+			return
+
+		if is_instance_valid(_combat_intro_body):
+			if event.is_action_pressed("ui_up") or event.is_action_pressed("up"):
+				_combat_intro_body.scroll_vertical = maxi(_combat_intro_body.scroll_vertical - 24, 0)
+				get_viewport().set_input_as_handled()
+				return
+			if event.is_action_pressed("ui_down") or event.is_action_pressed("down"):
+				_combat_intro_body.scroll_vertical += 24
+				get_viewport().set_input_as_handled()
+				return
+
 	# Pressing "C" on your keyboard triggers combat
 	if event is InputEventKey and event.pressed and event.keycode == KEY_C:
 		if _combat_intro_active:
@@ -274,6 +290,7 @@ func _show_combat_intro() -> void:
 	body.scroll_active = true
 	body.bbcode_enabled = false
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_font_size_override("normal_font_size", 16)
 	body.text = "For this demo battle, a clone of your character fights WITH you against the Orcs.\n\n" + \
 		"Your clone is a ranged attacker, which means they can hit enemies from farther away than melee units. " + \
 		"Try to let your clone pressure enemies from distance while you choose safe positions and avoid standing in open danger zones.\n\n" + \
@@ -294,6 +311,7 @@ func _show_combat_intro() -> void:
 	_combat_intro_overlay = overlay
 	_combat_intro_panel = panel
 	_combat_intro_begin_button = begin_button
+	_combat_intro_body = body
 
 	begin_button.grab_focus()
 
@@ -309,16 +327,19 @@ func _on_combat_intro_begin_pressed(overlay: ColorRect, panel: PanelContainer) -
 	tween.parallel().tween_property(panel, "modulate:a", 0.0, 0.2)
 	await tween.finished
 
-	if is_instance_valid(overlay):
-		overlay.queue_free()
+	_close_combat_intro()
+	Global.has_seen_combat_intro = true
+	_enter_combat_map()
+
+func _close_combat_intro() -> void:
+	if is_instance_valid(_combat_intro_overlay):
+		_combat_intro_overlay.queue_free()
 
 	_combat_intro_overlay = null
 	_combat_intro_panel = null
 	_combat_intro_begin_button = null
-
-	Global.has_seen_combat_intro = true
+	_combat_intro_body = null
 	_combat_intro_active = false
-	_enter_combat_map()
 
 func _enter_combat_map() -> void:
 	if _combat_transition_active:

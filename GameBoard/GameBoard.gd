@@ -30,6 +30,7 @@ var _valid_target_cells: Array = []
 var _attack_offsets_cache := {}
 var _phase_banner_layer: CanvasLayer = null
 var _results_canvas: CanvasLayer = null
+var _results_return_button: Button = null
 var _battle_ended: bool = false
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
@@ -55,6 +56,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		_show_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
+
+	if _battle_ended and is_instance_valid(_results_return_button):
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+			if not _results_return_button.disabled:
+				_results_return_button.pressed.emit()
+				get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down") or event.is_action_pressed("up") or event.is_action_pressed("down"):
+			_results_return_button.grab_focus()
+			get_viewport().set_input_as_handled()
+			return
 
 	if _active_unit and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel")):
 		
@@ -970,6 +982,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 	if is_instance_valid(_results_canvas):
 		_results_canvas.queue_free()
+	_results_return_button = null
 
 	_results_canvas = CanvasLayer.new()
 	_results_canvas.layer = 120 
@@ -1019,10 +1032,13 @@ func _show_results_screen(is_victory: bool) -> void:
 	# 5. A Much Bigger, Unmissable Button
 	var btn = Button.new()
 	btn.text = "Return to Farm"
+	btn.focus_mode = Control.FOCUS_ALL
 	btn.add_theme_font_size_override("font_size", 20)
 	btn.custom_minimum_size = Vector2(300, 60) # Forces the button to be nice and wide
 	btn.pressed.connect(_on_return_button_pressed.bind(btn))
 	vbox.add_child(btn)
+	_results_return_button = btn
+	btn.grab_focus()
 	
 	vbox.modulate.a = 0
 	var tween = create_tween().set_parallel(true)
@@ -1031,6 +1047,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 func _on_return_button_pressed(btn: Button) -> void:
 	btn.disabled = true
+	_results_return_button = null
 
 	Global.last_battle_result = {
 		"victory": _are_all_players_alive(),
