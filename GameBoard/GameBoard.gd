@@ -56,7 +56,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	if _active_unit and event.is_action_pressed("cancel"):
+	if _active_unit and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel")):
 		
 		# NEW: If viewing forecast, back out to targeting mode
 		if _target_unit_for_forecast != null:
@@ -345,6 +345,8 @@ func _show_pause_menu() -> void:
 	var pause_menu = PauseMenu.instantiate()
 	pause_menu.name = "PauseMenu" # Explicitly name it so has_node() works
 	add_child(pause_menu)
+	if pause_menu.has_method("_reset_menu_focus"):
+		pause_menu.call_deferred("_reset_menu_focus")
 
 
 func _reset_unit() -> void:
@@ -522,6 +524,8 @@ func _show_action_menu() -> void:
 		add_child(action_menu)
 		
 	action_menu.show()
+	if action_menu.has_method("_reset_menu_focus"):
+		action_menu.call_deferred("_reset_menu_focus")
 	
 	# REMOVED: All the screen_pos and offset calculations.
 	# The menu will now rely on the static anchors you set in ActionMenu.tscn!
