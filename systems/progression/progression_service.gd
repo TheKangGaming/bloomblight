@@ -67,8 +67,8 @@ func print_class_growth_debug_summary(characters: Array[CharacterData], levels_t
 		for growth_key in gains_totals.keys():
 			average_gains[growth_key] = snappedf(float(gains_totals[growth_key]) / runs, 0.01)
 
-		var class_name := class_info.metadata_name if not class_info.metadata_name.is_empty() else entry.display_name
-		print("[ProgressionService] ", class_name,
+		var class_label := class_info.metadata_name if not class_info.metadata_name.is_empty() else entry.display_name
+		print("[ProgressionService] ", class_label,
 			" | role=", class_info.role,
 			" | primary=", class_info.primary_damage_stat,
 			" | secondary=", class_info.secondary_stat,
