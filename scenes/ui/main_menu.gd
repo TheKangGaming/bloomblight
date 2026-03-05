@@ -30,39 +30,54 @@ func _ready() -> void:
 	Global.inventory_updated.connect(update_inventory)
 	Global.stats_updated.connect(update_status_page)
 
+func _shortcut_input(event: InputEvent) -> void:
+	if _handle_menu_toggle_input(event):
+		return
+
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("menu_toggle"): # Tab / Controller Menu Toggle
-		toggle_menu()
-		get_viewport().set_input_as_handled()
-	elif visible and event.is_action_pressed("ui_cancel"): # Escape / Controller B
-		toggle_menu()
-		get_viewport().set_input_as_handled()
-	elif visible:
-		if _is_action_pressed(event, TAB_PREV_ACTIONS):
-			_switch_tab(-1)
-			get_viewport().set_input_as_handled()
-		elif _is_action_pressed(event, TAB_NEXT_ACTIONS):
-			_switch_tab(1)
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
-			_activate_focused_control()
-		elif _is_action_pressed(event, NAV_LEFT_ACTIONS):
-			_move_focus(Vector2.LEFT)
-		elif _is_action_pressed(event, NAV_RIGHT_ACTIONS):
-			_move_focus(Vector2.RIGHT)
-		elif _is_action_pressed(event, NAV_UP_ACTIONS):
-			_move_focus(Vector2.UP)
-		elif _is_action_pressed(event, NAV_DOWN_ACTIONS):
-			_move_focus(Vector2.DOWN)
+	if _handle_menu_toggle_input(event):
+		return
+	if not visible:
+		return
 
+	if _is_action_pressed(event, TAB_PREV_ACTIONS):
+		_switch_tab(-1)
+		get_viewport().set_input_as_handled()
+	elif _is_action_pressed(event, TAB_NEXT_ACTIONS):
+		_switch_tab(1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+		_activate_focused_control()
+	elif _is_action_pressed(event, NAV_LEFT_ACTIONS):
+		_move_focus(Vector2.LEFT)
+		get_viewport().set_input_as_handled()
+	elif _is_action_pressed(event, NAV_RIGHT_ACTIONS):
+		_move_focus(Vector2.RIGHT)
+		get_viewport().set_input_as_handled()
+	elif _is_action_pressed(event, NAV_UP_ACTIONS):
+		_move_focus(Vector2.UP)
+		get_viewport().set_input_as_handled()
+	elif _is_action_pressed(event, NAV_DOWN_ACTIONS):
+		_move_focus(Vector2.DOWN)
+		get_viewport().set_input_as_handled()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _handle_menu_toggle_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("menu_toggle"):
 		toggle_menu()
 		get_viewport().set_input_as_handled()
-	elif visible and event.is_action_pressed("ui_cancel"):
+		return true
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
 		toggle_menu()
 		get_viewport().set_input_as_handled()
+		return true
+
+	if visible and event.is_action_pressed("ui_cancel"):
+		toggle_menu()
+		get_viewport().set_input_as_handled()
+		return true
+
+	return false
 
 func toggle_menu():
 	visible = not visible
@@ -74,13 +89,13 @@ func toggle_menu():
 		if tabs:
 			tabs.current_tab = 1
 		update_inventory()
-		_focus_first_interactable()
+		_focus_first_interactable_deferred()
 
 
 func _activate_focused_control() -> void:
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
 	if focus_owner == null or not _is_in_current_tab(focus_owner):
-		_focus_first_interactable()
+		_focus_first_interactable_deferred()
 		return
 
 	if focus_owner is BaseButton:
@@ -107,13 +122,16 @@ func _switch_tab(delta: int) -> void:
 		return
 
 	tabs.current_tab = wrapi(tabs.current_tab + delta, 0, count)
-	_focus_first_interactable()
+	_focus_first_interactable_deferred()
 
 func _focus_first_interactable() -> void:
 	for candidate in _get_tab_focusable_controls():
 		if candidate.get_focus_mode_with_override() == Control.FOCUS_ALL:
 			candidate.grab_focus()
 			return
+
+func _focus_first_interactable_deferred() -> void:
+	call_deferred("_focus_first_interactable")
 
 func _move_focus(direction: Vector2) -> void:
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
@@ -250,7 +268,7 @@ func update_inventory():
 			slot.setup(item_enum, count)
 
 	if visible and tabs and tabs.current_tab == 1:
-		_focus_first_interactable()
+		_focus_first_interactable_deferred()
 			
 func update_status_page():
 	var format_stat = func(stat_name: String, base_val: int) -> String:
