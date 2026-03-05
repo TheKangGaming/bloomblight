@@ -25,8 +25,8 @@ func _unhandled_input(event):
 		return
 
 	var cooking_menu = get_cooking_menu()
-	var is_confirm := event.is_action_pressed("interact") or event.is_action_pressed("ui_accept")
-	var is_cancel := event.is_action_pressed("ui_cancel")
+	var is_confirm: bool = event.is_action_pressed("interact") or event.is_action_pressed("ui_accept")
+	var is_cancel: bool = event.is_action_pressed("ui_cancel")
 
 	if is_confirm:
 		if not is_lit:
