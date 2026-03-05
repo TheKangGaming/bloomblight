@@ -135,7 +135,6 @@ func _get_or_create_focus_tooltip() -> PopupPanel:
 
 	var popup := PopupPanel.new()
 	popup.name = "FocusTooltip"
-	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	popup.visible = false
 
 	var margin := MarginContainer.new()

@@ -100,8 +100,9 @@ func _switch_tab(delta: int) -> void:
 
 func _focus_first_interactable() -> void:
 	for candidate in _get_tab_focusable_controls():
-		candidate.grab_focus()
-		return
+		if candidate.get_focus_mode_with_override() == Control.FOCUS_ALL:
+			candidate.grab_focus()
+			return
 
 func _move_focus(direction: Vector2) -> void:
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
@@ -200,7 +201,7 @@ func _get_tab_focusable_controls() -> Array[Control]:
 func _collect_focusable_controls(node: Node, result: Array[Control]) -> void:
 	if node is Control:
 		var control := node as Control
-		if control.visible and control.focus_mode != Control.FOCUS_NONE:
+		if control.visible and control.get_focus_mode_with_override() == Control.FOCUS_ALL:
 			result.append(control)
 
 	for child in node.get_children():
