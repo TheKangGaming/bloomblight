@@ -38,10 +38,8 @@ var cell := Vector2.ZERO:
 
 @onready var _timer: Timer = $Timer
 @onready var _move_deadzone := maxf(
-	InputMap.action_get_deadzone("left"),
-	InputMap.action_get_deadzone("right"),
-	InputMap.action_get_deadzone("up"),
-	InputMap.action_get_deadzone("down")
+	maxf(InputMap.action_get_deadzone("left"), InputMap.action_get_deadzone("right")),
+	maxf(InputMap.action_get_deadzone("up"), InputMap.action_get_deadzone("down"))
 )
 
 
