@@ -27,6 +27,8 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_focus_next"): # Tab Key
 		toggle_menu()
+	elif visible and event.is_action_pressed("ui_cancel"): # Escape / Controller B
+		toggle_menu()
 
 func toggle_menu():
 	visible = not visible

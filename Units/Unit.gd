@@ -381,6 +381,7 @@ func _setup_hp_bar() -> void:
 	_hp_bar.custom_minimum_size = Vector2(24, 4)
 	_hp_bar.position = Vector2(-12, -50) 
 	_hp_bar.z_index = 50
+	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# 1. The Carved Wood Background
 	var bg_style = StyleBoxFlat.new()

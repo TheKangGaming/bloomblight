@@ -42,7 +42,7 @@ func _physics_process(_delta: float) -> void:
 			Global.advance_tutorial()
 		# ----------------------------
 
-		last_direction = direction
+		last_direction = _to_cardinal_direction(direction)
 		if not $Sounds/StepsTimer.time_left:
 			$Sounds/StepsTimer.start()
 	else:
@@ -54,12 +54,23 @@ func _physics_process(_delta: float) -> void:
 
 signal toggle_menu_requested(pos: Vector2)
 
+func _to_cardinal_direction(input_dir: Vector2) -> Vector2:
+	if input_dir == Vector2.ZERO:
+		return last_direction
+
+	if absf(input_dir.x) > absf(input_dir.y):
+		return Vector2(sign(input_dir.x), 0)
+	elif absf(input_dir.y) > 0.0:
+		return Vector2(0, sign(input_dir.y))
+
+	return last_direction
+
 func get_input():
 	# 1. Grab the raw input into a temporary variable first
 	var raw_input = Input.get_vector('left', 'right', 'up', 'down')
 
 	if raw_input.length() > 0.1:
-		direction = raw_input
+		direction = raw_input.normalized()
 	else:
 		# The stick is resting (or just drifting slightly). Force it to a perfect stop.
 		direction = Vector2.ZERO
@@ -139,8 +150,9 @@ func animation():
 		else:
 			move_state_machine.travel('move')
 
-		update_animation_blend_positions(direction)
+		update_animation_blend_positions(last_direction)
 	else:
+		update_animation_blend_positions(last_direction)
 		move_state_machine.travel('idle')
 
 func update_animation_blend_positions(target_vec: Vector2):

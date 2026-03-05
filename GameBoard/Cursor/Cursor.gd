@@ -44,6 +44,9 @@ func _ready() -> void:
 	cell = grid.calculate_grid_coordinates(position)
 	position = grid.calculate_map_position(cell)
 
+func _is_accept_event(event: InputEvent) -> bool:
+	return event.is_action_pressed("click") or event.is_action_pressed("ui_accept") or event.is_action_pressed("interact") or event.is_action_pressed("plant")
+
 func _process(_delta: float) -> void:
 	if not is_active:
 		return
@@ -62,7 +65,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		is_mouse = true
 	# Trying to select something in a cell.
-	elif event.is_action_pressed("click") or event.is_action_pressed("ui_accept"):
+	elif _is_accept_event(event):
 		emit_signal("accept_pressed", cell)
 		get_viewport().set_input_as_handled()
 
@@ -74,16 +77,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	# Moves the cursor by one grid cell.
-	if event.is_action("ui_right"):
+	if event.is_action("ui_right") or event.is_action("right"):
 		cell += Vector2.RIGHT
 		is_mouse = false
-	elif event.is_action("ui_up"):
+	elif event.is_action("ui_up") or event.is_action("up"):
 		cell += Vector2.UP
 		is_mouse = false
-	elif event.is_action("ui_left"):
+	elif event.is_action("ui_left") or event.is_action("left"):
 		cell += Vector2.LEFT
 		is_mouse = false
-	elif event.is_action("ui_down"):
+	elif event.is_action("ui_down") or event.is_action("down"):
 		cell += Vector2.DOWN
 		is_mouse = false
 
