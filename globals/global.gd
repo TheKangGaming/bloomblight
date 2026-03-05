@@ -35,7 +35,7 @@ func update_tutorial_ui() -> void:
 		7: tutorial_updated.emit("Quest: Equip your Axe and chop a tree for Wood.")
 		8: tutorial_updated.emit("Quest: Press T to skip to the next day.")
 		9: tutorial_updated.emit("Quest: Harvest your fully grown crop (Walk over it).")
-		10: tutorial_updated.emit("Quest: Walk up to the Campfire and turn it on.")
+		10: tutorial_updated.emit("Quest: Walk up to the Campfire, then press Interact/Confirm to light it.")
 		11: tutorial_updated.emit("Quest: Cook a meal using your harvested crop!")
 		12: tutorial_updated.emit("Quest: Open inventory (Tab) and eat the meal.")
 		13: tutorial_updated.emit("Quest: Press C to enter your first Battle!")
