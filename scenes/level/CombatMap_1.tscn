@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://dgsrayt4fv7vu"]
+[gd_scene format=4 uid="uid://dx3gy0hon43dj"]
 
 [ext_resource type="TileSet" uid="uid://b8uqxw86b8u65" path="res://Epic_Tileset.tres" id="1_xlj5a"]
 [ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://GameBoard/Grid.tres" id="2_gh08p"]
@@ -9,9 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://djolfa2r5b6n0" path="res://UnitOverlay/movement_overlay.png" id="5_hgyof"]
 [ext_resource type="Texture2D" uid="uid://c7ywv0feplun" path="res://UnitOverlay/arrows.svg" id="7_d5mw3"]
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://GameBoard/UnitPath.gd" id="8_wkw2y"]
-[ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="10_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
 [ext_resource type="AudioStream" uid="uid://b33052oyr1adr" path="res://audio/Music_Morningconflict.wav" id="12_qga0l"]
+[ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/stats/unit_stats.gd" id="13_d3c05"]
 [ext_resource type="Script" uid="uid://drvu56wd8e480" path="res://scenes/level/map_director.gd" id="13_sfjbq"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
@@ -333,6 +333,24 @@ terrain_set_0/terrain_0/name = "Path"
 terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_gh08p")
 
+[sub_resource type="Resource" id="Resource_2qf2x"]
+script = ExtResource("13_d3c05")
+hp = 15
+max_hp = 15
+mov = 3
+
+[sub_resource type="Resource" id="Resource_d3c05"]
+script = ExtResource("13_d3c05")
+hp = 15
+max_hp = 15
+mov = 3
+
+[sub_resource type="Resource" id="Resource_mhctg"]
+script = ExtResource("13_d3c05")
+hp = 15
+max_hp = 15
+mov = 3
+
 [node name="Node2D" type="Node2D" unique_id=715923779]
 metadata/_edit_vertical_guides_ = [768.0]
 metadata/_edit_horizontal_guides_ = [512.0]
@@ -377,23 +395,18 @@ grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
 
-[node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("10_wkw2y")]
-y_sort_enabled = true
-position = Vector2(376, 444)
-
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(375, 212)
-
-[node name="Ranged Clone" parent="GameBoard" unique_id=1597076890 instance=ExtResource("10_wkw2y")]
-position = Vector2(333, 476)
-is_player = false
+current_stats = SubResource("Resource_2qf2x")
 
 [node name="Orc2" parent="GameBoard" unique_id=1345977684 instance=ExtResource("11_qga0l")]
 position = Vector2(272, 143)
+current_stats = SubResource("Resource_d3c05")
 
 [node name="Orc3" parent="GameBoard" unique_id=1083859874 instance=ExtResource("11_qga0l")]
 position = Vector2(509, 147)
+current_stats = SubResource("Resource_mhctg")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")

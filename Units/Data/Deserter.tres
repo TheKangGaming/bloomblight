@@ -5,6 +5,5 @@
 [resource]
 script = ExtResource("1_ncyay")
 tags = PackedStringArray()
-metadata/_custom_type_script = "uid://cs3pmkl8vpsw2"
-primary_damage_stat = &"strength"
 role = "fighter"
+metadata/_custom_type_script = "uid://cs3pmkl8vpsw2"
