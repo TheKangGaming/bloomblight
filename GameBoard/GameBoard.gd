@@ -51,6 +51,11 @@ func _ready() -> void:
 	_reinitialize()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("menu_toggle"):
+		_show_pause_menu()
+		get_viewport().set_input_as_handled()
+		return
+
 	if _active_unit and event.is_action_pressed("cancel"):
 		
 		# NEW: If viewing forecast, back out to targeting mode

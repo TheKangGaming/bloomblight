@@ -25,7 +25,7 @@ func _ready() -> void:
 	Global.stats_updated.connect(update_status_page)
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_focus_next"): # Tab Key
+	if event.is_action_pressed("menu_toggle"): # Tab / Controller Menu Toggle
 		toggle_menu()
 	elif visible and event.is_action_pressed("ui_cancel"): # Escape / Controller B
 		toggle_menu()
