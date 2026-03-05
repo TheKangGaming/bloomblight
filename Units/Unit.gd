@@ -248,7 +248,7 @@ func get_combat_stats(target: Unit) -> Dictionary:
 	var is_magic_damage := _uses_magic_damage()
 	var attack_stat := int_stat if is_magic_damage else strength
 	var defense_stat := target.magic_defense if is_magic_damage else target.defense
-	var actual_damage = max(1, (attack_stat + weapon_might) - defense_stat)
+	var actual_damage = max(0, (attack_stat + weapon_might) - defense_stat)
 
 	return {
 		"hit": hit_chance,

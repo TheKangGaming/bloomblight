@@ -7,6 +7,8 @@ extends Resource
 @export var default_weapon_profile: StringName = &""
 @export var primary_damage_stat: StringName = &"strength"
 @export var secondary_stat: StringName = &""
+# Free-form class role label (for example: fighter, mage, tank).
+# Tanks can now fully negate weak attacks when their defense meets/exceeds incoming might.
 @export var role: String = ""
 
 @export var base_stats: Dictionary = {
@@ -24,8 +26,8 @@ extends Resource
 @export var growth_rates: Dictionary = {
 	"max_health": 50,
 	"strength": 40,
-	"defense": 30,
-	"magic_defense": 25,
+	"defense": 22,
+	"magic_defense": 20,
 	"dexterity": 35,
 	"intelligence": 25,
 	"speed": 35,
@@ -36,8 +38,8 @@ extends Resource
 @export var stat_caps: Dictionary = {
 	"max_health": 60,
 	"strength": 30,
-	"defense": 30,
-	"magic_defense": 30,
+	"defense": 24,
+	"magic_defense": 22,
 	"dexterity": 30,
 	"intelligence": 30,
 	"speed": 30,

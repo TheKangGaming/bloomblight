@@ -174,7 +174,7 @@ const PLAYER_GROWTH_RATES := {
 	"MAX_HP": 80,
 	"VIT": 55,
 	"STR": 45,
-	"DEF": 35,
+	"DEF": 25,
 	"DEX": 45,
 	"INT": 30,
 	"SPD": 40,
