@@ -92,11 +92,19 @@ var strength: int:
 
 var defense: int:
 	get:
-		return current_stats.def
+		return current_stats.physical_def
+
+var magic_defense: int:
+	get:
+		return current_stats.magic_def
 
 var dexterity: int:
 	get:
 		return current_stats.dex
+
+var int_stat: int:
+	get:
+		return current_stats.int_stat
 
 var speed: int:
 	get:
@@ -237,13 +245,31 @@ func get_combat_stats(target: Unit) -> Dictionary:
 	var hit_chance = clamp(80 + (dexterity * 2) - (target.speed * 2), 0, 100)
 	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
 	var weapon_might = 5 # Simulating a basic Iron Axe
-	var actual_damage = max(1, (strength + weapon_might) - target.defense)
+	var is_magic_damage := _uses_magic_damage()
+	var attack_stat := int_stat if is_magic_damage else strength
+	var defense_stat := target.magic_defense if is_magic_damage else target.defense
+	var actual_damage = max(1, (attack_stat + weapon_might) - defense_stat)
 
 	return {
 		"hit": hit_chance,
 		"crit": crit_chance,
-		"damage": actual_damage
+		"damage": actual_damage,
+		"uses_magic_damage": is_magic_damage
 	}
+
+
+func _uses_magic_damage() -> bool:
+	if character_data == null or character_data.class_data == null:
+		return false
+
+	var class_info := character_data.class_data
+	var damage_stat := String(class_info.primary_damage_stat).to_lower()
+	if damage_stat == "intelligence" or damage_stat == "int":
+		return true
+	if damage_stat == "strength" or damage_stat == "str":
+		return false
+
+	return String(class_info.role).to_lower().contains("mage")
 
 
 func attack(target: Unit) -> void:

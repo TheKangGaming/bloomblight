@@ -5,7 +5,8 @@ extends Resource
 @export var hp: int = 20
 @export var max_hp: int = 20
 @export var str: int = 5
-@export var def: int = 2
+@export var physical_def: int = 2
+@export var magic_def: int = 1
 @export var dex: int = 5
 @export var int_stat: int = 0
 @export var spd: int = 5
@@ -23,8 +24,14 @@ const _ALIASES := {
 	"max_health": "max_hp",
 	"STR": "str",
 	"strength": "str",
-	"DEF": "def",
-	"defense": "def",
+	"DEF": "physical_def",
+	"def": "physical_def",
+	"defense": "physical_def",
+	"physical_def": "physical_def",
+	"physical_defense": "physical_def",
+	"MDEF": "magic_def",
+	"magic_def": "magic_def",
+	"magic_defense": "magic_def",
 	"DEX": "dex",
 	"dexterity": "dex",
 	"INT": "int_stat",
@@ -38,12 +45,20 @@ const _ALIASES := {
 }
 
 
+var def: int:
+	get:
+		return physical_def
+	set(value):
+		physical_def = value
+
+
 func clone() -> UnitStats:
 	var copy := UnitStats.new()
 	copy.hp = hp
 	copy.max_hp = max_hp
 	copy.str = str
-	copy.def = def
+	copy.physical_def = physical_def
+	copy.magic_def = magic_def
 	copy.dex = dex
 	copy.int_stat = int_stat
 	copy.spd = spd
@@ -69,7 +84,8 @@ func clamp_to_caps(caps: Dictionary = stat_caps) -> void:
 		if resolved_caps.has("HP") or resolved_caps.has("MAX_HP") or resolved_caps.has("max_health"):
 			max_hp = mini(max_hp, _extract_value(resolved_caps, "MAX_HP", max_hp))
 		str = mini(str, _extract_value(resolved_caps, "STR", str))
-		def = mini(def, _extract_value(resolved_caps, "DEF", def))
+		physical_def = mini(physical_def, _extract_value(resolved_caps, "DEF", physical_def))
+		magic_def = mini(magic_def, _extract_value(resolved_caps, "MDEF", magic_def))
 		dex = mini(dex, _extract_value(resolved_caps, "DEX", dex))
 		int_stat = mini(int_stat, _extract_value(resolved_caps, "INT", int_stat))
 		spd = mini(spd, _extract_value(resolved_caps, "SPD", spd))
@@ -90,7 +106,8 @@ func apply_class_progression(character_data: CharacterData) -> void:
 	max_hp = class_info.get_base_stat("max_health", max_hp) + int(personal_bases.get("max_health", 0))
 	hp = max_hp + int(personal_bases.get("health", 0))
 	str = class_info.get_base_stat("strength", str) + int(personal_bases.get("strength", 0))
-	def = class_info.get_base_stat("defense", def) + int(personal_bases.get("defense", 0))
+	physical_def = class_info.get_base_stat("defense", physical_def) + int(personal_bases.get("defense", 0))
+	magic_def = class_info.get_base_stat("magic_defense", class_info.get_base_stat("defense", magic_def)) + int(personal_bases.get("magic_defense", 0))
 	dex = class_info.get_base_stat("dexterity", dex) + int(personal_bases.get("dexterity", 0))
 	int_stat = class_info.get_base_stat("intelligence", int_stat) + int(personal_bases.get("intelligence", 0))
 	spd = class_info.get_base_stat("speed", spd) + int(personal_bases.get("speed", 0))
@@ -101,6 +118,7 @@ func apply_class_progression(character_data: CharacterData) -> void:
 		"HP": clampi(class_info.get_growth_rate("max_health", 0) + int(personal_growths.get("max_health", 0)), 0, 100),
 		"STR": clampi(class_info.get_growth_rate("strength", 0) + int(personal_growths.get("strength", 0)), 0, 100),
 		"DEF": clampi(class_info.get_growth_rate("defense", 0) + int(personal_growths.get("defense", 0)), 0, 100),
+		"MDEF": clampi(class_info.get_growth_rate("magic_defense", class_info.get_growth_rate("defense", 0)) + int(personal_growths.get("magic_defense", 0)), 0, 100),
 		"DEX": clampi(class_info.get_growth_rate("dexterity", 0) + int(personal_growths.get("dexterity", 0)), 0, 100),
 		"INT": clampi(class_info.get_growth_rate("intelligence", 0) + int(personal_growths.get("intelligence", 0)), 0, 100),
 		"SPD": clampi(class_info.get_growth_rate("speed", 0) + int(personal_growths.get("speed", 0)), 0, 100),
@@ -111,7 +129,8 @@ func apply_class_progression(character_data: CharacterData) -> void:
 	stat_caps = {
 		"MAX_HP": class_info.get_stat_cap("max_health", max_hp),
 		"STR": class_info.get_stat_cap("strength", str),
-		"DEF": class_info.get_stat_cap("defense", def),
+		"DEF": class_info.get_stat_cap("defense", physical_def),
+		"MDEF": class_info.get_stat_cap("magic_defense", class_info.get_stat_cap("defense", magic_def)),
 		"DEX": class_info.get_stat_cap("dexterity", dex),
 		"INT": class_info.get_stat_cap("intelligence", int_stat),
 		"SPD": class_info.get_stat_cap("speed", spd),
@@ -123,6 +142,7 @@ func apply_class_progression(character_data: CharacterData) -> void:
 		"MAX_HP": class_info.get_minimum_gain_interval("max_health", 0),
 		"STR": class_info.get_minimum_gain_interval("strength", 0),
 		"DEF": class_info.get_minimum_gain_interval("defense", 0),
+		"MDEF": class_info.get_minimum_gain_interval("magic_defense", class_info.get_minimum_gain_interval("defense", 0)),
 		"DEX": class_info.get_minimum_gain_interval("dexterity", 0),
 		"INT": class_info.get_minimum_gain_interval("intelligence", 0),
 		"SPD": class_info.get_minimum_gain_interval("speed", 0),
@@ -144,7 +164,8 @@ func apply_player_snapshot(player_stats: Dictionary, buffs: Dictionary = {}) -> 
 		hp = clampi(saved_hp, 0, max_hp)
 
 	str = int(player_stats.get("STR", str)) + int(buffs.get("STR", 0))
-	def = int(player_stats.get("DEF", def)) + int(buffs.get("DEF", 0))
+	physical_def = int(player_stats.get("DEF", physical_def)) + int(buffs.get("DEF", 0))
+	magic_def = int(player_stats.get("MDEF", player_stats.get("DEF", magic_def))) + int(buffs.get("MDEF", 0))
 	dex = int(player_stats.get("DEX", dex)) + int(buffs.get("DEX", 0))
 	int_stat = int(player_stats.get("INT", int_stat)) + int(buffs.get("INT", 0))
 	spd = int(player_stats.get("SPD", spd)) + int(buffs.get("SPD", 0))
@@ -159,6 +180,7 @@ func apply_auto_levels(level_count: int) -> Dictionary:
 		"MAX_HP": 0,
 		"STR": 0,
 		"DEF": 0,
+		"MDEF": 0,
 		"DEX": 0,
 		"INT": 0,
 		"SPD": 0,
@@ -267,7 +289,7 @@ func _normalize_growth_key(raw_key: String) -> String:
 	if raw_key == "max_health":
 		return "MAX_HP"
 
-	if raw_key == "MAX_HP" or raw_key == "STR" or raw_key == "DEF" or raw_key == "DEX" or raw_key == "INT" or raw_key == "SPD" or raw_key == "MOV" or raw_key == "ATK_RNG":
+	if raw_key == "MAX_HP" or raw_key == "STR" or raw_key == "DEF" or raw_key == "MDEF" or raw_key == "DEX" or raw_key == "INT" or raw_key == "SPD" or raw_key == "MOV" or raw_key == "ATK_RNG":
 		return raw_key
 
 	if _ALIASES.has(raw_key):
@@ -277,8 +299,10 @@ func _normalize_growth_key(raw_key: String) -> String:
 				return "MAX_HP"
 			"str":
 				return "STR"
-			"def":
+			"def", "physical_def":
 				return "DEF"
+			"magic_def":
+				return "MDEF"
 			"dex":
 				return "DEX"
 			"int_stat":
@@ -300,7 +324,9 @@ func _growth_key_to_property(growth_key: String) -> String:
 		"STR":
 			return "str"
 		"DEF":
-			return "def"
+			return "physical_def"
+		"MDEF":
+			return "magic_def"
 		"DEX":
 			return "dex"
 		"INT":

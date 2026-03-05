@@ -5,7 +5,7 @@ extends Resource
 @export var metadata_name: String = ""
 @export var tags: PackedStringArray = PackedStringArray()
 @export var default_weapon_profile: StringName = &""
-@export var primary_damage_stat: StringName = &""
+@export var primary_damage_stat: StringName = &"strength"
 @export var secondary_stat: StringName = &""
 @export var role: String = ""
 
@@ -13,6 +13,7 @@ extends Resource
 	"max_health": 20,
 	"strength": 5,
 	"defense": 2,
+	"magic_defense": 1,
 	"dexterity": 5,
 	"intelligence": 0,
 	"speed": 5,
@@ -24,6 +25,7 @@ extends Resource
 	"max_health": 50,
 	"strength": 40,
 	"defense": 30,
+	"magic_defense": 25,
 	"dexterity": 35,
 	"intelligence": 25,
 	"speed": 35,
@@ -35,6 +37,7 @@ extends Resource
 	"max_health": 60,
 	"strength": 30,
 	"defense": 30,
+	"magic_defense": 30,
 	"dexterity": 30,
 	"intelligence": 30,
 	"speed": 30,

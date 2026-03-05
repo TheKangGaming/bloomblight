@@ -816,9 +816,9 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	vbox.add_child(title)
 	
 	vbox.add_child(_create_stat_row("HP", str(attacker.health) + "/" + str(attacker.max_health)))
-	vbox.add_child(_create_stat_row("DMG", str(atk_stats.damage)))
-	vbox.add_child(_create_stat_row("HIT", str(atk_stats.hit) + "%"))
-	vbox.add_child(_create_stat_row("CRIT", str(atk_stats.crit) + "%"))
+	vbox.add_child(_create_stat_row("DMG", str(atk_stats["damage"])))
+	vbox.add_child(_create_stat_row("HIT", str(atk_stats["hit"]) + "%"))
+	vbox.add_child(_create_stat_row("CRIT", str(atk_stats["crit"]) + "%"))
 	
 	vbox.add_child(HSeparator.new())
 	
@@ -835,9 +835,9 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	var dist = _manhattan_distance(defender.cell, attacker.cell)
 	if _is_distance_in_attack_range(dist, defender.attack_range):
 		var def_stats = defender.get_combat_stats(attacker)
-		vbox.add_child(_create_stat_row("DMG", str(def_stats.damage)))
-		vbox.add_child(_create_stat_row("HIT", str(def_stats.hit) + "%"))
-		vbox.add_child(_create_stat_row("CRIT", str(def_stats.crit) + "%"))
+		vbox.add_child(_create_stat_row("DMG", str(def_stats["damage"])))
+		vbox.add_child(_create_stat_row("HIT", str(def_stats["hit"]) + "%"))
+		vbox.add_child(_create_stat_row("CRIT", str(def_stats["crit"]) + "%"))
 	else:
 		var no_counter = Label.new()
 		no_counter.text = "-- No Counter --"
