@@ -5,6 +5,9 @@ extends Resource
 @export var metadata_name: String = ""
 @export var tags: PackedStringArray = PackedStringArray()
 @export var default_weapon_profile: StringName = &""
+@export var primary_damage_stat: StringName = &""
+@export var secondary_stat: StringName = &""
+@export var role: String = ""
 
 @export var base_stats: Dictionary = {
 	"max_health": 20,
@@ -39,6 +42,10 @@ extends Resource
 	"attack_range": 3,
 }
 
+# Optional pity-style floor for growths.
+# Example: {"strength": 3} guarantees at least +1 STR every 3 levels.
+@export var minimum_gain_intervals: Dictionary = {}
+
 
 func get_base_stat(stat_key: String, fallback: int = 0) -> int:
 	return int(base_stats.get(stat_key, fallback))
@@ -50,3 +57,7 @@ func get_growth_rate(stat_key: String, fallback: int = 0) -> int:
 
 func get_stat_cap(stat_key: String, fallback: int = 0) -> int:
 	return int(stat_caps.get(stat_key, fallback))
+
+
+func get_minimum_gain_interval(stat_key: String, fallback: int = 0) -> int:
+	return maxi(int(minimum_gain_intervals.get(stat_key, fallback)), 0)

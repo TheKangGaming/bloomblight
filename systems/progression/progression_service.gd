@@ -29,3 +29,47 @@ func roll_growth(chance_percent: int) -> bool:
 func _set_seed(seed_value: int) -> void:
 	current_seed = seed_value
 	rng.seed = current_seed
+
+
+func print_class_growth_debug_summary(characters: Array[CharacterData], levels_to_simulate: int = 20, simulations_per_class: int = 250) -> void:
+	if characters.is_empty():
+		print("[ProgressionService] No character entries were provided for growth summary.")
+		return
+
+	var level_count := maxi(levels_to_simulate, 0)
+	var runs := maxi(simulations_per_class, 1)
+
+	print("[ProgressionService] Growth summary across ", runs, " simulations and ", level_count, " level-ups.")
+	for entry in characters:
+		if entry == null or entry.class_data == null:
+			continue
+
+		var class_info := entry.class_data
+		var gains_totals := {
+			"MAX_HP": 0.0,
+			"STR": 0.0,
+			"DEF": 0.0,
+			"DEX": 0.0,
+			"INT": 0.0,
+			"SPD": 0.0,
+			"MOV": 0.0,
+			"ATK_RNG": 0.0,
+		}
+
+		for _run in range(runs):
+			var sim_stats := UnitStats.new()
+			sim_stats.apply_class_progression(entry)
+			var gains := sim_stats.apply_auto_levels(level_count)
+			for growth_key in gains_totals.keys():
+				gains_totals[growth_key] = float(gains_totals[growth_key]) + float(gains.get(growth_key, 0))
+
+		var average_gains := {}
+		for growth_key in gains_totals.keys():
+			average_gains[growth_key] = snappedf(float(gains_totals[growth_key]) / runs, 0.01)
+
+		var class_name := class_info.metadata_name if not class_info.metadata_name.is_empty() else entry.display_name
+		print("[ProgressionService] ", class_name,
+			" | role=", class_info.role,
+			" | primary=", class_info.primary_damage_stat,
+			" | secondary=", class_info.secondary_stat,
+			" | avg gains=", average_gains)

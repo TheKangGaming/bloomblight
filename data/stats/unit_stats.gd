@@ -14,6 +14,7 @@ extends Resource
 
 @export var growth_rates: Dictionary = {}
 @export var stat_caps: Dictionary = {}
+@export var minimum_gain_intervals: Dictionary = {}
 
 const _ALIASES := {
 	"HP": "hp",
@@ -50,6 +51,7 @@ func clone() -> UnitStats:
 	copy.atk_rng = atk_rng
 	copy.growth_rates = growth_rates.duplicate(true)
 	copy.stat_caps = stat_caps.duplicate(true)
+	copy.minimum_gain_intervals = minimum_gain_intervals.duplicate(true)
 	return copy
 
 
@@ -117,6 +119,17 @@ func apply_class_progression(character_data: CharacterData) -> void:
 		"ATK_RNG": class_info.get_stat_cap("attack_range", atk_rng),
 	}
 
+	minimum_gain_intervals = {
+		"MAX_HP": class_info.get_minimum_gain_interval("max_health", 0),
+		"STR": class_info.get_minimum_gain_interval("strength", 0),
+		"DEF": class_info.get_minimum_gain_interval("defense", 0),
+		"DEX": class_info.get_minimum_gain_interval("dexterity", 0),
+		"INT": class_info.get_minimum_gain_interval("intelligence", 0),
+		"SPD": class_info.get_minimum_gain_interval("speed", 0),
+		"MOV": class_info.get_minimum_gain_interval("move_range", 0),
+		"ATK_RNG": class_info.get_minimum_gain_interval("attack_range", 0),
+	}
+
 	clamp_to_caps()
 
 
@@ -153,7 +166,15 @@ func apply_auto_levels(level_count: int) -> Dictionary:
 		"ATK_RNG": 0,
 	}
 
+	var levels_since_gain := {}
 	for _level in range(maxi(level_count, 0)):
+		for guaranteed_growth_key in minimum_gain_intervals.keys():
+			var normalized_guaranteed_key := _normalize_growth_key(String(guaranteed_growth_key))
+			if normalized_guaranteed_key.is_empty():
+				continue
+			levels_since_gain[normalized_guaranteed_key] = int(levels_since_gain.get(normalized_guaranteed_key, 0)) + 1
+
+		var gained_this_level := {}
 		for growth_key in growth_rates.keys():
 			var normalized_key := _normalize_growth_key(String(growth_key))
 			if normalized_key.is_empty():
@@ -163,8 +184,32 @@ func apply_auto_levels(level_count: int) -> Dictionary:
 			if not _roll_growth(chance_percent):
 				continue
 
+			if not _can_gain_stat(normalized_key):
+				continue
+
 			total_gains[normalized_key] = int(total_gains.get(normalized_key, 0)) + 1
 			set(_growth_key_to_property(normalized_key), int(get(_growth_key_to_property(normalized_key))) + 1)
+			gained_this_level[normalized_key] = true
+			levels_since_gain[normalized_key] = 0
+
+		for guaranteed_growth_key in minimum_gain_intervals.keys():
+			var normalized_guaranteed_key := _normalize_growth_key(String(guaranteed_growth_key))
+			if normalized_guaranteed_key.is_empty() or gained_this_level.has(normalized_guaranteed_key):
+				continue
+
+			var guarantee_interval := maxi(int(minimum_gain_intervals[guaranteed_growth_key]), 0)
+			if guarantee_interval <= 0:
+				continue
+
+			if int(levels_since_gain.get(normalized_guaranteed_key, 0)) < guarantee_interval:
+				continue
+
+			if not _can_gain_stat(normalized_guaranteed_key):
+				continue
+
+			total_gains[normalized_guaranteed_key] = int(total_gains.get(normalized_guaranteed_key, 0)) + 1
+			set(_growth_key_to_property(normalized_guaranteed_key), int(get(_growth_key_to_property(normalized_guaranteed_key))) + 1)
+			levels_since_gain[normalized_guaranteed_key] = 0
 
 	clamp_to_caps()
 	hp = max_hp
@@ -180,6 +225,16 @@ func _roll_growth(chance_percent: int) -> bool:
 
 	var clamped_chance := clampi(chance_percent, 0, 100)
 	return randf() < (clamped_chance / 100.0)
+
+
+func _can_gain_stat(growth_key: String) -> bool:
+	var property_name := _growth_key_to_property(growth_key)
+	if property_name.is_empty():
+		return false
+
+	var current_value := int(get(property_name))
+	var cap_value := _extract_value(stat_caps, growth_key, current_value)
+	return current_value < cap_value
 
 
 func sync_player_hp_to(player_stats: Dictionary, buffs: Dictionary = {}) -> void:
