@@ -73,7 +73,7 @@ func _switch_tab(delta: int) -> void:
 	if tabs == null:
 		return
 
-	var count := tabs.get_tab_count()
+	var count: int = tabs.get_tab_count()
 	if count <= 0:
 		return
 
@@ -121,7 +121,7 @@ func _get_tab_focusable_controls() -> Array[Control]:
 	if tabs == null:
 		return result
 
-	var tab_content := tabs.get_current_tab_control()
+	var tab_content: Control = tabs.get_current_tab_control()
 	if tab_content == null:
 		return result
 
@@ -141,7 +141,7 @@ func _is_in_current_tab(control: Control) -> bool:
 	if tabs == null:
 		return false
 
-	var tab_content := tabs.get_current_tab_control()
+	var tab_content: Control = tabs.get_current_tab_control()
 	if tab_content == null:
 		return false
 
