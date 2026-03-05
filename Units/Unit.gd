@@ -206,10 +206,17 @@ func walk_along(path: PackedVector2Array) -> void:
 
 func _initialize_unit_data() -> void:
 	current_stats.apply_class_progression(character_data)
+	if not is_player and character_data != null and level > 1:
+		current_stats.apply_auto_levels(level - 1)
 
 
 func _load_player_stats() -> void:
 	Global.ensure_player_stat_formats()
+	var global_player_level := Global.get_player_level()
+	if level > global_player_level:
+		Global.apply_player_auto_levels(level - global_player_level)
+	global_player_level = Global.get_player_level()
+	level = global_player_level
 	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
 	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
 	current_stats.apply_player_snapshot(permanent_stats, temporary_modifiers)
