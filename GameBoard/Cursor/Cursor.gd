@@ -37,6 +37,12 @@ var cell := Vector2.ZERO:
 		_timer.start()
 
 @onready var _timer: Timer = $Timer
+@onready var _move_deadzone := maxf(
+	InputMap.action_get_deadzone("left"),
+	InputMap.action_get_deadzone("right"),
+	InputMap.action_get_deadzone("up"),
+	InputMap.action_get_deadzone("down")
+)
 
 
 func _ready() -> void:
@@ -50,11 +56,25 @@ func _is_accept_event(event: InputEvent) -> bool:
 func _process(_delta: float) -> void:
 	if not is_active:
 		return
+
+	_poll_directional_input()
 	
 	if(is_mouse):
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		if(cell != grid_coords):
 			cell = grid_coords
+
+
+func _poll_directional_input() -> void:
+	var input_vector := Input.get_vector("left", "right", "up", "down", _move_deadzone)
+	if input_vector.is_zero_approx() or not _timer.is_stopped():
+		return
+
+	is_mouse = false
+	if absf(input_vector.x) >= absf(input_vector.y):
+		cell += Vector2.RIGHT if input_vector.x > 0.0 else Vector2.LEFT
+	else:
+		cell += Vector2.DOWN if input_vector.y > 0.0 else Vector2.UP
 
 func _unhandled_input(event: InputEvent) -> void:
 	# ADD THIS SAFETY CHECK: Ignore everything if the cursor is frozen!
@@ -68,28 +88,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif _is_accept_event(event):
 		emit_signal("accept_pressed", cell)
 		get_viewport().set_input_as_handled()
-
-	var should_move := event.is_pressed() 
-	if event.is_echo():
-		should_move = should_move and _timer.is_stopped()
-
-	if not should_move:
-		return
-
-	# Moves the cursor by one grid cell.
-	if event.is_action("ui_right") or event.is_action("right"):
-		cell += Vector2.RIGHT
-		is_mouse = false
-	elif event.is_action("ui_up") or event.is_action("up"):
-		cell += Vector2.UP
-		is_mouse = false
-	elif event.is_action("ui_left") or event.is_action("left"):
-		cell += Vector2.LEFT
-		is_mouse = false
-	elif event.is_action("ui_down") or event.is_action("down"):
-		cell += Vector2.DOWN
-		is_mouse = false
-
 
 func _draw() -> void:
 	if not grid:
