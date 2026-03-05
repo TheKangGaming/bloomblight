@@ -42,6 +42,8 @@ func _input(event: InputEvent) -> void:
 		elif _is_action_pressed(event, TAB_NEXT_ACTIONS):
 			_switch_tab(1)
 			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+			_activate_focused_control()
 		elif _is_action_pressed(event, NAV_LEFT_ACTIONS):
 			_move_focus(Vector2.LEFT)
 		elif _is_action_pressed(event, NAV_RIGHT_ACTIONS):
@@ -62,6 +64,22 @@ func toggle_menu():
 			tabs.current_tab = 1
 		update_inventory()
 		_focus_first_interactable()
+
+
+func _activate_focused_control() -> void:
+	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
+	if focus_owner == null or not _is_in_current_tab(focus_owner):
+		_focus_first_interactable()
+		return
+
+	if focus_owner is BaseButton:
+		(focus_owner as BaseButton).pressed.emit()
+		get_viewport().set_input_as_handled()
+		return
+
+	if focus_owner.has_method("_try_interact"):
+		focus_owner.call("_try_interact")
+		get_viewport().set_input_as_handled()
 
 func _is_action_pressed(event: InputEvent, actions: Array[StringName]) -> bool:
 	for action in actions:
@@ -86,8 +104,8 @@ func _focus_first_interactable() -> void:
 		return
 
 func _move_focus(direction: Vector2) -> void:
-	var focus_owner := get_viewport().gui_get_focus_owner()
-	if not (focus_owner is Control) or not visible or not _is_in_current_tab(focus_owner):
+	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
+	if focus_owner == null or not visible or not _is_in_current_tab(focus_owner):
 		_focus_first_interactable()
 		return
 
