@@ -37,18 +37,17 @@ var cell := Vector2.ZERO:
 		_timer.start()
 
 @onready var _timer: Timer = $Timer
-@onready var _left_action: StringName = _resolve_input_action("left", "ui_left")
-@onready var _right_action: StringName = _resolve_input_action("right", "ui_right")
-@onready var _up_action: StringName = _resolve_input_action("up", "ui_up")
-@onready var _down_action: StringName = _resolve_input_action("down", "ui_down")
-@onready var _move_deadzone := maxf(
-	maxf(InputMap.action_get_deadzone(_left_action), InputMap.action_get_deadzone(_right_action)),
-	maxf(InputMap.action_get_deadzone(_up_action), InputMap.action_get_deadzone(_down_action))
-)
+
+var _left_action: StringName = &"ui_left"
+var _right_action: StringName = &"ui_right"
+var _up_action: StringName = &"ui_up"
+var _down_action: StringName = &"ui_down"
+var _move_deadzone := 0.2
 
 
 func _ready() -> void:
 	_timer.wait_time = ui_cooldown
+	_setup_direction_actions()
 	cell = grid.calculate_grid_coordinates(position)
 	position = grid.calculate_map_position(cell)
 
@@ -67,13 +66,34 @@ func _process(_delta: float) -> void:
 			cell = grid_coords
 
 
+func _setup_direction_actions() -> void:
+	_left_action = _resolve_input_action(&"left", &"ui_left")
+	_right_action = _resolve_input_action(&"right", &"ui_right")
+	_up_action = _resolve_input_action(&"up", &"ui_up")
+	_down_action = _resolve_input_action(&"down", &"ui_down")
+
+	if _left_action.is_empty() or _right_action.is_empty() or _up_action.is_empty() or _down_action.is_empty():
+		_move_deadzone = 0.2
+		return
+
+	_move_deadzone = maxf(
+		maxf(InputMap.action_get_deadzone(_left_action), InputMap.action_get_deadzone(_right_action)),
+		maxf(InputMap.action_get_deadzone(_up_action), InputMap.action_get_deadzone(_down_action))
+	)
+
+
 func _resolve_input_action(preferred: StringName, fallback: StringName) -> StringName:
 	if InputMap.has_action(preferred):
 		return preferred
-	return fallback
+	if InputMap.has_action(fallback):
+		return fallback
+	return &""
 
 
 func _poll_directional_input() -> void:
+	if _left_action.is_empty() or _right_action.is_empty() or _up_action.is_empty() or _down_action.is_empty():
+		return
+
 	var input_vector := Input.get_vector(_left_action, _right_action, _up_action, _down_action, _move_deadzone)
 	if input_vector.is_zero_approx() or not _timer.is_stopped():
 		return
