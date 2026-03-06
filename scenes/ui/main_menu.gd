@@ -11,6 +11,8 @@ extends Control
 @onready var lbl_int = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblINT
 @onready var lbl_spd = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSPD
 @onready var lbl_mov = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblMOV
+@onready var lbl_class: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblClass
+@onready var lbl_level: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblLevel
 
 # Column 3: Meal
 @onready var lbl_food = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox/LblFoodBuff
@@ -271,6 +273,9 @@ func update_inventory():
 		_focus_first_interactable_deferred()
 			
 func update_status_page():
+	Global.ensure_player_stat_formats()
+	var player_snapshot: Dictionary = Global.get_player_combat_snapshot()
+
 	var format_stat = func(stat_name: String, base_val: int) -> String:
 		var buff_val = 0
 		if Global.active_food_buff.item != null:
@@ -284,16 +289,36 @@ func update_status_page():
 		else:
 			return "%s: %d" % [stat_name, base_val]
 
-	# --- THE FIX: We now only pass the TWO required arguments ---
-	lbl_vit.text = format_stat.call("VIT", Global.player_stats["VIT"])
-	lbl_str.text = format_stat.call("STR", Global.player_stats["STR"])
-	lbl_dex.text = format_stat.call("DEX", Global.player_stats["DEX"])
-	lbl_int.text = format_stat.call("INT", Global.player_stats["INT"])
-	lbl_spd.text = format_stat.call("SPD", Global.player_stats["SPD"])
-	lbl_mov.text = format_stat.call("MOV", Global.player_stats["MOV"])
+	# Pull from the normalized combat snapshot so menu stats always match runtime values.
+	lbl_vit.text = format_stat.call("VIT", int(player_snapshot.get("VIT", 0)))
+	lbl_str.text = format_stat.call("STR", int(player_snapshot.get("STR", 0)))
+	lbl_dex.text = format_stat.call("DEX", int(player_snapshot.get("DEX", 0)))
+	lbl_int.text = format_stat.call("INT", int(player_snapshot.get("INT", 0)))
+	lbl_spd.text = format_stat.call("SPD", int(player_snapshot.get("SPD", 0)))
+	lbl_mov.text = format_stat.call("MOV", int(player_snapshot.get("MOV", 0)))
+	lbl_level.text = "Level: %d" % Global.get_player_level()
+	lbl_class.text = "Class: %s" % _resolve_player_class_name()
 	
 	# Update Meal Text
 	if Global.active_food_buff.item != null:
 		lbl_food.text = "Ate a hearty meal!"
 	else:
 		lbl_food.text = "No meal."
+
+
+func _resolve_player_class_name() -> String:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return "Unknown"
+
+	for node in scene_root.find_children("*", "Unit", true, false):
+		var unit := node as Unit
+		if unit == null or not unit.is_player:
+			continue
+
+		if unit.character_data != null and unit.character_data.class_data != null:
+			var class_name := String(unit.character_data.class_data.metadata_name)
+			if not class_name.is_empty():
+				return class_name
+
+	return "Unknown"
