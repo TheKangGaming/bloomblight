@@ -349,30 +349,6 @@ hp = 15
 max_hp = 15
 mov = 3
 
-[sub_resource type="Resource" id="Resource_hejk3"]
-script = ExtResource("16_vtv1r")
-display_name = "Orc"
-class_data = ExtResource("13_vtv1r")
-metadata/_custom_type_script = "uid://dinfajkodigdx"
-
-[sub_resource type="Resource" id="Resource_t05iy"]
-script = ExtResource("13_d3c05")
-hp = 15
-max_hp = 15
-mov = 3
-
-[sub_resource type="Resource" id="Resource_efnms"]
-script = ExtResource("16_vtv1r")
-display_name = "Orc"
-class_data = ExtResource("13_vtv1r")
-metadata/_custom_type_script = "uid://dinfajkodigdx"
-
-[sub_resource type="Resource" id="Resource_x18w8"]
-script = ExtResource("13_d3c05")
-hp = 15
-max_hp = 15
-mov = 3
-
 [sub_resource type="Resource" id="Resource_yjnxd"]
 script = ExtResource("16_vtv1r")
 display_name = "Savannah"
@@ -471,21 +447,10 @@ position = Vector2(375, 212)
 character_data = SubResource("Resource_ddai4")
 current_stats = SubResource("Resource_mwyqx")
 
-[node name="Orc2" parent="GameBoard" unique_id=1345977684 instance=ExtResource("11_qga0l")]
-position = Vector2(272, 143)
-character_data = SubResource("Resource_hejk3")
-current_stats = SubResource("Resource_t05iy")
-
-[node name="Orc3" parent="GameBoard" unique_id=1083859874 instance=ExtResource("11_qga0l")]
-position = Vector2(509, 147)
-character_data = SubResource("Resource_efnms")
-current_stats = SubResource("Resource_x18w8")
-
 [node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
 current_stats = SubResource("Resource_rmf8s")
-level = 10
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
