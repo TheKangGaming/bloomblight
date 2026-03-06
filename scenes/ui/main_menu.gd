@@ -5,12 +5,12 @@ extends Control
 
 
 # Column 2: Stats
-@onready var lbl_vit = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblVIT
-@onready var lbl_str = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSTR
-@onready var lbl_dex = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDEX
-@onready var lbl_int = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblINT
-@onready var lbl_spd = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSPD
-@onready var lbl_mov = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblMOV
+@onready var lbl_vit: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblVIT
+@onready var lbl_str: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSTR
+@onready var lbl_dex: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDEX
+@onready var lbl_int: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblINT
+@onready var lbl_spd: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSPD
+@onready var lbl_mov: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblMOV
 @onready var lbl_class: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblClass
 @onready var lbl_level: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblLevel
 
@@ -287,12 +287,12 @@ func update_status_page():
 			return "%s: %d" % [stat_name, base_val]
 
 	# Show permanent value plus temporary modifier, mirroring combat calculations.
-	lbl_vit.text = format_stat.call("VIT", int(permanent_stats.get("VIT", 0)), int(temporary_modifiers.get("VIT", 0)))
-	lbl_str.text = format_stat.call("STR", int(permanent_stats.get("STR", 0)), int(temporary_modifiers.get("STR", 0)))
-	lbl_dex.text = format_stat.call("DEX", int(permanent_stats.get("DEX", 0)), int(temporary_modifiers.get("DEX", 0)))
-	lbl_int.text = format_stat.call("INT", int(permanent_stats.get("INT", 0)), int(temporary_modifiers.get("INT", 0)))
-	lbl_spd.text = format_stat.call("SPD", int(permanent_stats.get("SPD", 0)), int(temporary_modifiers.get("SPD", 0)))
-	lbl_mov.text = format_stat.call("MOV", int(permanent_stats.get("MOV", 0)), int(temporary_modifiers.get("MOV", 0)))
+	lbl_vit.bbcode_text = format_stat.call("VIT", int(permanent_stats.get("VIT", 0)), int(temporary_modifiers.get("VIT", 0)))
+	lbl_str.bbcode_text = format_stat.call("STR", int(permanent_stats.get("STR", 0)), int(temporary_modifiers.get("STR", 0)))
+	lbl_dex.bbcode_text = format_stat.call("DEX", int(permanent_stats.get("DEX", 0)), int(temporary_modifiers.get("DEX", 0)))
+	lbl_int.bbcode_text = format_stat.call("INT", int(permanent_stats.get("INT", 0)), int(temporary_modifiers.get("INT", 0)))
+	lbl_spd.bbcode_text = format_stat.call("SPD", int(permanent_stats.get("SPD", 0)), int(temporary_modifiers.get("SPD", 0)))
+	lbl_mov.bbcode_text = format_stat.call("MOV", int(permanent_stats.get("MOV", 0)), int(temporary_modifiers.get("MOV", 0)))
 	lbl_level.text = "Level: %d" % Global.get_player_level()
 	lbl_class.text = "Class: %s" % _resolve_player_class_name()
 	
