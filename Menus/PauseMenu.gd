@@ -72,7 +72,7 @@ func _on_units_button_pressed() -> void:
 	var title := Label.new()
 	title.text = "Units"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_font_size_override("font_size", 10)
 	content.add_child(title)
 
 	var list_text := RichTextLabel.new()
@@ -80,8 +80,8 @@ func _on_units_button_pressed() -> void:
 	list_text.fit_content = false
 	list_text.scroll_active = true
 	list_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_text.add_theme_font_size_override("normal_font_size", 12)
-	list_text.text = _build_units_summary()
+	list_text.add_theme_font_size_override("normal_font_size", 6)
+	list_text.bbcode_text = _build_units_summary()
 	content.add_child(list_text)
 
 	var close_btn := Button.new()
@@ -116,7 +116,7 @@ func _build_units_summary() -> String:
 				unit_class_name = String(unit.character_data.class_data.metadata_name)
 
 		var team_name := "Enemy" if unit.is_enemy else "Ally"
-		lines.append("[b]%s[/b] (%s) - %s Lv.%d\\nHP %d/%d  STR %d  DEF %d  SPD %d" % [
+		lines.append("[b]%s[/b] (%s) - %s Lv.%d\nHP %d/%d  STR %d  DEF %d  SPD %d" % [
 			display_name,
 			team_name,
 			unit_class_name,
@@ -128,7 +128,7 @@ func _build_units_summary() -> String:
 			unit.speed,
 		])
 
-	return "\\n\\n".join(lines)
+	return "\n\n".join(lines)
 
 
 func _on_options_button_pressed() -> void:
