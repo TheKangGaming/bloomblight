@@ -489,7 +489,6 @@ current_stats = SubResource("Resource_vtv1r")
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
 current_stats = SubResource("Resource_mwyqx")
-level = 10
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
