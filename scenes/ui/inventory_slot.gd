@@ -66,7 +66,7 @@ func setup(item_enum: Global.Items, quantity: int):
 	# 1. Tooltip Logic
 	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
 	tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
-	if has_focus() and is_instance_valid(_focus_tooltip):
+	if has_focus():
 		_show_focus_tooltip()
 	
 	# 2. Icon Logic

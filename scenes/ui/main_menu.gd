@@ -25,6 +25,11 @@ const NAV_LEFT_ACTIONS: Array[StringName] = [&"left", &"ui_left"]
 const NAV_RIGHT_ACTIONS: Array[StringName] = [&"right", &"ui_right"]
 const NAV_UP_ACTIONS: Array[StringName] = [&"up", &"ui_up"]
 const NAV_DOWN_ACTIONS: Array[StringName] = [&"down", &"ui_down"]
+const NAV_REPEAT_INITIAL_DELAY_MS := 220
+const NAV_REPEAT_INTERVAL_MS := 140
+
+var _last_nav_action: StringName = StringName()
+var _last_nav_time_ms: int = -100000
 
 func _ready() -> void:
 	visible = false
@@ -50,16 +55,16 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
 		_activate_focused_control()
-	elif _is_action_pressed(event, NAV_LEFT_ACTIONS):
+	elif _can_trigger_navigation(event, NAV_LEFT_ACTIONS, &"left"):
 		_move_focus(Vector2.LEFT)
 		get_viewport().set_input_as_handled()
-	elif _is_action_pressed(event, NAV_RIGHT_ACTIONS):
+	elif _can_trigger_navigation(event, NAV_RIGHT_ACTIONS, &"right"):
 		_move_focus(Vector2.RIGHT)
 		get_viewport().set_input_as_handled()
-	elif _is_action_pressed(event, NAV_UP_ACTIONS):
+	elif _can_trigger_navigation(event, NAV_UP_ACTIONS, &"up"):
 		_move_focus(Vector2.UP)
 		get_viewport().set_input_as_handled()
-	elif _is_action_pressed(event, NAV_DOWN_ACTIONS):
+	elif _can_trigger_navigation(event, NAV_DOWN_ACTIONS, &"down"):
 		_move_focus(Vector2.DOWN)
 		get_viewport().set_input_as_handled()
 
@@ -113,6 +118,26 @@ func _is_action_pressed(event: InputEvent, actions: Array[StringName]) -> bool:
 	for action in actions:
 		if InputMap.has_action(action) and event.is_action_pressed(action):
 			return true
+	return false
+
+func _can_trigger_navigation(event: InputEvent, actions: Array[StringName], nav_key: StringName) -> bool:
+	if not _is_action_pressed(event, actions):
+		return false
+
+	for action in actions:
+		if InputMap.has_action(action) and event.is_action_just_pressed(action):
+			_last_nav_action = nav_key
+			_last_nav_time_ms = Time.get_ticks_msec()
+			return true
+
+	if event is InputEventJoypadMotion:
+		var now := Time.get_ticks_msec()
+		var required_delay := NAV_REPEAT_INTERVAL_MS if _last_nav_action == nav_key else NAV_REPEAT_INITIAL_DELAY_MS
+		if now - _last_nav_time_ms >= required_delay:
+			_last_nav_action = nav_key
+			_last_nav_time_ms = now
+			return true
+
 	return false
 
 func _switch_tab(delta: int) -> void:
