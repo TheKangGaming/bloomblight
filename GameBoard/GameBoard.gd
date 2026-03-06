@@ -865,9 +865,9 @@ func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
 	var tooltip_size := _unit_hover_label.get_combined_minimum_size() + Vector2(12.0, 8.0)
 	_unit_hover_panel.custom_minimum_size = tooltip_size
 
-	var screen_point := grid.calculate_map_position(cell)
-	var target_pos := screen_point + Vector2(20, -40)
-	var viewport_size := get_viewport_rect().size
+	var screen_point: Vector2 = grid.calculate_map_position(cell)
+	var target_pos: Vector2 = screen_point + Vector2(20, -40)
+	var viewport_size: Vector2 = get_viewport_rect().size
 	target_pos.x = clampf(target_pos.x, 8.0, max(8.0, viewport_size.x - tooltip_size.x - 8.0))
 	target_pos.y = clampf(target_pos.y, 8.0, max(8.0, viewport_size.y - tooltip_size.y - 8.0))
 	_unit_hover_panel.position = target_pos.round()
