@@ -317,8 +317,8 @@ func _resolve_player_class_name() -> String:
 			continue
 
 		if unit.character_data != null and unit.character_data.class_data != null:
-			var class_name := String(unit.character_data.class_data.metadata_name)
-			if not class_name.is_empty():
-				return class_name
+			var unit_class_name := String(unit.character_data.class_data.metadata_name)
+			if not unit_class_name.is_empty():
+				return unit_class_name
 
 	return "Unknown"

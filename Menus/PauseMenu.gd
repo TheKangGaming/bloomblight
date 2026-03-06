@@ -108,18 +108,18 @@ func _build_units_summary() -> String:
 			continue
 
 		var display_name := "Unit"
-		var class_name := "Unknown"
+		var unit_class_name := "Unknown"
 		if unit.character_data != null:
 			if not String(unit.character_data.display_name).is_empty():
 				display_name = String(unit.character_data.display_name)
 			if unit.character_data.class_data != null:
-				class_name = String(unit.character_data.class_data.metadata_name)
+				unit_class_name = String(unit.character_data.class_data.metadata_name)
 
 		var team_name := "Enemy" if unit.is_enemy else "Ally"
 		lines.append("[b]%s[/b] (%s) - %s Lv.%d\\nHP %d/%d  STR %d  DEF %d  SPD %d" % [
 			display_name,
 			team_name,
-			class_name,
+			unit_class_name,
 			maxi(unit.level, 1),
 			unit.health,
 			unit.max_health,
