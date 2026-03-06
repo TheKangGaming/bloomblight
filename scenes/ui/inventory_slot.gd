@@ -23,6 +23,10 @@ var item_map: Dictionary = {}
 var _focus_tooltip: PanelContainer
 const FOCUS_TINT := Color(1.0, 0.95, 0.72, 1.0)
 const DEFAULT_TINT := Color(1, 1, 1, 1)
+const FOCUS_BORDER_COLOR := Color(1.0, 0.88, 0.3, 1.0)
+const DEFAULT_BORDER_COLOR := Color(0.23, 0.23, 0.23, 0.95)
+const FOCUS_BG_COLOR := Color(0.24, 0.22, 0.13, 0.95)
+const DEFAULT_BG_COLOR := Color(0.12, 0.12, 0.12, 0.86)
 
 func _ready():
 	focus_mode = Control.FOCUS_ALL
@@ -30,6 +34,7 @@ func _ready():
 	focus_exited.connect(_on_focus_exited)
 	mouse_entered.connect(_on_focus_entered)
 	mouse_exited.connect(_on_focus_exited)
+	_apply_focus_visual(false)
 
 	# Define where everything lives. 
 	# Format: ItemEnum : [TextureResource, Vector2i(Column, Row)]
@@ -90,12 +95,29 @@ func _exit_tree() -> void:
 	_hide_focus_tooltip(true)
 
 func _on_focus_entered() -> void:
-	self_modulate = FOCUS_TINT
+	_apply_focus_visual(true)
 	_show_focus_tooltip()
 
 func _on_focus_exited() -> void:
-	self_modulate = DEFAULT_TINT
+	_apply_focus_visual(false)
 	_hide_focus_tooltip()
+
+func _apply_focus_visual(is_focused: bool) -> void:
+	self_modulate = FOCUS_TINT if is_focused else DEFAULT_TINT
+
+	var style := StyleBoxFlat.new()
+	style.content_margin_left = 2
+	style.content_margin_right = 2
+	style.content_margin_top = 2
+	style.content_margin_bottom = 2
+	style.bg_color = FOCUS_BG_COLOR if is_focused else DEFAULT_BG_COLOR
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = FOCUS_BORDER_COLOR if is_focused else DEFAULT_BORDER_COLOR
+
+	add_theme_stylebox_override("panel", style)
 
 func _show_focus_tooltip() -> void:
 	if tooltip_text.is_empty():
