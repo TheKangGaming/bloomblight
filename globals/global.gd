@@ -2,6 +2,36 @@ extends Node
 
 func _ready() -> void:
 	ensure_player_stat_formats()
+	_sync_player_progression_from_combat_scene_template()
+
+
+func _sync_player_progression_from_combat_scene_template() -> void:
+	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
+	if combat_template == null:
+		return
+
+	var combat_root := combat_template.instantiate()
+	if combat_root == null:
+		return
+
+	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
+	if savannah == null:
+		combat_root.queue_free()
+		return
+
+	var template_level := int(savannah.get("level"))
+	if template_level > get_player_level():
+		apply_player_auto_levels(template_level - get_player_level())
+
+	var character_data = savannah.get("character_data")
+	if character_data != null:
+		var class_data = character_data.get("class_data")
+		if class_data != null:
+			var template_class_name := String(class_data.get("metadata_name"))
+			if not template_class_name.strip_edges().is_empty():
+				set_player_class_name(template_class_name)
+
+	combat_root.queue_free()
 
 
 signal inventory_updated
@@ -11,6 +41,7 @@ var saved_farm_scene: Node = null
 
 var returning_from_combat: bool = false
 var player_level: int = 1
+var player_class_name: String = "Deserter"
 var last_battle_result := {
 	"victory": false,
 	"enemies_defeated": 0,
@@ -339,6 +370,19 @@ func get_player_level() -> int:
 func set_player_level(new_level: int) -> void:
 	player_level = maxi(new_level, 1)
 
+
+
+
+func get_player_class_name() -> String:
+	if player_class_name.strip_edges().is_empty():
+		return "Unknown"
+	return player_class_name
+
+
+func set_player_class_name(new_class_name: String) -> void:
+	player_class_name = new_class_name.strip_edges()
+	if player_class_name.is_empty():
+		player_class_name = "Unknown"
 
 func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
 	ensure_player_stat_formats()

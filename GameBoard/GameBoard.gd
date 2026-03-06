@@ -33,6 +33,9 @@ var _phase_banner_layer: CanvasLayer = null
 var _results_canvas: CanvasLayer = null
 var _results_return_button: Button = null
 var _battle_ended: bool = false
+var _unit_hover_tooltip: CanvasLayer = null
+var _unit_hover_panel: PanelContainer = null
+var _unit_hover_label: RichTextLabel = null
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -54,6 +57,7 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu_toggle"):
+		_hide_unit_hover_tooltip()
 		_show_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
@@ -355,9 +359,12 @@ func _show_pause_menu() -> void:
 	if has_node("PauseMenu"):
 		return # Menu is already open, do nothing!
 		
+	_hide_unit_hover_tooltip()
 	var pause_menu = PauseMenu.instantiate()
 	pause_menu.name = "PauseMenu" # Explicitly name it so has_node() works
 	add_child(pause_menu)
+	if pause_menu.has_method("_set_units"):
+		pause_menu.call("_set_units", _units.values())
 	if pause_menu.has_method("_reset_menu_focus"):
 		pause_menu.call_deferred("_reset_menu_focus")
 
@@ -488,6 +495,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 ## Updates the interactive path's drawing if there's an active and selected unit.
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected:
+		_hide_unit_hover_tooltip()
 		if _walkable_cells.has(new_cell):
 			if _unit_path._pathfinder == null:
 				_unit_path.initialize(_walkable_cells)
@@ -496,6 +504,11 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 			_unit_path.stop()
 			
 	else:
+		if _units.has(new_cell):
+			_show_unit_hover_tooltip(_units[new_cell], new_cell)
+		else:
+			_hide_unit_hover_tooltip()
+
 		# CRITICAL FIX: Only show hover range if the unit hasn't taken their turn yet!
 		if _units.has(new_cell) and not _units[new_cell].is_wait:
 			_hover_display(new_cell)
@@ -796,6 +809,75 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 
 ## Generates a classic Strategy RPG preview window on the fly
 ## Generates a miniature, scaled-down Strategy RPG preview window
+
+
+func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
+	if not is_instance_valid(unit):
+		_hide_unit_hover_tooltip()
+		return
+
+	if _unit_hover_tooltip == null:
+		_unit_hover_tooltip = CanvasLayer.new()
+		add_child(_unit_hover_tooltip)
+
+	if _unit_hover_panel == null:
+		_unit_hover_panel = PanelContainer.new()
+		_unit_hover_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_unit_hover_tooltip.add_child(_unit_hover_panel)
+
+		var margin := MarginContainer.new()
+		margin.add_theme_constant_override("margin_left", 6)
+		margin.add_theme_constant_override("margin_right", 6)
+		margin.add_theme_constant_override("margin_top", 4)
+		margin.add_theme_constant_override("margin_bottom", 4)
+		_unit_hover_panel.add_child(margin)
+
+		_unit_hover_label = RichTextLabel.new()
+		_unit_hover_label.bbcode_enabled = true
+		_unit_hover_label.fit_content = true
+		_unit_hover_label.scroll_active = false
+		_unit_hover_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		_unit_hover_label.add_theme_font_size_override("normal_font_size", 10)
+		margin.add_child(_unit_hover_label)
+
+	var unit_class_name := "Unknown"
+	if unit.character_data != null and unit.character_data.class_data != null:
+		unit_class_name = String(unit.character_data.class_data.metadata_name)
+		if unit_class_name.is_empty():
+			unit_class_name = String(unit.character_data.display_name)
+
+	var team_name := "Enemy" if unit.is_enemy else "Ally"
+	var display_name := "Unit"
+	if unit.character_data != null and not String(unit.character_data.display_name).is_empty():
+		display_name = String(unit.character_data.display_name)
+
+	_unit_hover_label.text = "[b]%s[/b] (%s)\nClass: %s  Lv.%d\nHP: %d/%d  STR: %d  DEF: %d" % [
+		display_name,
+		team_name,
+		unit_class_name,
+		maxi(unit.level, 1),
+		unit.health,
+		unit.max_health,
+		unit.strength,
+		unit.defense,
+	]
+
+	var tooltip_size := _unit_hover_label.get_combined_minimum_size() + Vector2(12.0, 8.0)
+	_unit_hover_panel.custom_minimum_size = tooltip_size
+
+	var screen_point: Vector2 = grid.calculate_map_position(cell)
+	var target_pos: Vector2 = screen_point + Vector2(20, -40)
+	var viewport_size: Vector2 = get_viewport_rect().size
+	target_pos.x = clampf(target_pos.x, 8.0, max(8.0, viewport_size.x - tooltip_size.x - 8.0))
+	target_pos.y = clampf(target_pos.y, 8.0, max(8.0, viewport_size.y - tooltip_size.y - 8.0))
+	_unit_hover_panel.position = target_pos.round()
+	_unit_hover_panel.visible = true
+
+
+func _hide_unit_hover_tooltip() -> void:
+	if _unit_hover_panel != null:
+		_unit_hover_panel.visible = false
+
 func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	_hide_combat_forecast() 
 	
