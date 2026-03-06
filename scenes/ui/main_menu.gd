@@ -125,7 +125,7 @@ func _can_trigger_navigation(event: InputEvent, actions: Array[StringName], nav_
 		return false
 
 	for action in actions:
-		if InputMap.has_action(action) and event.is_action_just_pressed(action):
+		if InputMap.has_action(action) and Input.is_action_just_pressed(action):
 			_last_nav_action = nav_key
 			_last_nav_time_ms = Time.get_ticks_msec()
 			return true
