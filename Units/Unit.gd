@@ -225,6 +225,9 @@ func _load_player_stats() -> void:
 		Global.apply_player_auto_levels(level - global_player_level)
 	global_player_level = Global.get_player_level()
 	level = global_player_level
+	if character_data != null and character_data.class_data != null:
+		Global.set_player_class_name(String(character_data.class_data.metadata_name))
+
 	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
 	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
 	current_stats.apply_player_snapshot(permanent_stats, temporary_modifiers)

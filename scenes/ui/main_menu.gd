@@ -274,13 +274,10 @@ func update_inventory():
 			
 func update_status_page():
 	Global.ensure_player_stat_formats()
-	var player_snapshot: Dictionary = Global.get_player_combat_snapshot()
+	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
+	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
 
-	var format_stat = func(stat_name: String, base_val: int) -> String:
-		var buff_val = 0
-		if Global.active_food_buff.item != null:
-			# .get() safely looks for the stat, returning 0 if the key is missing
-			buff_val = Global.active_food_buff.stats.get(stat_name, 0)
+	var format_stat = func(stat_name: String, base_val: int, buff_val: int) -> String:
 			
 		if buff_val > 0:
 			return "%s: %d [color=green](+%d)[/color]" % [stat_name, base_val, buff_val]
@@ -289,13 +286,13 @@ func update_status_page():
 		else:
 			return "%s: %d" % [stat_name, base_val]
 
-	# Pull from the normalized combat snapshot so menu stats always match runtime values.
-	lbl_vit.text = format_stat.call("VIT", int(player_snapshot.get("VIT", 0)))
-	lbl_str.text = format_stat.call("STR", int(player_snapshot.get("STR", 0)))
-	lbl_dex.text = format_stat.call("DEX", int(player_snapshot.get("DEX", 0)))
-	lbl_int.text = format_stat.call("INT", int(player_snapshot.get("INT", 0)))
-	lbl_spd.text = format_stat.call("SPD", int(player_snapshot.get("SPD", 0)))
-	lbl_mov.text = format_stat.call("MOV", int(player_snapshot.get("MOV", 0)))
+	# Show permanent value plus temporary modifier, mirroring combat calculations.
+	lbl_vit.text = format_stat.call("VIT", int(permanent_stats.get("VIT", 0)), int(temporary_modifiers.get("VIT", 0)))
+	lbl_str.text = format_stat.call("STR", int(permanent_stats.get("STR", 0)), int(temporary_modifiers.get("STR", 0)))
+	lbl_dex.text = format_stat.call("DEX", int(permanent_stats.get("DEX", 0)), int(temporary_modifiers.get("DEX", 0)))
+	lbl_int.text = format_stat.call("INT", int(permanent_stats.get("INT", 0)), int(temporary_modifiers.get("INT", 0)))
+	lbl_spd.text = format_stat.call("SPD", int(permanent_stats.get("SPD", 0)), int(temporary_modifiers.get("SPD", 0)))
+	lbl_mov.text = format_stat.call("MOV", int(permanent_stats.get("MOV", 0)), int(temporary_modifiers.get("MOV", 0)))
 	lbl_level.text = "Level: %d" % Global.get_player_level()
 	lbl_class.text = "Class: %s" % _resolve_player_class_name()
 	
@@ -309,6 +306,8 @@ func update_status_page():
 func _resolve_player_class_name() -> String:
 	var scene_root := get_tree().current_scene
 	if scene_root == null:
+		if Global.has_method("get_player_class_name"):
+			return String(Global.get_player_class_name())
 		return "Unknown"
 
 	for node in scene_root.find_children("*", "Unit", true, false):
@@ -317,8 +316,12 @@ func _resolve_player_class_name() -> String:
 			continue
 
 		if unit.character_data != null and unit.character_data.class_data != null:
-			var unit_class_name := String(unit.character_data.class_data.metadata_name)
+			var unit_class_name := String(unit.character_data.class_data.metadata_name).strip_edges()
 			if not unit_class_name.is_empty():
+				Global.set_player_class_name(unit_class_name)
 				return unit_class_name
+
+	if Global.has_method("get_player_class_name"):
+		return String(Global.get_player_class_name())
 
 	return "Unknown"

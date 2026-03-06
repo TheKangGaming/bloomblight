@@ -11,6 +11,7 @@ var saved_farm_scene: Node = null
 
 var returning_from_combat: bool = false
 var player_level: int = 1
+var player_class_name: String = "Deserter"
 var last_battle_result := {
 	"victory": false,
 	"enemies_defeated": 0,
@@ -339,6 +340,19 @@ func get_player_level() -> int:
 func set_player_level(new_level: int) -> void:
 	player_level = maxi(new_level, 1)
 
+
+
+
+func get_player_class_name() -> String:
+	if player_class_name.strip_edges().is_empty():
+		return "Unknown"
+	return player_class_name
+
+
+func set_player_class_name(new_class_name: String) -> void:
+	player_class_name = new_class_name.strip_edges()
+	if player_class_name.is_empty():
+		player_class_name = "Unknown"
 
 func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
 	ensure_player_stat_formats()
