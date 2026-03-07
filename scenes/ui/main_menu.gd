@@ -307,6 +307,10 @@ func update_status_page():
 	Global.ensure_player_stat_formats()
 	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
 	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
+	var player_unit := _find_player_unit()
+	var class_data := _resolve_player_class_data(player_unit)
+	var weapon := _resolve_player_weapon(player_unit)
+	var uses_magic_damage := _class_uses_magic_damage(class_data)
 
 	var format_stat = func(stat_name: String, base_val: int, buff_val: int) -> String:
 			
@@ -325,15 +329,14 @@ func update_status_page():
 	lbl_spd.bbcode_text = format_stat.call("SPD", int(permanent_stats.get("SPD", 0)), int(temporary_modifiers.get("SPD", 0)))
 	lbl_mov.bbcode_text = format_stat.call("MOV", int(permanent_stats.get("MOV", 0)), int(temporary_modifiers.get("MOV", 0)))
 
-	var player_unit := _find_player_unit()
 	var max_hp_value := int(permanent_stats.get("MAX_HP", permanent_stats.get("HP", 0))) + int(temporary_modifiers.get("MAX_HP", 0)) + (int(temporary_modifiers.get("VIT", 0)) * 2)
 	lbl_hp.bbcode_text = "HP: %d/%d" % [int(permanent_stats.get("HP", 0)), max_hp_value]
 	lbl_def.bbcode_text = format_stat.call("DEF", int(permanent_stats.get("DEF", 0)), int(temporary_modifiers.get("DEF", 0)))
-	lbl_dmg.bbcode_text = "DMG: %d" % _resolve_player_damage_display(player_unit, permanent_stats, temporary_modifiers)
+	lbl_dmg.bbcode_text = _build_attack_preview_text(player_unit, permanent_stats, temporary_modifiers, weapon, uses_magic_damage)
 
 	lbl_level.text = "Level: %d" % Global.get_player_level()
 	lbl_class.text = "Class: %s" % _resolve_player_class_name()
-	_update_equipment_visuals(player_unit)
+	_update_equipment_visuals(player_unit, weapon)
 	
 	# Update Meal Text
 	if Global.active_food_buff.item != null:
@@ -378,30 +381,101 @@ func _find_player_unit() -> Unit:
 	return null
 
 
-func _resolve_player_damage_display(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary) -> int:
-	var weapon: WeaponData = null
-	var uses_magic_damage := false
-	var base_attack := int(permanent_stats.get("STR", 0)) + int(temporary_modifiers.get("STR", 0))
+func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary, weapon: WeaponData, uses_magic_damage: bool) -> String:
+	var attack_stat_name := "INT" if uses_magic_damage else "STR"
+	var attack_stat_total := int(permanent_stats.get(attack_stat_name, 0)) + int(temporary_modifiers.get(attack_stat_name, 0))
 
-	if player_unit != null and player_unit.character_data != null:
-		weapon = player_unit.character_data.equipped_weapon
-		uses_magic_damage = player_unit._uses_magic_damage()
-		base_attack = player_unit.int_stat if uses_magic_damage else player_unit.strength
+	if player_unit != null:
+		attack_stat_total = player_unit.int_stat if uses_magic_damage else player_unit.strength
 
-	if weapon == null:
-		var global_weapon = Global.equipment.get("Weapon", null)
-		if global_weapon is WeaponData:
-			weapon = global_weapon
-
+	var weapon_bonus_key := "intelligence" if uses_magic_damage else "strength"
+	var weapon_bonus := 0
 	var weapon_might := 2
 	if weapon != null:
 		weapon_might = int(weapon.might)
-		if uses_magic_damage:
-			base_attack += int(weapon.stat_bonuses.get("intelligence", 0))
-		else:
-			base_attack += int(weapon.stat_bonuses.get("strength", 0))
+		weapon_bonus = int(weapon.stat_bonuses.get(weapon_bonus_key, 0))
 
-	return maxi(0, base_attack + weapon_might)
+	var attack_total := maxi(0, attack_stat_total + weapon_bonus + weapon_might)
+	var stat_component_label := "%s %d" % [attack_stat_name, attack_stat_total]
+	if weapon_bonus != 0:
+		stat_component_label += " (%+d)" % weapon_bonus
+
+	return "ATK: %d\n[color=gray]%s + MT %d[/color]" % [attack_total, stat_component_label, weapon_might]
+
+
+func _resolve_player_weapon(player_unit: Unit) -> WeaponData:
+	if player_unit != null and player_unit.character_data != null and player_unit.character_data.equipped_weapon != null:
+		return player_unit.character_data.equipped_weapon
+
+	var global_weapon = Global.equipment.get("Weapon", null)
+	if global_weapon is WeaponData:
+		return global_weapon
+
+	return _resolve_player_weapon_from_combat_template()
+
+
+func _resolve_player_weapon_from_combat_template() -> WeaponData:
+	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
+	if combat_template == null:
+		return null
+
+	var combat_root := combat_template.instantiate()
+	if combat_root == null:
+		return null
+
+	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
+	if savannah == null:
+		combat_root.queue_free()
+		return null
+
+	var character_data: CharacterData = savannah.get("character_data") as CharacterData
+	if character_data != null and character_data.equipped_weapon != null:
+		var template_weapon := character_data.equipped_weapon
+		combat_root.queue_free()
+		return template_weapon
+
+	combat_root.queue_free()
+	return null
+
+
+func _resolve_player_class_data(player_unit: Unit) -> ClassData:
+	if player_unit != null and player_unit.character_data != null and player_unit.character_data.class_data != null:
+		return player_unit.character_data.class_data
+
+	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
+	if combat_template == null:
+		return null
+
+	var combat_root := combat_template.instantiate()
+	if combat_root == null:
+		return null
+
+	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
+	if savannah == null:
+		combat_root.queue_free()
+		return null
+
+	var character_data: CharacterData = savannah.get("character_data") as CharacterData
+	if character_data != null and character_data.class_data != null:
+		var template_class_data := character_data.class_data
+		combat_root.queue_free()
+		return template_class_data
+
+	combat_root.queue_free()
+	return null
+
+
+func _class_uses_magic_damage(class_data: ClassData) -> bool:
+	if class_data == null:
+		return false
+
+	var damage_stat := String(class_data.primary_damage_stat).to_lower()
+	if damage_stat == "intelligence" or damage_stat == "int":
+		return true
+	if damage_stat == "strength" or damage_stat == "str":
+		return false
+
+	return String(class_data.role).to_lower().contains("mage")
 
 
 func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
@@ -425,8 +499,10 @@ func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
 	return null
 
 
-func _update_equipment_visuals(player_unit: Unit) -> void:
+func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = null) -> void:
 	var weapon_icon := _resolve_equipment_icon("Weapon", player_unit)
+	if weapon_icon == null and resolved_weapon != null:
+		weapon_icon = resolved_weapon.icon
 	var armor_icon := _resolve_equipment_icon("Armor", player_unit)
 	var accessory_icon := _resolve_equipment_icon("Accessory", player_unit)
 
