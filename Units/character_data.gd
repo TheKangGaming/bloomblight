@@ -10,3 +10,6 @@ extends Resource
 
 @export var portrait: Texture2D
 @export var scene_reference: PackedScene
+
+@export_group("Equipment")
+@export var equipped_weapon: WeaponData

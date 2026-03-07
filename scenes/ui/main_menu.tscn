@@ -144,6 +144,27 @@ bbcode_enabled = true
 text = "MOV: 4"
 fit_content = true
 
+[node name="LblHP" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 6
+bbcode_enabled = true
+text = "HP: 20/20"
+fit_content = true
+
+[node name="LblDMG" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 6
+bbcode_enabled = true
+text = "DMG: 7"
+fit_content = true
+
+[node name="LblDEF" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 6
+bbcode_enabled = true
+text = "DEF: 2"
+fit_content = true
+
 [node name="EquipMealColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1787477166]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -167,14 +188,20 @@ alignment = 1
 [node name="SlotWeapon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1796073536]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=350771874]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1711539566]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="MealSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=2087827878]
 layout_mode = 2
