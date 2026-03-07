@@ -11,10 +11,16 @@ extends Control
 @onready var lbl_int: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblINT
 @onready var lbl_spd: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSPD
 @onready var lbl_mov: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblMOV
+@onready var lbl_hp: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblHP
+@onready var lbl_dmg: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDMG
+@onready var lbl_def: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDEF
 @onready var lbl_class: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblClass
 @onready var lbl_level: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblLevel
 
-# Column 3: Meal
+# Column 3: Equipment + Meal
+@onready var slot_weapon: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotWeapon
+@onready var slot_armor: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotArmor
+@onready var slot_accessory: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotAccessory
 @onready var lbl_food = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox/LblFoodBuff
 
 # Preload the slot scene
@@ -318,8 +324,16 @@ func update_status_page():
 	lbl_int.bbcode_text = format_stat.call("INT", int(permanent_stats.get("INT", 0)), int(temporary_modifiers.get("INT", 0)))
 	lbl_spd.bbcode_text = format_stat.call("SPD", int(permanent_stats.get("SPD", 0)), int(temporary_modifiers.get("SPD", 0)))
 	lbl_mov.bbcode_text = format_stat.call("MOV", int(permanent_stats.get("MOV", 0)), int(temporary_modifiers.get("MOV", 0)))
+
+	var player_unit := _find_player_unit()
+	var max_hp_value := int(permanent_stats.get("MAX_HP", permanent_stats.get("HP", 0))) + int(temporary_modifiers.get("MAX_HP", 0)) + (int(temporary_modifiers.get("VIT", 0)) * 2)
+	lbl_hp.bbcode_text = "HP: %d/%d" % [int(permanent_stats.get("HP", 0)), max_hp_value]
+	lbl_def.bbcode_text = format_stat.call("DEF", int(permanent_stats.get("DEF", 0)), int(temporary_modifiers.get("DEF", 0)))
+	lbl_dmg.bbcode_text = "DMG: %d" % _resolve_player_damage_display(player_unit, permanent_stats, temporary_modifiers)
+
 	lbl_level.text = "Level: %d" % Global.get_player_level()
 	lbl_class.text = "Class: %s" % _resolve_player_class_name()
+	_update_equipment_visuals(player_unit)
 	
 	# Update Meal Text
 	if Global.active_food_buff.item != null:
@@ -350,3 +364,79 @@ func _resolve_player_class_name() -> String:
 		return String(Global.get_player_class_name())
 
 	return "Unknown"
+
+func _find_player_unit() -> Unit:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return null
+
+	for node in scene_root.find_children("*", "Unit", true, false):
+		var unit := node as Unit
+		if unit != null and unit.is_player:
+			return unit
+
+	return null
+
+
+func _resolve_player_damage_display(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary) -> int:
+	var weapon: WeaponData = null
+	var uses_magic_damage := false
+	var base_attack := int(permanent_stats.get("STR", 0)) + int(temporary_modifiers.get("STR", 0))
+
+	if player_unit != null and player_unit.character_data != null:
+		weapon = player_unit.character_data.equipped_weapon
+		uses_magic_damage = player_unit._uses_magic_damage()
+		base_attack = player_unit.int_stat if uses_magic_damage else player_unit.strength
+
+	if weapon == null:
+		var global_weapon = Global.equipment.get("Weapon", null)
+		if global_weapon is WeaponData:
+			weapon = global_weapon
+
+	var weapon_might := 2
+	if weapon != null:
+		weapon_might = int(weapon.might)
+		if uses_magic_damage:
+			base_attack += int(weapon.stat_bonuses.get("intelligence", 0))
+		else:
+			base_attack += int(weapon.stat_bonuses.get("strength", 0))
+
+	return maxi(0, base_attack + weapon_might)
+
+
+func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
+	var equipped_entry = Global.equipment.get(slot_name, null)
+	if slot_name == "Weapon" and player_unit != null and player_unit.character_data != null and player_unit.character_data.equipped_weapon != null:
+		equipped_entry = player_unit.character_data.equipped_weapon
+
+	if equipped_entry is WeaponData:
+		return equipped_entry.icon
+
+	if equipped_entry is Resource and equipped_entry.get("icon") != null:
+		return equipped_entry.get("icon")
+
+	if equipped_entry is Dictionary and equipped_entry.has("icon"):
+		var icon_entry = equipped_entry["icon"]
+		if icon_entry is Texture2D:
+			return icon_entry
+		if icon_entry is String and not String(icon_entry).is_empty():
+			return load(String(icon_entry))
+
+	return null
+
+
+func _update_equipment_visuals(player_unit: Unit) -> void:
+	var weapon_icon := _resolve_equipment_icon("Weapon", player_unit)
+	var armor_icon := _resolve_equipment_icon("Armor", player_unit)
+	var accessory_icon := _resolve_equipment_icon("Accessory", player_unit)
+
+	slot_weapon.texture = weapon_icon
+	slot_armor.texture = armor_icon
+	slot_accessory.texture = accessory_icon
+
+	slot_weapon.tooltip_text = "Weapon"
+	slot_armor.tooltip_text = "Armor"
+	slot_accessory.tooltip_text = "Accessory"
+
+	if player_unit != null and player_unit.character_data != null and player_unit.character_data.equipped_weapon != null:
+		slot_weapon.tooltip_text = "Weapon: %s" % String(player_unit.character_data.equipped_weapon.weapon_name)
