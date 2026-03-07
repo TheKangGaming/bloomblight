@@ -34,7 +34,11 @@ var move_range: int:
 
 var attack_range: int:
 	get:
-		return current_stats.atk_rng
+		if character_data != null and character_data.equipped_weapon != null:
+			return maxi(1, int(character_data.equipped_weapon.attack_range))
+		if current_stats != null:
+			return maxi(1, current_stats.atk_rng)
+		return 1
 
 ## Texture representing the unit.
 @export var skin: Texture:
@@ -245,11 +249,26 @@ func _sync_player_hp_to_global() -> void:
 
 ## Calculates and returns combat math without actually executing the attack
 func get_combat_stats(target: Unit) -> Dictionary:
-	var hit_chance = clamp(80 + (dexterity * 2) - (target.speed * 2), 0, 100)
+	var equipped_weapon: WeaponData = null
+	if character_data != null:
+		equipped_weapon = character_data.equipped_weapon
+
+	var weapon_might := 2
+	var weapon_hit := 70
+	if equipped_weapon != null:
+		weapon_might = int(equipped_weapon.might)
+		weapon_hit = int(equipped_weapon.hit_rate)
+
+	var attacker_dex_bonus := _get_weapon_bonus_stat(equipped_weapon, "dexterity")
+	var hit_chance = clamp(weapon_hit + ((dexterity + attacker_dex_bonus) * 2) - (target.speed * 2), 0, 100)
 	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
-	var weapon_might = 5 # Simulating a basic Iron Axe
 	var is_magic_damage := _uses_magic_damage()
 	var attack_stat := int_stat if is_magic_damage else strength
+	if is_magic_damage:
+		attack_stat += _get_weapon_bonus_stat(equipped_weapon, "intelligence")
+	else:
+		attack_stat += _get_weapon_bonus_stat(equipped_weapon, "strength")
+
 	var defense_stat := target.magic_defense if is_magic_damage else target.defense
 	var actual_damage = max(0, (attack_stat + weapon_might) - defense_stat)
 
@@ -259,6 +278,13 @@ func get_combat_stats(target: Unit) -> Dictionary:
 		"damage": actual_damage,
 		"uses_magic_damage": is_magic_damage
 	}
+
+
+func _get_weapon_bonus_stat(weapon: WeaponData, key: String) -> int:
+	if weapon == null or weapon.stat_bonuses.is_empty():
+		return 0
+
+	return int(weapon.stat_bonuses.get(key, 0))
 
 
 func _uses_magic_damage() -> bool:
