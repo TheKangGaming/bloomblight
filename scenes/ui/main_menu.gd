@@ -499,6 +499,38 @@ func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
 	return null
 
 
+
+func _build_weapon_tooltip_text(weapon: WeaponData) -> String:
+	if weapon == null:
+		return "Weapon"
+
+	var lines: PackedStringArray = ["Weapon: %s" % String(weapon.weapon_name)]
+	lines.append("MT %d | HIT %d | RNG %d" % [int(weapon.might), int(weapon.hit_rate), int(weapon.attack_range)])
+
+	var bonus_labels := {
+		"strength": "STR",
+		"intelligence": "INT",
+		"dexterity": "DEX",
+		"speed": "SPD",
+		"defense": "DEF",
+		"magic_defense": "MDEF"
+	}
+
+	var bonus_parts: PackedStringArray = []
+	for bonus_key in ["strength", "intelligence", "dexterity", "speed", "defense", "magic_defense"]:
+		var bonus_value := int(weapon.stat_bonuses.get(bonus_key, 0))
+		if bonus_value != 0:
+			bonus_parts.append("%s %+d" % [String(bonus_labels.get(bonus_key, bonus_key.to_upper())), bonus_value])
+
+	if not bonus_parts.is_empty():
+		lines.append("Bonuses: " + ", ".join(bonus_parts))
+
+	if not String(weapon.description).strip_edges().is_empty():
+		lines.append(String(weapon.description))
+
+	return "\n".join(lines)
+
+
 func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = null) -> void:
 	var weapon_icon := _resolve_equipment_icon("Weapon", player_unit)
 	if weapon_icon == null and resolved_weapon != null:
@@ -510,9 +542,6 @@ func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = 
 	slot_armor.texture = armor_icon
 	slot_accessory.texture = accessory_icon
 
-	slot_weapon.tooltip_text = "Weapon"
+	slot_weapon.tooltip_text = _build_weapon_tooltip_text(resolved_weapon)
 	slot_armor.tooltip_text = "Armor"
 	slot_accessory.tooltip_text = "Accessory"
-
-	if player_unit != null and player_unit.character_data != null and player_unit.character_data.equipped_weapon != null:
-		slot_weapon.tooltip_text = "Weapon: %s" % String(player_unit.character_data.equipped_weapon.weapon_name)
