@@ -19,6 +19,7 @@
 [ext_resource type="Resource" path="res://Units/Data/Deserter.tres" id="15_42768"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
+[ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="18_ddai4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -343,7 +344,7 @@ display_name = "Orc"
 class_data = ExtResource("13_vtv1r")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_vtv1r"]
+[sub_resource type="Resource" id="Resource_mwyqx"]
 script = ExtResource("13_d3c05")
 hp = 24
 max_hp = 24
@@ -391,9 +392,10 @@ minimum_gain_intervals = {
 script = ExtResource("16_vtv1r")
 display_name = "Savannah"
 class_data = ExtResource("15_42768")
+equipped_weapon = ExtResource("18_ddai4")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_mwyqx"]
+[sub_resource type="Resource" id="Resource_hejk3"]
 script = ExtResource("13_d3c05")
 str = 6
 physical_def = 5
@@ -483,12 +485,12 @@ grid = ExtResource("2_gh08p")
 y_sort_enabled = true
 position = Vector2(375, 212)
 character_data = SubResource("Resource_ddai4")
-current_stats = SubResource("Resource_vtv1r")
+current_stats = SubResource("Resource_mwyqx")
 
 [node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
-current_stats = SubResource("Resource_mwyqx")
+current_stats = SubResource("Resource_hejk3")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
