@@ -287,6 +287,7 @@ func ensure_player_stat_formats() -> void:
 
 	temporary_stat_modifiers.food = _normalize_temporary_bucket(active_food_buff.get("stats", temporary_stat_modifiers.get("food", {})))
 	temporary_stat_modifiers.equipment = _normalize_temporary_bucket(temporary_stat_modifiers.get("equipment", {}))
+	_refresh_equipment_temporary_modifiers()
 	active_food_buff.stats = temporary_stat_modifiers.food
 
 	_sync_legacy_player_stats_snapshot()
@@ -316,6 +317,53 @@ func _upgrade_legacy_player_stats(legacy_stats: Dictionary) -> void:
 	active_food_buff.stats = temporary_stat_modifiers.food
 
 	_sync_legacy_player_stats_snapshot()
+
+
+func _refresh_equipment_temporary_modifiers() -> void:
+	var combined_modifiers := _build_stat_template()
+	for slot_name in ["Weapon", "Armor", "Accessory"]:
+		var slot_entry = equipment.get(slot_name, null)
+		var slot_modifiers := _extract_equipment_stat_modifiers(slot_entry)
+		for stat_name in TEMP_MODIFIER_KEYS:
+			combined_modifiers[stat_name] = int(combined_modifiers.get(stat_name, 0)) + int(slot_modifiers.get(stat_name, 0))
+		combined_modifiers["MAX_HP"] = int(combined_modifiers.get("MAX_HP", 0)) + int(slot_modifiers.get("MAX_HP", 0))
+
+	temporary_stat_modifiers.equipment = _normalize_temporary_bucket(combined_modifiers)
+
+
+func _extract_equipment_stat_modifiers(slot_entry) -> Dictionary:
+	var resolved := _build_stat_template()
+	if slot_entry == null:
+		return resolved
+
+	var stat_bonuses: Dictionary = {}
+	if slot_entry is Resource:
+		var resource_bonuses = slot_entry.get("stat_bonuses")
+		if resource_bonuses is Dictionary:
+			stat_bonuses = resource_bonuses
+	elif slot_entry is Dictionary:
+		if slot_entry.has("stat_bonuses") and slot_entry["stat_bonuses"] is Dictionary:
+			stat_bonuses = slot_entry["stat_bonuses"]
+		else:
+			stat_bonuses = slot_entry
+
+	var key_map := {
+		"strength": "STR",
+		"defense": "DEF",
+		"magic_defense": "MDEF",
+		"dexterity": "DEX",
+		"intelligence": "INT",
+		"speed": "SPD",
+		"move_range": "MOV",
+		"attack_range": "ATK_RNG",
+		"max_health": "MAX_HP"
+	}
+
+	for source_key in key_map.keys():
+		var target_key := String(key_map[source_key])
+		resolved[target_key] = int(resolved.get(target_key, 0)) + int(stat_bonuses.get(source_key, 0))
+
+	return resolved
 
 
 func get_player_permanent_totals() -> Dictionary:

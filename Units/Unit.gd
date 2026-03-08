@@ -259,15 +259,15 @@ func get_combat_stats(target: Unit) -> Dictionary:
 		weapon_might = int(equipped_weapon.might)
 		weapon_hit = int(equipped_weapon.hit_rate)
 
-	var attacker_dex_bonus := _get_weapon_bonus_stat(equipped_weapon, "dexterity")
+	var attacker_dex_bonus := _get_equipment_bonus_stat("dexterity")
 	var hit_chance = clamp(weapon_hit + ((dexterity + attacker_dex_bonus) * 2) - (target.speed * 2), 0, 100)
 	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
 	var is_magic_damage := _uses_magic_damage()
 	var attack_stat := int_stat if is_magic_damage else strength
 	if is_magic_damage:
-		attack_stat += _get_weapon_bonus_stat(equipped_weapon, "intelligence")
+		attack_stat += _get_equipment_bonus_stat("intelligence")
 	else:
-		attack_stat += _get_weapon_bonus_stat(equipped_weapon, "strength")
+		attack_stat += _get_equipment_bonus_stat("strength")
 
 	var defense_stat := target.magic_defense if is_magic_damage else target.defense
 	var actual_damage = max(0, (attack_stat + weapon_might) - defense_stat)
@@ -280,11 +280,26 @@ func get_combat_stats(target: Unit) -> Dictionary:
 	}
 
 
-func _get_weapon_bonus_stat(weapon: WeaponData, key: String) -> int:
-	if weapon == null or weapon.stat_bonuses.is_empty():
+func _get_equipment_bonus_stat(key: String) -> int:
+	if character_data == null:
 		return 0
 
-	return int(weapon.stat_bonuses.get(key, 0))
+	var total := 0
+	total += _get_stat_bonus_from_item(character_data.equipped_weapon, key)
+	total += _get_stat_bonus_from_item(character_data.equipped_armor, key)
+	total += _get_stat_bonus_from_item(character_data.equipped_accessory, key)
+	return total
+
+
+func _get_stat_bonus_from_item(item: Resource, key: String) -> int:
+	if item == null:
+		return 0
+
+	var bonuses = item.get("stat_bonuses")
+	if bonuses is Dictionary:
+		return int((bonuses as Dictionary).get(key, 0))
+
+	return 0
 
 
 func _uses_magic_damage() -> bool:

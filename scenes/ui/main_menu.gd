@@ -438,6 +438,55 @@ func _resolve_player_weapon_from_combat_template() -> WeaponData:
 	return null
 
 
+
+
+func _resolve_player_armor_from_combat_template() -> ArmorData:
+	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
+	if combat_template == null:
+		return null
+
+	var combat_root := combat_template.instantiate()
+	if combat_root == null:
+		return null
+
+	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
+	if savannah == null:
+		combat_root.queue_free()
+		return null
+
+	var character_data: CharacterData = savannah.get("character_data") as CharacterData
+	if character_data != null and character_data.equipped_armor != null:
+		var template_armor := character_data.equipped_armor
+		combat_root.queue_free()
+		return template_armor
+
+	combat_root.queue_free()
+	return null
+
+
+func _resolve_player_accessory_from_combat_template() -> AccessoryData:
+	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
+	if combat_template == null:
+		return null
+
+	var combat_root := combat_template.instantiate()
+	if combat_root == null:
+		return null
+
+	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
+	if savannah == null:
+		combat_root.queue_free()
+		return null
+
+	var character_data: CharacterData = savannah.get("character_data") as CharacterData
+	if character_data != null and character_data.equipped_accessory != null:
+		var template_accessory := character_data.equipped_accessory
+		combat_root.queue_free()
+		return template_accessory
+
+	combat_root.queue_free()
+	return null
+
 func _resolve_player_class_data(player_unit: Unit) -> ClassData:
 	if player_unit != null and player_unit.character_data != null and player_unit.character_data.class_data != null:
 		return player_unit.character_data.class_data
@@ -480,8 +529,13 @@ func _class_uses_magic_damage(class_data: ClassData) -> bool:
 
 func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
 	var equipped_entry = Global.equipment.get(slot_name, null)
-	if slot_name == "Weapon" and player_unit != null and player_unit.character_data != null and player_unit.character_data.equipped_weapon != null:
-		equipped_entry = player_unit.character_data.equipped_weapon
+	if player_unit != null and player_unit.character_data != null:
+		if slot_name == "Weapon" and player_unit.character_data.equipped_weapon != null:
+			equipped_entry = player_unit.character_data.equipped_weapon
+		elif slot_name == "Armor" and player_unit.character_data.equipped_armor != null:
+			equipped_entry = player_unit.character_data.equipped_armor
+		elif slot_name == "Accessory" and player_unit.character_data.equipped_accessory != null:
+			equipped_entry = player_unit.character_data.equipped_accessory
 
 	if equipped_entry is WeaponData:
 		return equipped_entry.icon
@@ -531,6 +585,43 @@ func _build_weapon_tooltip_text(weapon: WeaponData) -> String:
 	return "\n".join(lines)
 
 
+func _build_generic_equipment_tooltip(item: Resource, fallback_label: String) -> String:
+	if item == null:
+		return fallback_label
+
+	var stat_bonuses = item.get("stat_bonuses")
+	var bonus_labels := {
+		"strength": "STR",
+		"intelligence": "INT",
+		"dexterity": "DEX",
+		"speed": "SPD",
+		"defense": "DEF",
+		"magic_defense": "MDEF"
+	}
+
+	var title := fallback_label
+	if item is ArmorData:
+		title = "Armor: %s" % String((item as ArmorData).armor_name)
+	elif item is AccessoryData:
+		title = "Accessory: %s" % String((item as AccessoryData).accessory_name)
+
+	var lines: PackedStringArray = [title]
+	if stat_bonuses is Dictionary:
+		var bonus_parts: PackedStringArray = []
+		for bonus_key in ["strength", "intelligence", "dexterity", "speed", "defense", "magic_defense"]:
+			var bonus_value := int((stat_bonuses as Dictionary).get(bonus_key, 0))
+			if bonus_value != 0:
+				bonus_parts.append("%s %+d" % [String(bonus_labels.get(bonus_key, bonus_key.to_upper())), bonus_value])
+
+		if not bonus_parts.is_empty():
+			lines.append("Bonuses: " + ", ".join(bonus_parts))
+
+	var description := String(item.get("description")).strip_edges()
+	if not description.is_empty():
+		lines.append(description)
+
+	return "\n".join(lines)
+
 func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = null) -> void:
 	var weapon_icon := _resolve_equipment_icon("Weapon", player_unit)
 	if weapon_icon == null and resolved_weapon != null:
@@ -538,10 +629,23 @@ func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = 
 	var armor_icon := _resolve_equipment_icon("Armor", player_unit)
 	var accessory_icon := _resolve_equipment_icon("Accessory", player_unit)
 
+	var equipped_armor: Resource = Global.equipment.get("Armor", null)
+	var equipped_accessory: Resource = Global.equipment.get("Accessory", null)
+	if player_unit != null and player_unit.character_data != null:
+		if player_unit.character_data.equipped_armor != null:
+			equipped_armor = player_unit.character_data.equipped_armor
+		if player_unit.character_data.equipped_accessory != null:
+			equipped_accessory = player_unit.character_data.equipped_accessory
+	else:
+		if equipped_armor == null:
+			equipped_armor = _resolve_player_armor_from_combat_template()
+		if equipped_accessory == null:
+			equipped_accessory = _resolve_player_accessory_from_combat_template()
+
 	slot_weapon.texture = weapon_icon
 	slot_armor.texture = armor_icon
 	slot_accessory.texture = accessory_icon
 
 	slot_weapon.tooltip_text = _build_weapon_tooltip_text(resolved_weapon)
-	slot_armor.tooltip_text = "Armor"
-	slot_accessory.tooltip_text = "Accessory"
+	slot_armor.tooltip_text = _build_generic_equipment_tooltip(equipped_armor, "Armor")
+	slot_accessory.tooltip_text = _build_generic_equipment_tooltip(equipped_accessory, "Accessory")

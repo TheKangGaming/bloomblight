@@ -13,3 +13,5 @@ extends Resource
 
 @export_group("Equipment")
 @export var equipped_weapon: WeaponData
+@export var equipped_armor: ArmorData
+@export var equipped_accessory: AccessoryData
