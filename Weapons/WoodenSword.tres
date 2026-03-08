@@ -6,6 +6,6 @@
 [resource]
 script = ExtResource("1_f7t4n")
 weapon_name = "Wooden Sword"
-description = "An sword used for praticing."
+description = "A sword used for praticing."
 icon = ExtResource("1_0askm")
 metadata/_custom_type_script = "uid://c8wssyup5wth4"

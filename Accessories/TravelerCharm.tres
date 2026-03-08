@@ -1,11 +1,12 @@
-[gd_resource type="Resource" script_class="AccessoryData" format=3]
+[gd_resource type="Resource" script_class="AccessoryData" format=3 uid="uid://2mv5ijnjgfa7"]
 
-[ext_resource type="Script" path="res://data/accessory_data.gd" id="1_accessory"]
+[ext_resource type="Texture2D" uid="uid://dkb2w4oothong" path="res://graphics/accessories/ac7.png" id="1_3w8vu"]
+[ext_resource type="Script" uid="uid://da383psr5ihgj" path="res://data/accessory_data.gd" id="1_accessory"]
 
 [resource]
 script = ExtResource("1_accessory")
-accessory_name = "Traveler Charm"
 description = "A charm that sharpens focus on long journeys."
+icon = ExtResource("1_3w8vu")
 stat_bonuses = {
 "dexterity": 2,
 "speed": 1

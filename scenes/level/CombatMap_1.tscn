@@ -20,7 +20,7 @@
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
 [ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="18_ddai4"]
-[ext_resource type="Resource" path="res://Armor/LeatherVest.tres" id="19_armor"]
+[ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="19_armor"]
 [ext_resource type="Resource" path="res://Accessories/TravelerCharm.tres" id="20_accessory"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
