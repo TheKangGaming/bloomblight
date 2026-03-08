@@ -641,7 +641,12 @@ func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = 
 			equipped_armor = _resolve_player_armor_from_combat_template()
 		if equipped_accessory == null:
 			equipped_accessory = _resolve_player_accessory_from_combat_template()
-
+	
+	if armor_icon == null and equipped_armor != null and equipped_armor.get("icon") != null:
+		armor_icon = equipped_armor.get("icon")
+	if accessory_icon == null and equipped_accessory != null and equipped_accessory.get("icon") != null:
+		accessory_icon = equipped_accessory.get("icon")
+	
 	slot_weapon.texture = weapon_icon
 	slot_armor.texture = armor_icon
 	slot_accessory.texture = accessory_icon

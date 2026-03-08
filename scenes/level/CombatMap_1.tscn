@@ -21,7 +21,7 @@
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
 [ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="18_ddai4"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="19_armor"]
-[ext_resource type="Resource" path="res://Accessories/TravelerCharm.tres" id="20_accessory"]
+[ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://Accessories/TravelerCharm.tres" id="20_accessory"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -495,7 +495,6 @@ current_stats = SubResource("Resource_mwyqx")
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
 current_stats = SubResource("Resource_hejk3")
-level = 10
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
