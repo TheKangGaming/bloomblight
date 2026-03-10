@@ -1316,7 +1316,7 @@ func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 	var new_plant = plant_scene.instantiate()
 	
 	add_child(new_plant)
-	new_plant.position = grid.calculate_map_position(cell)
+	new_plant.position = grid.calculate_map_position(cell) + Vector2(0, -16)
 	
 	_battle_plants[cell] = new_plant
 	
