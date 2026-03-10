@@ -422,6 +422,20 @@ func take_damage(amount: int, is_crit: bool = false) -> void:
 		die()
 
 
+## Restores health and returns the amount actually healed.
+func heal(amount: int) -> int:
+	if current_stats == null or amount <= 0 or health <= 0:
+		return 0
+
+	var before_hp := health
+	current_stats.apply_delta({"HP": amount})
+	current_stats.clamp_to_caps()
+	_sync_player_hp_to_global()
+	_update_hp_bar()
+
+	return maxi(0, health - before_hp)
+
+
 ## Emits the death signal and removes the unit from the map
 func die() -> void:
 	died.emit(self)

@@ -1298,7 +1298,7 @@ func _execute_bloom_wave(caster: Unit, center_cell: Vector2, radius: int) -> boo
 	
 	var wave = BloomWaveEffect.new()
 	add_child(wave)
-	wave.position = grid.calculate_map_position(center_cell) + (grid.cell_size / 2.0)
+	wave.position = grid.calculate_map_position(center_cell)
 	# Calculate how big the wave should get based on grid size!
 	wave.max_radius = radius * grid.cell_size.x 
 	
@@ -1316,8 +1316,7 @@ func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 	var new_plant = plant_scene.instantiate()
 	
 	add_child(new_plant)
-	var plant_offset = Vector2(grid.cell_size.x / 2.0, grid.cell_size.y)
-	new_plant.position = grid.calculate_map_position(cell) + plant_offset
+	new_plant.position = grid.calculate_map_position(cell)
 	
 	_battle_plants[cell] = new_plant
 	
@@ -1346,11 +1345,10 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	
 	# 1. The Healing Math
 	var heal_amount = 10
-	caster.health += heal_amount
-	
-	# Cap the healing safely so she doesn't exceed Max HP
-	if caster.current_stats and caster.health > caster.current_stats.max_hp:
-		caster.health = caster.current_stats.max_health
+	var actual_healed := caster.heal(heal_amount)
+	if actual_healed <= 0:
+		print(caster.name, " could not be healed.")
+		return false
 		
 	# 2. Visual Cleanup
 	_battle_plants.erase(target_cell) # Remove from memory
@@ -1360,5 +1358,5 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	tween.tween_property(plant, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_callback(plant.queue_free) # Delete the node
 	
-	print(caster.name, " harvested a plant and healed for ", heal_amount, " HP!")
+	print(caster.name, " harvested a plant and healed for ", actual_healed, " HP!")
 	return true
