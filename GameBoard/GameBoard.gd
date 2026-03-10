@@ -15,6 +15,10 @@ const ActionMenu = preload("res://Menus/ActionMenu.tscn")
 enum TurnPhase { PLAYER, ENEMY }
 var current_phase: TurnPhase = TurnPhase.PLAYER
 
+
+# Tracks active battle plants. Key = Vector2 (cell), Value = Node2D (the plant)
+var _battle_plants := {}
+
 ## Mapping of coordinates of a cell to a reference to the unit it contains.
 var _units := {}
 var _enemies_defeated: int = 0
@@ -25,6 +29,8 @@ var _movement_costs
 var _prev_cell
 var _prev_position
 var _is_targeting_attack: bool = false
+var _is_targeting_ability: bool = false
+var _selected_ability: AbilityData = null
 var _target_unit_for_forecast: Unit = null
 var _forecast_ui_node: CanvasLayer = null
 var _valid_target_cells: Array = []
@@ -418,12 +424,16 @@ func _deselect_active_unit() -> void:
 
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	print("--- CURSOR ACCEPT CLICKED ---")
+	print("Clicked Cell: ", cell)
+	print("Targeting Ability Mode: ", _is_targeting_ability)
+	
 	if _battle_ended:
 		return
 
 	# --- 0. CONFIRM FORECAST STATE ---
 	if _target_unit_for_forecast != null:
-		# We are currently viewing the forecast window and clicked Confirm again!
+		# (Keep your existing forecast code here...)
 		var target = _target_unit_for_forecast
 		_target_unit_for_forecast = null
 		_hide_combat_forecast()
@@ -447,6 +457,28 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			var target_unit = _units[cell]
 			if target_unit.is_enemy != _active_unit.is_enemy:
 				_begin_attack_preview_on_target(target_unit)
+		return
+		
+	# --- 1.5 ABILITY TARGETING INTERCEPT ---
+	if _is_targeting_ability:
+		print("SUCCESS: We are in Ability Mode!")
+		print("Valid Target Cells array contains: ", _valid_target_cells)
+		
+		if cell in _valid_target_cells:
+			print("SUCCESS: Cell is valid! Firing execution math...")
+			var success = execute_ability(_active_unit, _selected_ability, cell)
+			
+			if success:
+				_is_targeting_ability = false
+				_selected_ability = null
+				_valid_target_cells.clear()
+				_unit_overlay.clear()
+				_cursor.is_active = false
+				finish_unit_turn() 
+			else:
+				print("FAIL: Ability cast failed in the math block.")
+		else:
+			print("FAIL: You clicked a cell outside of the valid red tiles!")
 		return
 		
 	# --- 2. MOVEMENT / SELECTION INTERCEPT ---
@@ -742,6 +774,7 @@ func start_player_phase() -> void:
 		var unit = _units[cell]
 		if not unit.is_enemy: 
 			unit.is_wait = false
+			unit.tick_cooldowns()
 			var visuals = unit.get_node_or_null("PathFollow2D/Visuals")
 			if visuals:
 				visuals.modulate = Color.WHITE 
@@ -765,6 +798,32 @@ func enter_attack_targeting() -> void:
 			_valid_target_cells.append(target_cell)
 					
 	# Draw the red tiles (passing an empty array for the blue tiles)
+	_unit_overlay.draw_attackable_cells(_valid_target_cells)
+	
+	# Wake the cursor back up so the player can pick a target
+	_cursor.is_active = true
+
+func enter_ability_targeting(ability: AbilityData) -> void:
+	_is_targeting_ability = true
+	_selected_ability = ability
+	_valid_target_cells.clear()
+	_unit_overlay.clear()
+	
+	var center_cell = _active_unit.cell
+	
+	# Calculate cast range from where the unit is currently standing
+	if ability.range == 0:
+		# Self-cast only (Like Bloom, they must click themselves)
+		_valid_target_cells.append(center_cell)
+	else:
+		# Ranged cast (Creates a diamond based on ability.range)
+		var ability_offsets = _get_attack_offsets(ability.range)
+		for offset in ability_offsets:
+			var target_cell = center_cell + offset
+			if grid.is_within_bounds(target_cell):
+				_valid_target_cells.append(target_cell)
+					
+	# Draw the red tiles to show where the player can click
 	_unit_overlay.draw_attackable_cells(_valid_target_cells)
 	
 	# Wake the cursor back up so the player can pick a target
@@ -1205,52 +1264,100 @@ func _are_all_players_alive() -> bool:
 # ABILITY PIPELINE
 # ==============================================================================
 
-## Routes the selected ability to its specific logic block
-func execute_ability(caster: Unit, ability: AbilityData, target_cell: Vector2) -> void:
+func execute_ability(caster: Unit, ability: AbilityData, target_cell: Vector2) -> bool:
+	var dist = abs(caster.cell.x - target_cell.x) + abs(caster.cell.y - target_cell.y)
+	if dist > ability.range:
+		return false
+
+	var success: bool = false
+	
 	match ability.type:
 		AbilityData.AbilityType.BLOOM:
-			_execute_bloom_wave(caster, target_cell, ability.radius)
+			success = _execute_bloom_wave(caster, target_cell, ability.radius)
 		AbilityData.AbilityType.HARVEST:
-			pass # We will build this next!
-		_:
-			print("Ability logic not implemented yet for: ", ability.ability_name)
+			success = _execute_harvest(caster, target_cell)
 			
-	# Put it on cooldown after a successful cast
-	caster.start_cooldown(ability)
+	if success:
+		caster.start_cooldown(ability)
+		
+	return success
 
-## Specific logic for Tera's Bloom
-func _execute_bloom_wave(caster: Unit, center_cell: Vector2, radius: int) -> void:
+func _execute_bloom_wave(caster: Unit, center_cell: Vector2, radius: int) -> bool:
 	var empty_cells: Array[Vector2] = []
 	
-	# 1. Collect valid cells using Manhattan distance
 	for x in range(-radius, radius + 1):
 		for y in range(-radius, radius + 1):
 			if abs(x) + abs(y) <= radius:
 				var check_cell = center_cell + Vector2(x, y)
-				
-				# 2. Check bounds and occupancy
 				if grid.is_within_bounds(check_cell):
-					# If there is no unit standing there
-					if not _units.has(check_cell):
+					if not _units.has(check_cell) and not is_occupied(check_cell):
 						empty_cells.append(check_cell)
 	
-	# 3. Randomize and Sprout
-	var plants_to_spawn = randi_range(2, 4) # Spawns 2 to 4 plants
+	if empty_cells.is_empty():
+		return false
+	
+	var wave = BloomWaveEffect.new()
+	add_child(wave)
+	wave.position = grid.calculate_map_position(center_cell) + (grid.cell_size / 2.0)
+	# Calculate how big the wave should get based on grid size!
+	wave.max_radius = radius * grid.cell_size.x 
+	
+	var plants_to_spawn = randi_range(2, 4)
 	empty_cells.shuffle()
 	
 	for i in range(min(plants_to_spawn, empty_cells.size())):
-		_spawn_battle_plant(empty_cells[i])
+		# We pass 'i' so the game knows to delay each plant slightly!
+		_spawn_battle_plant(empty_cells[i], i)
+		
+	return true
 
-## Instantiates the plant physically on the map
-func _spawn_battle_plant(cell: Vector2) -> void:
-	# For now, we will use your existing plant scene. We will make a custom BattlePlant next!
+func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 	var plant_scene = load("res://scenes/level/plant.tscn")
 	var new_plant = plant_scene.instantiate()
 	
 	add_child(new_plant)
-	new_plant.position = grid.calculate_map_position(cell)
+	new_plant.position = grid.calculate_map_position(cell) + (grid.cell_size / 2.0)
 	
-	# Optional: A magical pop-in animation
-	new_plant.scale = Vector2.ZERO
+	_battle_plants[cell] = new_plant
+	
+	# --- THE ELEGANT BLOOM ANIMATION ---
+	new_plant.scale = Vector2.ZERO # Start invisible
+	
 	var tween = create_tween()
-	tween.tween_property(new_plant, "scale", Vector2(1, 1), 0.3).set_trans(Tween.TRANS_BOUNCE)
+	# 1. Stagger the animation: wait 0.15 seconds per plant
+	tween.tween_interval(spawn_index * 0.15) 
+	
+	# 2. Pop up slightly larger than normal (1.3x) with a smooth spring effect
+	tween.tween_property(new_plant, "scale", Vector2(1.3, 1.3), 0.3)\
+		.set_trans(Tween.TRANS_SPRING).set_ease(Tween.EASE_OUT)
+		
+	# 3. Softly settle back down to normal size (1.0x)
+	tween.tween_property(new_plant, "scale", Vector2(1.0, 1.0), 0.2)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		
+## Consumes a plant on the grid and heals the caster
+func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
+	if not _battle_plants.has(target_cell):
+		print("No plant found on that tile!")
+		return false # Failed cast!
+		
+	var plant = _battle_plants[target_cell]
+	
+	# 1. The Healing Math
+	var heal_amount = 10
+	caster.health += heal_amount
+	
+	# Cap the healing safely so she doesn't exceed Max HP
+	if caster.current_stats and caster.health > caster.current_stats.max_health:
+		caster.health = caster.current_stats.max_health
+		
+	# 2. Visual Cleanup
+	_battle_plants.erase(target_cell) # Remove from memory
+	
+	# Shrink it away smoothly
+	var tween = create_tween()
+	tween.tween_property(plant, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_callback(plant.queue_free) # Delete the node
+	
+	print(caster.name, " harvested a plant and healed for ", heal_amount, " HP!")
+	return true

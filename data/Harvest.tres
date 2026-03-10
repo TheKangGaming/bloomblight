@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://bud6nrturapsp"]
+
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_1fmod"]
+
+[resource]
+script = ExtResource("1_1fmod")
+ability_name = "Harvest"
+radius = 0
+type = 3
+metadata/_custom_type_script = "uid://cwu7xbn7lsrpb"
