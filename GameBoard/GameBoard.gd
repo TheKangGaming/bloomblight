@@ -1200,3 +1200,57 @@ func _are_all_players_alive() -> bool:
 		if not unit.is_enemy:
 			return true
 	return false
+
+# ==============================================================================
+# ABILITY PIPELINE
+# ==============================================================================
+
+## Routes the selected ability to its specific logic block
+func execute_ability(caster: Unit, ability: AbilityData, target_cell: Vector2) -> void:
+	match ability.type:
+		AbilityData.AbilityType.BLOOM:
+			_execute_bloom_wave(caster, target_cell, ability.radius)
+		AbilityData.AbilityType.HARVEST:
+			pass # We will build this next!
+		_:
+			print("Ability logic not implemented yet for: ", ability.ability_name)
+			
+	# Put it on cooldown after a successful cast
+	caster.start_cooldown(ability)
+
+## Specific logic for Tera's Bloom
+func _execute_bloom_wave(caster: Unit, center_cell: Vector2, radius: int) -> void:
+	var empty_cells: Array[Vector2] = []
+	
+	# 1. Collect valid cells using Manhattan distance
+	for x in range(-radius, radius + 1):
+		for y in range(-radius, radius + 1):
+			if abs(x) + abs(y) <= radius:
+				var check_cell = center_cell + Vector2(x, y)
+				
+				# 2. Check bounds and occupancy
+				if grid.is_within_bounds(check_cell):
+					# If there is no unit standing there
+					if not _units.has(check_cell):
+						empty_cells.append(check_cell)
+	
+	# 3. Randomize and Sprout
+	var plants_to_spawn = randi_range(2, 4) # Spawns 2 to 4 plants
+	empty_cells.shuffle()
+	
+	for i in range(min(plants_to_spawn, empty_cells.size())):
+		_spawn_battle_plant(empty_cells[i])
+
+## Instantiates the plant physically on the map
+func _spawn_battle_plant(cell: Vector2) -> void:
+	# For now, we will use your existing plant scene. We will make a custom BattlePlant next!
+	var plant_scene = load("res://scenes/level/plant.tscn")
+	var new_plant = plant_scene.instantiate()
+	
+	add_child(new_plant)
+	new_plant.position = grid.calculate_map_position(cell)
+	
+	# Optional: A magical pop-in animation
+	new_plant.scale = Vector2.ZERO
+	var tween = create_tween()
+	tween.tween_property(new_plant, "scale", Vector2(1, 1), 0.3).set_trans(Tween.TRANS_BOUNCE)

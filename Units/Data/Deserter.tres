@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="ClassData" format=3]
+[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://bhqkfu4w4hexx"]
 
-[ext_resource type="Script" path="res://Units/class_data.gd" id="1_class"]
+[ext_resource type="Script" uid="uid://cs3pmkl8vpsw2" path="res://Units/class_data.gd" id="1_class"]
 
 [resource]
 script = ExtResource("1_class")
 metadata_name = "Deserter"
-role = "Jack-of-all-trades frontline skirmisher"
+tags = PackedStringArray()
 default_weapon_profile = &"sword_basic"
-primary_damage_stat = &"strength"
 secondary_stat = &"speed"
+role = "Jack-of-all-trades frontline skirmisher"
 base_stats = {
 "attack_range": 1,
 "defense": 5,
@@ -42,4 +42,3 @@ stat_caps = {
 "speed": 25,
 "strength": 25
 }
-minimum_gain_intervals = {}

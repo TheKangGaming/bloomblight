@@ -14,6 +14,10 @@ var move_state_machine = null # We will set this in _ready if the tree exists
 signal walk_finished
 signal died(unit)
 
+# --- ABILITIES & COOLDOWNS ---
+# Tracks active cooldowns. Key = AbilityData, Value = int (turns remaining)
+var ability_cooldowns: Dictionary = {}
+
 ## Shared resource of type Grid, used to calculate map coordinates.
 @export var grid: Resource
 
@@ -542,3 +546,20 @@ func _update_hp_bar(instant: bool = false) -> void:
 			_hp_fill_style.bg_color = Color(0.8, 0.2, 0.2) # Enemy Red
 		else:
 			_hp_fill_style.bg_color = Color(0.3, 0.8, 0.3) # Healthy Player Green
+			
+## Checks if an ability is ready to be used
+func is_ability_ready(ability: AbilityData) -> bool:
+	return not ability_cooldowns.has(ability)
+
+## Puts an ability on cooldown after use
+func start_cooldown(ability: AbilityData) -> void:
+	if ability.cooldown_turns > 0:
+		ability_cooldowns[ability] = ability.cooldown_turns
+
+## Ticks down cooldowns. Call this at the start of the unit's turn!
+func tick_cooldowns() -> void:
+	var keys = ability_cooldowns.keys()
+	for ability in keys:
+		ability_cooldowns[ability] -= 1
+		if ability_cooldowns[ability] <= 0:
+			ability_cooldowns.erase(ability) # Cooldown finished!

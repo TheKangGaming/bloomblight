@@ -7,6 +7,7 @@ extends Resource
 
 @export var personal_base_bonuses: Dictionary = {}
 @export var personal_growth_bonuses: Dictionary = {}
+@export var abilities: Array[AbilityData] = []
 
 @export var portrait: Texture2D
 @export var scene_reference: PackedScene

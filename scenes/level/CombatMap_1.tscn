@@ -22,6 +22,9 @@
 [ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="18_ddai4"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="19_armor"]
 [ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://Accessories/TravelerCharm.tres" id="20_accessory"]
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="21_efnms"]
+[ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="22_x18w8"]
+[ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/TheBloom.tres" id="23_rmf8s"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -344,6 +347,7 @@ sources/0 = SubResource("TileSetAtlasSource_gh08p")
 script = ExtResource("16_vtv1r")
 display_name = "Orc"
 class_data = ExtResource("13_vtv1r")
+abilities = null
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
 [sub_resource type="Resource" id="Resource_mwyqx"]
@@ -394,6 +398,7 @@ minimum_gain_intervals = {
 script = ExtResource("16_vtv1r")
 display_name = "Savannah"
 class_data = ExtResource("15_42768")
+abilities = null
 equipped_weapon = ExtResource("18_ddai4")
 equipped_armor = ExtResource("19_armor")
 equipped_accessory = ExtResource("20_accessory")
@@ -440,6 +445,15 @@ minimum_gain_intervals = {
 "SPD": 0,
 "STR": 0
 }
+
+[sub_resource type="Resource" id="Resource_vey2m"]
+script = ExtResource("16_vtv1r")
+class_data = ExtResource("23_rmf8s")
+abilities = Array[ExtResource("21_efnms")]([ExtResource("22_x18w8")])
+metadata/_custom_type_script = "uid://dinfajkodigdx"
+
+[sub_resource type="Resource" id="Resource_kk0qh"]
+script = ExtResource("13_d3c05")
 
 [node name="Node2D" type="Node2D" unique_id=715923779]
 metadata/_edit_vertical_guides_ = [768.0]
@@ -495,6 +509,11 @@ current_stats = SubResource("Resource_mwyqx")
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
 current_stats = SubResource("Resource_hejk3")
+
+[node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("14_d3c05")]
+position = Vector2(264, 438)
+character_data = SubResource("Resource_vey2m")
+current_stats = SubResource("Resource_kk0qh")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://bxi5bnn8ay4xn"]
+
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_2ohqf"]
+
+[resource]
+script = ExtResource("1_2ohqf")
+ability_name = "Bloom"
+description = "Sprouts tactical plants in a radius around the caster."
+range = 0
+type = 2
+metadata/_custom_type_script = "uid://cwu7xbn7lsrpb"
