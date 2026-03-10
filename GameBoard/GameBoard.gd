@@ -1316,7 +1316,8 @@ func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 	var new_plant = plant_scene.instantiate()
 	
 	add_child(new_plant)
-	new_plant.position = grid.calculate_map_position(cell) + (grid.cell_size / 2.0)
+	var plant_offset = Vector2(grid.cell_size.x / 2.0, grid.cell_size.y)
+	new_plant.position = grid.calculate_map_position(cell) + plant_offset
 	
 	_battle_plants[cell] = new_plant
 	
@@ -1348,7 +1349,7 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	caster.health += heal_amount
 	
 	# Cap the healing safely so she doesn't exceed Max HP
-	if caster.current_stats and caster.health > caster.current_stats.max_health:
+	if caster.current_stats and caster.health > caster.current_stats.max_hp:
 		caster.health = caster.current_stats.max_health
 		
 	# 2. Visual Cleanup
