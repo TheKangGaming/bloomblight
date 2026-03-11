@@ -33,7 +33,7 @@ window/stretch/scale=4.0
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/YATI/plugin.cfg")
+enabled=PackedStringArray("res://addons/YATI/plugin.cfg", "res://addons/msca/plugin.cfg")
 
 [input]
 
