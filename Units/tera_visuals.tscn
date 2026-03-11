@@ -1,5 +1,5 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://diq7ffmi73i73"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/visuals.tscn" id="1_1iwxc"]
+[ext_resource type="PackedScene" uid="uid://cna6pebvulm7w" path="res://scenes/player/visuals.tscn" id="1_1iwxc"]
 
-[node name="TeraVisuals" instance=ExtResource("1_1iwxc")]
+[node name="TeraVisuals" unique_id=282755047 instance=ExtResource("1_1iwxc")]
