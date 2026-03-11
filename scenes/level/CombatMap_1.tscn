@@ -27,7 +27,6 @@
 [ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="22_x18w8"]
 [ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/TheBloom.tres" id="23_rmf8s"]
 [ext_resource type="PackedScene" uid="uid://bxc8jd65qx0h" path="res://Units/tera.tscn" id="24_jk2x1"]
-[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="26_vey2m"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -352,7 +351,7 @@ display_name = "Orc"
 class_data = ExtResource("13_vtv1r")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_kk0qh"]
+[sub_resource type="Resource" id="Resource_rmf8s"]
 script = ExtResource("13_d3c05")
 hp = 24
 max_hp = 24
@@ -406,7 +405,7 @@ equipped_armor = ExtResource("19_armor")
 equipped_accessory = ExtResource("20_accessory")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_0a6tx"]
+[sub_resource type="Resource" id="Resource_kk0qh"]
 script = ExtResource("13_d3c05")
 str = 6
 physical_def = 5
@@ -455,7 +454,7 @@ class_data = ExtResource("23_rmf8s")
 abilities = Array[ExtResource("21_efnms")]([ExtResource("22_x18w8")])
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_xaypr"]
+[sub_resource type="Resource" id="Resource_0a6tx"]
 script = ExtResource("13_d3c05")
 hp = 16
 max_hp = 16
@@ -498,9 +497,6 @@ minimum_gain_intervals = {
 "SPD": 0,
 "STR": 0
 }
-
-[sub_resource type="Resource" id="Resource_rt72a"]
-script = ExtResource("13_d3c05")
 
 [node name="Node2D" type="Node2D" unique_id=715923779]
 metadata/_edit_vertical_guides_ = [768.0]
@@ -550,21 +546,17 @@ grid = ExtResource("2_gh08p")
 y_sort_enabled = true
 position = Vector2(375, 212)
 character_data = SubResource("Resource_ddai4")
-current_stats = SubResource("Resource_kk0qh")
+current_stats = SubResource("Resource_rmf8s")
 
 [node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
-current_stats = SubResource("Resource_0a6tx")
+current_stats = SubResource("Resource_kk0qh")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(264, 438)
 character_data = SubResource("Resource_vey2m")
-current_stats = SubResource("Resource_xaypr")
-
-[node name="Unit" parent="GameBoard" unique_id=214696743 instance=ExtResource("26_vey2m")]
-position = Vector2(118, 376)
-current_stats = SubResource("Resource_rt72a")
+current_stats = SubResource("Resource_0a6tx")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
