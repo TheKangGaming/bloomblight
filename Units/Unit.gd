@@ -73,9 +73,11 @@ var is_selected := false:
 	set(value):
 		is_selected = value
 		if is_selected:
-			_anim_player.play("selected")
+			if _anim_player:
+				_anim_player.play("selected")
 		else:
-			_anim_player.play("idle")
+			if _anim_player:
+				_anim_player.play("idle")
 
 var _is_walking := false:
 	set(value):
@@ -83,7 +85,7 @@ var _is_walking := false:
 		set_process(_is_walking)
 
 @onready var _sprite: Sprite2D = $PathFollow2D/Visuals/Sprite2D
-@onready var _anim_player: AnimationPlayer = $AnimationPlayer
+@onready var _anim_player: AnimationPlayer = _resolve_animation_player()
 @onready var _path_follow: PathFollow2D = $PathFollow2D
 
 var health: int:
@@ -119,11 +121,19 @@ var speed: int:
 		return current_stats.spd
 
 
+func _resolve_animation_player() -> AnimationPlayer:
+	var visuals_anim := get_node_or_null("PathFollow2D/Visuals/AnimationPlayer") as AnimationPlayer
+	if visuals_anim != null:
+		return visuals_anim
+
+	return get_node_or_null("AnimationPlayer") as AnimationPlayer
+
+
 func _ready() -> void:
 	set_process(false)
 	_path_follow = $PathFollow2D
 	_sprite = $PathFollow2D/Visuals/Sprite2D
-	_anim_player = $AnimationPlayer
+	_anim_player = _resolve_animation_player()
 
 	if current_stats == null:
 		current_stats = UnitStats.new()
