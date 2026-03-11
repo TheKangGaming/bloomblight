@@ -4,6 +4,7 @@ extends Resource
 
 @export var hp: int = 20
 @export var max_hp: int = 20
+@warning_ignore("shadowed_global_identifier")
 @export var str: int = 5
 @export var physical_def: int = 2
 @export var magic_def: int = 1

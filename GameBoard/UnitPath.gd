@@ -22,7 +22,7 @@ func draw(cell_start: Vector2, cell_end: Vector2) -> void:
 	# FIX: Cast the Vector2 array to a Vector2i array for Godot 4's TileMapLayer
 	var path_v2i: Array[Vector2i] = []
 	for point in current_path:
-		path_v2i.append(Vector2i(point.x, point.y))
+		path_v2i.append(Vector2i(int(point.x), int(point.y)))
 		
 	set_cells_terrain_connect(path_v2i, 0, 0)
 

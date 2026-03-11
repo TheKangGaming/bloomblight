@@ -6,7 +6,7 @@ var current_seed: int = 0
 
 func _ready() -> void:
 	if current_seed == 0:
-		seed_from_run(Time.get_unix_time_from_system())
+		seed_from_run(int(Time.get_unix_time_from_system()))
 
 
 func seed_from_run(run_seed: int) -> void:

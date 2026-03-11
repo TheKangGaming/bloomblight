@@ -205,7 +205,7 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 
 ## Generates a list of walkable cells based on unit movement value and tile movement cost
 ## Generates a list of walkable cells based on unit movement value and tile movement cost
-func _dijkstra(unit: Unit, max_distance: int, attackable_check: bool) -> Array:
+func _dijkstra(unit: Unit, max_distance: int, _attackable_check: bool) -> Array:
 	var start_cell = unit.cell.round()
 	
 	# Dictionary to store the absolute shortest distance to each cell
@@ -1282,7 +1282,7 @@ func execute_ability(caster: Unit, ability: AbilityData, target_cell: Vector2) -
 		
 	return success
 
-func _execute_bloom_wave(caster: Unit, center_cell: Vector2, radius: int) -> bool:
+func _execute_bloom_wave(_caster: Unit, center_cell: Vector2, radius: int) -> bool:
 	var empty_cells: Array[Vector2] = []
 	
 	for x in range(-radius, radius + 1):
