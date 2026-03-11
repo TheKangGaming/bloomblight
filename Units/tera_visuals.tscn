@@ -1,5 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d2arl7xj6g1yt"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/visuals.tscn" id="1_1iwxc"]
+[ext_resource type="PackedScene" path="res://Units/unit_visuals_template.tscn" id="1_53o7o"]
+[ext_resource type="Texture2D" uid="uid://b4ymvait5ox4g" path="res://graphics/characters/Tera.png" id="2_2ul1v"]
 
-[node name="TeraVisuals" instance=ExtResource("1_1iwxc")]
+[node name="TeraVisuals" instance=ExtResource("1_53o7o")]
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_2ul1v")
+region_enabled = true
+region_rect = Rect2(22, 13, 20, 31)

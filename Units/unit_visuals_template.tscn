@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://ce11ecg8v4b0k"]
+
+[node name="Visuals" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -16)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]

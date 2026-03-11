@@ -1,5 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bq2j4adf6r6sp"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/visuals.tscn" id="1_hl57m"]
+[ext_resource type="PackedScene" path="res://Units/unit_visuals_template.tscn" id="1_jf5x0"]
+[ext_resource type="Texture2D" uid="uid://dy71joucadqo" path="res://graphics/characters/Savannah.png" id="2_3gq01"]
 
-[node name="SavannahVisuals" instance=ExtResource("1_hl57m")]
+[node name="SavannahVisuals" instance=ExtResource("1_jf5x0")]
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_3gq01")
+region_enabled = true
+region_rect = Rect2(22, 13, 20, 31)
