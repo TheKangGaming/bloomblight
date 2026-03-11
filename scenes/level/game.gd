@@ -1,7 +1,8 @@
 extends Node2D
 
 const TILE_SIZE = 32
-@onready var player = $Objects/Player
+@export var player_path: NodePath = NodePath("Objects/Player")
+@onready var player = _resolve_player()
 var plant_scene:PackedScene = preload('res://scenes/level/plant.tscn')
 @export var daytime_gradient: Gradient
 
@@ -21,12 +22,27 @@ var _combat_intro_begin_button: Button
 var _combat_intro_body: RichTextLabel
 
 func _ready() -> void:
+	if player == null:
+		push_error("Game scene could not find a player. Set player_path or add a node to the 'Player' group.")
+		return
+
+	if player.has_signal("tool_use") and not player.tool_use.is_connected(_on_player_tool_use):
+		player.tool_use.connect(_on_player_tool_use)
+
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
 	$CanvasLayer/SeedMenu.seed_chosen.connect(_on_seed_chosen_from_menu)
 	_day_timer_cycle_seconds = $DayTimer.wait_time
 	_grow_timer_cycle_seconds = $GrowTimer.wait_time
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
+
+func _resolve_player() -> Node:
+	if not player_path.is_empty():
+		var selected_player = get_node_or_null(player_path)
+		if selected_player:
+			return selected_player
+
+	return get_tree().get_first_node_in_group("Player")
 
 func apply_combat_time_passage(_elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer

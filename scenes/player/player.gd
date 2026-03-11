@@ -1,7 +1,11 @@
 extends CharacterBody2D
 
-@onready var move_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/MoveStateMachine/playback')
-@onready var tool_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/ToolStateMachine/playback')
+@export var visuals_scene: PackedScene
+
+var visuals: Node
+var animation_tree: AnimationTree
+var move_state_machine: AnimationNodeStateMachinePlayback
+var tool_state_machine: AnimationNodeStateMachinePlayback
 @onready var tool_particles = $ToolParticles
 
 @export var tool_direction_offset := 30
@@ -88,11 +92,11 @@ func get_input():
 			# 2. Reach out 24px in the direction we are facing
 			var target_pos = player_center + (last_direction * tool_direction_offset)
 			tool_state_machine.travel(tool_connection[current_tool])
-			$Visuals/AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+			animation_tree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 			can_move = false
 
 			if current_tool in [Global.Tools.HOE, Global.Tools.WATER]:
-				await $Visuals/AnimationTree.animation_finished
+				await animation_tree.animation_finished
 
 				if current_tool == Global.Tools.HOE:
 					$Sounds/HoeSound.play()
@@ -140,8 +144,25 @@ func cycle_tool(tool_direction: int) -> void:
 	tool_changed.emit(current_tool)
 
 func _ready() -> void:
+	_setup_visuals()
 	update_animation_blend_positions(last_direction)
-	$Visuals/AnimationTree.animation_finished.connect(_on_animation_tree_animation_finished)
+	animation_tree.animation_finished.connect(_on_animation_tree_animation_finished)
+
+func _setup_visuals() -> void:
+	if visuals_scene:
+		var current_visuals = get_node_or_null("Visuals")
+		if current_visuals:
+			current_visuals.free()
+
+		var visuals_instance = visuals_scene.instantiate()
+		visuals_instance.name = "Visuals"
+		add_child(visuals_instance)
+		move_child(visuals_instance, 1)
+
+	visuals = get_node("Visuals")
+	animation_tree = visuals.get_node("AnimationTree") as AnimationTree
+	move_state_machine = animation_tree.get('parameters/MoveStateMachine/playback')
+	tool_state_machine = animation_tree.get('parameters/ToolStateMachine/playback')
 
 func animation():
 	if direction:
@@ -157,12 +178,12 @@ func animation():
 
 func update_animation_blend_positions(target_vec: Vector2):
 	var blend_pos = Vector2(round(target_vec.x), round(target_vec.y))
-	$Visuals/AnimationTree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
-	$Visuals/AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
-	$Visuals/AnimationTree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
+	animation_tree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
+	animation_tree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
+	animation_tree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
 
 	for state in tool_connection.values():
-		$Visuals/AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
+		animation_tree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
 
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	print("Player was successfully unlocked!")
