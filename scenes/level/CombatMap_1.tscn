@@ -16,6 +16,7 @@
 [ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="13_vtv1r"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="14_d3c05"]
+[ext_resource type="PackedScene" uid="uid://c3q1n6mfd5o2u" path="res://Units/tera.tscn" id="24_jk2x1"]
 [ext_resource type="Resource" uid="uid://bhqkfu4w4hexx" path="res://Units/Data/Deserter.tres" id="15_42768"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
@@ -552,7 +553,7 @@ position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
 current_stats = SubResource("Resource_x18w8")
 
-[node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("14_d3c05")]
+[node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(264, 438)
 character_data = SubResource("Resource_vey2m")
 current_stats = SubResource("Resource_rmf8s")
