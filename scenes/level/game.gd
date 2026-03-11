@@ -29,7 +29,10 @@ func _ready() -> void:
 	if player.has_signal("tool_use") and not player.tool_use.is_connected(_on_player_tool_use):
 		player.tool_use.connect(_on_player_tool_use)
 
-	player.toggle_menu_requested.connect(_on_player_menu_requested)
+	if player.has_signal("toggle_menu_requested"):
+		player.toggle_menu_requested.connect(_on_player_menu_requested)
+	else:
+		push_warning("Active player does not expose toggle_menu_requested; planting menu input is disabled for this character.")
 	$CanvasLayer/SeedMenu.seed_chosen.connect(_on_seed_chosen_from_menu)
 	_day_timer_cycle_seconds = $DayTimer.wait_time
 	_grow_timer_cycle_seconds = $GrowTimer.wait_time
@@ -43,6 +46,15 @@ func _resolve_player() -> Node:
 			return selected_player
 
 	return get_tree().get_first_node_in_group("Player")
+
+func _set_player_can_move(enabled: bool) -> void:
+	if player == null:
+		return
+
+	for property_info in player.get_property_list():
+		if property_info.get("name") == "can_move":
+			player.set("can_move", enabled)
+			return
 
 func apply_combat_time_passage(_elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer
@@ -75,7 +87,7 @@ func apply_combat_time_passage(_elapsed_seconds: float) -> void:
 	
 func _on_seed_menu_cancelled():
 	# Give the player their movement back!
-	player.can_move = true
+	_set_player_can_move(true)
 
 func _process(_delta: float) -> void:
 	var daytime_point: float = 1.0 - ($DayTimer.time_left / _day_timer_cycle_seconds)
@@ -145,7 +157,7 @@ func _on_player_menu_requested(target_pos: Vector2):
 			if plant.grid_pos == grid_pos:
 				return # A plant is already here
 		
-		player.can_move = false
+		_set_player_can_move(false)
 		
 		# 3. Save the ADJUSTED pos so the seed plants in the right spot!
 		pending_plant_pos = adjusted_pos 
@@ -156,7 +168,7 @@ func _on_player_menu_requested(target_pos: Vector2):
 		print('You can only plant on tilled soil!')
 		
 func _on_seed_chosen_from_menu(seed_type: int):
-	player.can_move = true
+	_set_player_can_move(true)
 	
 	# Save the true/false result of the planting attempt
 	var successfully_planted = _on_player_seed_use(seed_type, pending_plant_pos)
@@ -287,7 +299,7 @@ func _scroll_combat_intro_text(delta: float) -> void:
 func _show_combat_intro() -> void:
 	_combat_intro_active = true
 	if is_instance_valid(player):
-		player.can_move = false
+		_set_player_can_move(false)
 
 	if is_instance_valid(_combat_intro_overlay):
 		_combat_intro_overlay.queue_free()
@@ -378,7 +390,7 @@ func _close_combat_intro() -> void:
 	_combat_intro_body = null
 	_combat_intro_active = false
 	if is_instance_valid(player):
-		player.can_move = true
+		_set_player_can_move(true)
 
 func _enter_combat_map() -> void:
 	if _combat_transition_active:
