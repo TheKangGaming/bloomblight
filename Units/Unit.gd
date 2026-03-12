@@ -82,7 +82,7 @@ var _is_walking := false:
 		_is_walking = value
 		set_process(_is_walking)
 
-@onready var _sprite: Sprite2D = $PathFollow2D/Visuals/Sprite2D
+@onready var _sprite: Sprite2D = _resolve_primary_sprite()
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
 
@@ -122,7 +122,7 @@ var speed: int:
 func _ready() -> void:
 	set_process(false)
 	_path_follow = $PathFollow2D
-	_sprite = $PathFollow2D/Visuals/Sprite2D
+	_sprite = _resolve_primary_sprite()
 	_anim_player = $AnimationPlayer
 
 	if current_stats == null:
@@ -577,3 +577,11 @@ func tick_cooldowns() -> void:
 		ability_cooldowns[ability] -= 1
 		if ability_cooldowns[ability] <= 0:
 			ability_cooldowns.erase(ability) # Cooldown finished!
+
+
+func _resolve_primary_sprite() -> Sprite2D:
+	var direct_sprite = get_node_or_null("PathFollow2D/Visuals/Sprite2D") as Sprite2D
+	if direct_sprite != null:
+		return direct_sprite
+
+	return get_node_or_null("PathFollow2D/Visuals/Player/SpriteLayers/01body") as Sprite2D

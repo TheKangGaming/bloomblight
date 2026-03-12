@@ -5,5 +5,5 @@
 
 [node name="TeraVisuals" unique_id=282755047 instance=ExtResource("1_1iwxc")]
 
-[node name="Sprite2D" parent="." index="0" unique_id=1335107080]
+[node name="01body" parent="Player/SpriteLayers" index="2" unique_id=1335107080]
 texture = ExtResource("2_cw7ve")
