@@ -580,13 +580,13 @@ position = Vector2(323, 471)
 character_data = SubResource("Resource_vey2m")
 current_stats = SubResource("Resource_45ywn")
 level = 10
+is_player = false
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
 position = Vector2(443, 471)
 character_data = SubResource("Resource_u5s1f")
 current_stats = SubResource("Resource_bhsje")
 level = 10
-is_player = true
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")

@@ -28,7 +28,7 @@ growth_rates = {
 "magic_defense": 20,
 "max_health": 50,
 "move_range": 0,
-"speed": 60,
+"speed": 55,
 "strength": 40
 }
 stat_caps = {
