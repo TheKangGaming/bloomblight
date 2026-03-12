@@ -1,7 +1,8 @@
 extends CharacterBody2D
 
-@onready var move_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/MoveStateMachine/playback')
-@onready var tool_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/ToolStateMachine/playback')
+@onready var animation_tree: AnimationTree = $Visuals/AnimationTree
+@onready var move_state_machine: AnimationNodeStateMachinePlayback = _resolve_move_state_machine()
+@onready var tool_state_machine: AnimationNodeStateMachinePlayback = _resolve_tool_state_machine()
 @onready var tool_particles = $ToolParticles
 
 @export var tool_direction_offset := 30
@@ -87,12 +88,15 @@ func get_input():
 
 			# 2. Reach out 24px in the direction we are facing
 			var target_pos = player_center + (last_direction * tool_direction_offset)
-			tool_state_machine.travel(tool_connection[current_tool])
-			$Visuals/AnimationTree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+			if tool_state_machine != null:
+				tool_state_machine.travel(tool_connection[current_tool])
+			if animation_tree != null:
+				animation_tree.set('parameters/OneShot/request', AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 			can_move = false
 
 			if current_tool in [Global.Tools.HOE, Global.Tools.WATER]:
-				await $Visuals/AnimationTree.animation_finished
+				if animation_tree != null:
+					await animation_tree.animation_finished
 
 				if current_tool == Global.Tools.HOE:
 					$Sounds/HoeSound.play()
@@ -141,28 +145,35 @@ func cycle_tool(tool_direction: int) -> void:
 
 func _ready() -> void:
 	update_animation_blend_positions(last_direction)
-	$Visuals/AnimationTree.animation_finished.connect(_on_animation_tree_animation_finished)
+	if animation_tree != null and not animation_tree.animation_finished.is_connected(_on_animation_tree_animation_finished):
+		animation_tree.animation_finished.connect(_on_animation_tree_animation_finished)
 
 func animation():
 	if direction:
 		if current_speed == run_speed:
-			move_state_machine.travel('run')
+			if move_state_machine != null:
+				move_state_machine.travel('run')
 		else:
-			move_state_machine.travel('move')
+			if move_state_machine != null:
+				move_state_machine.travel('move')
 
 		update_animation_blend_positions(last_direction)
 	else:
 		update_animation_blend_positions(last_direction)
-		move_state_machine.travel('idle')
+		if move_state_machine != null:
+			move_state_machine.travel('idle')
 
 func update_animation_blend_positions(target_vec: Vector2):
 	var blend_pos = Vector2(round(target_vec.x), round(target_vec.y))
-	$Visuals/AnimationTree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
-	$Visuals/AnimationTree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
-	$Visuals/AnimationTree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
+	if animation_tree == null:
+		return
+
+	animation_tree.set('parameters/MoveStateMachine/move/blend_position', blend_pos)
+	animation_tree.set('parameters/MoveStateMachine/idle/blend_position', blend_pos)
+	animation_tree.set('parameters/MoveStateMachine/run/blend_position', blend_pos)
 
 	for state in tool_connection.values():
-		$Visuals/AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
+		animation_tree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
 
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	print("Player was successfully unlocked!")
@@ -185,3 +196,23 @@ func axe_use():
 
 func _on_steps_timer_timeout() -> void:
 	$Sounds/Steps.play()
+
+func _resolve_move_state_machine() -> AnimationNodeStateMachinePlayback:
+	if animation_tree == null:
+		return null
+
+	var nested = animation_tree.get('parameters/MoveStateMachine/playback') as AnimationNodeStateMachinePlayback
+	if nested != null:
+		return nested
+
+	return animation_tree.get('parameters/playback') as AnimationNodeStateMachinePlayback
+
+func _resolve_tool_state_machine() -> AnimationNodeStateMachinePlayback:
+	if animation_tree == null:
+		return null
+
+	var nested = animation_tree.get('parameters/ToolStateMachine/playback') as AnimationNodeStateMachinePlayback
+	if nested != null:
+		return nested
+
+	return animation_tree.get('parameters/playback') as AnimationNodeStateMachinePlayback
