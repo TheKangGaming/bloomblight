@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="ClassData" format=3]
+[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://dmrthnl4rs4l1"]
 
-[ext_resource type="Script" path="res://Units/class_data.gd" id="1_class"]
+[ext_resource type="Script" uid="uid://cs3pmkl8vpsw2" path="res://Units/class_data.gd" id="1_class"]
 
 [resource]
 script = ExtResource("1_class")
 metadata_name = "Tank"
-role = "Iron wall that blanks weak physical hits but is vulnerable to magic and doubles"
+tags = PackedStringArray()
 default_weapon_profile = &"lance_basic"
-primary_damage_stat = &"strength"
 secondary_stat = &"defense"
+role = "Iron wall that blanks weak physical hits but is vulnerable to magic and doubles"
 base_stats = {
 "attack_range": 1,
 "defense": 9,
@@ -42,4 +42,3 @@ stat_caps = {
 "speed": 15,
 "strength": 20
 }
-minimum_gain_intervals = {}
