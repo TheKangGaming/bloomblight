@@ -27,7 +27,6 @@
 [ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="22_x18w8"]
 [ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/TheBloom.tres" id="23_rmf8s"]
 [ext_resource type="PackedScene" uid="uid://bxc8jd65qx0h" path="res://Units/tera.tscn" id="24_jk2x1"]
-[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="26_vey2m"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -499,9 +498,6 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_rt72a"]
-script = ExtResource("13_d3c05")
-
 [node name="Node2D" type="Node2D" unique_id=715923779]
 metadata/_edit_vertical_guides_ = [768.0]
 metadata/_edit_horizontal_guides_ = [512.0]
@@ -561,10 +557,6 @@ current_stats = SubResource("Resource_0a6tx")
 position = Vector2(264, 438)
 character_data = SubResource("Resource_vey2m")
 current_stats = SubResource("Resource_xaypr")
-
-[node name="Unit" parent="GameBoard" unique_id=1150624353 instance=ExtResource("26_vey2m")]
-position = Vector2(334, 459)
-current_stats = SubResource("Resource_rt72a")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
