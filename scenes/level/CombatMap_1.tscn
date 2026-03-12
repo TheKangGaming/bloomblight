@@ -586,7 +586,6 @@ position = Vector2(443, 471)
 character_data = SubResource("Resource_u5s1f")
 current_stats = SubResource("Resource_bhsje")
 level = 10
-is_player = true
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("12_qga0l")
@@ -595,3 +594,60 @@ autoplay = true
 
 [node name="MapDirector" type="Node" parent="." unique_id=1086377815]
 script = ExtResource("13_sfjbq")
+enemy_stat_scale_by_class = {
+"Archer": {
+"DEF": 90,
+"DEX": 95,
+"HP": 92,
+"SPD": 95,
+"STR": 92
+},
+"Deserter": {
+"DEF": 90,
+"DEX": 90,
+"HP": 90,
+"INT": 90,
+"MDEF": 90,
+"SPD": 90,
+"STR": 90
+},
+"Mage": {
+"DEF": 88,
+"DEX": 92,
+"HP": 88,
+"INT": 95,
+"MDEF": 92,
+"SPD": 92
+},
+"Purifier": {
+"DEF": 90,
+"DEX": 92,
+"HP": 90,
+"INT": 92,
+"MDEF": 95,
+"SPD": 92
+},
+"Tank": {
+"DEF": 105,
+"HP": 100,
+"MDEF": 95,
+"SPD": 85,
+"STR": 95
+},
+"Warrior": {
+"DEF": 92,
+"DEX": 92,
+"HP": 95,
+"SPD": 92,
+"STR": 95
+},
+"default": {
+"DEF": 95,
+"DEX": 95,
+"HP": 95,
+"INT": 95,
+"MDEF": 95,
+"SPD": 95,
+"STR": 95
+}
+}
