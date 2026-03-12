@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_os2c7")
-metadata_name = "The Bloom"
+metadata_name = "Purifier"
 tags = PackedStringArray()
 role = "Support"
 base_stats = {
