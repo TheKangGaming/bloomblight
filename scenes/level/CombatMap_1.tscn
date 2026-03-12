@@ -353,7 +353,51 @@ display_name = "Orc"
 class_data = ExtResource("13_vtv1r")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_xaypr"]
+[sub_resource type="Resource" id="Resource_kk0qh"]
+script = ExtResource("13_d3c05")
+hp = 24
+max_hp = 24
+str = 8
+physical_def = 3
+magic_def = 2
+dex = 4
+int_stat = 1
+mov = 5
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 15,
+"DEX": 30,
+"HP": 85,
+"INT": 5,
+"MDEF": 10,
+"MOV": 0,
+"SPD": 40,
+"STR": 70
+}
+stat_caps = {
+"ATK_RNG": 1,
+"DEF": 15,
+"DEX": 20,
+"INT": 10,
+"MAX_HP": 80,
+"MDEF": 14,
+"MOV": 5,
+"SPD": 24,
+"STR": 30
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
+
+[sub_resource type="Resource" id="Resource_0a6tx"]
 script = ExtResource("13_d3c05")
 hp = 24
 max_hp = 24
@@ -407,7 +451,7 @@ equipped_armor = ExtResource("19_armor")
 equipped_accessory = ExtResource("20_accessory")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_rt72a"]
+[sub_resource type="Resource" id="Resource_xaypr"]
 script = ExtResource("13_d3c05")
 str = 6
 physical_def = 5
@@ -456,15 +500,16 @@ class_data = ExtResource("23_rmf8s")
 abilities = Array[ExtResource("21_efnms")]([ExtResource("22_x18w8")])
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_45ywn"]
+[sub_resource type="Resource" id="Resource_rt72a"]
 script = ExtResource("13_d3c05")
-hp = 16
-max_hp = 16
+hp = 21
+max_hp = 21
 str = 0
-magic_def = 6
-dex = 4
-int_stat = 10
-spd = 6
+physical_def = 6
+magic_def = 11
+dex = 10
+int_stat = 16
+spd = 11
 mov = 4
 growth_rates = {
 "ATK_RNG": 0,
@@ -506,18 +551,51 @@ display_name = "Silas"
 class_data = ExtResource("27_0a6tx")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
-[sub_resource type="Resource" id="Resource_bhsje"]
+[sub_resource type="Resource" id="Resource_45ywn"]
 script = ExtResource("13_d3c05")
-hp = 18
-max_hp = 18
-str = 8
-physical_def = 4
-magic_def = 3
-dex = 12
-int_stat = 3
-spd = 10
+hp = 22
+max_hp = 22
+str = 7
+physical_def = 7
+magic_def = 6
+dex = 14
+int_stat = 2
+spd = 12
 mov = 5
 atk_rng = 2
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 20,
+"DEX": 70,
+"HP": 50,
+"INT": 10,
+"MDEF": 20,
+"MOV": 0,
+"SPD": 60,
+"STR": 40
+}
+stat_caps = {
+"ATK_RNG": 2,
+"DEF": 18,
+"DEX": 30,
+"INT": 15,
+"MAX_HP": 50,
+"MDEF": 18,
+"MOV": 5,
+"SPD": 28,
+"STR": 22
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
 
 [node name="Node2D" type="Node2D" unique_id=715923779]
 metadata/_edit_vertical_guides_ = [768.0]
@@ -567,25 +645,31 @@ grid = ExtResource("2_gh08p")
 y_sort_enabled = true
 position = Vector2(375, 212)
 character_data = SubResource("Resource_ddai4")
-current_stats = SubResource("Resource_xaypr")
+current_stats = SubResource("Resource_kk0qh")
 
-[node name="Savannah" parent="GameBoard" unique_id=376372171 instance=ExtResource("14_d3c05")]
+[node name="Orc2" parent="GameBoard" unique_id=376372171 instance=ExtResource("11_qga0l")]
+y_sort_enabled = true
+position = Vector2(441, 210)
+character_data = SubResource("Resource_ddai4")
+current_stats = SubResource("Resource_0a6tx")
+
+[node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
 character_data = SubResource("Resource_yjnxd")
-current_stats = SubResource("Resource_rt72a")
+current_stats = SubResource("Resource_xaypr")
 level = 10
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(323, 471)
 character_data = SubResource("Resource_vey2m")
-current_stats = SubResource("Resource_45ywn")
+current_stats = SubResource("Resource_rt72a")
 level = 10
 is_player = false
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
 position = Vector2(443, 471)
 character_data = SubResource("Resource_u5s1f")
-current_stats = SubResource("Resource_bhsje")
+current_stats = SubResource("Resource_45ywn")
 level = 10
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
@@ -595,3 +679,60 @@ autoplay = true
 
 [node name="MapDirector" type="Node" parent="." unique_id=1086377815]
 script = ExtResource("13_sfjbq")
+enemy_stat_scale_by_class = {
+"Archer": {
+"DEF": 90,
+"DEX": 95,
+"HP": 92,
+"SPD": 95,
+"STR": 92
+},
+"Deserter": {
+"DEF": 90,
+"DEX": 90,
+"HP": 90,
+"INT": 90,
+"MDEF": 90,
+"SPD": 90,
+"STR": 90
+},
+"Mage": {
+"DEF": 88,
+"DEX": 92,
+"HP": 88,
+"INT": 95,
+"MDEF": 92,
+"SPD": 92
+},
+"Purifier": {
+"DEF": 90,
+"DEX": 92,
+"HP": 90,
+"INT": 92,
+"MDEF": 95,
+"SPD": 92
+},
+"Tank": {
+"DEF": 105,
+"HP": 100,
+"MDEF": 95,
+"SPD": 85,
+"STR": 95
+},
+"Warrior": {
+"DEF": 92,
+"DEX": 92,
+"HP": 95,
+"SPD": 92,
+"STR": 95
+},
+"default": {
+"DEF": 95,
+"DEX": 95,
+"HP": 95,
+"INT": 95,
+"MDEF": 95,
+"SPD": 95,
+"STR": 95
+}
+}

@@ -5,6 +5,8 @@ extends Node
 @export var max_level: int = 99
 @export var use_player_level: bool = true
 @export var class_level_offsets: Dictionary = {}
+@export var enemy_stat_scale_by_class: Dictionary = {}
+@export var enemy_stat_flat_bonus_by_class: Dictionary = {}
 
 
 func _ready() -> void:
@@ -77,7 +79,80 @@ func _build_enemy_stats_for_level(enemy: Unit, target_level: int) -> UnitStats:
 	if level_ups > 0:
 		generated_stats.apply_auto_levels(level_ups)
 
+	_apply_enemy_stat_scaling(enemy, generated_stats)
+
 	return generated_stats
+
+
+func _apply_enemy_stat_scaling(enemy: Unit, generated_stats: UnitStats) -> void:
+	if enemy == null or generated_stats == null:
+		return
+
+	var class_key := _get_enemy_class_key(enemy)
+	if class_key.is_empty():
+		return
+
+	var scale_map: Dictionary = _get_class_table_entry(enemy_stat_scale_by_class, class_key)
+	if not scale_map.is_empty():
+		_apply_stat_scale_map(generated_stats, scale_map)
+
+	var flat_map: Dictionary = _get_class_table_entry(enemy_stat_flat_bonus_by_class, class_key)
+	if not flat_map.is_empty():
+		generated_stats.apply_delta(flat_map)
+
+	generated_stats.clamp_to_caps()
+	generated_stats.hp = generated_stats.max_hp
+
+
+func _get_class_table_entry(table: Dictionary, class_key: String) -> Dictionary:
+	if table.has(class_key) and table[class_key] is Dictionary:
+		return table[class_key] as Dictionary
+	if table.has("default") and table["default"] is Dictionary:
+		return table["default"] as Dictionary
+	return {}
+
+
+func _apply_stat_scale_map(stats: UnitStats, scale_map: Dictionary) -> void:
+	for raw_key in scale_map.keys():
+		var property_name := _stat_property_from_key(String(raw_key))
+		if property_name.is_empty():
+			continue
+
+		var current_value := int(stats.get(property_name))
+		var scale_percent := maxi(int(scale_map[raw_key]), 0)
+		var scaled_value := int(round(float(current_value) * (float(scale_percent) / 100.0)))
+		stats.set(property_name, scaled_value)
+
+
+func _stat_property_from_key(raw_key: String) -> String:
+	match raw_key.to_upper():
+		"HP", "MAX_HP", "MAX_HEALTH":
+			return "max_hp"
+		"STR", "STRENGTH":
+			return "str"
+		"DEF", "DEFENSE", "PHYSICAL_DEF", "PHYSICAL_DEFENSE":
+			return "physical_def"
+		"MDEF", "MAGIC_DEF", "MAGIC_DEFENSE":
+			return "magic_def"
+		"DEX", "DEXTERITY":
+			return "dex"
+		"INT", "INTELLIGENCE":
+			return "int_stat"
+		"SPD", "SPEED":
+			return "spd"
+		"MOV", "MOVE_RANGE":
+			return "mov"
+		"ATK_RNG", "ATTACK_RANGE":
+			return "atk_rng"
+		_:
+			return ""
+
+
+func _get_enemy_class_key(enemy: Unit) -> String:
+	if enemy == null or enemy.character_data == null or enemy.character_data.class_data == null:
+		return ""
+
+	return String(enemy.character_data.class_data.metadata_name)
 
 
 func _resolve_player_level() -> int:
