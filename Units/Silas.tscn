@@ -2,9 +2,13 @@
 
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_fxqpl"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/stats/unit_stats.gd" id="2_a5yb6"]
+[ext_resource type="PackedScene" uid="uid://fhchsb42bkb" path="res://Units/silas_visuals.tscn" id="3_a5yb6"]
 
 [sub_resource type="Resource" id="Resource_sljd4"]
 script = ExtResource("2_a5yb6")
 
 [node name="Unit" unique_id=376372171 instance=ExtResource("1_fxqpl")]
 current_stats = SubResource("Resource_sljd4")
+
+[node name="Visuals" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1" unique_id=2093412421 instance=ExtResource("3_a5yb6")]
+position = Vector2(0, 12)

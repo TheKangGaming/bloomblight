@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://fhchsb42bkb"]
+
+[ext_resource type="PackedScene" uid="uid://cna6pebvulm7w" path="res://scenes/player/visuals.tscn" id="1_7q6sm"]
+[ext_resource type="Texture2D" uid="uid://cd6428w70xi1y" path="res://graphics/characters/Silas.png" id="2_dv8fp"]
+
+[node name="Visuals" unique_id=2093412421 instance=ExtResource("1_7q6sm")]
+
+[node name="Sprite2D" parent="." index="0" unique_id=1335107080]
+texture = ExtResource("2_dv8fp")
