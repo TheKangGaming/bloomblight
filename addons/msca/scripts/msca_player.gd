@@ -37,12 +37,28 @@ func _resolve_animation_player() -> AnimationPlayer:
 	if by_path != null:
 		return by_path
 
+	var sibling = get_node_or_null("../AnimationPlayer") as AnimationPlayer
+	if sibling != null:
+		return sibling
+
+	var in_parent = get_parent().find_child("AnimationPlayer", true, false) as AnimationPlayer if get_parent() != null else null
+	if in_parent != null:
+		return in_parent
+
 	return find_child("AnimationPlayer", true, false) as AnimationPlayer
 
 func _resolve_animation_tree() -> AnimationTree:
 	var by_path = get_node_or_null("SpriteLayers/AnimationTree") as AnimationTree
 	if by_path != null:
 		return by_path
+
+	var sibling = get_node_or_null("../AnimationTree") as AnimationTree
+	if sibling != null:
+		return sibling
+
+	var in_parent = get_parent().find_child("AnimationTree", true, false) as AnimationTree if get_parent() != null else null
+	if in_parent != null:
+		return in_parent
 
 	return find_child("AnimationTree", true, false) as AnimationTree
 	
