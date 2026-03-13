@@ -5,7 +5,7 @@ extends Node
 signal day_changed(new_day: int, encounter_data: Dictionary)
 
 # A typed dictionary contract for our deterministic encounters
-var threat_calendar: Dictionary = {
+const THREAT_CALENDAR: Dictionary = {
 	3: {
 		"id": &"orc_scout",
 		"display_name": "Orc Scouting Party",
@@ -22,13 +22,13 @@ var threat_calendar: Dictionary = {
 
 ## Returns the encounter data for a specific day. Returns empty dict if peaceful.
 func get_encounter_for_day(day: int) -> Dictionary:
-	if threat_calendar.has(day):
-		return threat_calendar[day]
+	if THREAT_CALENDAR.has(day):
+		return THREAT_CALENDAR[day].duplicate(true)
 	return {}
 
 ## Quick boolean check if a day has an attack scheduled
 func has_encounter(day: int) -> bool:
-	return threat_calendar.has(day)
+	return THREAT_CALENDAR.has(day)
 
 ## Called by the global clock when the day officially advances
 func trigger_day_change(new_day: int) -> void:

@@ -19,6 +19,7 @@ var _combat_intro_overlay: ColorRect
 var _combat_intro_panel: PanelContainer
 var _combat_intro_begin_button: Button
 var _combat_intro_body: RichTextLabel
+var _warning_ui_scene: PackedScene = preload("res://scenes/ui/warning_ui.tscn")
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -204,7 +205,11 @@ func _process_night_transition():
 		tween.tween_callback(func(): Global.pending_day_transition = false)
 	else:
 		# --- THREAT INTERCEPTOR ---
-		Global.pending_combat_scene_path = encounter["combat_scene"]
+		Global.pending_combat_scene_path = String(encounter.get("combat_scene", ""))
+		if Global.pending_combat_scene_path.is_empty():
+			push_error("Calendar encounter for day %d is missing a combat_scene path." % Global.current_day)
+			Global.pending_day_transition = false
+			return
 		Global.pending_day_transition = false
 		
 		level_reset() 
@@ -218,7 +223,7 @@ func _process_night_transition():
 		main_root.remove_child(self)
 		
 		# 3. Use our saved 'main_root' and 'main_tree' to spawn the UI!
-		var warning_ui = load("res://scenes/ui/warning_ui.tscn").instantiate()
+		var warning_ui = _warning_ui_scene.instantiate()
 		main_root.add_child(warning_ui)
 		main_tree.current_scene = warning_ui
 	
