@@ -502,12 +502,13 @@ metadata/_custom_type_script = "uid://dinfajkodigdx"
 
 [sub_resource type="Resource" id="Resource_rt72a"]
 script = ExtResource("13_d3c05")
+hp = 16
+max_hp = 16
 str = 0
-physical_def = 5
-magic_def = 10
-dex = 9
-int_stat = 16
-spd = 8
+magic_def = 6
+dex = 4
+int_stat = 10
+spd = 6
 mov = 4
 growth_rates = {
 "ATK_RNG": 0,
@@ -552,14 +553,13 @@ metadata/_custom_type_script = "uid://dinfajkodigdx"
 
 [sub_resource type="Resource" id="Resource_45ywn"]
 script = ExtResource("13_d3c05")
-hp = 21
-max_hp = 21
-str = 10
-physical_def = 5
-magic_def = 5
-dex = 16
-int_stat = 3
-spd = 13
+hp = 18
+max_hp = 18
+physical_def = 3
+magic_def = 3
+dex = 8
+int_stat = 2
+spd = 7
 mov = 5
 atk_rng = 2
 growth_rates = {
