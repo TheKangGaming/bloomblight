@@ -12,6 +12,7 @@ var direction: Vector2 = Vector2.ZERO
 var last_direction: Vector2 = Vector2.DOWN
 var current_speed := walk_speed
 var can_move: bool = true
+var is_performing_tool_action: bool = false
 var current_tool: Global.Tools = Global.Tools.AXE
 
 const TOOL_ANIMATIONS := {
@@ -51,7 +52,8 @@ func _physics_process(_delta: float) -> void:
 
 	velocity = direction * current_speed * int(can_move)
 	move_and_slide()
-	animation()
+	if not is_performing_tool_action:
+		animation()
 
 func _to_cardinal_direction(input_dir: Vector2) -> Vector2:
 	if input_dir == Vector2.ZERO:
@@ -78,28 +80,33 @@ func get_input() -> void:
 		toggle_menu_requested.emit(target_pos)
 
 func _perform_tool_action() -> void:
+	if is_performing_tool_action:
+		return
+
 	var player_center = global_position + Vector2(0, -chest_offset)
 	var target_pos = player_center + (last_direction * tool_direction_offset)
 	var animation_name: String = TOOL_ANIMATIONS.get(current_tool, "Idle")
 
+	is_performing_tool_action = true
 	travel_to_anim(animation_name, last_direction)
 	can_move = false
 
 	if current_tool == Global.Tools.HOE:
-		await animationPlayer.animation_finished
 		$Sounds/HoeSound.play()
 		tool_particles.global_position = target_pos
 		tool_particles.color = Color("#593a28")
 		tool_particles.emitting = true
 	elif current_tool == Global.Tools.WATER:
-		await animationPlayer.animation_finished
 		$Sounds/WaterSound.play()
 	elif current_tool == Global.Tools.AXE:
+		$Sounds/AxeSound.play()
 		axe_use()
 
-	if current_tool != Global.Tools.AXE:
-		tool_use.emit(current_tool, target_pos)
+	tool_use.emit(current_tool, target_pos)
 
+	await get_tree().create_timer(0.25).timeout
+
+	is_performing_tool_action = false
 	can_move = true
 	travel_to_anim("Idle", last_direction)
 
@@ -151,9 +158,6 @@ func axe_use() -> void:
 	tool_particles.global_position = target_pos
 	tool_particles.color = Color("#e3c298")
 	tool_particles.emitting = true
-
-	tool_use.emit(Global.Tools.AXE, target_pos)
-	$Sounds/AxeSound.play()
 
 func _on_steps_timer_timeout() -> void:
 	$Sounds/Steps.play()
