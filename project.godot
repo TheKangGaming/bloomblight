@@ -23,6 +23,7 @@ config/icon="res://icon.svg"
 
 Global="*uid://bcq8tavlkaxyr"
 ProgressionService="*res://systems/progression/progression_service.gd"
+CalendarService="*uid://cp8duraorkxir"
 
 [display]
 

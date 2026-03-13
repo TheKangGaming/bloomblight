@@ -67,7 +67,7 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed('time_skip'):
 		if Global.tutorial_step == 8:
 			Global.advance_tutorial()
-		day_switch()
+		request_end_day()
 
 func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 	# Tweak this number (16, 24, or 32) until it hits the exact tile  want
@@ -175,12 +175,52 @@ func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> bool: # Changed
 		
 	return false # <-- ADDED: Returns false if the tile isn't soil
 		
-func day_switch():
+func request_end_day():
+	# 1. Prevent the player from accidentally sleeping twice
+	if Global.pending_day_transition:
+		return
+	Global.pending_day_transition = true
+	
+	# 2. Start the fade to black
 	var tween = create_tween()
 	tween.tween_property($CanvasLayer/ColorRect, 'modulate:a', 1.0, 1.0)
-	tween.tween_callback(level_reset)
-	tween.tween_interval(1.0)
-	tween.tween_property($CanvasLayer/ColorRect, 'modulate:a', 0.0, 1.0)
+	tween.tween_callback(_process_night_transition)
+
+func _process_night_transition():
+	# 3. Advance the calendar exactly once!
+	Global.current_day += 1
+	
+	# 4. Ask the CalendarService what happens tomorrow
+	var encounter = CalendarService.get_encounter_for_day(Global.current_day)
+	
+	if encounter.is_empty():
+		# --- PEACEFUL DAY ---
+		level_reset() # Run your existing crop math!
+		
+		# Fade the screen back in
+		var tween = create_tween()
+		tween.tween_interval(1.0)
+		tween.tween_property($CanvasLayer/ColorRect, 'modulate:a', 0.0, 1.0)
+		tween.tween_callback(func(): Global.pending_day_transition = false)
+	else:
+		# --- THREAT INTERCEPTOR ---
+		Global.pending_combat_scene_path = encounter["combat_scene"]
+		Global.pending_day_transition = false
+		
+		level_reset() 
+		
+		# 1. Grab the tree BEFORE we unplug the farm!
+		var main_tree = get_tree()
+		var main_root = main_tree.root
+		
+		# 2. Save the Farm in memory and unplug it
+		Global.saved_farm_scene = self
+		main_root.remove_child(self)
+		
+		# 3. Use our saved 'main_root' and 'main_tree' to spawn the UI!
+		var warning_ui = load("res://scenes/ui/warning_ui.tscn").instantiate()
+		main_root.add_child(warning_ui)
+		main_tree.current_scene = warning_ui
 	
 func level_reset():
 	# 1. Calculate how many growth ticks are left in the current day

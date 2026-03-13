@@ -1246,6 +1246,13 @@ func _on_return_button_pressed(btn: Button) -> void:
 		# 2. WAIT ONE FRAME FOR GROUPS TO RE-REGISTER
 		await get_tree().process_frame 
 		
+		# --- THE FIX: WAKE THE FARM UP (FADE OUT THE BLACK SCREEN) ---
+		if Global.saved_farm_scene.has_node("CanvasLayer/ColorRect"):
+			var color_rect = Global.saved_farm_scene.get_node("CanvasLayer/ColorRect")
+			var tween = Global.saved_farm_scene.create_tween()
+			tween.tween_property(color_rect, "modulate:a", 0.0, 1.5).set_trans(Tween.TRANS_SINE)
+		# -------------------------------------------------------------
+		
 		# 3. Now it is safe to apply elapsed farm time.
 		if Global.saved_farm_scene.has_method("apply_combat_time_passage"):
 			Global.saved_farm_scene.apply_combat_time_passage(elapsed_seconds)

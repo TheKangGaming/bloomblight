@@ -48,6 +48,17 @@ var last_battle_result := {
 	"returned_at_unix": 0
 }
 
+# --- TIME & CALENDAR STATE ---
+var current_day: int = 1
+var pending_day_transition: bool = false
+
+# Tracks which encounters have been beaten (for save/load later)
+var resolved_encounters: Array = [] 
+
+# Used to temporarily hold the specific map we need to load
+var pending_combat_scene_path: String = ""
+# -----------------------------
+
 # --- TUTORIAL SYSTEM ---
 signal tutorial_updated(text: String)
 var tutorial_step: int = 0
