@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Texture2D" uid="uid://b3yvxp0g1pnn8" path="res://graphics/weapons/w22.png" id="1_icon"]
+[ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/weapon_data.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+weapon_name = "Iron Shortsword"
+description = "A sturdier sidearm favored by deserter skirmishers."
+icon = ExtResource("1_icon")
+might = 6
+hit_rate = 86
+attack_range = 1
+stat_bonuses = {
+"strength": 1,
+"speed": 1
+}
+metadata/_custom_type_script = "uid://c8wssyup5wth4"

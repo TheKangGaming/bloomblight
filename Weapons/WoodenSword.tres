@@ -6,6 +6,12 @@
 [resource]
 script = ExtResource("1_f7t4n")
 weapon_name = "Wooden Sword"
-description = "A sword used for praticing."
+description = "A practice blade with decent balance and control."
 icon = ExtResource("1_0askm")
+might = 4
+hit_rate = 92
+attack_range = 1
+stat_bonuses = {
+"dexterity": 1
+}
 metadata/_custom_type_script = "uid://c8wssyup5wth4"

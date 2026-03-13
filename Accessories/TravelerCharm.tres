@@ -5,9 +5,10 @@
 
 [resource]
 script = ExtResource("1_accessory")
-description = "A charm that sharpens focus on long journeys."
+accessory_name = "Traveler Charm"
+description = "A roadworn charm that grants a little poise and quickness."
 icon = ExtResource("1_3w8vu")
 stat_bonuses = {
-"dexterity": 2,
+"dexterity": 1,
 "speed": 1
 }

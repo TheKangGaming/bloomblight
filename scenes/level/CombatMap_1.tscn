@@ -20,15 +20,21 @@
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
 [ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="18_ddai4"]
+[ext_resource type="Resource" path="res://Weapons/IronShortsword.tres" id="19_iron_sword"]
 [ext_resource type="Resource" uid="uid://bud6nrturapsp" path="res://data/Harvest.tres" id="18_x18w8"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="19_armor"]
+[ext_resource type="Resource" path="res://Armor/ScoutBrigandine.tres" id="20_scout_armor"]
+[ext_resource type="Resource" path="res://Armor/AshenMantle.tres" id="21_purifier_armor"]
 [ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://Accessories/TravelerCharm.tres" id="20_accessory"]
+[ext_resource type="Resource" path="res://Accessories/PrayerBeads.tres" id="22_prayer_beads"]
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="21_efnms"]
 [ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="22_x18w8"]
 [ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/Purifier.tres" id="23_rmf8s"]
 [ext_resource type="PackedScene" uid="uid://bxc8jd65qx0h" path="res://Units/tera.tscn" id="24_jk2x1"]
 [ext_resource type="PackedScene" uid="uid://cav5av4vtw4yn" path="res://Units/Silas.tscn" id="26_kk0qh"]
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://Units/Data/Archer.tres" id="27_0a6tx"]
+[ext_resource type="Resource" path="res://Weapons/TrainingBow.tres" id="28_training_bow"]
+[ext_resource type="Resource" path="res://Weapons/CinderRod.tres" id="29_cinder_rod"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -446,8 +452,8 @@ script = ExtResource("16_vtv1r")
 display_name = "Savannah"
 class_data = ExtResource("15_42768")
 abilities = Array[ExtResource("21_efnms")]([ExtResource("18_x18w8")])
-equipped_weapon = ExtResource("18_ddai4")
-equipped_armor = ExtResource("19_armor")
+equipped_weapon = ExtResource("19_iron_sword")
+equipped_armor = ExtResource("20_scout_armor")
 equipped_accessory = ExtResource("20_accessory")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
@@ -498,6 +504,9 @@ script = ExtResource("16_vtv1r")
 display_name = "Tera"
 class_data = ExtResource("23_rmf8s")
 abilities = Array[ExtResource("21_efnms")]([ExtResource("22_x18w8")])
+equipped_weapon = ExtResource("29_cinder_rod")
+equipped_armor = ExtResource("21_purifier_armor")
+equipped_accessory = ExtResource("22_prayer_beads")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 
 [sub_resource type="Resource" id="Resource_rt72a"]
@@ -548,6 +557,7 @@ minimum_gain_intervals = {
 script = ExtResource("16_vtv1r")
 display_name = "Silas"
 class_data = ExtResource("27_0a6tx")
+equipped_weapon = ExtResource("28_training_bow")
 equipped_armor = ExtResource("19_armor")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
 

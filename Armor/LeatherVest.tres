@@ -5,9 +5,11 @@
 
 [resource]
 script = ExtResource("1_armor")
-description = "A light vest that adds a little protection."
+armor_name = "Leather Vest"
+description = "A light vest preferred by archers for mobility and aim."
 icon = ExtResource("1_glq2y")
 stat_bonuses = {
-"defense": 2,
-"dexterity": 1
+"defense": 1,
+"dexterity": 2,
+"speed": 1
 }

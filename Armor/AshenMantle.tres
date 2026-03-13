@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ArmorData" format=3]
+
+[ext_resource type="Script" uid="uid://crjlhbtt5bth0" path="res://data/armor_data.gd" id="1_armor"]
+[ext_resource type="Texture2D" uid="uid://c2gkll2ebvlsj" path="res://graphics/armor/a1.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_armor")
+armor_name = "Ashen Mantle"
+description = "Ceremonial cloth stitched with warding ash for purifier initiates."
+icon = ExtResource("2_icon")
+stat_bonuses = {
+"defense": 1,
+"intelligence": 1,
+"magic_defense": 3
+}

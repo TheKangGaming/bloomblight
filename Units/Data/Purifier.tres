@@ -6,6 +6,7 @@
 script = ExtResource("1_os2c7")
 metadata_name = "Purifier"
 tags = PackedStringArray()
+primary_damage_stat = &"intelligence"
 role = "Support"
 base_stats = {
 "attack_range": 1,
