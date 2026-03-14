@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://d1c28n15wopmi" path="res://scenes/ui/cooking_menu.tscn" id="13_bften"]
 [ext_resource type="PackedScene" uid="uid://82ji0j6uwvpc" path="res://scenes/level/sign.tscn" id="13_lw8he"]
 [ext_resource type="AudioStream" uid="uid://dtn14tdae0ypa" path="res://audio/Whispers_of_the_Old_Wood.mp3" id="14_g35fm"]
+[ext_resource type="PackedScene" uid="uid://vf2y3h4ibrd" path="res://scenes/ui/day_time_hud.tscn" id="15_mr15t"]
 
 [sub_resource type="Gradient" id="Gradient_ig4jx"]
 offsets = PackedFloat32Array(0, 0.509434, 1)
@@ -2691,6 +2692,8 @@ position = Vector2(1040, 632)
 shape = SubResource("RectangleShape2D_g35fm")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
+
+[node name="DayTimeHUD" parent="CanvasLayer" unique_id=1114614844 instance=ExtResource("15_mr15t")]
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=671595794]
 modulate = Color(1, 1, 1, 0)
