@@ -2,6 +2,7 @@ extends Control
 
 const DAY_START_HOUR := 6
 const DAY_LENGTH_MINUTES := 18 * 60
+const TIME_TICK_MINUTES := 30
 
 @onready var day_label: Label = $VBoxContainer/DayLabel
 @onready var time_label: Label = $VBoxContainer/TimeLabel
@@ -72,9 +73,10 @@ func _update_clock(force := false) -> void:
 	var progress = clampf(1.0 - (time_left / max_time), 0.0, 1.0)
 	
 	var passed_minutes = int(DAY_LENGTH_MINUTES * progress)
-	
-	var hours = DAY_START_HOUR + (passed_minutes / 60)
-	var minutes = passed_minutes % 60
+	var displayed_minutes = passed_minutes - (passed_minutes % TIME_TICK_MINUTES)
+
+	var hours = DAY_START_HOUR + (displayed_minutes / 60)
+	var minutes = displayed_minutes % 60
 	
 	var am_pm = "AM"
 	if hours >= 12:
