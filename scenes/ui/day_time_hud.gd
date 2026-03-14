@@ -59,8 +59,16 @@ func _set_icon_animation(next_animation: String, force := false) -> void:
 		return
 
 	_last_animation = next_animation
+	
 	if time_icon.animation != next_animation:
-		time_icon.play(next_animation)
+		# --- ELEGANT FADE TRANSITION ---
+		var tween = create_tween()
+		# 1. Fade the current icon to 0% opacity over 0.5 seconds
+		tween.tween_property(time_icon, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE)
+		# 2. Swap the animation while it's invisible
+		tween.tween_callback(func(): time_icon.play(next_animation))
+		# 3. Fade the new icon back to 100% opacity over 0.5 seconds
+		tween.tween_property(time_icon, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 
 func _update_clock(force := false) -> void:
 	var max_time = day_timer.wait_time
