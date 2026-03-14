@@ -1,6 +1,189 @@
 [gd_scene format=3 uid="uid://vf2y3h4ibrd"]
 
 [ext_resource type="Script" uid="uid://dpldeju6kawb2" path="res://scenes/ui/day_time_hud.gd" id="1_3icrl"]
+[ext_resource type="Texture2D" uid="uid://0x2j8vxwgafw" path="res://graphics/animations/1 Dawn/1.png" id="2_owtcy"]
+[ext_resource type="Texture2D" uid="uid://bv0aqayffhrtr" path="res://graphics/animations/1 Dawn/2.png" id="3_eduv7"]
+[ext_resource type="Texture2D" uid="uid://bgnucicqyr0as" path="res://graphics/animations/1 Dawn/3.png" id="4_1tixe"]
+[ext_resource type="Texture2D" uid="uid://dx6dvec2150ha" path="res://graphics/animations/1 Dawn/4.png" id="5_inpwp"]
+[ext_resource type="Texture2D" uid="uid://bcclhi8jgrcij" path="res://graphics/animations/1 Dawn/5.png" id="6_nxy76"]
+[ext_resource type="Texture2D" uid="uid://c23lvfpkvc4e3" path="res://graphics/animations/1 Dawn/6.png" id="7_7gd6b"]
+[ext_resource type="Texture2D" uid="uid://co4veocpietgx" path="res://graphics/animations/1 Dawn/7.png" id="8_q4glw"]
+[ext_resource type="Texture2D" uid="uid://blu35n50dus2e" path="res://graphics/animations/1 Dawn/8.png" id="9_yq55n"]
+[ext_resource type="Texture2D" uid="uid://cskka3jcwvko7" path="res://graphics/animations/1 Dawn/9.png" id="10_tymn7"]
+[ext_resource type="Texture2D" uid="uid://c5fmpki0bgnc1" path="res://graphics/animations/1 Dawn/10.png" id="11_6fr82"]
+[ext_resource type="Texture2D" uid="uid://dgm1utc56el6i" path="res://graphics/animations/2 Day/1.png" id="12_oxm42"]
+[ext_resource type="Texture2D" uid="uid://5p5wrch5n1h7" path="res://graphics/animations/2 Day/2.png" id="13_w2xm1"]
+[ext_resource type="Texture2D" uid="uid://cohqoy504mkvs" path="res://graphics/animations/2 Day/3.png" id="14_arp44"]
+[ext_resource type="Texture2D" uid="uid://d4mwtut3shjgi" path="res://graphics/animations/2 Day/4.png" id="15_lop5c"]
+[ext_resource type="Texture2D" uid="uid://cda75ytvkm6rb" path="res://graphics/animations/2 Day/5.png" id="16_k11de"]
+[ext_resource type="Texture2D" uid="uid://5ivs733jmgv" path="res://graphics/animations/2 Day/6.png" id="17_rlt7g"]
+[ext_resource type="Texture2D" uid="uid://qs5mmm0sovu5" path="res://graphics/animations/2 Day/7.png" id="18_s4ipd"]
+[ext_resource type="Texture2D" uid="uid://mbg1yos47d55" path="res://graphics/animations/2 Day/8.png" id="19_4y0xj"]
+[ext_resource type="Texture2D" uid="uid://csx8ip56fog00" path="res://graphics/animations/2 Day/9.png" id="20_uhx6u"]
+[ext_resource type="Texture2D" uid="uid://c5ttjx6pswci4" path="res://graphics/animations/2 Day/10.png" id="21_yf30r"]
+[ext_resource type="Texture2D" uid="uid://ctsexh6u8uu44" path="res://graphics/animations/4 Night/1.png" id="22_i5o3j"]
+[ext_resource type="Texture2D" uid="uid://ds2f7ohq6ji5g" path="res://graphics/animations/4 Night/2.png" id="23_7lwpi"]
+[ext_resource type="Texture2D" uid="uid://dkqlnws7wl7xb" path="res://graphics/animations/4 Night/3.png" id="24_4iadq"]
+[ext_resource type="Texture2D" uid="uid://c7nkfn38l5" path="res://graphics/animations/4 Night/4.png" id="25_if4mc"]
+[ext_resource type="Texture2D" uid="uid://biw4rd0iev33s" path="res://graphics/animations/4 Night/5.png" id="26_ivgke"]
+[ext_resource type="Texture2D" uid="uid://bn1uqwgewkop0" path="res://graphics/animations/4 Night/6.png" id="27_2cptd"]
+[ext_resource type="Texture2D" uid="uid://do813yjjt8hsv" path="res://graphics/animations/4 Night/7.png" id="28_24thw"]
+[ext_resource type="Texture2D" uid="uid://b0tur08datrjw" path="res://graphics/animations/4 Night/8.png" id="29_pwnrp"]
+[ext_resource type="Texture2D" uid="uid://d3bgyv6gm7fmm" path="res://graphics/animations/4 Night/9.png" id="30_vnjkb"]
+[ext_resource type="Texture2D" uid="uid://bgdgddtvk6x2r" path="res://graphics/animations/4 Night/10.png" id="31_nhs2u"]
+[ext_resource type="Texture2D" uid="uid://5dlcbx1o0o66" path="res://graphics/animations/3 Noon/1.png" id="32_jmuxl"]
+[ext_resource type="Texture2D" uid="uid://cqfjxxr10ra68" path="res://graphics/animations/3 Noon/2.png" id="33_u4jrp"]
+[ext_resource type="Texture2D" uid="uid://blolbehyo3cxj" path="res://graphics/animations/3 Noon/3.png" id="34_6584q"]
+[ext_resource type="Texture2D" uid="uid://8vsj0o7ctucb" path="res://graphics/animations/3 Noon/4.png" id="35_174re"]
+[ext_resource type="Texture2D" uid="uid://c5sgwrdjmmh0k" path="res://graphics/animations/3 Noon/5.png" id="36_dh2tc"]
+[ext_resource type="Texture2D" uid="uid://dn7phksg5eod8" path="res://graphics/animations/3 Noon/6.png" id="37_gtjw8"]
+[ext_resource type="Texture2D" uid="uid://ceyf3dd4v0x13" path="res://graphics/animations/3 Noon/7.png" id="38_8m5ly"]
+[ext_resource type="Texture2D" uid="uid://cnm1qbpujb6hv" path="res://graphics/animations/3 Noon/8.png" id="39_e67lx"]
+[ext_resource type="Texture2D" uid="uid://bhmbnseibeafc" path="res://graphics/animations/3 Noon/9.png" id="40_y1xdm"]
+[ext_resource type="Texture2D" uid="uid://ckkla8636fy6t" path="res://graphics/animations/3 Noon/10.png" id="41_22lha"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_phbs8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_owtcy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_eduv7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_1tixe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_inpwp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_nxy76")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_7gd6b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_q4glw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_yq55n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_tymn7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_6fr82")
+}],
+"loop": true,
+"name": &"dawn",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("12_oxm42")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_w2xm1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_arp44")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_lop5c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_k11de")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_rlt7g")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_s4ipd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_4y0xj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_uhx6u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_yf30r")
+}],
+"loop": true,
+"name": &"day",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("22_i5o3j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_7lwpi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_4iadq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_if4mc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_ivgke")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_2cptd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_24thw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_pwnrp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_vnjkb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_nhs2u")
+}],
+"loop": true,
+"name": &"night",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("32_jmuxl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_u4jrp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_6584q")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_174re")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_dh2tc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_gtjw8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_8m5ly")
+}, {
+"duration": 1.0,
+"texture": ExtResource("39_e67lx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_y1xdm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_22lha")
+}],
+"loop": true,
+"name": &"noon",
+"speed": 10.0
+}]
 
 [node name="DayTimeHUD" type="Control" unique_id=1114614844]
 layout_mode = 3
@@ -8,7 +191,7 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -120.0
-offset_bottom = 60.0
+offset_bottom = 101.0
 grow_horizontal = 0
 script = ExtResource("1_3icrl")
 
@@ -22,9 +205,18 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -46.0
-offset_bottom = 40.0
+offset_left = -50.0
+offset_top = 28.0
+offset_right = -4.0
+offset_bottom = 68.0
 grow_horizontal = 0
+theme_override_constants/separation = -4
+
+[node name="TimeLabel" type="Label" parent="VBoxContainer" unique_id=1159419522]
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "6:00 AM"
+horizontal_alignment = 1
 
 [node name="DayLabel" type="Label" parent="VBoxContainer" unique_id=1388749463]
 layout_mode = 2
@@ -33,8 +225,9 @@ theme_override_font_sizes/font_size = 8
 text = "Day 1"
 horizontal_alignment = 1
 
-[node name="TimeLabel" type="Label" parent="VBoxContainer" unique_id=1159419522]
-layout_mode = 2
-theme_override_font_sizes/font_size = 8
-text = "6:00 AM"
-horizontal_alignment = 1
+[node name="TimeIcon" type="AnimatedSprite2D" parent="." unique_id=431973782]
+position = Vector2(92, 26)
+scale = Vector2(0.4, 0.4)
+sprite_frames = SubResource("SpriteFrames_phbs8")
+animation = &"noon"
+autoplay = "dawn"
