@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WeaponData" format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://bmik5reb3ilhq"]
 
 [ext_resource type="Texture2D" uid="uid://b3yvxp0g1pnn8" path="res://graphics/weapons/w22.png" id="1_icon"]
 [ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/weapon_data.gd" id="2_script"]
@@ -10,7 +10,6 @@ description = "A novice purifier focus that channels ember-touched rites."
 icon = ExtResource("1_icon")
 might = 3
 hit_rate = 94
-attack_range = 1
 stat_bonuses = {
 "intelligence": 2,
 "magic_defense": 1

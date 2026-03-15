@@ -1227,36 +1227,63 @@ func _on_return_button_pressed(btn: Button) -> void:
 	btn.disabled = true
 	_results_return_button = null
 
+	var is_victory = _are_all_players_alive()
 	Global.last_battle_result = {
-		"victory": _are_all_players_alive(),
+		"victory": is_victory,
 		"enemies_defeated": _enemies_defeated,
 		"returned_at_unix": Time.get_unix_time_from_system()
 	}
 
-	if Global.tutorial_step == 14 and Global.last_battle_result.victory:
+	if Global.tutorial_step == 14 and is_victory:
 		Global.advance_tutorial()
 
 	if Global.saved_farm_scene:
 		var elapsed_seconds = Global.consume_combat_elapsed_seconds()
+		var farm = Global.saved_farm_scene
 
 		# 1. Plug the farm back in
-		get_tree().root.add_child(Global.saved_farm_scene)
-		get_tree().current_scene = Global.saved_farm_scene
+		get_tree().root.add_child(farm)
+		get_tree().current_scene = farm
 		
 		# 2. WAIT ONE FRAME FOR GROUPS TO RE-REGISTER
 		await get_tree().process_frame 
 		
-		# --- THE FIX: WAKE THE FARM UP (FADE OUT THE BLACK SCREEN) ---
-		if Global.saved_farm_scene.has_node("CanvasLayer/ColorRect"):
-			var color_rect = Global.saved_farm_scene.get_node("CanvasLayer/ColorRect")
-			var tween = Global.saved_farm_scene.create_tween()
-			tween.tween_property(color_rect, "modulate:a", 0.0, 1.5).set_trans(Tween.TRANS_SINE)
-		# -------------------------------------------------------------
+		var color_rect = farm.get_node_or_null("CanvasLayer/ColorRect")
+		var hud = farm.get_node_or_null("CanvasLayer/DayTimeHUD")
 		
-		# 3. Now it is safe to apply elapsed farm time.
-		if Global.saved_farm_scene.has_method("apply_combat_time_passage"):
-			Global.saved_farm_scene.apply_combat_time_passage(elapsed_seconds)
+		if is_victory:
+			# ==========================================
+			# --- THE VICTORY PATH (Late Afternoon) ---
+			# ==========================================
+			if color_rect:
+				var tween = farm.create_tween()
+				tween.tween_property(color_rect, "modulate:a", 0.0, 1.5).set_trans(Tween.TRANS_SINE)
+				
+			if farm.has_method("apply_combat_time_passage"):
+				farm.apply_combat_time_passage(elapsed_seconds)
+				
+		else:
+			# ==========================================
+			# --- THE DEFEAT PATH (The Coma) ---
+			# ==========================================
+			# 1. The Penalty: They were unconscious for a full day!
+			Global.current_day += 1
 			
+			# 2. Force a massive night cycle to grow crops and reset clock to 6:00 AM
+			if farm.has_method("level_reset"):
+				farm.level_reset()
+				
+			# 3. Force the UI to reflect the missed day instantly behind the dark screen
+			if hud and hud.has_method("_update_view"):
+				hud._update_view(true)
+				
+			# 4. Slowly wake up (Longer fade from black to simulate grogginess)
+			if color_rect:
+				color_rect.modulate.a = 1.0 # Ensure it starts pitch black
+				var tween = farm.create_tween()
+				tween.tween_interval(2.0) # Stay in the dark for 2 seconds to let the music linger
+				tween.tween_property(color_rect, "modulate:a", 0.0, 4.0).set_trans(Tween.TRANS_SINE)
+
 		Global.saved_farm_scene = null
 
 	get_parent().queue_free()
