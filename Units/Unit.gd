@@ -266,11 +266,11 @@ func get_combat_stats(target: Unit) -> Dictionary:
 		weapon_might = int(equipped_weapon.might)
 		weapon_hit = int(equipped_weapon.hit_rate)
 
-	var attacker_dex_bonus := _get_equipment_bonus_stat("dexterity")
+	var attacker_dex_bonus := _get_equipment_bonus_stat("dexterity", equipped_weapon)
 	var hit_chance = clamp(weapon_hit + ((dexterity + attacker_dex_bonus) * 2) - (target.speed * 2), 0, 100)
 	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
 	var is_magic_damage := _uses_magic_damage()
-	var damage_profile := _resolve_damage_stat_profile(is_magic_damage)
+	var damage_profile := _resolve_damage_stat_profile(is_magic_damage, equipped_weapon)
 	var attack_stat := int(damage_profile.get("attack_stat", 0))
 
 	var defense_stat := target.magic_defense if is_magic_damage else target.defense
@@ -294,7 +294,7 @@ func get_attack_preview_data(weapon: WeaponData = null) -> Dictionary:
 	if equipped_weapon != null:
 		weapon_might = int(equipped_weapon.might)
 
-	var profile := _resolve_damage_stat_profile(_uses_magic_damage())
+	var profile := _resolve_damage_stat_profile(_uses_magic_damage(), equipped_weapon)
 	var attack_stat := int(profile.get("attack_stat", 0))
 	var attack_total := maxi(0, attack_stat + weapon_might)
 
@@ -306,9 +306,9 @@ func get_attack_preview_data(weapon: WeaponData = null) -> Dictionary:
 	}
 
 
-func _resolve_damage_stat_profile(is_magic_damage: bool) -> Dictionary:
+func _resolve_damage_stat_profile(is_magic_damage: bool, weapon_override: WeaponData = null) -> Dictionary:
 	if is_magic_damage:
-		var int_total := int_stat + _get_equipment_bonus_stat("intelligence")
+		var int_total := int_stat + _get_equipment_bonus_stat("intelligence", weapon_override)
 		return {
 			"attack_stat": int_total,
 			"stat_label": "INT",
@@ -319,8 +319,8 @@ func _resolve_damage_stat_profile(is_magic_damage: bool) -> Dictionary:
 	var primary_stat := String(class_data.primary_damage_stat).to_lower() if class_data != null else "strength"
 	var secondary_stat := String(class_data.secondary_stat).to_lower() if class_data != null else ""
 
-	var strength_total := strength + _get_equipment_bonus_stat("strength")
-	var dexterity_total := dexterity + _get_equipment_bonus_stat("dexterity")
+	var strength_total := strength + _get_equipment_bonus_stat("strength", weapon_override)
+	var dexterity_total := dexterity + _get_equipment_bonus_stat("dexterity", weapon_override)
 
 	if (primary_stat == "strength" or primary_stat == "str") and (secondary_stat == "dexterity" or secondary_stat == "dex"):
 		var weighted_attack := int(floor((strength_total * ARCHER_DAMAGE_STR_WEIGHT) + (dexterity_total * ARCHER_DAMAGE_DEX_WEIGHT)))
@@ -339,12 +339,15 @@ func _resolve_damage_stat_profile(is_magic_damage: bool) -> Dictionary:
 	}
 
 
-func _get_equipment_bonus_stat(key: String) -> int:
+func _get_equipment_bonus_stat(key: String, weapon_override: WeaponData = null) -> int:
 	if character_data == null:
 		return 0
 
 	var total := 0
-	total += _get_stat_bonus_from_item(character_data.equipped_weapon, key)
+	var weapon_item: Resource = weapon_override
+	if weapon_item == null:
+		weapon_item = character_data.equipped_weapon
+	total += _get_stat_bonus_from_item(weapon_item, key)
 	total += _get_stat_bonus_from_item(character_data.equipped_armor, key)
 	total += _get_stat_bonus_from_item(character_data.equipped_accessory, key)
 	return total
