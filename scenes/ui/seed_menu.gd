@@ -21,7 +21,7 @@ func open(player_pos: Vector2):
 		# FIX: Only create buttons if the item is actually a seed!
 		# We check if the item is in our SEED_COORDS dictionary (from seed_button)
 		# Or you can manually check:
-		if item_type in [Global.Items.CORN_SEED, Global.Items.TOMATO_SEED, Global.Items.PUMPKIN_SEED]:
+		if item_type in Global.HARVEST_DROPS:
 			
 			var amount = Global.inventory[item_type]
 			if amount > 0:

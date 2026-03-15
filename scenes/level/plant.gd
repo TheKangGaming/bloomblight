@@ -17,20 +17,120 @@ var grow_speed: float
 
 
 const plant_data = {
-	Global.Items.CORN_SEED: { 
+	# Summer
+	Global.Items.BLUEBERRY_SEED: {
+		'origin': Vector2i(3, 8),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.WHEAT_SEED: {
+		'origin': Vector2i(3, 9),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.MELON_SEED: {
+		'origin': Vector2i(3, 10),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.CORN_SEED: {
 		'origin': Vector2i(3, 11),
-		'max age': 5, 
-		'grow speed': 1
+		'max age': 5,
+		'grow speed': 1.0
 	},
-	Global.Items.TOMATO_SEED: { 
+	Global.Items.HOT_PEPPER_SEED: {
+		'origin': Vector2i(3, 12),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.RADISH_SEED: {
+		'origin': Vector2i(3, 13),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.RED_CABBAGE_SEED: {
+		'origin': Vector2i(3, 14),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.TOMATO_SEED: {
 		'origin': Vector2i(3, 15),
-		'max age': 5, 
-		'grow speed': 1
+		'max age': 5,
+		'grow speed': 0.75
 	},
-	Global.Items.PUMPKIN_SEED: { 
-		'origin': Vector2i(23, 8), 
-		'max age': 5, 
-		'grow speed': 0.5
+
+	# Spring
+	Global.Items.CARROT_SEED: {
+		'origin': Vector2i(13, 8),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.CAULIFLOWER_SEED: {
+		'origin': Vector2i(13, 9),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.POTATO_SEED: {
+		'origin': Vector2i(13, 10),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.PARSNIP_SEED: {
+		'origin': Vector2i(13, 11),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.GARLIC_SEED: {
+		'origin': Vector2i(13, 12),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.GREEN_BEANS_SEED: {
+		'origin': Vector2i(13, 13),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.STRAWBERRY_SEED: {
+		'origin': Vector2i(13, 14),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.COFFEE_BEAN_SEED: {
+		'origin': Vector2i(13, 15),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+
+	# Fall
+	Global.Items.PUMPKIN_SEED: {
+		'origin': Vector2i(23, 8),
+		'max age': 5,
+		'grow speed': 0.2
+	},
+	Global.Items.BROCCOLI_SEED: {
+		'origin': Vector2i(23, 9),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.ARTICHOKE_SEED: {
+		'origin': Vector2i(23, 10),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.EGGPLANT_SEED: {
+		'origin': Vector2i(23, 11),
+		'max age': 5,
+		'grow speed': 0.75
+	},
+	Global.Items.BOK_CHOY_SEED: {
+		'origin': Vector2i(23, 12),
+		'max age': 5,
+		'grow speed': 1.0
+	},
+	Global.Items.GRAPE_SEED: {
+		'origin': Vector2i(23, 13),
+		'max age': 5,
+		'grow speed': 0.75
 	}
 }
 
