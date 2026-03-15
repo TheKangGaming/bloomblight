@@ -140,7 +140,10 @@ enum Items {
 	
 	# Food
 	
-	ROASTED_CORN, TOMATO_SOUP, HERBAL_HASH
+	ROASTED_CORN, TOMATO_SOUP, HERBAL_HASH,
+	GARLIC_MASHED_POTATOES, GLAZED_CARROTS, ROASTED_ROOT_MEDLEY,
+	CAULIFLOWER_STEAK, GREEN_BEAN_SAUTE, STRAWBERRY_ENERGY_BOWL,
+	MORNING_COFFEE, PARSNIP_SOUP
 }
 
 # 2. HARVEST MAPPING
@@ -279,6 +282,14 @@ var inventory = {
 	Items.ROASTED_CORN: 0,
 	Items.TOMATO_SOUP: 0,
 	Items.HERBAL_HASH: 0,
+	Items.GARLIC_MASHED_POTATOES: 0,
+	Items.GLAZED_CARROTS: 0,
+	Items.ROASTED_ROOT_MEDLEY: 0,
+	Items.CAULIFLOWER_STEAK: 0,
+	Items.GREEN_BEAN_SAUTE: 0,
+	Items.STRAWBERRY_ENERGY_BOWL: 0,
+	Items.MORNING_COFFEE: 0,
+	Items.PARSNIP_SOUP: 0,
 }
 
 # Early-game meal tuning notes:
@@ -305,6 +316,62 @@ var recipes = {
 		"buff_preview": "+1 VIT, +1 DEX, +1 SPD, +1 STR",
 		"role_tag": "Generalist",
 		"ingredients": {Items.POTATO: 1, Items.GARLIC: 1, Items.WOOD: 1}
+	},
+	Items.GARLIC_MASHED_POTATOES: {
+		"display_name": "Garlic Mashed Potatoes",
+		"buff_preview": "+2 STR, +2 DEF",
+		"role_tag": "Frontliner",
+		"strategy_note": "The Brawler meal for Savannah.",
+		"ingredients": {Items.POTATO: 1, Items.GARLIC: 1}
+	},
+	Items.GLAZED_CARROTS: {
+		"display_name": "Glazed Carrots",
+		"buff_preview": "+3 DEX, +1 SPD",
+		"role_tag": "Archer",
+		"strategy_note": "Maximizes Silas's crit chance and accuracy.",
+		"ingredients": {Items.CARROT: 1, Items.PARSNIP: 1}
+	},
+	Items.ROASTED_ROOT_MEDLEY: {
+		"display_name": "Roasted Root Medley",
+		"buff_preview": "+4 VIT, +1 STR",
+		"role_tag": "Frontliner",
+		"strategy_note": "High health boost before a long battle.",
+		"ingredients": {Items.POTATO: 1, Items.CARROT: 1, Items.PARSNIP: 1}
+	},
+	Items.CAULIFLOWER_STEAK: {
+		"display_name": "Cauliflower \"Steak\"",
+		"buff_preview": "+3 INT, +1 DEF",
+		"role_tag": "Purifier",
+		"strategy_note": "Boosts Tera's magic/purifying power and keeps her safe.",
+		"ingredients": {Items.CAULIFLOWER: 1, Items.GARLIC: 1}
+	},
+	Items.GREEN_BEAN_SAUTE: {
+		"display_name": "Green Bean Sauté",
+		"buff_preview": "+2 VIT, +2 SPD",
+		"role_tag": "Archer",
+		"strategy_note": "Perfect for dodging or repositioning.",
+		"ingredients": {Items.GREEN_BEANS: 1, Items.GARLIC: 1}
+	},
+	Items.STRAWBERRY_ENERGY_BOWL: {
+		"display_name": "Strawberry Energy Bowl",
+		"buff_preview": "+1 VIT, +1 MOV",
+		"role_tag": "Archer",
+		"strategy_note": "A light snack that helps characters cover more ground.",
+		"ingredients": {Items.STRAWBERRY: 1}
+	},
+	Items.MORNING_COFFEE: {
+		"display_name": "Morning Coffee",
+		"buff_preview": "+2 MOV, +1 SPD",
+		"role_tag": "Archer",
+		"strategy_note": "Massive movement boost for kiting Orcs.",
+		"ingredients": {Items.COFFEE_BEAN: 1}
+	},
+	Items.PARSNIP_SOUP: {
+		"display_name": "Parsnip Soup",
+		"buff_preview": "+2 INT, +2 VIT",
+		"role_tag": "Generalist",
+		"strategy_note": "A balanced meal for hybrid support/tanking.",
+		"ingredients": {Items.PARSNIP: 1, Items.POTATO: 1}
 	}
 }
 
@@ -424,7 +491,15 @@ var food_stats = {
 	# Purifier path: casting tempo and reliability, still no movement dependency.
 	Items.TOMATO_SOUP:  {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 1, "INT": 2, "SPD": 1, "MOV": 0},
 	# Generalist fallback: broadly useful when role-specific ingredients are unavailable.
-	Items.HERBAL_HASH:  {"VIT": 1, "STR": 1, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 1, "MOV": 0}
+	Items.HERBAL_HASH:  {"VIT": 1, "STR": 1, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 1, "MOV": 0},
+	Items.GARLIC_MASHED_POTATOES: {"VIT": 0, "STR": 2, "DEF": 2, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.GLAZED_CARROTS: {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 3, "INT": 0, "SPD": 1, "MOV": 0},
+	Items.ROASTED_ROOT_MEDLEY: {"VIT": 4, "STR": 1, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.CAULIFLOWER_STEAK: {"VIT": 0, "STR": 0, "DEF": 1, "DEX": 0, "INT": 3, "SPD": 0, "MOV": 0},
+	Items.GREEN_BEAN_SAUTE: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 2, "MOV": 0},
+	Items.STRAWBERRY_ENERGY_BOWL: {"VIT": 1, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 1},
+	Items.MORNING_COFFEE: {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 1, "MOV": 2},
+	Items.PARSNIP_SOUP: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 2, "SPD": 0, "MOV": 0}
 	# Add future meals here (respect early MOV cap and total power budget).
 }
 

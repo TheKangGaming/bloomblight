@@ -96,6 +96,14 @@ func _ready():
 	item_map[Global.Items.ROASTED_CORN] = [SHEET_FURNITURE, Vector2i(23,4)]
 	item_map[Global.Items.TOMATO_SOUP] = [SHEET_FURNITURE, Vector2i(21,4)]
 	item_map[Global.Items.HERBAL_HASH] = [SHEET_FURNITURE, Vector2i(22,4)]
+	item_map[Global.Items.GARLIC_MASHED_POTATOES] = [SHEET_FURNITURE, Vector2i(20,4)]
+	item_map[Global.Items.GLAZED_CARROTS] = [SHEET_FURNITURE, Vector2i(24,4)]
+	item_map[Global.Items.ROASTED_ROOT_MEDLEY] = [SHEET_FURNITURE, Vector2i(25,4)]
+	item_map[Global.Items.CAULIFLOWER_STEAK] = [SHEET_FURNITURE, Vector2i(26,4)]
+	item_map[Global.Items.GREEN_BEAN_SAUTE] = [SHEET_FURNITURE, Vector2i(27,4)]
+	item_map[Global.Items.STRAWBERRY_ENERGY_BOWL] = [SHEET_FURNITURE, Vector2i(28,4)]
+	item_map[Global.Items.MORNING_COFFEE] = [SHEET_FURNITURE, Vector2i(29,4)]
+	item_map[Global.Items.PARSNIP_SOUP] = [SHEET_FURNITURE, Vector2i(30,4)]
 	
 
 
