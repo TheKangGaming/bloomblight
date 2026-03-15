@@ -29,34 +29,46 @@ func _ready() -> void:
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
 
-func apply_combat_time_passage(_elapsed_seconds: float) -> void:
+func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer
 	var grow_timer = $GrowTimer
-	var day_time_left = day_timer.time_left
+	
+	# 1. A grueling battle takes about 65% of the day (roughly jumping to 6:00 PM / Nightfall)
+	# We use the actual elapsed time, or 65% of the day, whichever is longer.
+	var battle_duration_seconds = max(elapsed_seconds, _day_timer_cycle_seconds * 0.65)
+	
+	# Cap it so we never accidentally force the timer into the negatives
+	var simulated_seconds = min(battle_duration_seconds, day_timer.time_left - 2.0)
+	
 	var grow_time_left = max(grow_timer.time_left, 0.001)
 	var grow_interval = _grow_timer_cycle_seconds
 
-	# Combat should fast-forward the farm to night, but never into a new day.
-	var simulated_seconds = day_time_left
-	if simulated_seconds <= 0.0:
-		day_timer.start(0.01)
-		day_timer.wait_time = _day_timer_cycle_seconds
-		grow_timer.stop()
-		grow_timer.wait_time = _grow_timer_cycle_seconds
-		return
-
+	# 2. Codex's perfectly safe crop tick math
 	var ticks_to_simulate := 0
 	if simulated_seconds >= grow_time_left:
 		ticks_to_simulate = 1 + int(floor((simulated_seconds - grow_time_left) / grow_interval))
 
 	for _i in range(ticks_to_simulate):
-		_on_grow_timer_timeout()
+		if has_method("_on_grow_timer_timeout"):
+			_on_grow_timer_timeout()
 
-	# Leave the scene at night with the next day not yet started.
-	day_timer.start(0.01)
+	# 3. Advance the clock safely to the Evening (Leaving time for the player to walk around)
+	var new_day_time = day_timer.time_left - simulated_seconds
+	day_timer.start(max(new_day_time, 1.0))
 	day_timer.wait_time = _day_timer_cycle_seconds
-	grow_timer.stop()
+	
+	# Sync the grow timer so plants don't lose their partial progress
+	var remainder_grow = simulated_seconds - (ticks_to_simulate * grow_interval)
+	var new_grow_time = grow_time_left - remainder_grow
+	if new_grow_time <= 0:
+		new_grow_time += grow_interval
+	grow_timer.start(max(new_grow_time, 0.01))
 	grow_timer.wait_time = _grow_timer_cycle_seconds
+
+	# 4. Force the UI to instantly update to the new Late Afternoon/Night time!
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud and hud.has_method("_update_view"):
+		hud._update_view(true)
 	
 func _on_seed_menu_cancelled():
 	# Give the player their movement back!
