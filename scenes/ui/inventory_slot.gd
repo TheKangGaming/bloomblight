@@ -81,11 +81,11 @@ func _ready():
 	item_map[Global.Items.STRAWBERRY] = [SHEET_FARM, Vector2i(20, 14)]
 	item_map[Global.Items.COFFEE_BEAN] = [SHEET_FARM, Vector2i(20, 15)]
 	item_map[Global.Items.PUMPKIN] = [SHEET_FARM, Vector2i(30, 8)]
-	item_map[Global.Items.BROCCOLI] = [SHEET_FARM, Vector2i(31, 9)]
-	item_map[Global.Items.ARTICHOKE] = [SHEET_FARM, Vector2i(32, 10)]
-	item_map[Global.Items.EGGPLANT] = [SHEET_FARM, Vector2i(33, 11)]
-	item_map[Global.Items.BOK_CHOY] = [SHEET_FARM, Vector2i(34, 12)]
-	item_map[Global.Items.GRAPE] = [SHEET_FARM, Vector2i(35, 13)]
+	item_map[Global.Items.BROCCOLI] = [SHEET_FARM, Vector2i(30, 9)]
+	item_map[Global.Items.ARTICHOKE] = [SHEET_FARM, Vector2i(30, 10)]
+	item_map[Global.Items.EGGPLANT] = [SHEET_FARM, Vector2i(30, 11)]
+	item_map[Global.Items.BOK_CHOY] = [SHEET_FARM, Vector2i(30, 12)]
+	item_map[Global.Items.GRAPE] = [SHEET_FARM, Vector2i(30, 13)]
 	
 	# -- LOOT (On Loot Sheet) --
 	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)]
