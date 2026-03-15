@@ -95,6 +95,7 @@ func _ready():
 	
 	item_map[Global.Items.ROASTED_CORN] = [SHEET_FURNITURE, Vector2i(23,4)]
 	item_map[Global.Items.TOMATO_SOUP] = [SHEET_FURNITURE, Vector2i(21,4)]
+	item_map[Global.Items.HERBAL_HASH] = [SHEET_FURNITURE, Vector2i(22,4)]
 	
 
 
@@ -238,9 +239,11 @@ func eat_food():
 		Global.advance_tutorial()
 
 	Global.active_food_buff.item = stored_item_enum
-	Global.active_food_buff.stats = Global.food_stats[stored_item_enum].duplicate()
-	
-	# 2. Apply the buff! We use .duplicate() so we don't accidentally alter the master food_stats list
+	var applied_stats: Dictionary = Global.food_stats[stored_item_enum].duplicate()
+	applied_stats["MOV"] = mini(int(applied_stats.get("MOV", 0)), Global.EARLY_FOOD_MOVEMENT_CAP)
+	Global.active_food_buff.stats = Global._normalize_temporary_bucket(applied_stats)
+
+	# 2. Apply the buff! We duplicate and normalize so consumed food always matches the status/combat pipeline.
 	Global.stats_updated.emit()
 	
 	print("Ate a delicious ", Global.Items.keys()[stored_item_enum], "!")

@@ -2,8 +2,23 @@ extends Node
 
 func _ready() -> void:
 	ensure_player_stat_formats()
+	_validate_early_food_balance()
 	_sync_player_progression_from_combat_scene_template()
 
+
+func _validate_early_food_balance() -> void:
+	for meal_item in food_stats.keys():
+		var meal_stats: Dictionary = food_stats[meal_item]
+		var movement_bonus := int(meal_stats.get("MOV", 0))
+		if movement_bonus > EARLY_FOOD_MOVEMENT_CAP:
+			push_warning("%s exceeds early MOV cap (%d > %d)." % [Items.keys()[meal_item], movement_bonus, EARLY_FOOD_MOVEMENT_CAP])
+
+		var total_points := 0
+		for stat_name in ["VIT", "STR", "DEF", "DEX", "INT", "SPD", "MOV"]:
+			total_points += int(meal_stats.get(stat_name, 0))
+
+		if total_points != EARLY_FOOD_TOTAL_POWER_POINTS:
+			push_warning("%s is off early food budget (%d != %d)." % [Items.keys()[meal_item], total_points, EARLY_FOOD_TOTAL_POWER_POINTS])
 
 func _sync_player_progression_from_combat_scene_template() -> void:
 	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
@@ -125,7 +140,7 @@ enum Items {
 	
 	# Food
 	
-	ROASTED_CORN, TOMATO_SOUP
+	ROASTED_CORN, TOMATO_SOUP, HERBAL_HASH
 }
 
 # 2. HARVEST MAPPING
@@ -263,12 +278,19 @@ var inventory = {
 	Items.WATER: 0,
 	Items.ROASTED_CORN: 0,
 	Items.TOMATO_SOUP: 0,
+	Items.HERBAL_HASH: 0,
 }
+
+# Early-game meal tuning notes:
+# - Keep each meal on a 4-point total budget to preserve meaningful choice.
+# - Early movement is capped at +1 MOV max; any extra power should flow into SPD/DEX/VIT instead.
+const EARLY_FOOD_TOTAL_POWER_POINTS := 4
+const EARLY_FOOD_MOVEMENT_CAP := 1
 
 var recipes = {
 	Items.ROASTED_CORN: {
 		"display_name": "Roasted Corn",
-		"buff_preview": "+2 VIT, +2 STR",
+		"buff_preview": "+3 VIT, +1 STR",
 		"role_tag": "Frontliner",
 		"ingredients": {Items.CORN: 1, Items.WOOD: 1}
 	},
@@ -277,6 +299,12 @@ var recipes = {
 		"buff_preview": "+1 DEX, +2 INT, +1 SPD",
 		"role_tag": "Purifier",
 		"ingredients": {Items.TOMATO: 2, Items.WATER: 1}
+	},
+	Items.HERBAL_HASH: {
+		"display_name": "Herbal Hash",
+		"buff_preview": "+1 VIT, +1 DEX, +1 SPD, +1 STR",
+		"role_tag": "Generalist",
+		"ingredients": {Items.POTATO: 1, Items.GARLIC: 1, Items.WOOD: 1}
 	}
 }
 
@@ -391,9 +419,13 @@ var active_food_buff = {
 # 4. The Food Database
 # This tells the game exactly what stats to apply when a specific meal is eaten!
 var food_stats = {
-	Items.ROASTED_CORN: {"VIT": 2, "STR": 2, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
-	Items.TOMATO_SOUP:  {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 1, "INT": 2, "SPD": 1, "MOV": 0}
-	# Add future meals here (e.g., a late-game meal might give +1 MOV!)
+	# Frontliner path: durable, no movement dependency.
+	Items.ROASTED_CORN: {"VIT": 3, "STR": 1, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	# Purifier path: casting tempo and reliability, still no movement dependency.
+	Items.TOMATO_SOUP:  {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 1, "INT": 2, "SPD": 1, "MOV": 0},
+	# Generalist fallback: broadly useful when role-specific ingredients are unavailable.
+	Items.HERBAL_HASH:  {"VIT": 1, "STR": 1, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 1, "MOV": 0}
+	# Add future meals here (respect early MOV cap and total power budget).
 }
 
 # ==========================================

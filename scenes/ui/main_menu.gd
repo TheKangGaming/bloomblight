@@ -343,7 +343,16 @@ func update_status_page():
 	
 	# Update Meal Text
 	if Global.active_food_buff.item != null:
-		lbl_food.text = "Ate a hearty meal!"
+		var meal_item: Global.Items = Global.active_food_buff.item
+		var meal_name := Global.Items.keys()[meal_item].replace("_", " ").capitalize()
+		var stat_parts: Array[String] = []
+		for stat_name in ["VIT", "STR", "DEF", "DEX", "INT", "SPD", "MOV"]:
+			var stat_value := int(Global.active_food_buff.stats.get(stat_name, 0))
+			if stat_value != 0:
+				stat_parts.append("+%d %s" % [stat_value, stat_name])
+
+		var meal_summary := ", ".join(stat_parts) if not stat_parts.is_empty() else "No bonuses"
+		lbl_food.text = "%s (%s)" % [meal_name, meal_summary]
 	else:
 		lbl_food.text = "No meal."
 
