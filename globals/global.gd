@@ -1,6 +1,7 @@
 extends Node
 
 func _ready() -> void:
+	reset_known_recipes_to_defaults()
 	ensure_player_stat_formats()
 	_validate_early_food_balance()
 	_sync_player_progression_from_combat_scene_template()
@@ -374,6 +375,72 @@ var recipes = {
 		"ingredients": {Items.PARSNIP: 1, Items.POTATO: 1}
 	}
 }
+
+const DEFAULT_KNOWN_RECIPES := [
+	Items.ROASTED_CORN,
+	Items.TOMATO_SOUP,
+	Items.HERBAL_HASH
+]
+
+var known_recipes: Array[int] = []
+
+func knows_recipe(recipe_item: Items) -> bool:
+	return recipe_item in known_recipes
+
+func learn_recipe(recipe_item: Items) -> bool:
+	if not recipes.has(recipe_item):
+		return false
+
+	if knows_recipe(recipe_item):
+		return false
+
+	known_recipes.append(recipe_item)
+	return true
+
+func reset_known_recipes_to_defaults() -> void:
+	known_recipes.clear()
+	for recipe_item in DEFAULT_KNOWN_RECIPES:
+		learn_recipe(recipe_item)
+
+func get_progression_save_data() -> Dictionary:
+	return {
+		"inventory": inventory.duplicate(true),
+		"tutorial_step": tutorial_step,
+		"current_day": current_day,
+		"resolved_encounters": resolved_encounters.duplicate(true),
+		"has_seen_combat_intro": has_seen_combat_intro,
+		"player_level": get_player_level(),
+		"player_class_name": get_player_class_name(),
+		"known_recipes": known_recipes.duplicate()
+	}
+
+func apply_progression_save_data(save_data: Dictionary) -> void:
+	if save_data.has("inventory") and save_data.inventory is Dictionary:
+		inventory = save_data.inventory.duplicate(true)
+
+	tutorial_step = int(save_data.get("tutorial_step", tutorial_step))
+	current_day = int(save_data.get("current_day", current_day))
+	resolved_encounters = Array(save_data.get("resolved_encounters", resolved_encounters)).duplicate(true)
+	has_seen_combat_intro = bool(save_data.get("has_seen_combat_intro", has_seen_combat_intro))
+	set_player_level(int(save_data.get("player_level", get_player_level())))
+	set_player_class_name(String(save_data.get("player_class_name", get_player_class_name())))
+	_migrate_known_recipes_from_save(save_data)
+	inventory_updated.emit()
+	update_tutorial_ui()
+
+func _migrate_known_recipes_from_save(save_data: Dictionary) -> void:
+	if not save_data.has("known_recipes"):
+		reset_known_recipes_to_defaults()
+		return
+
+	known_recipes.clear()
+	for raw_recipe in Array(save_data.get("known_recipes", [])):
+		var recipe_item := int(raw_recipe)
+		if recipes.has(recipe_item):
+			learn_recipe(recipe_item)
+
+	if known_recipes.is_empty():
+		reset_known_recipes_to_defaults()
 
 var unlocked_tools: Array[Tools] = []
 
