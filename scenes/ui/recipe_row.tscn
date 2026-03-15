@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://rle9wo8h4s2g"]
+
+[ext_resource type="Script" path="res://scenes/ui/recipe_row.gd" id="1_8h0v8"]
+
+[node name="RecipeRow" type="HBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+script = ExtResource("1_8h0v8")
+
+[node name="NameLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Recipe"
+
+[node name="IngredientsLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ingredients"
+autowrap_mode = 2
+
+[node name="BuffLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Buff"
+autowrap_mode = 2
+
+[node name="CraftButton" type="Button" parent="."]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Craft"

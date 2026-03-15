@@ -1,49 +1,36 @@
 [gd_scene format=3 uid="uid://d1c28n15wopmi"]
 
 [ext_resource type="Script" uid="uid://bq3ly3cfg8ppi" path="res://scenes/ui/cooking_menu.gd" id="1_pkwnn"]
-[ext_resource type="Texture2D" uid="uid://dxo8q8lh05up2" path="res://graphics/tilesets/furniture_and_props.png" id="2_bnbn2"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_5exhc"]
-atlas = ExtResource("2_bnbn2")
-region = Rect2(808, 137, 14, 12)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_8xf1h"]
-atlas = ExtResource("2_bnbn2")
-region = Rect2(744, 137, 14, 12)
 
 [node name="CookingMenu" type="CanvasLayer" unique_id=534342953 groups=["CookingMenu"]]
 script = ExtResource("1_pkwnn")
 
 [node name="Panel" type="Panel" parent="." unique_id=292111174]
-custom_minimum_size = Vector2(75, 0)
+custom_minimum_size = Vector2(620, 0)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -310.0
+offset_top = -120.0
+offset_right = 310.0
+offset_bottom = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel" unique_id=644584400]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-theme_override_constants/separation = 10
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
-[node name="BtnRoastedCorn" type="Button" parent="Panel/HBoxContainer" unique_id=916249307]
-custom_minimum_size = Vector2(32, 32)
+[node name="RecipeList" type="VBoxContainer" parent="Panel/MarginContainer"]
 layout_mode = 2
-icon = SubResource("AtlasTexture_5exhc")
-icon_alignment = 1
-expand_icon = true
-
-[node name="BtnTomatoSoup" type="Button" parent="Panel/HBoxContainer" unique_id=706923647]
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-icon = SubResource("AtlasTexture_8xf1h")
-icon_alignment = 1
-expand_icon = true
+theme_override_constants/separation = 8

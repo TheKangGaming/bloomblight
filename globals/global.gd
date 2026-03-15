@@ -266,8 +266,18 @@ var inventory = {
 }
 
 var recipes = {
-	Items.ROASTED_CORN: {Items.CORN: 1, Items.WOOD: 1},
-	Items.TOMATO_SOUP: {Items.TOMATO: 2, Items.WATER: 1}
+	Items.ROASTED_CORN: {
+		"display_name": "Roasted Corn",
+		"buff_preview": "+2 VIT, +2 STR",
+		"role_tag": "Frontliner",
+		"ingredients": {Items.CORN: 1, Items.WOOD: 1}
+	},
+	Items.TOMATO_SOUP: {
+		"display_name": "Tomato Soup",
+		"buff_preview": "+1 DEX, +2 INT, +1 SPD",
+		"role_tag": "Purifier",
+		"ingredients": {Items.TOMATO: 2, Items.WATER: 1}
+	}
 }
 
 var unlocked_tools: Array[Tools] = []
