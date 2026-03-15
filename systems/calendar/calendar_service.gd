@@ -1,6 +1,9 @@
 extends Node
 # systems/calendar/calendar_service.gd
 
+const DAYS_PER_SEASON := 28
+const SEASON_ORDER: Array[StringName] = [Global.SPRING, Global.SUMMER, Global.FALL, Global.WINTER]
+
 # Emitted when a new day officially begins
 signal day_changed(new_day: int, encounter_data: Dictionary)
 
@@ -34,3 +37,14 @@ func has_encounter(day: int) -> bool:
 func trigger_day_change(new_day: int) -> void:
 	var encounter = get_encounter_for_day(new_day)
 	day_changed.emit(new_day, encounter)
+
+## Converts world day to a season. Day 1 starts in Spring.
+func get_season_for_day(day: int) -> StringName:
+	if day <= 0:
+		return Global.SPRING
+
+	var season_index := int(floor(float(day - 1) / float(DAYS_PER_SEASON))) % SEASON_ORDER.size()
+	return SEASON_ORDER[season_index]
+
+func get_current_season() -> StringName:
+	return get_season_for_day(Global.current_day)

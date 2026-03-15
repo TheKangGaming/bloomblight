@@ -155,6 +155,58 @@ const HARVEST_DROPS = {
 	Items.GRAPE_SEED: Items.GRAPE
 }
 
+const SPRING := &"spring"
+const SUMMER := &"summer"
+const FALL := &"fall"
+const WINTER := &"winter"
+
+# Seed metadata used by farm planting and seed menu UI.
+# "seasons" controls when a seed can be planted.
+# "allow_off_season" allows special rare seeds to bypass season lock.
+const SEED_PLANTING_RULES := {
+	Items.BLUEBERRY_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.WHEAT_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.MELON_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.CORN_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.HOT_PEPPER_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.RADISH_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.RED_CABBAGE_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.TOMATO_SEED: {"seasons": [SUMMER], "allow_off_season": false},
+	Items.CARROT_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.CAULIFLOWER_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.POTATO_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.PARSNIP_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.GARLIC_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.GREEN_BEANS_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.STRAWBERRY_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.COFFEE_BEAN_SEED: {"seasons": [SPRING], "allow_off_season": false},
+	Items.PUMPKIN_SEED: {"seasons": [FALL], "allow_off_season": false},
+	Items.BROCCOLI_SEED: {"seasons": [FALL], "allow_off_season": false},
+	Items.ARTICHOKE_SEED: {"seasons": [FALL], "allow_off_season": false},
+	Items.EGGPLANT_SEED: {"seasons": [FALL], "allow_off_season": false},
+	Items.BOK_CHOY_SEED: {"seasons": [FALL], "allow_off_season": false},
+	Items.GRAPE_SEED: {"seasons": [FALL], "allow_off_season": false}
+}
+
+func get_seed_seasons(seed_type: Items) -> Array:
+	if not SEED_PLANTING_RULES.has(seed_type):
+		return []
+
+	return Array(SEED_PLANTING_RULES[seed_type].get("seasons", []))
+
+func seed_allows_off_season_planting(seed_type: Items) -> bool:
+	if not SEED_PLANTING_RULES.has(seed_type):
+		return false
+
+	return bool(SEED_PLANTING_RULES[seed_type].get("allow_off_season", false))
+
+func is_seed_in_season(seed_type: Items, season: StringName) -> bool:
+	if seed_allows_off_season_planting(seed_type):
+		return true
+
+	var allowed_seasons := get_seed_seasons(seed_type)
+	return season in allowed_seasons
+
 # 3. TOOLS (Kept separate for state machine logic)
 enum Tools { HOE, WATER, AXE, PLANT }
 

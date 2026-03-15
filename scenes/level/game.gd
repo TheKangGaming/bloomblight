@@ -166,6 +166,11 @@ func _on_seed_chosen_from_menu(seed_type: int):
 		Global.inventory_updated.emit()
 
 func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> bool: # Changed from void to bool
+	var season := CalendarService.get_current_season()
+	if not Global.is_seed_in_season(seed_enum, season):
+		print("%s cannot be planted during %s." % [Global.Items.keys()[seed_enum], String(season).capitalize()])
+		return false
+
 	var local_pos = soil_layer.to_local(global_pos)
 	var grid_pos = soil_layer.local_to_map(local_pos)
 	

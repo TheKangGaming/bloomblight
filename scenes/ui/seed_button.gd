@@ -33,7 +33,7 @@ const SEED_COORDS = {
 	Global.Items.GRAPE_SEED: Vector2i(29, 17)
 }
 
-func setup(seed_type: Global.Items, amount: int):
+func setup(seed_type: Global.Items, amount: int, can_plant_now: bool = true, status_tooltip: String = ""):
 	my_seed_type = seed_type
 	
 	# Update the label text
@@ -49,6 +49,10 @@ func setup(seed_type: Global.Items, amount: int):
 		$Sprite2D.frame_coords = SEED_COORDS[seed_type]
 	else:
 		$Sprite2D.frame_coords = Vector2i(0, 0)
+
+	disabled = not can_plant_now
+	modulate = Color(1, 1, 1, 1) if can_plant_now else Color(1, 1, 1, 0.45)
+	tooltip_text = status_tooltip
 	
 func _pressed():
 	seed_selected.emit(my_seed_type)

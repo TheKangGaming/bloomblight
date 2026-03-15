@@ -14,8 +14,9 @@ func open(player_pos: Vector2):
 	for child in $PanelContainer/Grid.get_children():
 		$PanelContainer/Grid.remove_child(child)
 		child.queue_free()
+
+	var current_season := CalendarService.get_current_season()
 		
-	
 	var has_seeds = false
 	for item_type in Global.inventory:
 		# FIX: Only create buttons if the item is actually a seed!
@@ -28,7 +29,17 @@ func open(player_pos: Vector2):
 				has_seeds = true
 				var btn = seed_button_scene.instantiate()
 				$PanelContainer/Grid.add_child(btn)
-				btn.setup(item_type, amount)
+
+				var in_season := Global.is_seed_in_season(item_type, current_season)
+				var tooltip := "In season (%s)" % String(current_season).capitalize()
+				if not in_season:
+					var allowed_seasons: Array = Global.get_seed_seasons(item_type)
+					var season_names: PackedStringArray = []
+					for season_name in allowed_seasons:
+						season_names.append(String(season_name).capitalize())
+					tooltip = "Out of season. Plantable in: %s" % ", ".join(season_names)
+
+				btn.setup(item_type, amount, in_season, tooltip)
 				btn.seed_selected.connect(_on_seed_selected)
 
 	if has_seeds:
@@ -54,8 +65,15 @@ func open(player_pos: Vector2):
 		tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT) # Make it bounce!
 		tween.tween_property($PanelContainer, "scale", Vector2.ONE, 0.3)
 		
-		# Focus the first button
-		$PanelContainer/Grid.get_child(0).grab_focus()
+		# Focus the first available in-season button, fallback to first item.
+		var focused_button := false
+		for child in $PanelContainer/Grid.get_children():
+			if child is Button and not child.disabled:
+				child.grab_focus()
+				focused_button = true
+				break
+		if not focused_button and $PanelContainer/Grid.get_child_count() > 0:
+			$PanelContainer/Grid.get_child(0).grab_focus()
 		
 	else:
 		print('no seeds to plant!')
