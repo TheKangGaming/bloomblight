@@ -333,9 +333,9 @@ var recipes = {
 	},
 	Items.ROASTED_ROOT_MEDLEY: {
 		"display_name": "Roasted Root Medley",
-		"buff_preview": "+4 VIT, +1 STR",
+		"buff_preview": "+3 VIT, +1 STR",
 		"role_tag": "Frontliner",
-		"strategy_note": "High health boost before a long battle.",
+		"strategy_note": "Still a fantastic health boost before a boss fight, with less health bloat.",
 		"ingredients": {Items.POTATO: 1, Items.CARROT: 1, Items.PARSNIP: 1}
 	},
 	Items.CAULIFLOWER_STEAK: {
@@ -354,16 +354,16 @@ var recipes = {
 	},
 	Items.STRAWBERRY_ENERGY_BOWL: {
 		"display_name": "Strawberry Energy Bowl",
-		"buff_preview": "+1 VIT, +1 MOV",
+		"buff_preview": "+2 VIT, +1 SPD, +1 MOV",
 		"role_tag": "Archer",
-		"strategy_note": "A light snack that helps characters cover more ground.",
+		"strategy_note": "A budgeted speed snack with extra initiative and +1 movement.",
 		"ingredients": {Items.STRAWBERRY: 1}
 	},
 	Items.MORNING_COFFEE: {
 		"display_name": "Morning Coffee",
-		"buff_preview": "+2 MOV, +1 SPD",
+		"buff_preview": "+1 MOV, +2 SPD, +1 DEX",
 		"role_tag": "Archer",
-		"strategy_note": "Massive movement boost for kiting Orcs.",
+		"strategy_note": "Caffeine-fueled mobility and initiative with a focus bump.",
 		"ingredients": {Items.COFFEE_BEAN: 1}
 	},
 	Items.PARSNIP_SOUP: {
@@ -494,11 +494,11 @@ var food_stats = {
 	Items.HERBAL_HASH:  {"VIT": 1, "STR": 1, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 1, "MOV": 0},
 	Items.GARLIC_MASHED_POTATOES: {"VIT": 0, "STR": 2, "DEF": 2, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
 	Items.GLAZED_CARROTS: {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 3, "INT": 0, "SPD": 1, "MOV": 0},
-	Items.ROASTED_ROOT_MEDLEY: {"VIT": 4, "STR": 1, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.ROASTED_ROOT_MEDLEY: {"VIT": 3, "STR": 1, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
 	Items.CAULIFLOWER_STEAK: {"VIT": 0, "STR": 0, "DEF": 1, "DEX": 0, "INT": 3, "SPD": 0, "MOV": 0},
 	Items.GREEN_BEAN_SAUTE: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 2, "MOV": 0},
-	Items.STRAWBERRY_ENERGY_BOWL: {"VIT": 1, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 1},
-	Items.MORNING_COFFEE: {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 1, "MOV": 2},
+	Items.STRAWBERRY_ENERGY_BOWL: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 1, "MOV": 1},
+	Items.MORNING_COFFEE: {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 2, "MOV": 1},
 	Items.PARSNIP_SOUP: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 2, "SPD": 0, "MOV": 0}
 	# Add future meals here (respect early MOV cap and total power budget).
 }
