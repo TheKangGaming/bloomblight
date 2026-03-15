@@ -15,6 +15,7 @@ func _ready() -> void:
 	visible = false
 	_build_recipe_rows()
 	Global.inventory_updated.connect(_on_inventory_updated)
+	Global.recipe_knowledge_updated.connect(_on_recipe_knowledge_updated)
 
 func open_menu() -> void:
 	visible = true
@@ -30,6 +31,10 @@ func _unhandled_input(event) -> void:
 		get_viewport().set_input_as_handled()
 
 func _on_inventory_updated() -> void:
+	if visible:
+		_refresh_recipe_rows()
+
+func _on_recipe_knowledge_updated() -> void:
 	if visible:
 		_refresh_recipe_rows()
 

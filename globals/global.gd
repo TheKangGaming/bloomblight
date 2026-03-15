@@ -51,6 +51,7 @@ func _sync_player_progression_from_combat_scene_template() -> void:
 
 
 signal inventory_updated
+signal recipe_knowledge_updated
 @warning_ignore('unused_signal')
 signal stats_updated
 var saved_farm_scene: Node = null
@@ -387,7 +388,7 @@ var known_recipes: Array[int] = []
 func knows_recipe(recipe_item: Items) -> bool:
 	return recipe_item in known_recipes
 
-func learn_recipe(recipe_item: Items) -> bool:
+func learn_recipe(recipe_item: Items, emit_update: bool = true) -> bool:
 	if not recipes.has(recipe_item):
 		return false
 
@@ -395,12 +396,20 @@ func learn_recipe(recipe_item: Items) -> bool:
 		return false
 
 	known_recipes.append(recipe_item)
+	if emit_update:
+		recipe_knowledge_updated.emit()
 	return true
 
 func reset_known_recipes_to_defaults() -> void:
+	var had_known_recipes := not known_recipes.is_empty()
 	known_recipes.clear()
+	var learned_any := false
 	for recipe_item in DEFAULT_KNOWN_RECIPES:
-		learn_recipe(recipe_item)
+		if learn_recipe(recipe_item, false):
+			learned_any = true
+
+	if had_known_recipes or learned_any:
+		recipe_knowledge_updated.emit()
 
 func get_progression_save_data() -> Dictionary:
 	return {
@@ -434,10 +443,15 @@ func _migrate_known_recipes_from_save(save_data: Dictionary) -> void:
 		return
 
 	known_recipes.clear()
+	var learned_any := false
 	for raw_recipe in Array(save_data.get("known_recipes", [])):
 		var recipe_item := int(raw_recipe)
 		if recipes.has(recipe_item):
-			learn_recipe(recipe_item)
+			if learn_recipe(recipe_item, false):
+				learned_any = true
+
+	if learned_any:
+		recipe_knowledge_updated.emit()
 
 	if known_recipes.is_empty():
 		reset_known_recipes_to_defaults()
