@@ -390,6 +390,11 @@ func knows_recipe(recipe_item: Items) -> bool:
 
 func learn_recipe(recipe_item: Items, emit_update: bool = true) -> bool:
 	if not recipes.has(recipe_item):
+		var item_name := str(recipe_item)
+		var item_keys := Items.keys()
+		if recipe_item >= 0 and recipe_item < item_keys.size():
+			item_name = item_keys[recipe_item]
+		push_warning("[Global] Ignoring learn_recipe for invalid meal item: %s" % item_name)
 		return false
 
 	if knows_recipe(recipe_item):
