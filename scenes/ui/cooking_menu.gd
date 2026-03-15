@@ -43,6 +43,7 @@ func _build_recipe_rows() -> void:
 	for recipe_output in sorted_outputs:
 		var recipe_data: Dictionary = Global.recipes[recipe_output]
 		var row = RECIPE_ROW_SCENE.instantiate()
+		recipe_list.add_child(row)
 		row.setup(
 			recipe_output,
 			String(recipe_data.get("display_name", _format_item_name(recipe_output))),
@@ -51,7 +52,6 @@ func _build_recipe_rows() -> void:
 			_can_cook(recipe_output)
 		)
 		row.craft_requested.connect(_on_craft_requested)
-		recipe_list.add_child(row)
 		_recipe_rows.append(row)
 
 	_assign_focus_neighbors()

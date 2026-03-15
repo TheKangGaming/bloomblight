@@ -83,7 +83,7 @@ func _update_clock(force := false) -> void:
 	var passed_minutes = int(DAY_LENGTH_MINUTES * progress)
 	var displayed_minutes = passed_minutes - (passed_minutes % TIME_TICK_MINUTES)
 
-	var hours = DAY_START_HOUR + (displayed_minutes / 60)
+	var hours = DAY_START_HOUR + int(displayed_minutes / 60.0)
 	var minutes = displayed_minutes % 60
 	
 	var am_pm = "AM"
