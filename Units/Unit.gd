@@ -118,6 +118,9 @@ var speed: int:
 	get:
 		return current_stats.spd
 
+const ARCHER_DAMAGE_STR_WEIGHT := 0.4
+const ARCHER_DAMAGE_DEX_WEIGHT := 0.6
+
 
 func _ready() -> void:
 	set_process(false)
@@ -267,11 +270,8 @@ func get_combat_stats(target: Unit) -> Dictionary:
 	var hit_chance = clamp(weapon_hit + ((dexterity + attacker_dex_bonus) * 2) - (target.speed * 2), 0, 100)
 	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
 	var is_magic_damage := _uses_magic_damage()
-	var attack_stat := int_stat if is_magic_damage else strength
-	if is_magic_damage:
-		attack_stat += _get_equipment_bonus_stat("intelligence")
-	else:
-		attack_stat += _get_equipment_bonus_stat("strength")
+	var damage_profile := _resolve_damage_stat_profile(is_magic_damage)
+	var attack_stat := int(damage_profile.get("attack_stat", 0))
 
 	var defense_stat := target.magic_defense if is_magic_damage else target.defense
 	var actual_damage = max(0, (attack_stat + weapon_might) - defense_stat)
@@ -280,7 +280,62 @@ func get_combat_stats(target: Unit) -> Dictionary:
 		"hit": hit_chance,
 		"crit": crit_chance,
 		"damage": actual_damage,
-		"uses_magic_damage": is_magic_damage
+		"uses_magic_damage": is_magic_damage,
+		"damage_profile": damage_profile
+	}
+
+
+func get_attack_preview_data(weapon: WeaponData = null) -> Dictionary:
+	var equipped_weapon := weapon
+	if equipped_weapon == null and character_data != null:
+		equipped_weapon = character_data.equipped_weapon
+
+	var weapon_might := 2
+	if equipped_weapon != null:
+		weapon_might = int(equipped_weapon.might)
+
+	var profile := _resolve_damage_stat_profile(_uses_magic_damage())
+	var attack_stat := int(profile.get("attack_stat", 0))
+	var attack_total := maxi(0, attack_stat + weapon_might)
+
+	return {
+		"attack_total": attack_total,
+		"weapon_might": weapon_might,
+		"attack_stat": attack_stat,
+		"profile": profile
+	}
+
+
+func _resolve_damage_stat_profile(is_magic_damage: bool) -> Dictionary:
+	if is_magic_damage:
+		var int_total := int_stat + _get_equipment_bonus_stat("intelligence")
+		return {
+			"attack_stat": int_total,
+			"stat_label": "INT",
+			"formula_text": "INT"
+		}
+
+	var class_data: ClassData = character_data.class_data if character_data != null else null
+	var primary_stat := String(class_data.primary_damage_stat).to_lower() if class_data != null else "strength"
+	var secondary_stat := String(class_data.secondary_stat).to_lower() if class_data != null else ""
+
+	var strength_total := strength + _get_equipment_bonus_stat("strength")
+	var dexterity_total := dexterity + _get_equipment_bonus_stat("dexterity")
+
+	if (primary_stat == "strength" or primary_stat == "str") and (secondary_stat == "dexterity" or secondary_stat == "dex"):
+		var weighted_attack := int(floor((strength_total * ARCHER_DAMAGE_STR_WEIGHT) + (dexterity_total * ARCHER_DAMAGE_DEX_WEIGHT)))
+		return {
+			"attack_stat": weighted_attack,
+			"stat_label": "STR/DEX",
+			"formula_text": "floor(STR×0.4 + DEX×0.6)",
+			"strength_total": strength_total,
+			"dexterity_total": dexterity_total
+		}
+
+	return {
+		"attack_stat": strength_total,
+		"stat_label": "STR",
+		"formula_text": "STR"
 	}
 
 

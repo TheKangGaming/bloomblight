@@ -311,6 +311,9 @@ func update_status_page():
 	var class_data := _resolve_player_class_data(player_unit)
 	var weapon := _resolve_player_weapon(player_unit)
 	var uses_magic_damage := _class_uses_magic_damage(class_data)
+	var attack_preview_data: Dictionary = {}
+	if player_unit != null:
+		attack_preview_data = player_unit.get_attack_preview_data(weapon)
 
 	var format_stat = func(stat_name: String, base_val: int, buff_val: int) -> String:
 			
@@ -332,7 +335,7 @@ func update_status_page():
 	var max_hp_value := int(permanent_stats.get("MAX_HP", permanent_stats.get("HP", 0))) + int(temporary_modifiers.get("MAX_HP", 0)) + (int(temporary_modifiers.get("VIT", 0)) * 2)
 	lbl_hp.bbcode_text = "HP: %d/%d" % [int(permanent_stats.get("HP", 0)), max_hp_value]
 	lbl_def.bbcode_text = format_stat.call("DEF", int(permanent_stats.get("DEF", 0)), int(temporary_modifiers.get("DEF", 0)))
-	lbl_dmg.bbcode_text = _build_attack_preview_text(player_unit, permanent_stats, temporary_modifiers, weapon, uses_magic_damage)
+	lbl_dmg.bbcode_text = _build_attack_preview_text(player_unit, permanent_stats, temporary_modifiers, weapon, uses_magic_damage, attack_preview_data)
 
 	lbl_level.text = "Level: %d" % Global.get_player_level()
 	lbl_class.text = "Class: %s" % _resolve_player_class_name()
@@ -381,26 +384,41 @@ func _find_player_unit() -> Unit:
 	return null
 
 
-func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary, weapon: WeaponData, uses_magic_damage: bool) -> String:
-	var attack_stat_name := "INT" if uses_magic_damage else "STR"
-	var attack_stat_total := int(permanent_stats.get(attack_stat_name, 0)) + int(temporary_modifiers.get(attack_stat_name, 0))
+func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary, weapon: WeaponData, uses_magic_damage: bool, attack_preview_data: Dictionary = {}) -> String:
+	var preview_data := attack_preview_data
+	if preview_data.is_empty() and player_unit != null:
+		preview_data = player_unit.get_attack_preview_data(weapon)
 
-	if player_unit != null:
-		attack_stat_total = player_unit.int_stat if uses_magic_damage else player_unit.strength
-
-	var weapon_bonus_key := "intelligence" if uses_magic_damage else "strength"
-	var weapon_bonus := 0
 	var weapon_might := 2
 	if weapon != null:
 		weapon_might = int(weapon.might)
-		weapon_bonus = int(weapon.stat_bonuses.get(weapon_bonus_key, 0))
 
-	var attack_total := maxi(0, attack_stat_total + weapon_bonus + weapon_might)
-	var stat_component_label := "%s %d" % [attack_stat_name, attack_stat_total]
-	if weapon_bonus != 0:
-		stat_component_label += " (%+d)" % weapon_bonus
+	var attack_total := maxi(0, weapon_might)
+	var stat_component_label := ""
+	var formula_text := ""
 
-	return "ATK: %d\n[color=gray]%s + MT %d[/color]" % [attack_total, stat_component_label, weapon_might]
+	if not preview_data.is_empty():
+		attack_total = int(preview_data.get("attack_total", weapon_might))
+		weapon_might = int(preview_data.get("weapon_might", weapon_might))
+		var profile: Dictionary = preview_data.get("profile", {})
+		var stat_label := String(profile.get("stat_label", "INT" if uses_magic_damage else "STR"))
+		var attack_stat := int(preview_data.get("attack_stat", profile.get("attack_stat", 0)))
+		stat_component_label = "%s %d" % [stat_label, attack_stat]
+		formula_text = String(profile.get("formula_text", ""))
+	else:
+		var attack_stat_name := "INT" if uses_magic_damage else "STR"
+		var attack_stat_total := int(permanent_stats.get(attack_stat_name, 0)) + int(temporary_modifiers.get(attack_stat_name, 0))
+		var weapon_bonus_key := "intelligence" if uses_magic_damage else "strength"
+		var weapon_bonus := int(weapon.stat_bonuses.get(weapon_bonus_key, 0)) if weapon != null else 0
+		attack_total = maxi(0, attack_stat_total + weapon_bonus + weapon_might)
+		stat_component_label = "%s %d" % [attack_stat_name, attack_stat_total]
+		if weapon_bonus != 0:
+			stat_component_label += " (%+d)" % weapon_bonus
+
+	var preview_text := "ATK: %d\n[color=gray]%s + MT %d[/color]" % [attack_total, stat_component_label, weapon_might]
+	if not formula_text.is_empty() and formula_text != "INT" and formula_text != "STR":
+		preview_text += "\n[color=gray]%s[/color]" % formula_text
+	return preview_text
 
 
 func _resolve_player_weapon(player_unit: Unit) -> WeaponData:
