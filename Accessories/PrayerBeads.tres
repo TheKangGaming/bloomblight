@@ -9,6 +9,6 @@ accessory_name = "Prayer Beads"
 description = "A novice purifier's focus for steadier rituals and safer casting."
 icon = ExtResource("1_icon")
 stat_bonuses = {
-"intelligence": 1,
+"intelligence": 0,
 "magic_defense": 2
 }

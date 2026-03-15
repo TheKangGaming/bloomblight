@@ -10,6 +10,6 @@ description = "Ceremonial cloth stitched with warding ash for purifier initiates
 icon = ExtResource("2_icon")
 stat_bonuses = {
 "defense": 1,
-"intelligence": 1,
+"intelligence": 0,
 "magic_defense": 3
 }

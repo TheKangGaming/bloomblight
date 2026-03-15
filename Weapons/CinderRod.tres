@@ -11,7 +11,7 @@ icon = ExtResource("1_icon")
 might = 3
 hit_rate = 94
 stat_bonuses = {
-"intelligence": 2,
+"intelligence": 1,
 "magic_defense": 1
 }
 metadata/_custom_type_script = "uid://c8wssyup5wth4"
