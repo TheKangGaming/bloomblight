@@ -7,7 +7,7 @@ const ROLE_SORT_ORDER := {
 	"Purifier": 2
 }
 
-@onready var recipe_list: VBoxContainer = $Panel/MarginContainer/RecipeList
+@onready var recipe_list: VBoxContainer = $Panel/MarginContainer/Layout/RecipeScroll/RecipeList
 
 var _recipe_rows: Array = []
 
