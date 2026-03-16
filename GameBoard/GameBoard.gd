@@ -1255,6 +1255,9 @@ func _on_return_button_pressed(btn: Button) -> void:
 			# ==========================================
 			# --- THE VICTORY PATH (Late Afternoon) ---
 			# ==========================================
+			if Global.current_day == 3 and Global.learn_recipe(Global.Items.MORNING_COFFEE):
+				print("Unlocked Morning Coffee recipe from combat!")
+
 			if color_rect:
 				var tween = farm.create_tween()
 				tween.tween_property(color_rect, "modulate:a", 0.0, 1.5).set_trans(Tween.TRANS_SINE)
