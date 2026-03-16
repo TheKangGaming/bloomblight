@@ -94,7 +94,10 @@ func _assign_focus_neighbors() -> void:
 		current_button.focus_neighbor_right = NodePath("")
 
 func _get_sorted_recipe_outputs() -> Array:
-	var outputs := Global.recipes.keys()
+	var outputs: Array = []
+	for recipe_output in Global.recipes.keys():
+		if Global.knows_recipe(recipe_output):
+			outputs.append(recipe_output)
 	outputs.sort_custom(_sort_recipe_outputs)
 	return outputs
 
@@ -147,6 +150,9 @@ func _can_cook(recipe_output: Global.Items) -> bool:
 	return true
 
 func _craft_item(recipe_output: Global.Items) -> void:
+	if not Global.knows_recipe(recipe_output):
+		return
+
 	if not _can_cook(recipe_output):
 		return
 

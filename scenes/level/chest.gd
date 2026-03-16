@@ -3,6 +3,8 @@ extends StaticBody2D
 @onready var animation_player = $AnimationPlayer
 @onready var loot_popup = $LootPopup
 
+@export var recipe_to_teach: Global.Items = Global.Items.WOOD
+
 var is_open := false
 var player_in_range := false
 
@@ -33,20 +35,27 @@ func open_chest():
 
 func give_loot():
 	print("Chest opened! Loot distributed.")
-	
-	# Safely add to the inventory using Global enums
-	Global.inventory[Global.Items.CORN_SEED] += 5
-	Global.inventory[Global.Items.TOMATO_SEED] += 5
-	Global.inventory[Global.Items.PUMPKIN_SEED] += 5
-	
-	# Give the tools by adding them to the unlocked array
-	if not Global.unlocked_tools.has(Global.Tools.HOE):
-		Global.unlocked_tools.append(Global.Tools.HOE)
-		Global.unlocked_tools.append(Global.Tools.WATER)
-		Global.unlocked_tools.append(Global.Tools.AXE)
-	
-	Global.inventory_updated.emit()
-	
+
+	var gave_recipe := false
+	if Global.recipes.has(recipe_to_teach):
+		gave_recipe = Global.learn_recipe(recipe_to_teach)
+		if gave_recipe:
+			print("You found a recipe scroll!")
+
+	if not gave_recipe:
+		# Safely add to the inventory using Global enums
+		Global.inventory[Global.Items.CORN_SEED] += 5
+		Global.inventory[Global.Items.TOMATO_SEED] += 5
+		Global.inventory[Global.Items.PUMPKIN_SEED] += 5
+
+		# Give the tools by adding them to the unlocked array
+		if not Global.unlocked_tools.has(Global.Tools.HOE):
+			Global.unlocked_tools.append(Global.Tools.HOE)
+			Global.unlocked_tools.append(Global.Tools.WATER)
+			Global.unlocked_tools.append(Global.Tools.AXE)
+
+		Global.inventory_updated.emit()
+
 	loot_popup.visible = true
 	
 	var tween = get_tree().create_tween()
