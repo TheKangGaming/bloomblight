@@ -866,7 +866,7 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 	# Give the final animation a tiny bit of time to settle before unlocking the cursor
 	await get_tree().create_timer(0.2).timeout
 
-## Generates a classic Strategy RPG preview window on the fly
+
 ## Generates a miniature, scaled-down Strategy RPG preview window
 
 

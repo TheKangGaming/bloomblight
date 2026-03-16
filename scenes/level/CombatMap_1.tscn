@@ -10,7 +10,6 @@
 [ext_resource type="Texture2D" uid="uid://c7ywv0feplun" path="res://UnitOverlay/arrows.svg" id="7_d5mw3"]
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://GameBoard/UnitPath.gd" id="8_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
-[ext_resource type="AudioStream" uid="uid://b33052oyr1adr" path="res://audio/Music_Morningconflict.wav" id="12_qga0l"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/stats/unit_stats.gd" id="13_d3c05"]
 [ext_resource type="Script" uid="uid://drvu56wd8e480" path="res://scenes/level/map_director.gd" id="13_sfjbq"]
 [ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="13_vtv1r"]
@@ -34,6 +33,7 @@
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://Units/Data/Archer.tres" id="27_0a6tx"]
 [ext_resource type="Resource" path="res://Weapons/TrainingBow.tres" id="28_training_bow"]
 [ext_resource type="Resource" uid="uid://bmik5reb3ilhq" path="res://Weapons/CinderRod.tres" id="29_cinder_rod"]
+[ext_resource type="AudioStream" uid="uid://66huqdsx1df6" path="res://audio/Music_Norest.wav" id="33_u5s1f"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -677,8 +677,8 @@ character_data = SubResource("Resource_u5s1f")
 current_stats = SubResource("Resource_ucvxe")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
-stream = ExtResource("12_qga0l")
-volume_db = -15.0
+stream = ExtResource("33_u5s1f")
+volume_db = -10.0
 autoplay = true
 
 [node name="MapDirector" type="Node" parent="." unique_id=1086377815]
