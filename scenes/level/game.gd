@@ -28,6 +28,17 @@ func _ready() -> void:
 	_grow_timer_cycle_seconds = $GrowTimer.wait_time
 	
 	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
+	_grant_day_one_recipe_from_silas()
+
+func _grant_day_one_recipe_from_silas() -> void:
+	if Global.current_day != 1:
+		return
+
+	if not Global.known_recipes.is_empty():
+		return
+
+	if Global.learn_recipe(Global.Items.ROASTED_CORN):
+		print("Silas taught you the Roasted Corn recipe.")
 
 func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer

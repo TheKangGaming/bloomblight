@@ -377,11 +377,7 @@ var recipes = {
 	}
 }
 
-const DEFAULT_KNOWN_RECIPES := [
-	Items.ROASTED_CORN,
-	Items.TOMATO_SOUP,
-	Items.HERBAL_HASH
-]
+const DEFAULT_KNOWN_RECIPES := []
 
 var known_recipes: Array[int] = []
 
