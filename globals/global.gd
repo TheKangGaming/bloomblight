@@ -102,7 +102,7 @@ func update_tutorial_ui() -> void:
 		10: tutorial_updated.emit("Quest: Walk up to the Campfire, then press Interact/Confirm to light it.")
 		11: tutorial_updated.emit("Quest: Cook a meal using your harvested crop!")
 		12: tutorial_updated.emit("Quest: Open inventory (Tab) and eat the meal.")
-		13: tutorial_updated.emit("Quest: Press C to enter your first Battle!")
+		13: tutorial_updated.emit("Quest: Sleep to trigger the battle warning, then press Defend the Sanctuary!")
 		14: tutorial_updated.emit("Quest: Defeat the enemy and return to the farm!")
 		15: tutorial_updated.emit("") # An empty string will hide the UI!
 		_:
@@ -112,7 +112,6 @@ var combat_transition := {
 	"started_at_unix": 0.0
 }
 
-var has_seen_combat_intro: bool = false
 
 func begin_combat_transition() -> void:
 	combat_transition.started_at_unix = Time.get_unix_time_from_system()
@@ -418,7 +417,6 @@ func get_progression_save_data() -> Dictionary:
 		"tutorial_step": tutorial_step,
 		"current_day": current_day,
 		"resolved_encounters": resolved_encounters.duplicate(true),
-		"has_seen_combat_intro": has_seen_combat_intro,
 		"player_level": get_player_level(),
 		"player_class_name": get_player_class_name(),
 		"known_recipes": known_recipes.duplicate()
@@ -431,7 +429,6 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 	tutorial_step = int(save_data.get("tutorial_step", tutorial_step))
 	current_day = int(save_data.get("current_day", current_day))
 	resolved_encounters = Array(save_data.get("resolved_encounters", resolved_encounters)).duplicate(true)
-	has_seen_combat_intro = bool(save_data.get("has_seen_combat_intro", has_seen_combat_intro))
 	set_player_level(int(save_data.get("player_level", get_player_level())))
 	set_player_class_name(String(save_data.get("player_class_name", get_player_class_name())))
 	_migrate_known_recipes_from_save(save_data)

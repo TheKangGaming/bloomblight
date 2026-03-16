@@ -72,4 +72,63 @@ func _load_combat_scene() -> void:
 
 	var combat_scene_path := Global.pending_combat_scene_path
 	Global.pending_combat_scene_path = ""
-	get_tree().change_scene_to_file(combat_scene_path)
+
+	var scene_tree := get_tree()
+	if scene_tree == null:
+		_transitioning = false
+		defend_button.disabled = false
+		return
+
+	var transition_layer := CanvasLayer.new()
+	transition_layer.layer = 100
+	transition_layer.name = "CombatSceneTransitionLayer"
+	scene_tree.root.add_child(transition_layer)
+
+	var fade_rect := ColorRect.new()
+	fade_rect.name = "CombatSceneTransition"
+	fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	fade_rect.color = Color(0, 0, 0, 1)
+	transition_layer.add_child(fade_rect)
+
+	var combat_scene = load(combat_scene_path).instantiate()
+	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
+	if is_instance_valid(combat_music):
+		combat_music.autoplay = false
+		combat_music.volume_db = -40.0
+
+	var previous_scene := scene_tree.current_scene
+	if Global.tutorial_step == 13:
+		Global.advance_tutorial()
+	Global.begin_combat_transition()
+
+	scene_tree.root.add_child(combat_scene)
+	scene_tree.current_scene = combat_scene
+	scene_tree.root.remove_child(previous_scene)
+
+	await scene_tree.process_frame
+
+	if is_instance_valid(combat_music):
+		combat_music.play()
+		var combat_fade := scene_tree.create_tween()
+		combat_fade.set_ease(Tween.EASE_OUT)
+		combat_fade.set_trans(Tween.TRANS_SINE)
+		combat_fade.tween_property(combat_music, "volume_db", -15.0, 1.5)
+
+	var savannah: Node = combat_scene.get_node_or_null("GameBoard/Savannah")
+	var cursor: Node = combat_scene.get_node_or_null("GameBoard/Cursor")
+	if savannah != null and cursor != null and "cell" in savannah and "cell" in cursor:
+		cursor.cell = savannah.cell.round()
+		if "is_active" in cursor:
+			cursor.is_active = true
+
+	var reveal := scene_tree.create_tween()
+	reveal.set_ease(Tween.EASE_IN_OUT)
+	reveal.set_trans(Tween.TRANS_SINE)
+	reveal.tween_property(fade_rect, "color:a", 0.0, 0.35)
+	await reveal.finished
+
+	if is_instance_valid(previous_scene):
+		previous_scene.queue_free()
+	if is_instance_valid(transition_layer):
+		transition_layer.queue_free()
