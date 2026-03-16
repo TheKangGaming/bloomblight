@@ -113,7 +113,7 @@ func _load_combat_scene() -> void:
 		var combat_fade := scene_tree.create_tween()
 		combat_fade.set_ease(Tween.EASE_OUT)
 		combat_fade.set_trans(Tween.TRANS_SINE)
-		combat_fade.tween_property(combat_music, "volume_db", -15.0, 1.5)
+		combat_fade.tween_property(combat_music, "volume_db", -10.0, 1.5)
 
 	var savannah: Node = combat_scene.get_node_or_null("GameBoard/Savannah")
 	var cursor: Node = combat_scene.get_node_or_null("GameBoard/Cursor")
