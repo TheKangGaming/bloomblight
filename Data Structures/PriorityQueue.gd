@@ -3,6 +3,7 @@
 ## the queue one by one.
 ## Our implementation will have these nodes sorted by priority value (from lowest priority to highest priority)
 ## Code is adapted from this link: https://www.geeksforgeeks.org/priority-queue-using-linked-list/
+## Canonical priority queue script for global class registration.
 extends Node
 class_name PriorityQueue
 
