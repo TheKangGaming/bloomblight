@@ -1,0 +1,7 @@
+[gd_resource type="FontVariation" format=3 uid="uid://cxgg15prdnlas"]
+
+[ext_resource type="FontFile" uid="uid://dpwruyc8g7s5n" path="res://assets/fonts/Cinzel-VariableFont_wght.ttf" id="1_x2i3k"]
+
+[resource]
+base_font = ExtResource("1_x2i3k")
+spacing_space = 2

@@ -46,6 +46,7 @@ all_tabs_in_front = true
 
 [node name="Status" type="Panel" parent="CenterContainer/TabContainer" unique_id=1792060860]
 visible = false
+texture_filter = 2
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -69,12 +70,14 @@ theme_override_constants/separation = 4
 alignment = 1
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=652478579]
+texture_filter = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 8
 text = "Savannah"
 horizontal_alignment = 1
 
 [node name="CharIamge" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=282487790]
+texture_filter = 1
 custom_minimum_size = Vector2(40, 62)
 layout_mode = 2
 texture = SubResource("AtlasTexture_1g8jr")
@@ -82,6 +85,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="StatsColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1981587412]
+texture_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
@@ -144,21 +148,21 @@ bbcode_enabled = true
 text = "MOV: 4"
 fit_content = true
 
-[node name="LblHP" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn"]
+[node name="LblHP" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=890779902]
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "HP: 20/20"
 fit_content = true
 
-[node name="LblDMG" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn"]
+[node name="LblDMG" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=141434984]
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
 text = "DMG: 7"
 fit_content = true
 
-[node name="LblDEF" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn"]
+[node name="LblDEF" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=2067629847]
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 6
 bbcode_enabled = true
@@ -186,18 +190,21 @@ theme_override_constants/separation = 4
 alignment = 1
 
 [node name="SlotWeapon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1796073536]
+texture_filter = 1
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=350771874]
+texture_filter = 2
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1711539566]
+texture_filter = 1
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 expand_mode = 1

@@ -1,40 +1,41 @@
-[gd_scene format=3 uid="uid://rle9wo8h4s2g"]
+[gd_scene format=3 uid="uid://rlfawo8h4s2g"]
 
-[ext_resource type="Script" path="res://scenes/ui/recipe_row.gd" id="1_8h0v8"]
+[ext_resource type="Script" uid="uid://dr3yeev7a2qdo" path="res://scenes/ui/recipe_row.gd" id="1_8h0v8"]
 
-[node name="RecipeRow" type="HBoxContainer"]
+[node name="RecipeRow" type="HBoxContainer" unique_id=224597023]
+texture_filter = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 script = ExtResource("1_8h0v8")
 
-[node name="NameLabel" type="Label" parent="."]
+[node name="NameLabel" type="Label" parent="." unique_id=1427547538]
 custom_minimum_size = Vector2(90, 22)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
 text = "Recipe"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 9
 
-[node name="IngredientsLabel" type="Label" parent="."]
+[node name="IngredientsLabel" type="Label" parent="." unique_id=423577794]
 custom_minimum_size = Vector2(200, 22)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Ingredients"
-autowrap_mode = 2
-vertical_alignment = 1
 theme_override_font_sizes/font_size = 8
+text = "Ingredients"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="BuffLabel" type="Label" parent="."]
+[node name="BuffLabel" type="Label" parent="." unique_id=1124289663]
 custom_minimum_size = Vector2(120, 22)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Buff"
-autowrap_mode = 2
-vertical_alignment = 1
 theme_override_font_sizes/font_size = 8
+text = "Buff"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="CraftButton" type="Button" parent="."]
+[node name="CraftButton" type="Button" parent="." unique_id=1127360929]
 custom_minimum_size = Vector2(56, 22)
 layout_mode = 2
-text = "Craft"
 theme_override_font_sizes/font_size = 8
+text = "Craft"
