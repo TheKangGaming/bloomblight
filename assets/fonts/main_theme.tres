@@ -1,0 +1,6 @@
+[gd_resource type="Theme" format=3 uid="uid://cd5gqhd6wqs3y"]
+
+[ext_resource type="FontFile" uid="uid://dpwruyc8g7s5n" path="res://assets/fonts/Cinzel-VariableFont_wght.ttf" id="1_gvjhl"]
+
+[resource]
+default_font = ExtResource("1_gvjhl")

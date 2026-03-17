@@ -37,6 +37,10 @@ window/stretch/scale=4.0
 
 enabled=PackedStringArray("res://addons/YATI/plugin.cfg", "res://addons/msca/plugin.cfg")
 
+[gui]
+
+theme/custom="uid://cd5gqhd6wqs3y"
+
 [input]
 
 ui_accept={
