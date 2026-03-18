@@ -45,13 +45,17 @@ shadow_offset = Vector2(4, 4)
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_cfe2f"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ik4u"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+bg_color = Color(1, 1, 1, 0.1)
 border_width_bottom = 2
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_aqu7r"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jsbfx"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_bottom = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a4ium"]
+bg_color = Color(1, 1, 1, 0.1)
 border_width_bottom = 2
 
 [node name="TitleScreen" type="Control" unique_id=1986978738]
@@ -137,7 +141,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxEmpty_aqu7r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_jsbfx")
-theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/focus = SubResource("StyleBoxFlat_a4ium")
 text = "Exit Game"
 
 [node name="FadeRect" type="ColorRect" parent="." unique_id=233096601]

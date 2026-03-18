@@ -9,6 +9,7 @@ var current_track: AudioStream
 var active_tween: Tween 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	player_a = AudioStreamPlayer.new()
 	player_b = AudioStreamPlayer.new()
 	

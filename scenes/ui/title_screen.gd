@@ -3,6 +3,7 @@ extends Control
 @onready var start_button: Button = $MarginContainer/VBoxContainer/Buttons/StartButton
 @onready var quit_button: Button = $MarginContainer/VBoxContainer/Buttons/QuitButton
 @onready var fade_rect: ColorRect = $FadeRect
+@onready var atmosphere_particles: GPUParticles2D = $AtmosphereParticles
 
 @export var title_music: AudioStream 
 @export var game_scene: PackedScene # The unbreakable scene reference
@@ -12,6 +13,8 @@ var _is_transitioning: bool = true
 var _fade_tween: Tween
 
 func _ready() -> void:
+	get_tree().root.size_changed.connect(_update_particle_layout)
+	_update_particle_layout()
 	fade_rect.modulate.a = 1.0 
 	start_button.disabled = true
 	quit_button.disabled = true
@@ -47,7 +50,6 @@ func _on_fade_in_complete() -> void:
 	start_button.grab_focus()
 
 func _on_start_pressed() -> void:
-	# Double-check the state guard just in case
 	if _is_transitioning:
 		return
 		
@@ -55,23 +57,23 @@ func _on_start_pressed() -> void:
 	start_button.disabled = true 
 	quit_button.disabled = true
 	
-	# 5. Kill the intro tween if it's somehow still hanging around
-	if _fade_tween and _fade_tween.is_valid():
-		_fade_tween.kill()
-		
-	_fade_tween = create_tween()
-	_fade_tween.tween_property(fade_rect, "modulate:a", 1.0, 1.5)
-	_fade_tween.tween_callback(_load_farm_map)
+	# Call our new global manager to handle the heavy lifting
+	TransitionManager.change_scene(game_scene)
 
-func _load_farm_map() -> void:
-	if game_scene:
-		# Loads the assigned scene using its UID, immune to file path changes
-		get_tree().change_scene_to_packed(game_scene)
-	else:
-		# Fails gracefully and alerts you if the field is empty
-		push_error("Title Screen Error: No game scene assigned in the Inspector!")
 
 func _on_quit_pressed() -> void:
 	if _is_transitioning:
 		return
 	get_tree().quit()
+
+func _update_particle_layout() -> void:
+	# Get the actual size of the player's window
+	var screen_size = get_viewport_rect().size
+	
+	# Center the emitter perfectly
+	atmosphere_particles.position = screen_size / 2.0
+	
+	# Scale the emission box to fill the new screen size
+	var mat = atmosphere_particles.process_material as ParticleProcessMaterial
+	if mat:
+		mat.emission_box_extents = Vector3(screen_size.x / 2.0, screen_size.y / 2.0, 1.0)

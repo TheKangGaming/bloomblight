@@ -19,12 +19,17 @@ run/main_scene="uid://wdgjtlnwjk0c"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[audio]
+
+buses/default_bus_layout="uid://b0ncci1a8pr65"
+
 [autoload]
 
 Global="*uid://bcq8tavlkaxyr"
 ProgressionService="*res://systems/progression/progression_service.gd"
 CalendarService="*uid://cp8duraorkxir"
 MusicManager="*uid://ds754ws0s2j6e"
+TransitionManager="*uid://74bgy2nyplkn"
 
 [display]
 
