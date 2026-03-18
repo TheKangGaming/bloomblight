@@ -23,7 +23,7 @@ func _ready() -> void:
 	if title_music:
 		MusicManager.crossfade_to(title_music, 1.0)
 		
-	# 1. Fade the black screen away (Revealing the title and particles)
+	# 1. Fade the black screen away
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(fade_rect, "modulate:a", 0.0, 2.5)
 	
@@ -32,6 +32,10 @@ func _ready() -> void:
 	_fade_tween.parallel().tween_property(quit_button, "modulate:a", 1.0, 2.0).set_delay(1.5)
 	
 	_fade_tween.tween_callback(_on_fade_in_complete)
+	
+	# 3. CRITICAL RESTORATION: Connect the buttons so the game actually starts!
+	start_button.pressed.connect(_on_start_pressed)
+	quit_button.pressed.connect(_on_quit_pressed)
 
 func _on_fade_in_complete() -> void:
 	# 4. Unlock the state only when the fade is 100% finished

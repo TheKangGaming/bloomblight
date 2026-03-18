@@ -53,10 +53,17 @@ func fade_to_silence(fade_duration: float = 2.0) -> void:
 	if active_tween and active_tween.is_valid():
 		active_tween.kill()
 		
-	active_tween = create_tween()
+	# Set parallel to true so both players fade at the exact same time
+	active_tween = create_tween().set_parallel(true)
 	
-	if current_player and current_player.playing:
-		active_tween.tween_property(current_player, "volume_db", -80.0, fade_duration)
-		active_tween.tween_callback(current_player.stop)
+	# Catch and fade ANY player that is currently making noise
+	if player_a.playing:
+		active_tween.tween_property(player_a, "volume_db", -80.0, fade_duration)
+	if player_b.playing:
+		active_tween.tween_property(player_b, "volume_db", -80.0, fade_duration)
+		
+	# Wait for the fade to finish, then explicitly shut both down
+	active_tween.chain().tween_callback(player_a.stop)
+	active_tween.parallel().tween_callback(player_b.stop)
 		
 	current_track = null	

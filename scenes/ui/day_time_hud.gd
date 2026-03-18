@@ -35,16 +35,21 @@ func _resolve_day_timer() -> void:
 		day_timer = main_scene.get_node("DayTimer") as Timer
 
 func _update_view(force := false) -> void:
-	_set_day_label(force)
-
-	if day_timer and not day_timer.is_stopped():
-		_update_clock(force)
-	elif Global.pending_day_transition:
+	# 1. The Ultimate Override: Is the day ending?
+	if Global.pending_day_transition:
 		_set_time_label("Midnight", force)
 		_set_icon_animation("night", force)
-	else:
-		_set_time_label("6:00 AM", force)
-		_set_icon_animation("dawn", force)
+		
+		# Lock in the silence phase immediately
+		if _active_music_phase != "silence":
+			_active_music_phase = "silence"
+			MusicManager.fade_to_silence(1.5)
+			
+		return # Halt all further UI updates for this frame
+
+	# 2. Normal Gameplay: Is the timer running?
+	if not day_timer.is_stopped():
+		_update_clock(force)
 
 func _set_day_label(force := false) -> void:
 	if not force and _last_rendered_day == Global.current_day:
@@ -94,17 +99,6 @@ func _check_music_transition(clock_hour_24: int) -> void:
 
 
 func _update_clock(force := false) -> void:
-	# 1. Catch the early sleep/transition state first
-	if Global.pending_day_transition:
-		_set_time_label("Midnight", force)
-		_set_icon_animation("night", force)
-		
-		# Prevent spamming the fade-out every frame
-		if _active_music_phase != "silence":
-			_active_music_phase = "silence"
-			MusicManager.fade_to_silence(1.5)
-		return
-		
 	var max_time = day_timer.wait_time
 	if max_time <= 0.0:
 		_set_time_label("6:00 AM", force)
@@ -124,14 +118,12 @@ func _update_clock(force := false) -> void:
 	var minutes = displayed_minutes % 60
 	
 	var am_pm = "AM"
-	# Now 0 (midnight) correctly bypasses this and stays AM
 	if clock_hour_24 >= 12:
 		am_pm = "PM"
 		
 	var display_hour = clock_hour_24
 	if display_hour > 12:
 		display_hour -= 12
-	# Catches both 0 (midnight) and 0 from (12 % 12) if we had used it
 	if display_hour == 0: 
 		display_hour = 12
 		
@@ -143,7 +135,6 @@ func _update_clock(force := false) -> void:
 
 	var current_anim = "day"
 	
-	# Update these checks to use the normalized 24-hour variable
 	if clock_hour_24 >= 6 and clock_hour_24 < 9:
 		current_anim = "dawn"
 	elif clock_hour_24 >= 9 and clock_hour_24 < 13:
@@ -155,5 +146,5 @@ func _update_clock(force := false) -> void:
 
 	_set_icon_animation(current_anim, force)
 	
-	# Pass the normalized hour to the music manager
+	# Safely trigger music checks based purely on the clock math
 	_check_music_transition(clock_hour_24)
