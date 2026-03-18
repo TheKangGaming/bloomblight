@@ -50,3 +50,15 @@ func crossfade_to(stream: AudioStream, fade_duration: float = 3.0) -> void:
 	active_tween.chain().tween_callback(current_player.stop)
 	
 	current_player = next_player
+	
+func fade_to_silence(fade_duration: float = 2.0) -> void:
+	if active_tween and active_tween.is_valid():
+		active_tween.kill()
+		
+	active_tween = create_tween()
+	
+	if current_player and current_player.playing:
+		active_tween.tween_property(current_player, "volume_db", -80.0, fade_duration)
+		active_tween.tween_callback(current_player.stop)
+		
+	current_track = null	

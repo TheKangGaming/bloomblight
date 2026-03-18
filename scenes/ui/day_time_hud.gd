@@ -94,6 +94,17 @@ func _check_music_transition(clock_hour_24: int) -> void:
 
 
 func _update_clock(force := false) -> void:
+	# 1. Catch the early sleep/transition state first
+	if Global.pending_day_transition:
+		_set_time_label("Midnight", force)
+		_set_icon_animation("night", force)
+		
+		# Prevent spamming the fade-out every frame
+		if _active_music_phase != "silence":
+			_active_music_phase = "silence"
+			MusicManager.fade_to_silence(1.5)
+		return
+		
 	var max_time = day_timer.wait_time
 	if max_time <= 0.0:
 		_set_time_label("6:00 AM", force)
