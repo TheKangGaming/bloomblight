@@ -7,6 +7,19 @@ signal menu_cancelled
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	$PanelContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.09, 0.09, 0.1, 0.92)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.88, 0.82, 0.56, 0.95)
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	panel_style.corner_radius_bottom_right = 8
+	panel_style.corner_radius_bottom_left = 8
+	$PanelContainer.add_theme_stylebox_override("panel", panel_style)
 	hide() # Start hidden
 	
 func open(player_pos: Vector2):
@@ -63,7 +76,8 @@ func open(player_pos: Vector2):
 		
 		var tween = create_tween()
 		tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT) # Make it bounce!
-		tween.tween_property($PanelContainer, "scale", Vector2.ONE, 0.3)
+		tween.tween_property($PanelContainer, "scale", Vector2.ONE * 1.05, 0.2)
+		tween.tween_property($PanelContainer, "scale", Vector2.ONE, 0.12)
 		
 		# Focus the first available in-season button, fallback to first item.
 		var focused_button := false

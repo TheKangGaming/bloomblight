@@ -882,13 +882,26 @@ func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
 	if _unit_hover_panel == null:
 		_unit_hover_panel = PanelContainer.new()
 		_unit_hover_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_unit_hover_panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		var hover_style := StyleBoxFlat.new()
+		hover_style.bg_color = Color(0.08, 0.1, 0.12, 0.94)
+		hover_style.border_width_left = 2
+		hover_style.border_width_top = 2
+		hover_style.border_width_right = 2
+		hover_style.border_width_bottom = 2
+		hover_style.border_color = Color(0.95, 0.83, 0.45, 0.95)
+		hover_style.corner_radius_top_left = 8
+		hover_style.corner_radius_top_right = 8
+		hover_style.corner_radius_bottom_right = 8
+		hover_style.corner_radius_bottom_left = 8
+		_unit_hover_panel.add_theme_stylebox_override("panel", hover_style)
 		_unit_hover_tooltip.add_child(_unit_hover_panel)
 
 		var margin := MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 6)
-		margin.add_theme_constant_override("margin_right", 6)
-		margin.add_theme_constant_override("margin_top", 4)
-		margin.add_theme_constant_override("margin_bottom", 4)
+		margin.add_theme_constant_override("margin_left", 12)
+		margin.add_theme_constant_override("margin_right", 12)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_bottom", 8)
 		_unit_hover_panel.add_child(margin)
 
 		_unit_hover_label = RichTextLabel.new()
@@ -896,7 +909,8 @@ func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
 		_unit_hover_label.fit_content = true
 		_unit_hover_label.scroll_active = false
 		_unit_hover_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		_unit_hover_label.add_theme_font_size_override("normal_font_size", 18)
+		_unit_hover_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		_unit_hover_label.add_theme_font_size_override("normal_font_size", 24)
 		margin.add_child(_unit_hover_label)
 
 	var unit_class_name := "Unknown"
@@ -921,11 +935,11 @@ func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
 		unit.defense,
 	]
 
-	var tooltip_size := _unit_hover_label.get_combined_minimum_size() + Vector2(12.0, 8.0)
+	var tooltip_size := _unit_hover_label.get_combined_minimum_size() + Vector2(24.0, 18.0)
 	_unit_hover_panel.custom_minimum_size = tooltip_size
 
 	var screen_point: Vector2 = grid.calculate_map_position(cell)
-	var target_pos: Vector2 = screen_point + Vector2(20, -40)
+	var target_pos: Vector2 = screen_point + Vector2(28, -52)
 	var viewport_size: Vector2 = get_viewport_rect().size
 	target_pos.x = clampf(target_pos.x, 8.0, max(8.0, viewport_size.x - tooltip_size.x - 8.0))
 	target_pos.y = clampf(target_pos.y, 8.0, max(8.0, viewport_size.y - tooltip_size.y - 8.0))
@@ -944,20 +958,31 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	add_child(_forecast_ui_node)
 	
 	var panel = PanelContainer.new()
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var forecast_style := StyleBoxFlat.new()
+	forecast_style.bg_color = Color(0.05, 0.06, 0.09, 0.93)
+	forecast_style.border_width_left = 2
+	forecast_style.border_width_top = 2
+	forecast_style.border_width_right = 2
+	forecast_style.border_width_bottom = 2
+	forecast_style.border_color = Color(0.82, 0.88, 0.97, 0.92)
+	forecast_style.corner_radius_top_left = 10
+	forecast_style.corner_radius_top_right = 10
+	forecast_style.corner_radius_bottom_right = 10
+	forecast_style.corner_radius_bottom_left = 10
+	panel.add_theme_stylebox_override("panel", forecast_style)
 	_forecast_ui_node.add_child(panel)
-	panel.position = Vector2(10, 10) # Tucked slightly tighter into the corner
+	panel.position = Vector2(24, 20)
 	
 	var margin = MarginContainer.new()
-	# Halved the margins to remove the bulky borders
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 5)
-	margin.add_theme_constant_override("margin_bottom", 5)
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
 	panel.add_child(margin)
 	
 	var vbox = VBoxContainer.new()
-	# Force the rows to sit much closer together
-	vbox.add_theme_constant_override("separation", 1) 
+	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 	
 	# 1. Attacker Stats
@@ -965,7 +990,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	var title = Label.new()
 	title.text = ">> " + attacker.name + " <<"
 	title.add_theme_color_override("font_color", Color.AQUA)
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", 28)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 	
@@ -980,7 +1005,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	var def_title = Label.new()
 	def_title.text = ">> " + defender.name + " <<"
 	def_title.add_theme_color_override("font_color", Color.ORANGE_RED)
-	def_title.add_theme_font_size_override("font_size", 20)
+	def_title.add_theme_font_size_override("font_size", 28)
 	def_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(def_title)
 	
@@ -996,7 +1021,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 		var no_counter = Label.new()
 		no_counter.text = "-- No Counter --"
 		no_counter.add_theme_color_override("font_color", Color.GRAY)
-		no_counter.add_theme_font_size_override("font_size", 16)
+		no_counter.add_theme_font_size_override("font_size", 22)
 		no_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(no_counter)
 
@@ -1004,17 +1029,18 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 ## Helper function to create tightly packed, right-aligned stat rows
 func _create_stat_row(stat_name: String, value: String) -> HBoxContainer:
 	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 18)
 	
 	var name_lbl = Label.new()
 	name_lbl.text = stat_name + ":"
-	name_lbl.custom_minimum_size = Vector2(70, 0)
-	name_lbl.add_theme_font_size_override("font_size", 16)
+	name_lbl.custom_minimum_size = Vector2(96, 0)
+	name_lbl.add_theme_font_size_override("font_size", 22)
 	
 	var val_lbl = Label.new()
 	val_lbl.text = value
 	val_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT # Pushes the numbers perfectly to the right border!
-	val_lbl.add_theme_font_size_override("font_size", 16)
+	val_lbl.add_theme_font_size_override("font_size", 22)
 	
 	hbox.add_child(name_lbl)
 	hbox.add_child(val_lbl)
@@ -1194,7 +1220,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 	var title = Label.new()
 	title.text = "VICTORY!" if is_victory else "DEFEAT..."
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", 60)
 	title.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2) if is_victory else Color(0.8, 0.2, 0.2))
 	title.add_theme_color_override("font_outline_color", Color.BLACK)
 	title.add_theme_constant_override("outline_size", 8)
@@ -1203,7 +1229,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 	var stats = Label.new()
 	stats.text = "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
-	stats.add_theme_font_size_override("font_size", 24)
+	stats.add_theme_font_size_override("font_size", 34)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats)
 	
@@ -1211,8 +1237,8 @@ func _show_results_screen(is_victory: bool) -> void:
 	var btn = Button.new()
 	btn.text = "Return to Farm"
 	btn.focus_mode = Control.FOCUS_ALL
-	btn.add_theme_font_size_override("font_size", 28)
-	btn.custom_minimum_size = Vector2(420, 84)
+	btn.add_theme_font_size_override("font_size", 36)
+	btn.custom_minimum_size = Vector2(540, 104)
 	btn.pressed.connect(_on_return_button_pressed.bind(btn))
 	vbox.add_child(btn)
 	_results_return_button = btn

@@ -8,6 +8,7 @@ var _units_overlay: CanvasLayer = null
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	$VBoxContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_reset_menu_focus()
 	
 	##disable the cursor
@@ -47,22 +48,23 @@ func _on_units_button_pressed() -> void:
 	add_child(_units_overlay)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(760, 440)
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	panel.custom_minimum_size = Vector2(900, 560)
 	panel.anchor_left = 0.5
 	panel.anchor_top = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_bottom = 0.5
-	panel.offset_left = -380
-	panel.offset_top = -220
-	panel.offset_right = 380
-	panel.offset_bottom = 220
+	panel.offset_left = -450
+	panel.offset_top = -280
+	panel.offset_right = 450
+	panel.offset_bottom = 280
 	_units_overlay.add_child(panel)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 10)
-	margin.add_theme_constant_override("margin_right", 10)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
 	panel.add_child(margin)
 
 	var content := VBoxContainer.new()
@@ -72,7 +74,7 @@ func _on_units_button_pressed() -> void:
 	var title := Label.new()
 	title.text = "Units"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 32)
 	content.add_child(title)
 
 	var list_text := RichTextLabel.new()
@@ -80,12 +82,15 @@ func _on_units_button_pressed() -> void:
 	list_text.fit_content = false
 	list_text.scroll_active = true
 	list_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_text.add_theme_font_size_override("normal_font_size", 16)
+	list_text.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	list_text.add_theme_font_size_override("normal_font_size", 22)
 	list_text.bbcode_text = _build_units_summary()
 	content.add_child(list_text)
 
 	var close_btn := Button.new()
 	close_btn.text = "Close"
+	close_btn.custom_minimum_size = Vector2(0, 64)
+	close_btn.add_theme_font_size_override("font_size", 26)
 	close_btn.pressed.connect(_close_units_overlay)
 	content.add_child(close_btn)
 	close_btn.grab_focus()

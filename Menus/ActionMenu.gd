@@ -8,6 +8,7 @@ extends CanvasLayer
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	$VBoxContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	# --- NEW: ABILITY SETUP LOGIC ---
 	var unit = get_parent()._active_unit # Grab the unit currently taking its turn
 	

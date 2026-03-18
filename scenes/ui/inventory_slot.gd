@@ -29,6 +29,8 @@ const FOCUS_BG_COLOR := Color(0.24, 0.22, 0.13, 0.95)
 const DEFAULT_BG_COLOR := Color(0.12, 0.12, 0.12, 0.86)
 
 func _ready():
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	focus_mode = Control.FOCUS_ALL
 	focus_entered.connect(_on_focus_entered)
 	focus_exited.connect(_on_focus_exited)
@@ -173,6 +175,7 @@ func _show_focus_tooltip() -> void:
 	var tooltip: PanelContainer = _get_or_create_focus_tooltip()
 	var text_label: Label = tooltip.get_node("Margin/Text") as Label
 	text_label.text = tooltip_text
+	text_label.add_theme_font_size_override("font_size", 20)
 
 	var slot_rect: Rect2 = get_global_rect()
 	var tooltip_size: Vector2 = text_label.get_combined_minimum_size() + Vector2(16.0, 12.0)
@@ -218,6 +221,7 @@ func _get_or_create_focus_tooltip() -> PanelContainer:
 	var text_label: Label = Label.new()
 	text_label.name = "Text"
 	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	margin.add_child(text_label)
 	tooltip.add_child(margin)
 

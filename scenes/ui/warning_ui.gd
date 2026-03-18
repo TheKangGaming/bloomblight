@@ -10,7 +10,25 @@ func _ready() -> void:
 	# 1. Start completely invisible
 	modulate.a = 0.0
 	center_container.modulate.a = 1.0
+	center_container.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	warning_text.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	defend_button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	defend_button.disabled = true # Prevent clicking before the fade finishes
+
+	var button_style := StyleBoxFlat.new()
+	button_style.bg_color = Color(0.5, 0.08, 0.08, 0.92)
+	button_style.border_color = Color(1.0, 0.82, 0.6, 1.0)
+	button_style.border_width_left = 3
+	button_style.border_width_top = 3
+	button_style.border_width_right = 3
+	button_style.border_width_bottom = 3
+	button_style.corner_radius_top_left = 10
+	button_style.corner_radius_top_right = 10
+	button_style.corner_radius_bottom_right = 10
+	button_style.corner_radius_bottom_left = 10
+	defend_button.add_theme_stylebox_override("normal", button_style)
+	defend_button.add_theme_stylebox_override("hover", button_style.duplicate())
+	defend_button.add_theme_stylebox_override("focus", button_style.duplicate())
 
 	# 2. Grab the specific threat data from the Calendar
 	var day = Global.current_day

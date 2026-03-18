@@ -12,9 +12,11 @@ grow_vertical = 2
 script = ExtResource("1_p5jfp")
 
 [node name="PanelContainer" type="PanelContainer" parent="." unique_id=1681172680]
+custom_minimum_size = Vector2(220, 96)
 layout_mode = 1
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 220.0
+offset_bottom = 96.0
 
 [node name="Grid" type="HBoxContainer" parent="PanelContainer" unique_id=859724658]
 layout_mode = 2
+theme_override_constants/separation = 12

@@ -5,37 +5,37 @@
 [node name="RecipeRow" type="HBoxContainer" unique_id=224597023]
 texture_filter = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 16
 script = ExtResource("1_8h0v8")
 
 [node name="NameLabel" type="Label" parent="." unique_id=1427547538]
-custom_minimum_size = Vector2(180, 44)
+custom_minimum_size = Vector2(220, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 24
 text = "Recipe"
 vertical_alignment = 1
 
 [node name="IngredientsLabel" type="Label" parent="." unique_id=423577794]
-custom_minimum_size = Vector2(400, 44)
+custom_minimum_size = Vector2(460, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 text = "Ingredients"
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="BuffLabel" type="Label" parent="." unique_id=1124289663]
-custom_minimum_size = Vector2(240, 44)
+custom_minimum_size = Vector2(300, 56)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 text = "Buff"
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="CraftButton" type="Button" parent="." unique_id=1127360929]
-custom_minimum_size = Vector2(120, 44)
+custom_minimum_size = Vector2(160, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 text = "Craft"

@@ -13,6 +13,19 @@ var _recipe_rows: Array = []
 
 func _ready() -> void:
 	visible = false
+	$Panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.1, 0.94)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.78, 0.72, 0.54, 0.95)
+	panel_style.corner_radius_top_left = 10
+	panel_style.corner_radius_top_right = 10
+	panel_style.corner_radius_bottom_right = 10
+	panel_style.corner_radius_bottom_left = 10
+	$Panel.add_theme_stylebox_override("panel", panel_style)
 	_build_recipe_rows()
 	Global.inventory_updated.connect(_on_inventory_updated)
 	Global.recipe_knowledge_updated.connect(_on_recipe_knowledge_updated)

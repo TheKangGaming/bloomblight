@@ -5,6 +5,7 @@ signal craft_requested(recipe_output: Global.Items)
 var _recipe_output: Global.Items
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	$CraftButton.pressed.connect(_on_craft_button_pressed)
 
 func setup(recipe_output: Global.Items, recipe_name: String, ingredients_summary: String, buff_summary: String, can_craft: bool) -> void:

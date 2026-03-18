@@ -35,6 +35,9 @@ const SEED_COORDS = {
 
 func setup(seed_type: Global.Items, amount: int, can_plant_now: bool = true, status_tooltip: String = ""):
 	my_seed_type = seed_type
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	$Sprite2D.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	$Sprite2D/Label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	
 	# Update the label text
 	$Sprite2D/Label.text = str(amount)
