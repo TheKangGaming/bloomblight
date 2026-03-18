@@ -47,15 +47,15 @@ func _on_units_button_pressed() -> void:
 	add_child(_units_overlay)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(380, 220)
+	panel.custom_minimum_size = Vector2(760, 440)
 	panel.anchor_left = 0.5
 	panel.anchor_top = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_bottom = 0.5
-	panel.offset_left = -190
-	panel.offset_top = -110
-	panel.offset_right = 190
-	panel.offset_bottom = 110
+	panel.offset_left = -380
+	panel.offset_top = -220
+	panel.offset_right = 380
+	panel.offset_bottom = 220
 	_units_overlay.add_child(panel)
 
 	var margin := MarginContainer.new()
@@ -72,7 +72,7 @@ func _on_units_button_pressed() -> void:
 	var title := Label.new()
 	title.text = "Units"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 10)
+	title.add_theme_font_size_override("font_size", 24)
 	content.add_child(title)
 
 	var list_text := RichTextLabel.new()
@@ -80,7 +80,7 @@ func _on_units_button_pressed() -> void:
 	list_text.fit_content = false
 	list_text.scroll_active = true
 	list_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_text.add_theme_font_size_override("normal_font_size", 6)
+	list_text.add_theme_font_size_override("normal_font_size", 16)
 	list_text.bbcode_text = _build_units_summary()
 	content.add_child(list_text)
 

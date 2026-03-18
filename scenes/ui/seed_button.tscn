@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bontbnxlphj0g" path="res://graphics/ui/seeds.png" id="2_40qgp"]
 
 [node name="SeedButton" type="Button" unique_id=844998914]
-custom_minimum_size = Vector2(24, 24)
+custom_minimum_size = Vector2(48, 48)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -13,7 +13,7 @@ grow_vertical = 2
 script = ExtResource("1_ht8dw")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=521613924]
-position = Vector2(12, 12)
+position = Vector2(24, 24)
 texture = ExtResource("2_40qgp")
 hframes = 3
 
@@ -23,12 +23,12 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -26.0
-offset_top = -13.0
-offset_right = 14.0
-offset_bottom = 10.0
+offset_left = -44.0
+offset_top = -24.0
+offset_right = 22.0
+offset_bottom = 18.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 6
+theme_override_font_sizes/font_size = 14
 text = "5"

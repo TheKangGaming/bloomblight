@@ -36,7 +36,7 @@ func _setup_quest_ui() -> void:
 	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(160, 0)
+	panel.custom_minimum_size = Vector2(320, 0)
 	panel.self_modulate = Color(1, 1, 1, 0.9)
 
 	var content = MarginContainer.new()
@@ -47,7 +47,7 @@ func _setup_quest_ui() -> void:
 
 	quest_label = Label.new()
 	quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quest_label.add_theme_font_size_override("font_size", 6)
+	quest_label.add_theme_font_size_override("font_size", 16)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
 	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	quest_label.add_theme_constant_override("outline_size", 2)

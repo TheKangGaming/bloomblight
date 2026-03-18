@@ -896,7 +896,7 @@ func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
 		_unit_hover_label.fit_content = true
 		_unit_hover_label.scroll_active = false
 		_unit_hover_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		_unit_hover_label.add_theme_font_size_override("normal_font_size", 10)
+		_unit_hover_label.add_theme_font_size_override("normal_font_size", 18)
 		margin.add_child(_unit_hover_label)
 
 	var unit_class_name := "Unknown"
@@ -965,7 +965,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	var title = Label.new()
 	title.text = ">> " + attacker.name + " <<"
 	title.add_theme_color_override("font_color", Color.AQUA)
-	title.add_theme_font_size_override("font_size", 12) # Smaller font
+	title.add_theme_font_size_override("font_size", 20)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(title)
 	
@@ -980,7 +980,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	var def_title = Label.new()
 	def_title.text = ">> " + defender.name + " <<"
 	def_title.add_theme_color_override("font_color", Color.ORANGE_RED)
-	def_title.add_theme_font_size_override("font_size", 12) # Smaller font
+	def_title.add_theme_font_size_override("font_size", 20)
 	def_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(def_title)
 	
@@ -996,7 +996,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 		var no_counter = Label.new()
 		no_counter.text = "-- No Counter --"
 		no_counter.add_theme_color_override("font_color", Color.GRAY)
-		no_counter.add_theme_font_size_override("font_size", 10) # Smaller font
+		no_counter.add_theme_font_size_override("font_size", 16)
 		no_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(no_counter)
 
@@ -1007,14 +1007,14 @@ func _create_stat_row(stat_name: String, value: String) -> HBoxContainer:
 	
 	var name_lbl = Label.new()
 	name_lbl.text = stat_name + ":"
-	name_lbl.custom_minimum_size = Vector2(35, 0) # Squished width
-	name_lbl.add_theme_font_size_override("font_size", 10) # Smaller font
+	name_lbl.custom_minimum_size = Vector2(70, 0)
+	name_lbl.add_theme_font_size_override("font_size", 16)
 	
 	var val_lbl = Label.new()
 	val_lbl.text = value
 	val_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT # Pushes the numbers perfectly to the right border!
-	val_lbl.add_theme_font_size_override("font_size", 10) # Smaller font
+	val_lbl.add_theme_font_size_override("font_size", 16)
 	
 	hbox.add_child(name_lbl)
 	hbox.add_child(val_lbl)
@@ -1203,7 +1203,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 	var stats = Label.new()
 	stats.text = "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
-	stats.add_theme_font_size_override("font_size", 16)
+	stats.add_theme_font_size_override("font_size", 24)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats)
 	
@@ -1211,8 +1211,8 @@ func _show_results_screen(is_victory: bool) -> void:
 	var btn = Button.new()
 	btn.text = "Return to Farm"
 	btn.focus_mode = Control.FOCUS_ALL
-	btn.add_theme_font_size_override("font_size", 20)
-	btn.custom_minimum_size = Vector2(300, 60) # Forces the button to be nice and wide
+	btn.add_theme_font_size_override("font_size", 28)
+	btn.custom_minimum_size = Vector2(420, 84)
 	btn.pressed.connect(_on_return_button_pressed.bind(btn))
 	vbox.add_child(btn)
 	_results_return_button = btn
