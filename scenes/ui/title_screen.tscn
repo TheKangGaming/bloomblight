@@ -5,6 +5,26 @@
 [ext_resource type="PackedScene" uid="uid://bf0yuue48pk6v" path="res://scenes/level/game.tscn" id="3_w8uqo"]
 [ext_resource type="FontFile" uid="uid://dpwruyc8g7s5n" path="res://assets/fonts/Cinzel-VariableFont_wght.ttf" id="4_a4ium"]
 
+[sub_resource type="Gradient" id="Gradient_r23qo"]
+colors = PackedColorArray(0.18543339, 2.8685927e-05, 0.7077556, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_cfe2f"]
+gradient = SubResource("Gradient_r23qo")
+width = 256
+height = 256
+fill = 1
+
+[sub_resource type="Gradient" id="Gradient_a4ium"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_r23qo"]
+gradient = SubResource("Gradient_a4ium")
+width = 16
+height = 16
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_w8uqo"]
 particle_flag_disable_z = true
 emission_shape = 3
@@ -12,7 +32,7 @@ emission_box_extents = Vector3(1280, 720, 1)
 gravity = Vector3(0, -10, 0)
 scale_min = 2.0
 scale_max = 6.0
-color = Color(0.1764706, 0.40392157, 0, 0.54901963)
+color = Color(0.24699152, 0.07583184, 0.51259595, 0.54901963)
 
 [sub_resource type="LabelSettings" id="LabelSettings_r23qo"]
 font = ExtResource("4_a4ium")
@@ -52,6 +72,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = SubResource("GradientTexture2D_cfe2f")
 
 [node name="ColorRect" type="ColorRect" parent="Background" unique_id=1429496130]
 layout_mode = 1
@@ -63,8 +84,12 @@ grow_vertical = 2
 color = Color(0.12225223, 0.12225223, 0.12225223, 1)
 
 [node name="AtmosphereParticles" type="GPUParticles2D" parent="." unique_id=2141827461]
+position = Vector2(1280, 720)
+amount = 100
+texture = SubResource("GradientTexture2D_r23qo")
 lifetime = 10.0
 preprocess = 10.0
+fixed_fps = 60
 process_material = SubResource("ParticleProcessMaterial_w8uqo")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1352178641]
@@ -103,6 +128,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
 text = "Start Game"
 
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=1634308205]
@@ -111,6 +137,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxEmpty_aqu7r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_jsbfx")
+theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
 text = "Exit Game"
 
 [node name="FadeRect" type="ColorRect" parent="." unique_id=233096601]
