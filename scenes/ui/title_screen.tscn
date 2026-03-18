@@ -2,6 +2,37 @@
 
 [ext_resource type="Script" uid="uid://glj0a3o7b0b7" path="res://scenes/ui/title_screen.gd" id="1_eb34j"]
 [ext_resource type="AudioStream" uid="uid://bxr3m7mq3vovb" path="res://audio/Sea of stars.wav" id="2_aqpy5"]
+[ext_resource type="PackedScene" uid="uid://bf0yuue48pk6v" path="res://scenes/level/game.tscn" id="3_w8uqo"]
+[ext_resource type="FontFile" uid="uid://dpwruyc8g7s5n" path="res://assets/fonts/Cinzel-VariableFont_wght.ttf" id="4_a4ium"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_w8uqo"]
+particle_flag_disable_z = true
+emission_shape = 3
+emission_box_extents = Vector3(1280, 720, 1)
+gravity = Vector3(0, -10, 0)
+scale_min = 2.0
+scale_max = 6.0
+color = Color(0.1764706, 0.40392157, 0, 0.54901963)
+
+[sub_resource type="LabelSettings" id="LabelSettings_r23qo"]
+font = ExtResource("4_a4ium")
+font_size = 96
+outline_size = 1
+outline_color = Color(0.52906674, 0.5290667, 0.5290667, 1)
+shadow_color = Color(0, 0, 0, 0.753)
+shadow_offset = Vector2(4, 4)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_cfe2f"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ik4u"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_bottom = 2
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_aqu7r"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jsbfx"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_bottom = 2
 
 [node name="TitleScreen" type="Control" unique_id=1986978738]
 layout_mode = 3
@@ -12,6 +43,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_eb34j")
 title_music = ExtResource("2_aqpy5")
+game_scene = ExtResource("3_w8uqo")
 
 [node name="Background" type="TextureRect" parent="." unique_id=774924399]
 layout_mode = 1
@@ -29,6 +61,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.12225223, 0.12225223, 0.12225223, 1)
+
+[node name="AtmosphereParticles" type="GPUParticles2D" parent="." unique_id=2141827461]
+lifetime = 10.0
+preprocess = 10.0
+process_material = SubResource("ParticleProcessMaterial_w8uqo")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1352178641]
 layout_mode = 1
@@ -53,6 +90,7 @@ size_flags_horizontal = 4
 size_flags_vertical = 1
 theme_override_font_sizes/font_size = 96
 text = "BLIGHT & BLOOM"
+label_settings = SubResource("LabelSettings_r23qo")
 horizontal_alignment = 1
 
 [node name="Buttons" type="VBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=101251817]
@@ -63,12 +101,16 @@ size_flags_horizontal = 4
 texture_filter = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
+theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
 text = "Start Game"
 
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=1634308205]
 texture_filter = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxEmpty_aqu7r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_jsbfx")
 text = "Exit Game"
 
 [node name="FadeRect" type="ColorRect" parent="." unique_id=233096601]
