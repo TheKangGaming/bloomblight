@@ -12,6 +12,8 @@ const TIME_TICK_MINUTES := 30
 @export var day_music: AudioStream
 @export var night_music: AudioStream
 
+# Tracks the current audio phase so we don't spam the MusicManager
+var _active_music_phase: String = ""
 var day_timer: Timer
 var _last_rendered_day := -1
 var _last_rendered_time := ""
@@ -74,16 +76,21 @@ func _set_icon_animation(next_animation: String, force := false) -> void:
 		# 3. Fade the new icon back to 100% opacity over 0.5 seconds
 		tween.tween_property(time_icon, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 
-func _check_music_transition(current_hour: int) -> void:
-	# If the time is between 6 AM and 5:59 PM (17:59), play the Day track
-	if current_hour >= 6 and current_hour < 18:
-		if day_music:
-			MusicManager.crossfade_to(day_music)
-			
-	# If it hits 6 PM (18:00) or later, crossfade to the Night track
-	else:
-		if night_music:
-			MusicManager.crossfade_to(night_music)
+func _check_music_transition(clock_hour_24: int) -> void:
+	# Determine what the music phase *should* be right now
+	var target_phase: String = "day" if (clock_hour_24 >= 6 and clock_hour_24 < 18) else "night"
+
+	# If we are already in this phase, bail out immediately. Zero Autoload traffic.
+	if target_phase == _active_music_phase:
+		return
+
+	# Otherwise, the phase just changed! Update the cache and trigger the crossfade.
+	_active_music_phase = target_phase
+
+	if target_phase == "day" and day_music:
+		MusicManager.crossfade_to(day_music)
+	elif target_phase == "night" and night_music:
+		MusicManager.crossfade_to(night_music)
 
 
 func _update_clock(force := false) -> void:
@@ -100,16 +107,21 @@ func _update_clock(force := false) -> void:
 	var displayed_minutes = passed_minutes - (passed_minutes % TIME_TICK_MINUTES)
 
 	var hours = DAY_START_HOUR + int(displayed_minutes / 60.0)
+	
+	# Normalize to a strict 0-23 format
+	var clock_hour_24 = hours % 24 
 	var minutes = displayed_minutes % 60
 	
 	var am_pm = "AM"
-	if hours >= 12:
+	# Now 0 (midnight) correctly bypasses this and stays AM
+	if clock_hour_24 >= 12:
 		am_pm = "PM"
 		
-	var display_hour = hours
+	var display_hour = clock_hour_24
 	if display_hour > 12:
 		display_hour -= 12
-	if display_hour == 0:
+	# Catches both 0 (midnight) and 0 from (12 % 12) if we had used it
+	if display_hour == 0: 
 		display_hour = 12
 		
 	var min_str = str(minutes)
@@ -120,14 +132,17 @@ func _update_clock(force := false) -> void:
 
 	var current_anim = "day"
 	
-	if hours >= 6 and hours < 9:
+	# Update these checks to use the normalized 24-hour variable
+	if clock_hour_24 >= 6 and clock_hour_24 < 9:
 		current_anim = "dawn"
-	elif hours >= 9 and hours < 13:
+	elif clock_hour_24 >= 9 and clock_hour_24 < 13:
 		current_anim = "day"
-	elif hours >= 13 and hours < 18:
+	elif clock_hour_24 >= 13 and clock_hour_24 < 18:
 		current_anim = "noon"
 	else:
 		current_anim = "night"
-	
-	_check_music_transition(hours)
+
 	_set_icon_animation(current_anim, force)
+	
+	# Pass the normalized hour to the music manager
+	_check_music_transition(clock_hour_24)

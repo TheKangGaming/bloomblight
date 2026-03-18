@@ -5,12 +5,13 @@ var player_b: AudioStreamPlayer
 var current_player: AudioStreamPlayer
 var current_track: AudioStream
 
+# 1. Add a reference to track the currently running tween
+var active_tween: Tween 
+
 func _ready() -> void:
-	# Create two audio players so we can crossfade them
 	player_a = AudioStreamPlayer.new()
 	player_b = AudioStreamPlayer.new()
 	
-	# Assign them to the "Music" audio bus (in case you add volume sliders later)
 	player_a.bus = "Music"
 	player_b.bus = "Music"
 	
@@ -19,33 +20,33 @@ func _ready() -> void:
 	
 	current_player = player_a
 
-# Call this function from anywhere in your game to change the music!
 func crossfade_to(stream: AudioStream, fade_duration: float = 3.0) -> void:
-	# Don't do anything if the track is already playing
 	if current_track == stream:
 		return 
 		
 	current_track = stream
 	
-	# Determine which player is currently idle
+	# 2. If a crossfade is already happening, execute it immediately
+	if active_tween and active_tween.is_valid():
+		active_tween.kill()
+	
 	var next_player = player_b if current_player == player_a else player_a
 	
-	# Prep the new track
+	# 3. Force stop the next player just in case it was left playing by a killed tween
+	next_player.stop()
+	
 	next_player.stream = stream
-	next_player.volume_db = -80.0 # Start completely silent
+	next_player.volume_db = -80.0 
 	next_player.play()
 	
-	# Animate the volume changes simultaneously
-	var tween = create_tween().set_parallel(true)
+	# 4. Assign the new tween to our tracker variable
+	active_tween = create_tween().set_parallel(true)
 	
 	if current_player.playing:
-		tween.tween_property(current_player, "volume_db", -80.0, fade_duration)
+		active_tween.tween_property(current_player, "volume_db", -80.0, fade_duration)
 		
-	# Fade in the new track (0.0 is default volume, lower it if the tracks are too loud)
-	tween.tween_property(next_player, "volume_db", -15, fade_duration)
+	active_tween.tween_property(next_player, "volume_db", 0.0, fade_duration)
 	
-	# Stop the old player once the fade finishes
-	tween.chain().tween_callback(current_player.stop)
+	active_tween.chain().tween_callback(current_player.stop)
 	
-	# Swap our pointers
 	current_player = next_player
