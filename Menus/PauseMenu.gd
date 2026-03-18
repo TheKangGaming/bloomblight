@@ -74,7 +74,7 @@ func _on_units_button_pressed() -> void:
 	var title := Label.new()
 	title.text = "Units"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", 34)
 	content.add_child(title)
 
 	var list_text := RichTextLabel.new()
@@ -83,14 +83,14 @@ func _on_units_button_pressed() -> void:
 	list_text.scroll_active = true
 	list_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	list_text.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	list_text.add_theme_font_size_override("normal_font_size", 22)
+	list_text.add_theme_font_size_override("normal_font_size", 24)
 	list_text.bbcode_text = _build_units_summary()
 	content.add_child(list_text)
 
 	var close_btn := Button.new()
 	close_btn.text = "Close"
 	close_btn.custom_minimum_size = Vector2(0, 64)
-	close_btn.add_theme_font_size_override("font_size", 26)
+	close_btn.add_theme_font_size_override("font_size", 28)
 	close_btn.pressed.connect(_close_units_overlay)
 	content.add_child(close_btn)
 	close_btn.grab_focus()

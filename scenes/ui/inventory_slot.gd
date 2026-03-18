@@ -21,6 +21,7 @@ const IMG_APPLE = preload("res://graphics/plants/apple.png")
 # This dictionary maps the Item Enum -> The specific sheet and coordinates
 var item_map: Dictionary = {}
 var _focus_tooltip: PanelContainer
+var _focus_tooltip_text := ""
 const FOCUS_TINT := Color(1.0, 0.95, 0.72, 1.0)
 const DEFAULT_TINT := Color(1, 1, 1, 1)
 const FOCUS_BORDER_COLOR := Color(1.0, 0.88, 0.3, 1.0)
@@ -29,7 +30,6 @@ const FOCUS_BG_COLOR := Color(0.24, 0.22, 0.13, 0.95)
 const DEFAULT_BG_COLOR := Color(0.12, 0.12, 0.12, 0.86)
 
 func _ready():
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	focus_mode = Control.FOCUS_ALL
 	focus_entered.connect(_on_focus_entered)
@@ -114,7 +114,8 @@ func setup(item_enum: Global.Items, quantity: int):
 	stored_item_enum = item_enum
 	# 1. Tooltip Logic
 	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
-	tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
+	_focus_tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
+	tooltip_text = ""
 	if has_focus():
 		_show_focus_tooltip()
 	
@@ -169,13 +170,13 @@ func _apply_focus_visual(is_focused: bool) -> void:
 	add_theme_stylebox_override("panel", style)
 
 func _show_focus_tooltip() -> void:
-	if tooltip_text.is_empty():
+	if _focus_tooltip_text.is_empty():
 		return
 
 	var tooltip: PanelContainer = _get_or_create_focus_tooltip()
 	var text_label: Label = tooltip.get_node("Margin/Text") as Label
-	text_label.text = tooltip_text
-	text_label.add_theme_font_size_override("font_size", 20)
+	text_label.text = _focus_tooltip_text
+	text_label.add_theme_font_size_override("font_size", 22)
 
 	var slot_rect: Rect2 = get_global_rect()
 	var tooltip_size: Vector2 = text_label.get_combined_minimum_size() + Vector2(16.0, 12.0)

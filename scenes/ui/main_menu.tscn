@@ -72,7 +72,7 @@ alignment = 1
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=652478579]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "Savannah"
 horizontal_alignment = 1
 
@@ -92,79 +92,79 @@ theme_override_constants/separation = 14
 
 [node name="LblClass" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=111228304]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
 text = "Class: Unknown"
 
 [node name="LblLevel" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=503268440]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
 text = "Level: 1"
 
 [node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=928234126]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "- STATS -"
 horizontal_alignment = 1
 
 [node name="LblVIT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=902142575]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "VIT: 10"
 fit_content = true
 
 [node name="LblSTR" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1105434709]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "STR: 5"
 fit_content = true
 
 [node name="LblDEX" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1989397476]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "DEX: 5"
 fit_content = true
 
 [node name="LblINT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1871792445]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "INT: 5"
 fit_content = true
 
 [node name="LblSPD" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=729639059]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "SPD: 5"
 fit_content = true
 
 [node name="LblMOV" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1053189907]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "MOV: 4"
 fit_content = true
 
 [node name="LblHP" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=890779902]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "HP: 20/20"
 fit_content = true
 
 [node name="LblDMG" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=141434984]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "DMG: 7"
 fit_content = true
 
 [node name="LblDEF" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=2067629847]
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 22
+theme_override_font_sizes/normal_font_size = 24
 bbcode_enabled = true
 text = "DEF: 2"
 fit_content = true
@@ -180,7 +180,7 @@ theme_override_constants/separation = 4
 
 [node name="Label2" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=1278387377]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "- EQUIPMENT -"
 horizontal_alignment = 1
 
@@ -197,7 +197,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=350771874]
-texture_filter = 2
+texture_filter = 1
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 expand_mode = 1
@@ -216,7 +216,7 @@ theme_override_constants/separation = 4
 
 [node name="Label3" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=422969036]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "- ACTIVE MEAL -"
 horizontal_alignment = 1
 
@@ -225,6 +225,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="ActiveFoodIcon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=1475998150]
+texture_filter = 1
 custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 
@@ -262,7 +263,7 @@ metadata/_tab_index = 2
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "Villagers Coming Soon"
 
 [node name="Settings" type="Control" parent="CenterContainer/TabContainer" unique_id=704047247]
@@ -274,5 +275,5 @@ metadata/_tab_index = 3
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 23.0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "Settings Coming Soon"

@@ -12,44 +12,44 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -320.0
-offset_top = -300.0
-offset_bottom = 300.0
+offset_left = -250.0
+offset_top = -220.0
+offset_bottom = 220.0
 grow_horizontal = 0
 grow_vertical = 2
 scale = Vector2(1, 1)
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="UnitsButton" type="Button" parent="VBoxContainer" unique_id=87751286]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 30
 text = "Units"
 
 [node name="OptionsButton" type="Button" parent="VBoxContainer" unique_id=939150608]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 30
 text = "Options"
 
 [node name="EmptyButton" type="Button" parent="VBoxContainer" unique_id=371110556]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 30
 focus_mode = 0
 mouse_filter = 2
 text = " "
 
 [node name="EndTurnButton" type="Button" parent="VBoxContainer" unique_id=785154608]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 30
 text = "End Turn"
 
 [node name="CloseButton" type="Button" parent="VBoxContainer" unique_id=1205323486]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
-theme_override_font_sizes/font_size = 28
+custom_minimum_size = Vector2(0, 56)
+theme_override_font_sizes/font_size = 30
 text = "Close"
 
 [connection signal="pressed" from="VBoxContainer/UnitsButton" to="." method="_on_units_button_pressed"]
