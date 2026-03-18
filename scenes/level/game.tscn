@@ -14,7 +14,6 @@
 [ext_resource type="PackedScene" uid="uid://tqhmm4hkqce0" path="res://scenes/ui/seed_menu.tscn" id="10_0o7gw"]
 [ext_resource type="PackedScene" uid="uid://d1c28n15wopmi" path="res://scenes/ui/cooking_menu.tscn" id="13_bften"]
 [ext_resource type="PackedScene" uid="uid://82ji0j6uwvpc" path="res://scenes/level/sign.tscn" id="13_lw8he"]
-[ext_resource type="AudioStream" uid="uid://dtn14tdae0ypa" path="res://audio/Whispers_of_the_Old_Wood.mp3" id="14_g35fm"]
 [ext_resource type="PackedScene" uid="uid://vf2y3h4ibrd" path="res://scenes/ui/day_time_hud.tscn" id="15_mr15t"]
 
 [sub_resource type="Gradient" id="Gradient_ig4jx"]
@@ -2719,13 +2718,6 @@ color = Color(0.99607843, 0.9098039, 0.7176471, 1)
 wait_time = 600.0
 one_shot = true
 autostart = true
-
-[node name="WhispersOfTheOldWood" type="AudioStreamPlayer" parent="." unique_id=1998592912]
-process_mode = 3
-stream = ExtResource("14_g35fm")
-volume_db = -15.0
-autoplay = true
-parameters/looping = true
 
 [node name="GrowTimer" type="Timer" parent="." unique_id=330085024]
 wait_time = 60.0

@@ -6,6 +6,7 @@
 script = ExtResource("1_pkwnn")
 
 [node name="Panel" type="Panel" parent="." unique_id=292111174]
+texture_filter = 2
 custom_minimum_size = Vector2(560, 0)
 anchors_preset = 8
 anchor_left = 0.5
@@ -19,7 +20,7 @@ offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="Panel" unique_id=1023719095]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,65 +32,65 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="Layout" type="VBoxContainer" parent="Panel/MarginContainer"]
+[node name="Layout" type="VBoxContainer" parent="Panel/MarginContainer" unique_id=369811114]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Title" type="Label" parent="Panel/MarginContainer/Layout"]
+[node name="Title" type="Label" parent="Panel/MarginContainer/Layout" unique_id=115729465]
 layout_mode = 2
+theme_override_font_sizes/font_size = 9
 text = "Campfire Cooking"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 9
 
-[node name="Subtitle" type="Label" parent="Panel/MarginContainer/Layout"]
+[node name="Subtitle" type="Label" parent="Panel/MarginContainer/Layout" unique_id=885466473]
+modulate = Color(0.84, 0.84, 0.84, 1)
 layout_mode = 2
+theme_override_font_sizes/font_size = 9
 text = "Cook role meals. ↑/↓ select, Enter craft."
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 9
-modulate = Color(0.84, 0.84, 0.84, 1)
 
-[node name="Header" type="HBoxContainer" parent="Panel/MarginContainer/Layout"]
+[node name="Header" type="HBoxContainer" parent="Panel/MarginContainer/Layout" unique_id=1006960615]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="NameHeader" type="Label" parent="Panel/MarginContainer/Layout/Header"]
+[node name="NameHeader" type="Label" parent="Panel/MarginContainer/Layout/Header" unique_id=131567686]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Meal"
 theme_override_font_sizes/font_size = 9
+text = "Meal"
 
-[node name="IngredientsHeader" type="Label" parent="Panel/MarginContainer/Layout/Header"]
+[node name="IngredientsHeader" type="Label" parent="Panel/MarginContainer/Layout/Header" unique_id=1255341370]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Ingredients"
 theme_override_font_sizes/font_size = 9
+text = "Ingredients"
 
-[node name="BuffHeader" type="Label" parent="Panel/MarginContainer/Layout/Header"]
+[node name="BuffHeader" type="Label" parent="Panel/MarginContainer/Layout/Header" unique_id=594440155]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Buff"
 theme_override_font_sizes/font_size = 9
+text = "Buff"
 
-[node name="ActionHeader" type="Label" parent="Panel/MarginContainer/Layout/Header"]
+[node name="ActionHeader" type="Label" parent="Panel/MarginContainer/Layout/Header" unique_id=1889556949]
 custom_minimum_size = Vector2(56, 0)
 layout_mode = 2
+theme_override_font_sizes/font_size = 9
 text = "Action"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 9
 
-[node name="Divider" type="HSeparator" parent="Panel/MarginContainer/Layout"]
+[node name="Divider" type="HSeparator" parent="Panel/MarginContainer/Layout" unique_id=98696410]
 layout_mode = 2
 
-[node name="RecipeScroll" type="ScrollContainer" parent="Panel/MarginContainer/Layout"]
+[node name="RecipeScroll" type="ScrollContainer" parent="Panel/MarginContainer/Layout" unique_id=296579527]
 custom_minimum_size = Vector2(0, 175)
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="RecipeList" type="VBoxContainer" parent="Panel/MarginContainer/Layout/RecipeScroll"]
+[node name="RecipeList" type="VBoxContainer" parent="Panel/MarginContainer/Layout/RecipeScroll" unique_id=148621315]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6

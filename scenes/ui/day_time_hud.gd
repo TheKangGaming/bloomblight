@@ -8,6 +8,10 @@ const TIME_TICK_MINUTES := 30
 @onready var time_label: Label = $VBoxContainer/TimeLabel
 @onready var time_icon: AnimatedSprite2D = $TimeIcon
 
+# Drag your audio files from the FileSystem into these variables!
+@export var day_music: AudioStream
+@export var night_music: AudioStream
+
 var day_timer: Timer
 var _last_rendered_day := -1
 var _last_rendered_time := ""
@@ -70,6 +74,18 @@ func _set_icon_animation(next_animation: String, force := false) -> void:
 		# 3. Fade the new icon back to 100% opacity over 0.5 seconds
 		tween.tween_property(time_icon, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 
+func _check_music_transition(current_hour: int) -> void:
+	# If the time is between 6 AM and 5:59 PM (17:59), play the Day track
+	if current_hour >= 6 and current_hour < 18:
+		if day_music:
+			MusicManager.crossfade_to(day_music)
+			
+	# If it hits 6 PM (18:00) or later, crossfade to the Night track
+	else:
+		if night_music:
+			MusicManager.crossfade_to(night_music)
+
+
 func _update_clock(force := false) -> void:
 	var max_time = day_timer.wait_time
 	if max_time <= 0.0:
@@ -112,5 +128,6 @@ func _update_clock(force := false) -> void:
 		current_anim = "noon"
 	else:
 		current_anim = "night"
-
+	
+	_check_music_transition(hours)
 	_set_icon_animation(current_anim, force)

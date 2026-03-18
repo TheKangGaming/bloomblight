@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Blight & Bloom"
-run/main_scene="uid://bf0yuue48pk6v"
+run/main_scene="uid://wdgjtlnwjk0c"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -24,6 +24,7 @@ config/icon="res://icon.svg"
 Global="*uid://bcq8tavlkaxyr"
 ProgressionService="*res://systems/progression/progression_service.gd"
 CalendarService="*uid://cp8duraorkxir"
+MusicManager="*uid://ds754ws0s2j6e"
 
 [display]
 
@@ -31,7 +32,6 @@ window/size/viewport_width=2560
 window/size/viewport_height=1440
 window/size/mode=4
 window/stretch/mode="canvas_items"
-window/stretch/scale=4.0
 
 [editor_plugins]
 
