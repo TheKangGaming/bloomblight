@@ -29,6 +29,21 @@ func _ready() -> void:
 	# 4. Boot up the visuals
 	_spawn_actors()
 
+@onready var left_spawn: Marker2D = $LeftSpawn   # Create these in your scene!
+@onready var right_spawn: Marker2D = $RightSpawn # Create these in your scene!
+
+var active_attacker: BattleActor
+var active_defender: BattleActor
+
 func _spawn_actors() -> void:
-	# We will write the instantiation logic here next!
-	pass
+	# 1. Instantiate the attacker
+	if _attacker_data.battle_actor_scene:
+		active_attacker = _attacker_data.battle_actor_scene.instantiate() as BattleActor
+		left_spawn.add_child(active_attacker)
+		active_attacker.setup_from_combat_snapshot(_attacker_data, _attacker_stats, true)
+	
+	# 2. Instantiate the defender
+	if _defender_data.battle_actor_scene:
+		active_defender = _defender_data.battle_actor_scene.instantiate() as BattleActor
+		right_spawn.add_child(active_defender)
+		active_defender.setup_from_combat_snapshot(_defender_data, _defender_stats, false)
