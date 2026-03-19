@@ -2,11 +2,18 @@ extends Node
 
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var current_seed: int = 0
-
+var party_roster: Array[CharacterData] = []
 
 func _ready() -> void:
 	if current_seed == 0:
 		seed_from_run(int(Time.get_unix_time_from_system()))
+	
+	# Load Savannah's data resource immediately when the game boots.
+	# (Make sure this path perfectly matches your actual file structure!)	
+	var savannah_data = load("res://Units/Data/Savannah/savannah_data.tres") as CharacterData
+	
+	if savannah_data:
+		party_roster.append(savannah_data)
 
 
 func seed_from_run(run_seed: int) -> void:

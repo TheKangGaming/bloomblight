@@ -442,102 +442,30 @@ func _resolve_player_weapon(player_unit: Unit) -> WeaponData:
 
 
 func _resolve_player_weapon_from_combat_template() -> WeaponData:
-	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
-	if combat_template == null:
-		return null
-
-	var combat_root := combat_template.instantiate()
-	if combat_root == null:
-		return null
-
-	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
-	if savannah == null:
-		combat_root.queue_free()
-		return null
-
-	var character_data: CharacterData = savannah.get("character_data") as CharacterData
-	if character_data != null and character_data.equipped_weapon != null:
-		var template_weapon := character_data.equipped_weapon
-		combat_root.queue_free()
-		return template_weapon
-
-	combat_root.queue_free()
+	# Check if the roster has data, then return the weapon instantly
+	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
+		return Global.party_roster[0].equipped_weapon
 	return null
-
-
-
 
 func _resolve_player_armor_from_combat_template() -> ArmorData:
-	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
-	if combat_template == null:
-		return null
-
-	var combat_root := combat_template.instantiate()
-	if combat_root == null:
-		return null
-
-	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
-	if savannah == null:
-		combat_root.queue_free()
-		return null
-
-	var character_data: CharacterData = savannah.get("character_data") as CharacterData
-	if character_data != null and character_data.equipped_armor != null:
-		var template_armor := character_data.equipped_armor
-		combat_root.queue_free()
-		return template_armor
-
-	combat_root.queue_free()
+	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
+		return Global.party_roster[0].equipped_armor
 	return null
 
-
 func _resolve_player_accessory_from_combat_template() -> AccessoryData:
-	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
-	if combat_template == null:
-		return null
-
-	var combat_root := combat_template.instantiate()
-	if combat_root == null:
-		return null
-
-	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
-	if savannah == null:
-		combat_root.queue_free()
-		return null
-
-	var character_data: CharacterData = savannah.get("character_data") as CharacterData
-	if character_data != null and character_data.equipped_accessory != null:
-		var template_accessory := character_data.equipped_accessory
-		combat_root.queue_free()
-		return template_accessory
-
-	combat_root.queue_free()
+	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
+		return Global.party_roster[0].equipped_accessory
 	return null
 
 func _resolve_player_class_data(player_unit: Unit) -> ClassData:
+	# 1. First, trust the passed-in unit if it already has the data
 	if player_unit != null and player_unit.character_data != null and player_unit.character_data.class_data != null:
 		return player_unit.character_data.class_data
 
-	var combat_template := load("res://scenes/level/CombatMap_1.tscn") as PackedScene
-	if combat_template == null:
-		return null
+	# 2. Fallback to the global roster instead of instantiating the heavy map scene
+	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
+		return Global.party_roster[0].class_data
 
-	var combat_root := combat_template.instantiate()
-	if combat_root == null:
-		return null
-
-	var savannah := combat_root.get_node_or_null("GameBoard/Savannah")
-	if savannah == null:
-		combat_root.queue_free()
-		return null
-
-	var character_data: CharacterData = savannah.get("character_data") as CharacterData
-	if character_data != null and character_data.class_data != null:
-		var template_class_data := character_data.class_data
-		combat_root.queue_free()
-		return template_class_data
-
-	combat_root.queue_free()
 	return null
 
 

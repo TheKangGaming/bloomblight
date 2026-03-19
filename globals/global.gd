@@ -5,6 +5,9 @@ func _ready() -> void:
 	ensure_player_stat_formats()
 	_validate_early_food_balance()
 	_sync_player_progression_from_combat_scene_template()
+	var savannah_data = load("res://Units/Data/Savannah/savannah_data.tres") as CharacterData
+	if savannah_data:
+		party_roster.append(savannah_data)
 
 
 func _validate_early_food_balance() -> void:
@@ -56,6 +59,8 @@ signal recipe_knowledge_updated
 signal stats_updated
 var saved_farm_scene: Node = null
 
+
+var party_roster: Array[CharacterData] = []
 var returning_from_combat: bool = false
 var player_level: int = 1
 var player_class_name: String = "Deserter"

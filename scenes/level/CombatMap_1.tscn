@@ -15,14 +15,10 @@
 [ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="13_vtv1r"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="14_d3c05"]
-[ext_resource type="Resource" uid="uid://bhqkfu4w4hexx" path="res://Units/Data/Deserter.tres" id="15_42768"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
-[ext_resource type="Resource" uid="uid://bud6nrturapsp" path="res://data/Harvest.tres" id="18_x18w8"]
+[ext_resource type="Resource" uid="uid://cjn48pfrllmt8" path="res://Units/Data/Savannah/savannah_data.tres" id="18_0a6tx"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="19_armor"]
-[ext_resource type="Resource" path="res://Weapons/IronShortsword.tres" id="19_iron_sword"]
-[ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://Accessories/TravelerCharm.tres" id="20_accessory"]
-[ext_resource type="Resource" path="res://Armor/ScoutBrigandine.tres" id="20_scout_armor"]
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="21_efnms"]
 [ext_resource type="Resource" uid="uid://7wfqs56geyvx" path="res://Armor/AshenMantle.tres" id="21_purifier_armor"]
 [ext_resource type="Resource" path="res://Accessories/PrayerBeads.tres" id="22_prayer_beads"]
@@ -446,16 +442,6 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_yjnxd"]
-script = ExtResource("16_vtv1r")
-display_name = "Savannah"
-class_data = ExtResource("15_42768")
-abilities = Array[ExtResource("21_efnms")]([ExtResource("18_x18w8")])
-equipped_weapon = ExtResource("19_iron_sword")
-equipped_armor = ExtResource("20_scout_armor")
-equipped_accessory = ExtResource("20_accessory")
-metadata/_custom_type_script = "uid://dinfajkodigdx"
-
 [sub_resource type="Resource" id="Resource_y2ebn"]
 script = ExtResource("13_d3c05")
 str = 6
@@ -663,7 +649,7 @@ current_stats = SubResource("Resource_m1h8s")
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
-character_data = SubResource("Resource_yjnxd")
+character_data = ExtResource("18_0a6tx")
 current_stats = SubResource("Resource_y2ebn")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
