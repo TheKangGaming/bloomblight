@@ -309,7 +309,7 @@ func update_status_page():
 	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
 	var player_unit := _find_player_unit()
 	var class_data := _resolve_player_class_data(player_unit)
-	var weapon := _resolve_player_weapon(player_unit)
+	var weapon := _resolve_player_weapon_from_roster(player_unit)
 	var uses_magic_damage := _class_uses_magic_damage(class_data)
 	var attack_preview_data: Dictionary = {}
 	if player_unit != null:
@@ -430,43 +430,34 @@ func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, 
 	return preview_text
 
 
-func _resolve_player_weapon(player_unit: Unit) -> WeaponData:
-	if player_unit != null and player_unit.character_data != null and player_unit.character_data.equipped_weapon != null:
-		return player_unit.character_data.equipped_weapon
+# 1. THE MASTER HELPER: Finds the character data from the live unit OR the global roster
+func _resolve_player_character_data(player_unit: Unit = null) -> CharacterData:
+	# Trust the live map unit first (if we are currently in a battle)
+	if player_unit != null and player_unit.character_data != null:
+		return player_unit.character_data
 
-	var global_weapon = Global.equipment.get("Weapon", null)
-	if global_weapon is WeaponData:
-		return global_weapon
-
-	return _resolve_player_weapon_from_combat_template()
-
-
-func _resolve_player_weapon_from_combat_template() -> WeaponData:
-	# Check if the roster has data, then return the weapon instantly
-	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
-		return Global.party_roster[0].equipped_weapon
-	return null
-
-func _resolve_player_armor_from_combat_template() -> ArmorData:
-	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
-		return Global.party_roster[0].equipped_armor
-	return null
-
-func _resolve_player_accessory_from_combat_template() -> AccessoryData:
-	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
-		return Global.party_roster[0].equipped_accessory
-	return null
-
-func _resolve_player_class_data(player_unit: Unit) -> ClassData:
-	# 1. First, trust the passed-in unit if it already has the data
-	if player_unit != null and player_unit.character_data != null and player_unit.character_data.class_data != null:
-		return player_unit.character_data.class_data
-
-	# 2. Fallback to the global roster instead of instantiating the heavy map scene
-	if not Global.party_roster.is_empty() and Global.party_roster[0] != null:
-		return Global.party_roster[0].class_data
+	# Fallback to the Progression Service (if we are in a town, menu, or title screen)
+	if ProgressionService != null and ProgressionService.has_method("get_player_character_data"):
+		return ProgressionService.get_player_character_data()
 
 	return null
+
+# 2. THE CLEAN GETTERS: All route through the master helper
+func _resolve_player_weapon_from_roster(player_unit: Unit = null) -> WeaponData:
+	var data := _resolve_player_character_data(player_unit)
+	return data.equipped_weapon if data != null else null
+
+func _resolve_player_armor_from_roster(player_unit: Unit = null) -> ArmorData:
+	var data := _resolve_player_character_data(player_unit)
+	return data.equipped_armor if data != null else null
+
+func _resolve_player_accessory_from_roster(player_unit: Unit = null) -> AccessoryData:
+	var data := _resolve_player_character_data(player_unit)
+	return data.equipped_accessory if data != null else null
+
+func _resolve_player_class_data(player_unit: Unit = null) -> ClassData:
+	var data := _resolve_player_character_data(player_unit)
+	return data.class_data if data != null else null
 
 
 func _class_uses_magic_damage(class_data: ClassData) -> bool:
@@ -593,9 +584,9 @@ func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = 
 			equipped_accessory = player_unit.character_data.equipped_accessory
 	else:
 		if equipped_armor == null:
-			equipped_armor = _resolve_player_armor_from_combat_template()
+			equipped_armor = _resolve_player_armor_from_roster()
 		if equipped_accessory == null:
-			equipped_accessory = _resolve_player_accessory_from_combat_template()
+			equipped_accessory = _resolve_player_accessory_from_roster()
 	
 	if armor_icon == null and equipped_armor != null and equipped_armor.get("icon") != null:
 		armor_icon = equipped_armor.get("icon")

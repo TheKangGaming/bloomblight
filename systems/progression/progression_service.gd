@@ -15,6 +15,14 @@ func _ready() -> void:
 	if savannah_data:
 		party_roster.append(savannah_data)
 
+## Public accessors so other scripts don't have to guess array indices
+func get_party_roster() -> Array[CharacterData]:
+	return party_roster
+
+func get_player_character_data() -> CharacterData:
+	if not party_roster.is_empty():
+		return party_roster[0]
+	return null
 
 func seed_from_run(run_seed: int) -> void:
 	_set_seed(run_seed)
