@@ -12,6 +12,21 @@ func apply_combat_snapshot(data: CharacterData, stats: UnitStats) -> void:
 
 func set_facing(dir: Vector2) -> void:
 	_facing = dir
+	
+	if msca_player != null:
+		# 1. Force the MSCA internal variable to update
+		if "facing_direction" in msca_player:
+			msca_player.facing_direction = dir
+			
+		# 2. Immediately force the AnimationTree to adopt the new facing direction
+		if msca_player.has_method("travel_to_anim"):
+			msca_player.travel_to_anim("Idle", dir)
+			
+		# 3. (Optional) Keep the Sprite flip_h fallback just in case your rig 
+		# relies on it instead of true directional animations
+		var sprite = msca_player.get_node_or_null("SpriteLayers/01body") 
+		if sprite and "flip_h" in sprite:
+			sprite.flip_h = (dir == Vector2.LEFT)
 
 func play_idle() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
