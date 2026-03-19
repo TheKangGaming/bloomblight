@@ -262,7 +262,11 @@ func level_reset():
 	
 	# Emit the signal so the UI visually removes the meal and bonus stats!
 	Global.stats_updated.emit()
-
+	
+	
+	# Emit the signal so the HUD (and crops, and NPCs) update instantly
+	Global.day_changed.emit(Global.current_day)
+	
 func _on_grow_timer_timeout() -> void:
 	for plant in get_tree().get_nodes_in_group('Plants'):
 		# Check if this specific tile has water on it

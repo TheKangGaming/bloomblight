@@ -22,7 +22,16 @@ var _last_animation := ""
 func _ready() -> void:
 	_resolve_day_timer()
 	_update_view(true)
-
+	
+	# 2. Set the text immediately on boot
+	_update_day_display(Global.current_day)
+	
+	# 3. Connect to the global signal so we never have to poll it in _process
+	Global.day_changed.connect(_update_day_display)
+	
+func _update_day_display(new_day: int) -> void:
+	if day_label:
+		day_label.text = "Day " + str(new_day)
 func _process(_delta: float) -> void:
 	if not is_instance_valid(day_timer):
 		_resolve_day_timer()

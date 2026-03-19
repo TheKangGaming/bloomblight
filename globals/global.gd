@@ -65,6 +65,8 @@ var last_battle_result := {
 	"returned_at_unix": 0
 }
 
+signal day_changed(new_day: int)
+
 # --- TIME & CALENDAR STATE ---
 var current_day: int = 1
 var pending_day_transition: bool = false
