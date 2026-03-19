@@ -10,7 +10,13 @@ extends Resource
 @export var abilities: Array[AbilityData] = []
 
 @export var portrait: Texture2D
-@export var scene_reference: PackedScene
+
+@export_group("Presentation Layers")
+## The low-res pawn used on the tactical grid
+@export var map_unit_scene: PackedScene 
+
+## The high-res animated actor used in the combat cut-in
+@export var battle_actor_scene: PackedScene
 
 @export_group("Equipment")
 @export var equipped_weapon: WeaponData
