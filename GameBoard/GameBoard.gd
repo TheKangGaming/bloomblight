@@ -866,7 +866,6 @@ func execute_combat(attacker: Unit, defender: Unit) -> void:
 	# Give the final animation a tiny bit of time to settle before unlocking the cursor
 	await get_tree().create_timer(0.2).timeout
 
-
 ## Generates a miniature, scaled-down Strategy RPG preview window
 
 
@@ -1104,7 +1103,7 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 48)
+	label.add_theme_font_size_override("font_size", 96)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 8)
