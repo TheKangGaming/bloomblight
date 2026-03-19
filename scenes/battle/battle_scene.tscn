@@ -4,3 +4,9 @@
 
 [node name="BattleScene" type="Node2D" unique_id=1933445641]
 script = ExtResource("1_3hov6")
+
+[node name="LeftSpawn" type="Marker2D" parent="." unique_id=1511196624]
+position = Vector2(447, 450)
+
+[node name="RightSpawn" type="Marker2D" parent="." unique_id=1027645305]
+position = Vector2(1934, 437)
