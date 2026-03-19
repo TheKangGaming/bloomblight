@@ -17,7 +17,14 @@ func _ready() -> void:
 
 ## Public accessors so other scripts don't have to guess array indices
 func get_party_roster() -> Array[CharacterData]:
-	return party_roster
+	# Returns a safe copy so external scripts can't mutate the master array
+	return party_roster.duplicate()
+
+## The official starting level for a brand new game
+func get_starting_player_level() -> int:
+	# If you eventually add a 'base_level' export to CharacterData, you can read it here.
+	# For now, we explicitly define the new game rule:
+	return 1
 
 func get_player_character_data() -> CharacterData:
 	if not party_roster.is_empty():

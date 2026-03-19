@@ -5,8 +5,12 @@ func _ready() -> void:
 	ensure_player_stat_formats()
 	_validate_early_food_balance()
 	
-	
-
+	# If we are NOT loading from a save file, ask ProgressionService for the base level
+	if player_level <= 0:
+		if ProgressionService and ProgressionService.has_method("get_starting_player_level"):
+			player_level = ProgressionService.get_starting_player_level()
+		else:
+			player_level = 1 # Absolute failsafe
 
 func _validate_early_food_balance() -> void:
 	for meal_item in food_stats.keys():
@@ -30,7 +34,7 @@ var saved_farm_scene: Node = null
 
 
 var returning_from_combat: bool = false
-var player_level: int = 1
+var player_level: int
 var player_class_name: String = "Deserter"
 var last_battle_result := {
 	"victory": false,

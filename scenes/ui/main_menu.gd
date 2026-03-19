@@ -356,30 +356,6 @@ func update_status_page():
 	else:
 		lbl_food.text = "No meal."
 
-
-func _resolve_player_class_name() -> String:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		if Global.has_method("get_player_class_name"):
-			return String(Global.get_player_class_name())
-		return "Unknown"
-
-	for node in scene_root.find_children("*", "Unit", true, false):
-		var unit := node as Unit
-		if unit == null or not unit.is_player:
-			continue
-
-		if unit.character_data != null and unit.character_data.class_data != null:
-			var unit_class_name := String(unit.character_data.class_data.metadata_name).strip_edges()
-			if not unit_class_name.is_empty():
-				Global.set_player_class_name(unit_class_name)
-				return unit_class_name
-
-	if Global.has_method("get_player_class_name"):
-		return String(Global.get_player_class_name())
-
-	return "Unknown"
-
 func _find_player_unit() -> Unit:
 	var scene_root := get_tree().current_scene
 	if scene_root == null:
@@ -391,7 +367,6 @@ func _find_player_unit() -> Unit:
 			return unit
 
 	return null
-
 
 func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary, weapon: WeaponData, uses_magic_damage: bool, attack_preview_data: Dictionary = {}) -> String:
 	var preview_data := attack_preview_data
@@ -430,7 +405,7 @@ func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, 
 	return preview_text
 
 
-# 1. THE MASTER HELPER: Finds the character data from the live unit OR the global roster
+# 1. THE MASTER HELPER: Finds the character data from the live unit OR the Progression Service
 func _resolve_player_character_data(player_unit: Unit = null) -> CharacterData:
 	# Trust the live map unit first (if we are currently in a battle)
 	if player_unit != null and player_unit.character_data != null:
@@ -498,6 +473,21 @@ func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
 
 	return null
 
+func _resolve_player_class_name(player_unit: Unit = null) -> String:
+	# 1. Get the authoritative data first
+	var class_data := _resolve_player_class_data(player_unit)
+	
+	if class_data != null:
+		# Changed from class_name to metadata_name!
+		var final_name: String = String(class_data.metadata_name).strip_edges() 
+		
+		if not final_name.is_empty():
+			# Sync Global so the save file has the correct string, then return it
+			Global.set_player_class_name(final_name)
+			return final_name
+
+	# 2. Absolute fallback if all else fails
+	return String(Global.get_player_class_name())
 
 
 func _build_weapon_tooltip_text(weapon: WeaponData) -> String:
