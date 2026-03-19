@@ -11,7 +11,13 @@ func _ready() -> void:
 			player_level = ProgressionService.get_starting_player_level()
 		else:
 			player_level = 1 # Absolute failsafe
-
+	# Sync the class name so early saves don't default to "Deserter"
+	if player_class_name == "Deserter" or player_class_name == "":
+		if ProgressionService and ProgressionService.has_method("get_player_character_data"):
+			var player_data = ProgressionService.get_player_character_data()
+			if player_data != null and player_data.class_data != null:
+				player_class_name = String(player_data.class_data.metadata_name).strip_edges()
+				
 func _validate_early_food_balance() -> void:
 	for meal_item in food_stats.keys():
 		var meal_stats: Dictionary = food_stats[meal_item]
