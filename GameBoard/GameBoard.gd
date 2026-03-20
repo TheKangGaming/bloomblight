@@ -908,6 +908,22 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	if _cursor:
 		_cursor.is_active = true
 		
+	# --- 5. END THE ATTACKER'S TURN ---
+	if is_instance_valid(attacker):
+		# Tell the unit it is done (replace "end_turn()" with whatever 
+		# function your Unit script uses to gray itself out!)
+		if attacker.has_method("end_turn"):
+			attacker.end_turn()
+		elif "is_exhausted" in attacker:
+			attacker.is_exhausted = true
+			
+	# Clear the board's memory of who is acting so you can select someone else
+	_active_unit = null
+	
+	# (If your GameBoard uses a State Machine variable like 'state = BoardState.IDLE',
+	# be sure to set it back to IDLE right here!)
+	# ----------------------------------
+
 	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
