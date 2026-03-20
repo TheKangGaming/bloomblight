@@ -850,6 +850,24 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	
 	# 2. Pack the briefcase
 	var payload := CombatManager.setup_combat(attacker, defender, terrain_modifier, distance)
+	
+	# 1. Give it the return ticket (the current map's file path)
+	payload.map_scene_path = scene_file_path 
+	
+	# 2. Add the Math (Temporary hardcoded test logic!)
+	payload.attacker_damage_to_deal = 5
+	
+	# Can the defender reach the attacker to counter?
+	var def_range = defender.character_data.equipped_weapon.max_range if defender.character_data.equipped_weapon else 1
+	payload.defender_can_counter = (distance <= def_range)
+	
+	# Did the attacker kill them in one hit?
+	var def_hp = defender.current_stats.hp if defender.current_stats else 10
+	payload.defender_survived = (def_hp - payload.attacker_damage_to_deal > 0)
+	
+	if payload.defender_can_counter and payload.defender_survived:
+		payload.defender_damage_to_deal = 3 # Hardcoded test damage
+		
 	if payload == null:
 		push_error("GameBoard: Failed to build combat payload. Aborting combat transition.")
 		return false
@@ -865,14 +883,11 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	if has_node("ActionMenu"):
 		$ActionMenu.hide()
 
-	# 4. Initiate the jump!
-	TransitionManager.change_scene(combat_scene) 
-	
+	# Open the arena as an overlay!
+	TransitionManager.open_overlay(combat_scene, 0.5) 
 	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
-
-
 func _show_unit_hover_tooltip(unit: Unit, cell: Vector2) -> void:
 	if not is_instance_valid(unit):
 		_hide_unit_hover_tooltip()

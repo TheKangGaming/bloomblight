@@ -3,6 +3,10 @@ extends Node2D
 @onready var left_spawn: Marker2D = $LeftSpawn
 @onready var right_spawn: Marker2D = $RightSpawn
 
+var _map_scene_path: String = ""
+var _defender_can_counter: bool = false
+var _defender_survived: bool = true
+
 
 var _combat_distance: int = 1
 var _attacker_data: CharacterData
@@ -26,6 +30,9 @@ func _ready() -> void:
 	_defender_data = payload.defender_data
 	_attacker_stats = payload.attacker_stats
 	_defender_stats = payload.defender_stats
+	_map_scene_path = payload.map_scene_path
+	_defender_can_counter = payload.defender_can_counter
+	_defender_survived = payload.defender_survived
 	
 	# Save the distance so we know if a counterattack is possible!
 	_combat_distance = payload.distance
@@ -56,55 +63,44 @@ func _spawn_actors() -> void:
 		active_defender.setup_from_combat_snapshot(_defender_data, _defender_stats, false)
 	else:
 		push_error("BattleScene: Defender missing battle_actor_scene in CharacterData!")
+		
+	if active_attacker == null or active_defender == null:
+		push_error("BattleScene Error: Failed to spawn actors. Aborting sequence.")
+		_return_to_map()
+		return
 
 func _execute_battle_sequence() -> void:
-	# 1. Dramatic pause as the camera loads in
 	await get_tree().create_timer(0.5).timeout
 	
-	# --- PHASE 1: THE INITIATOR STRIKES ---
-	if active_attacker:
-		active_attacker.play_attack()
-		
-	# Wait for the sword/spell to visually connect
+	# --- PHASE 1: THE STRIKE ---
+	active_attacker.play_attack()
 	await get_tree().create_timer(0.4).timeout
+	active_defender.play_hit()
 	
-	if active_defender:
-		active_defender.play_hit()
-		
-	# Let the dust settle and give the defender a moment to recover
+	# TODO: Actually subtract the HP from the UI here later!
+	
 	await get_tree().create_timer(0.8).timeout
 	
-	# --- PHASE 2: THE COUNTERATTACK ---
-	# If they are fighting in adjacent grid cells (Melee), the defender swings back.
-	# (In the future, you will wrap this in an 'if defender.current_hp > 0' check!)
-	if _combat_distance == 1 and active_defender:
+	# --- PHASE 2: THE SMART COUNTERATTACK ---
+	# We no longer hardcode distance == 1. We check the math!
+	if _defender_can_counter and _defender_survived:
 		active_defender.play_attack()
-		
-		# Wait for the counterattack to connect
 		await get_tree().create_timer(0.4).timeout
-		
-		if active_attacker:
-			active_attacker.play_hit()
-			
-		# Let the attacker recover from the hit
+		active_attacker.play_hit()
 		await get_tree().create_timer(0.8).timeout
+	elif not _defender_survived:
+		# If they didn't survive, play the death animation instead!
+		active_defender.play_death()
+		await get_tree().create_timer(1.0).timeout
 	
 	# --- PHASE 3: THE RETURN ---
-	# A final brief pause before the screen fades out
 	await get_tree().create_timer(0.4).timeout
 	_return_to_map()
 	
 func _return_to_map() -> void:
-	# NOTE: Ensure this path perfectly matches your tactical map's file path!
-	var map_path := "res://scenes/level/CombatMap_1.tscn"
-	var map_scene := load(map_path) as PackedScene
-	
-	if map_scene == null:
-		push_error("BattleScene: Could not load the return map!")
-		return
-		
-	if TransitionManager and TransitionManager.has_method("change_scene"):
-		TransitionManager.change_scene(map_scene)
+	# Tell the transition manager to fade out, delete this node, and unpause the map
+	if TransitionManager and TransitionManager.has_method("close_overlay"):
+		TransitionManager.close_overlay(self, 0.5)
 	else:
-		# Failsafe if TransitionManager isn't hooked up for the return trip
-		get_tree().change_scene_to_packed(map_scene)	
+		queue_free()
+		get_tree().paused = false
