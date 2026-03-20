@@ -442,7 +442,9 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		_hide_combat_forecast()
 		
 		_cursor.is_active = false 
-		if await execute_combat(_active_unit, target):
+		
+		var combat_completed := await execute_combat(_active_unit, target)
+		if not combat_completed:
 			return
 		
 		_is_targeting_attack = false
@@ -754,7 +756,8 @@ func start_enemy_phase() -> void:
 			if _is_distance_in_attack_range(final_dist, enemy.attack_range):
 				
 				# NEW: Hand the AI fight over to the combat manager!
-				if await execute_combat(enemy, target_player):
+				var combat_completed := await execute_combat(enemy, target_player)
+				if not combat_completed:
 					return
 				
 		# Add a slight delay before the next Orc takes its turn
@@ -889,40 +892,28 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	await TransitionManager.overlay_closed
 	
 	# --- 3. APPLY THE ACTUAL COMBAT RESULTS ---
-	# Subtract Attacker's damage
 	defender.current_stats.hp -= payload.attacker_damage_to_deal
 	
-	# Subtract Defender's counter-damage (if they survived and were in range)
 	if payload.defender_can_counter and payload.defender_survived:
 		attacker.current_stats.hp -= payload.defender_damage_to_deal
 		
-	# Check for deaths and remove them from the tactical map
+	# FIX: Use die() so the board registers the kill and updates the grid!
 	if defender.current_stats.hp <= 0:
-		defender.queue_free() # Or call your specific MapUnit.die() function
-		
-	if attacker.current_stats.hp <= 0:
-		attacker.queue_free() # Or call your specific MapUnit.die() function
-	# ------------------------------------------
-
-	# 4. WAKE UP! Give control back to the player.
-	if _cursor:
-		_cursor.is_active = true
-		
-	# --- 5. END THE ATTACKER'S TURN ---
-	if is_instance_valid(attacker):
-		# Tell the unit it is done (replace "end_turn()" with whatever 
-		# function your Unit script uses to gray itself out!)
-		if attacker.has_method("end_turn"):
-			attacker.end_turn()
-		elif "is_exhausted" in attacker:
-			attacker.is_exhausted = true
+		if defender.has_method("die"):
+			defender.die() 
+		else:
+			defender.queue_free()
 			
-	# Clear the board's memory of who is acting so you can select someone else
-	_active_unit = null
-	
-	# (If your GameBoard uses a State Machine variable like 'state = BoardState.IDLE',
-	# be sure to set it back to IDLE right here!)
-	# ----------------------------------
+	if attacker.current_stats.hp <= 0:
+		if attacker.has_method("die"):
+			attacker.die()
+		else:
+			attacker.queue_free()
+
+	# Wiping out the bad patch: 
+	# REMOVE _cursor.is_active = true
+	# REMOVE attacker.is_exhausted = true
+	# We are letting the callers handle this now!
 
 	return true
 
