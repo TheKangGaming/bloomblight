@@ -2,9 +2,15 @@
 
 [ext_resource type="Script" uid="uid://ddfo2x3m1ulaj" path="res://scenes/battle/battle_scene.gd" id="1_3hov6"]
 
-[node name="BattleScene" type="Node2D" unique_id=1933445641]
+[node name="BattleScene" type="CanvasLayer" unique_id=104459711]
 process_mode = 3
+layer = 10
 script = ExtResource("1_3hov6")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=347300026]
+offset_right = 2556.0
+offset_bottom = 1443.0
+color = Color(0, 0, 0, 1)
 
 [node name="LeftSpawn" type="Marker2D" parent="." unique_id=1511196624]
 position = Vector2(1158, 442)

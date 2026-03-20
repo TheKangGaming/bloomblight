@@ -1,5 +1,6 @@
 extends CanvasLayer
 
+signal overlay_closed
 @onready var fade_rect: ColorRect = $FadeRect
 var _is_transitioning: bool = false
 
@@ -63,5 +64,9 @@ func close_overlay(overlay_node: Node, fade_duration: float = 0.5) -> void:
 		
 		var in_tween = create_tween()
 		in_tween.tween_property(fade_rect, "modulate:a", 0.0, fade_duration)
-		in_tween.tween_callback(func(): _is_transitioning = false)
+		in_tween.tween_callback(func(): 
+			_is_transitioning = false
+			# ADD THIS LINE: Tell the game the door is fully closed
+			overlay_closed.emit()
+		)
 )

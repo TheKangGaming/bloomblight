@@ -1,4 +1,4 @@
-extends Node2D
+extends CanvasLayer
 
 @onready var left_spawn: Marker2D = $LeftSpawn
 @onready var right_spawn: Marker2D = $RightSpawn

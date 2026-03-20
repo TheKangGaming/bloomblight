@@ -442,7 +442,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		_hide_combat_forecast()
 		
 		_cursor.is_active = false 
-		if execute_combat(_active_unit, target):
+		if await execute_combat(_active_unit, target):
 			return
 		
 		_is_targeting_attack = false
@@ -754,7 +754,7 @@ func start_enemy_phase() -> void:
 			if _is_distance_in_attack_range(final_dist, enemy.attack_range):
 				
 				# NEW: Hand the AI fight over to the combat manager!
-				if execute_combat(enemy, target_player):
+				if await execute_combat(enemy, target_player):
 					return
 				
 		# Add a slight delay before the next Orc takes its turn
@@ -883,8 +883,19 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	if has_node("ActionMenu"):
 		$ActionMenu.hide()
 
-	# Open the arena as an overlay!
+	# 1. Open the arena as an overlay!
 	TransitionManager.open_overlay(combat_scene, 0.5) 
+	
+	# 2. Halt this specific function and wait for the battle to finish
+	await TransitionManager.overlay_closed
+	
+	# 3. WAKE UP! The battle is over, give control back to the player.
+	if _cursor:
+		_cursor.is_active = true
+		
+	# (In the future, this is exactly where you will check if the Orc died 
+	# and remove him from the map, or end Savannah's turn!)
+	
 	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
