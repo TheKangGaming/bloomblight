@@ -80,29 +80,35 @@ func _spawn_actors() -> bool:
 
 func _execute_battle_sequence() -> void:
 	await get_tree().create_timer(0.5).timeout
-	
-	# --- PHASE 1: THE STRIKE ---
+
+	# --- PHASE 1: ATTACKER STRIKES ---
 	active_attacker.play_attack()
 	await get_tree().create_timer(0.4).timeout
-	active_defender.play_hit()
-	
-	# TODO: Actually subtract the HP from the UI here later!
-	
+
+	if not _attacker_hit:
+		active_defender.play_evade()
+	elif not _defender_survived:
+		active_defender.play_death()
+	else:
+		active_defender.play_hit()
+
 	await get_tree().create_timer(0.8).timeout
-	
-	# --- PHASE 2: THE SMART COUNTERATTACK ---
-	# We no longer hardcode distance == 1. We check the math!
-	if _defender_can_counter and _defender_survived:
+
+	# --- PHASE 2: DEFENDER COUNTERS ---
+	if _defender_can_counter:
 		active_defender.play_attack()
 		await get_tree().create_timer(0.4).timeout
-		active_attacker.play_hit()
+
+		if not _defender_hit:
+			active_attacker.play_evade()
+		elif not _attacker_survived:
+			active_attacker.play_death()
+		else:
+			active_attacker.play_hit()
+
 		await get_tree().create_timer(0.8).timeout
-	elif not _defender_survived:
-		# If they didn't survive, play the death animation instead!
-		active_defender.play_death()
-		await get_tree().create_timer(1.0).timeout
-	
-	# --- PHASE 3: THE RETURN ---
+
+	# --- PHASE 3: RETURN ---
 	await get_tree().create_timer(0.4).timeout
 	_return_to_map()
 	

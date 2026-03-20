@@ -26,3 +26,9 @@ func play_hit() -> void:
 func play_death() -> void:
 	if anim_player and anim_player.has_animation("death"):
 		anim_player.play("death")
+		
+func play_evade() -> void:
+	if anim_player and anim_player.has_animation("evade"):
+		anim_player.play("evade")
+	else:
+		play_idle()

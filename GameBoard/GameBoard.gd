@@ -860,6 +860,8 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 		return false
 	
 	# 3. Add the Math (Temporary hardcoded test logic)
+	payload.attacker_hit = true
+	payload.attacker_crit = false
 	payload.attacker_damage_to_deal = 5
 	
 	# FIX: Use attack_range instead of max_range
@@ -867,12 +869,20 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	var def_range = def_weapon.attack_range if def_weapon else 1
 	
 	payload.defender_can_counter = (distance <= def_range)
+	payload.defender_hit = payload.defender_can_counter
+	payload.defender_crit = false
 	
 	var def_hp = defender.current_stats.hp if defender.current_stats else 10
 	payload.defender_survived = (def_hp - payload.attacker_damage_to_deal > 0)
 	
-	if payload.defender_can_counter and payload.defender_survived:
+	var atk_hp = attacker.current_stats.hp if attacker.current_stats else 10
+	payload.attacker_survived = true
+	
+	if payload.defender_can_counter and payload.defender_hit and payload.defender_survived:
 		payload.defender_damage_to_deal = 3
+		payload.attacker_survived = (atk_hp - payload.defender_damage_to_deal > 0)
+	else:
+		payload.defender_damage_to_deal = 0
 
 	# 3. Clean up the map UI so it isn't stuck open when we return
 	_target_unit_for_forecast = null
