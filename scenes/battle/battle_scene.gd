@@ -3,7 +3,6 @@ extends CanvasLayer
 @onready var left_spawn: Marker2D = $LeftSpawn
 @onready var right_spawn: Marker2D = $RightSpawn
 
-var _map_scene_path: String = ""
 var _defender_can_counter: bool = false
 var _defender_survived: bool = true
 
@@ -30,7 +29,6 @@ func _ready() -> void:
 	_defender_data = payload.defender_data
 	_attacker_stats = payload.attacker_stats
 	_defender_stats = payload.defender_stats
-	_map_scene_path = payload.map_scene_path
 	_defender_can_counter = payload.defender_can_counter
 	_defender_survived = payload.defender_survived
 	
@@ -40,11 +38,11 @@ func _ready() -> void:
 	# Clear the payload from the Autoload
 	CombatManager.clear_payload()
 	
-	# Spawn them in
-	_spawn_actors()
-	_execute_battle_sequence()
+	# FIX: Only run the sequence if spawning succeeds
+	if _spawn_actors():
+		_execute_battle_sequence()
 
-func _spawn_actors() -> void:
+func _spawn_actors() -> bool:
 	# 1. Spawn Attacker (Left Side, Facing Right)
 	if _attacker_data and _attacker_data.battle_actor_scene:
 		active_attacker = _attacker_data.battle_actor_scene.instantiate() as BattleActor
@@ -67,7 +65,9 @@ func _spawn_actors() -> void:
 	if active_attacker == null or active_defender == null:
 		push_error("BattleScene Error: Failed to spawn actors. Aborting sequence.")
 		_return_to_map()
-		return
+		return false # Tell _ready() to abort!
+		
+	return true # Tell _ready() it's safe to proceed!
 
 func _execute_battle_sequence() -> void:
 	await get_tree().create_timer(0.5).timeout

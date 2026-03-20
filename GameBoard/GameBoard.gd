@@ -848,29 +848,28 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	var distance := int(abs(attacker.cell.x - defender.cell.x) + abs(attacker.cell.y - defender.cell.y))
 	var terrain_modifier := 0 # We can hook this up to your tilemap data later!
 	
-	# 2. Pack the briefcase
+	# 1. Pack the briefcase FIRST
 	var payload := CombatManager.setup_combat(attacker, defender, terrain_modifier, distance)
 	
-	# 1. Give it the return ticket (the current map's file path)
-	payload.map_scene_path = scene_file_path 
+	# 2. Check for null IMMEDIATELY
+	if payload == null:
+		push_error("GameBoard: Failed to build combat payload. Aborting combat transition.")
+		return false
 	
-	# 2. Add the Math (Temporary hardcoded test logic!)
+	# 3. Add the Math (Temporary hardcoded test logic)
 	payload.attacker_damage_to_deal = 5
 	
-	# Can the defender reach the attacker to counter?
-	var def_range = defender.character_data.equipped_weapon.max_range if defender.character_data.equipped_weapon else 1
+	# FIX: Use attack_range instead of max_range
+	var def_weapon = defender.character_data.equipped_weapon
+	var def_range = def_weapon.attack_range if def_weapon else 1
+	
 	payload.defender_can_counter = (distance <= def_range)
 	
-	# Did the attacker kill them in one hit?
 	var def_hp = defender.current_stats.hp if defender.current_stats else 10
 	payload.defender_survived = (def_hp - payload.attacker_damage_to_deal > 0)
 	
 	if payload.defender_can_counter and payload.defender_survived:
-		payload.defender_damage_to_deal = 3 # Hardcoded test damage
-		
-	if payload == null:
-		push_error("GameBoard: Failed to build combat payload. Aborting combat transition.")
-		return false
+		payload.defender_damage_to_deal = 3
 
 	# 3. Clean up the map UI so it isn't stuck open when we return
 	_target_unit_for_forecast = null
@@ -886,16 +885,29 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	# 1. Open the arena as an overlay!
 	TransitionManager.open_overlay(combat_scene, 0.5) 
 	
-	# 2. Halt this specific function and wait for the battle to finish
+	# 2. Wait for the battle to finish
 	await TransitionManager.overlay_closed
 	
-	# 3. WAKE UP! The battle is over, give control back to the player.
+	# --- 3. APPLY THE ACTUAL COMBAT RESULTS ---
+	# Subtract Attacker's damage
+	defender.current_stats.hp -= payload.attacker_damage_to_deal
+	
+	# Subtract Defender's counter-damage (if they survived and were in range)
+	if payload.defender_can_counter and payload.defender_survived:
+		attacker.current_stats.hp -= payload.defender_damage_to_deal
+		
+	# Check for deaths and remove them from the tactical map
+	if defender.current_stats.hp <= 0:
+		defender.queue_free() # Or call your specific MapUnit.die() function
+		
+	if attacker.current_stats.hp <= 0:
+		attacker.queue_free() # Or call your specific MapUnit.die() function
+	# ------------------------------------------
+
+	# 4. WAKE UP! Give control back to the player.
 	if _cursor:
 		_cursor.is_active = true
 		
-	# (In the future, this is exactly where you will check if the Orc died 
-	# and remove him from the map, or end Savannah's turn!)
-	
 	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
