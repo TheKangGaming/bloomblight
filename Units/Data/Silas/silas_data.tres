@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://b6wnmas847bmy"]
 
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_sux24"]
+[ext_resource type="PackedScene" uid="uid://344jqu6h5ryl" path="res://scenes/battle/silas_battle_actor.tscn" id="2_5b2ij"]
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://Units/Data/Archer.tres" id="2_ver7o"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="3_5b2ij"]
 [ext_resource type="Resource" path="res://Weapons/TrainingBow.tres" id="4_qsq73"]
@@ -10,6 +11,7 @@
 script = ExtResource("5_a8dig")
 display_name = "Silas"
 class_data = ExtResource("2_ver7o")
+battle_actor_scene = ExtResource("2_5b2ij")
 equipped_weapon = ExtResource("4_qsq73")
 equipped_armor = ExtResource("3_5b2ij")
 metadata/_custom_type_script = "uid://dinfajkodigdx"

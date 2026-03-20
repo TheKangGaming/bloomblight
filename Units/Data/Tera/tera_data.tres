@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_2vpsb"]
 [ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="2_cu05k"]
+[ext_resource type="PackedScene" uid="uid://cyqtsfss5xi2d" path="res://scenes/battle/tera_battle_actor.tscn" id="3_cu05k"]
 [ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/Purifier.tres" id="3_mjny1"]
 [ext_resource type="Resource" path="res://Accessories/PrayerBeads.tres" id="4_dgs3p"]
 [ext_resource type="Resource" uid="uid://7wfqs56geyvx" path="res://Armor/AshenMantle.tres" id="5_yba7b"]
@@ -13,6 +14,7 @@ script = ExtResource("7_kbec3")
 display_name = "Tera"
 class_data = ExtResource("3_mjny1")
 abilities = Array[ExtResource("1_2vpsb")]([ExtResource("2_cu05k")])
+battle_actor_scene = ExtResource("3_cu05k")
 equipped_weapon = ExtResource("6_mktlr")
 equipped_armor = ExtResource("5_yba7b")
 equipped_accessory = ExtResource("4_dgs3p")

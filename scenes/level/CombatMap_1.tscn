@@ -340,7 +340,7 @@ terrain_set_0/terrain_0/name = "Path"
 terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_gh08p")
 
-[sub_resource type="Resource" id="Resource_rt72a"]
+[sub_resource type="Resource" id="Resource_mwyqx"]
 script = ExtResource("13_d3c05")
 hp = 24
 max_hp = 24
@@ -384,7 +384,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_45ywn"]
+[sub_resource type="Resource" id="Resource_hejk3"]
 script = ExtResource("13_d3c05")
 hp = 24
 max_hp = 24
@@ -428,7 +428,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_bhsje"]
+[sub_resource type="Resource" id="Resource_t05iy"]
 script = ExtResource("13_d3c05")
 str = 6
 physical_def = 5
@@ -470,7 +470,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_m1h8s"]
+[sub_resource type="Resource" id="Resource_efnms"]
 script = ExtResource("13_d3c05")
 hp = 16
 max_hp = 16
@@ -514,7 +514,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_y2ebn"]
+[sub_resource type="Resource" id="Resource_x18w8"]
 script = ExtResource("13_d3c05")
 hp = 18
 max_hp = 18
@@ -607,28 +607,28 @@ grid = ExtResource("2_gh08p")
 y_sort_enabled = true
 position = Vector2(375, 212)
 character_data = ExtResource("13_mwyqx")
-current_stats = SubResource("Resource_rt72a")
+current_stats = SubResource("Resource_mwyqx")
 
 [node name="Orc2" parent="GameBoard" unique_id=376372171 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(441, 210)
 character_data = ExtResource("13_mwyqx")
-current_stats = SubResource("Resource_45ywn")
+current_stats = SubResource("Resource_hejk3")
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
 character_data = ExtResource("18_0a6tx")
-current_stats = SubResource("Resource_bhsje")
+current_stats = SubResource("Resource_t05iy")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(323, 471)
 character_data = ExtResource("18_hejk3")
-current_stats = SubResource("Resource_m1h8s")
+current_stats = SubResource("Resource_efnms")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
 position = Vector2(443, 471)
 character_data = ExtResource("20_t05iy")
-current_stats = SubResource("Resource_y2ebn")
+current_stats = SubResource("Resource_x18w8")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("33_u5s1f")
