@@ -907,11 +907,6 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	if payload.defender_can_counter and payload.defender_survived:
 		attacker.apply_battle_result_damage(payload.defender_damage_to_deal)
 
-	# Wiping out the bad patch: 
-	# REMOVE _cursor.is_active = true
-	# REMOVE attacker.is_exhausted = true
-	# We are letting the callers handle this now!
-
 	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
