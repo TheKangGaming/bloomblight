@@ -12,6 +12,9 @@ const ActionMenu = preload("res://Menus/ActionMenu.tscn")
 ## Resource of type Grid.
 @export var grid: Resource
 
+const DEFAULT_BATTLE_SCENE = preload("res://scenes/battle/battle_scene.tscn")
+@export var battle_scene: PackedScene = DEFAULT_BATTLE_SCENE
+
 enum TurnPhase { PLAYER, ENEMY }
 var current_phase: TurnPhase = TurnPhase.PLAYER
 
@@ -439,7 +442,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		_hide_combat_forecast()
 		
 		_cursor.is_active = false 
-		await execute_combat(_active_unit, target)
+		if execute_combat(_active_unit, target):
+			return
 		
 		_is_targeting_attack = false
 		_valid_target_cells.clear()
@@ -750,7 +754,8 @@ func start_enemy_phase() -> void:
 			if _is_distance_in_attack_range(final_dist, enemy.attack_range):
 				
 				# NEW: Hand the AI fight over to the combat manager!
-				await execute_combat(enemy, target_player)
+				if execute_combat(enemy, target_player):
+					return
 				
 		# Add a slight delay before the next Orc takes its turn
 		await get_tree().create_timer(0.3).timeout
@@ -830,41 +835,40 @@ func enter_ability_targeting(ability: AbilityData) -> void:
 	_cursor.is_active = true
 	
 ## Orchestrates the turn-based combat sequence between two units
-func execute_combat(attacker: Unit, defender: Unit) -> void:
-	if _battle_ended or not is_instance_valid(attacker) or not is_instance_valid(defender):
-		return
+func execute_combat(attacker: Unit, defender: Unit) -> bool:
+	if not is_instance_valid(attacker) or not is_instance_valid(defender):
+		return false
 
-	# 1. Initiator swings first
-	await attacker.attack(defender)
-	if _battle_ended or not is_instance_valid(attacker):
-		return
+	var combat_scene := battle_scene if battle_scene != null else DEFAULT_BATTLE_SCENE
+	if combat_scene == null:
+		push_error("GameBoard: No battle scene assigned for execute_combat.")
+		return false
+
+	# 1. Calculate the context
+	var distance := int(abs(attacker.cell.x - defender.cell.x) + abs(attacker.cell.y - defender.cell.y))
+	var terrain_modifier := 0 # We can hook this up to your tilemap data later!
 	
-	var defender_countered := false
+	# 2. Pack the briefcase
+	var payload := CombatManager.setup_combat(attacker, defender, terrain_modifier, distance)
+	if payload == null:
+		push_error("GameBoard: Failed to build combat payload. Aborting combat transition.")
+		return false
 
-	# 2. Check if defender survived the hit
-	if is_instance_valid(defender) and defender.health > 0:
-		
-		# 3. Strategy logic: Is the attacker inside the defender's attack range?
-		if _can_unit_attack_target(defender, attacker):
-			
-			# 4. Cinematic pause, then counter-attack!
-			await get_tree().create_timer(0.3).timeout
-			print(defender.name + " retaliates!")
-			await defender.attack(attacker)
-			defender_countered = true
+	# 3. Clean up the map UI so it isn't stuck open when we return
+	_target_unit_for_forecast = null
+	_is_targeting_attack = false
+	_valid_target_cells.clear()
+	if _unit_overlay:
+		_unit_overlay.clear()
+	if _cursor:
+		_cursor.is_active = false
+	if has_node("ActionMenu"):
+		$ActionMenu.hide()
 
-	# 5. Follow-up strike from the faster unit, if still alive and in range.
-	if is_instance_valid(attacker) and is_instance_valid(defender) and _can_unit_follow_up(attacker, defender):
-		await get_tree().create_timer(0.2).timeout
-		print(attacker.name + " follows up!")
-		await attacker.attack(defender)
-	elif defender_countered and is_instance_valid(defender) and is_instance_valid(attacker) and _can_unit_follow_up(defender, attacker):
-		await get_tree().create_timer(0.2).timeout
-		print(defender.name + " follows up!")
-		await defender.attack(attacker)
-			
-	# Give the final animation a tiny bit of time to settle before unlocking the cursor
-	await get_tree().create_timer(0.2).timeout
+	# 4. Initiate the jump!
+	TransitionManager.change_scene(combat_scene) 
+	
+	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
 
