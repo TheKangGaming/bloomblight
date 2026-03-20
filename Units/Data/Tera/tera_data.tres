@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://drbs6r1u01xcf"]
+
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_2vpsb"]
+[ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="2_cu05k"]
+[ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/Purifier.tres" id="3_mjny1"]
+[ext_resource type="Resource" path="res://Accessories/PrayerBeads.tres" id="4_dgs3p"]
+[ext_resource type="Resource" uid="uid://7wfqs56geyvx" path="res://Armor/AshenMantle.tres" id="5_yba7b"]
+[ext_resource type="Resource" uid="uid://bmik5reb3ilhq" path="res://Weapons/CinderRod.tres" id="6_mktlr"]
+[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="7_kbec3"]
+
+[resource]
+script = ExtResource("7_kbec3")
+display_name = "Tera"
+class_data = ExtResource("3_mjny1")
+abilities = Array[ExtResource("1_2vpsb")]([ExtResource("2_cu05k")])
+equipped_weapon = ExtResource("6_mktlr")
+equipped_armor = ExtResource("5_yba7b")
+equipped_accessory = ExtResource("4_dgs3p")
+metadata/_custom_type_script = "uid://dinfajkodigdx"

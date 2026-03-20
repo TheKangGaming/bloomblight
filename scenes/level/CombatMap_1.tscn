@@ -11,25 +11,16 @@
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://GameBoard/UnitPath.gd" id="8_wkw2y"]
 [ext_resource type="PackedScene" uid="uid://cjkgbivtnlgno" path="res://Units/orc.tscn" id="11_qga0l"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/stats/unit_stats.gd" id="13_d3c05"]
+[ext_resource type="Resource" uid="uid://btp0fm5m4wl8c" path="res://Units/Data/Enemies/orc_data.tres" id="13_mwyqx"]
 [ext_resource type="Script" uid="uid://drvu56wd8e480" path="res://scenes/level/map_director.gd" id="13_sfjbq"]
-[ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="13_vtv1r"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="14_d3c05"]
-[ext_resource type="PackedScene" uid="uid://ceqn8w1yyldvk" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="14_xaypr"]
 [ext_resource type="Texture2D" uid="uid://dd36nah5rhdm6" path="res://graphics/TinySwords/Terrain/Tileset/Water Background color.png" id="15_d3c05"]
-[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="16_vtv1r"]
 [ext_resource type="Resource" uid="uid://cjn48pfrllmt8" path="res://Units/Data/Savannah/savannah_data.tres" id="18_0a6tx"]
-[ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="19_armor"]
-[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="21_efnms"]
-[ext_resource type="Resource" uid="uid://7wfqs56geyvx" path="res://Armor/AshenMantle.tres" id="21_purifier_armor"]
-[ext_resource type="Resource" path="res://Accessories/PrayerBeads.tres" id="22_prayer_beads"]
-[ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="22_x18w8"]
-[ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://Units/Data/Purifier.tres" id="23_rmf8s"]
+[ext_resource type="Resource" uid="uid://drbs6r1u01xcf" path="res://Units/Data/Tera/tera_data.tres" id="18_hejk3"]
+[ext_resource type="Resource" uid="uid://b6wnmas847bmy" path="res://Units/Data/Silas/silas_data.tres" id="20_t05iy"]
 [ext_resource type="PackedScene" uid="uid://bxc8jd65qx0h" path="res://Units/tera.tscn" id="24_jk2x1"]
 [ext_resource type="PackedScene" uid="uid://cav5av4vtw4yn" path="res://Units/Silas.tscn" id="26_kk0qh"]
-[ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://Units/Data/Archer.tres" id="27_0a6tx"]
-[ext_resource type="Resource" path="res://Weapons/TrainingBow.tres" id="28_training_bow"]
-[ext_resource type="Resource" uid="uid://bmik5reb3ilhq" path="res://Weapons/CinderRod.tres" id="29_cinder_rod"]
 [ext_resource type="AudioStream" uid="uid://66huqdsx1df6" path="res://audio/Music_Norest.wav" id="33_u5s1f"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
@@ -349,13 +340,6 @@ terrain_set_0/terrain_0/name = "Path"
 terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_gh08p")
 
-[sub_resource type="Resource" id="Resource_ddai4"]
-script = ExtResource("16_vtv1r")
-display_name = "Orc"
-class_data = ExtResource("13_vtv1r")
-battle_actor_scene = ExtResource("14_xaypr")
-metadata/_custom_type_script = "uid://dinfajkodigdx"
-
 [sub_resource type="Resource" id="Resource_rt72a"]
 script = ExtResource("13_d3c05")
 hp = 24
@@ -486,16 +470,6 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_vey2m"]
-script = ExtResource("16_vtv1r")
-display_name = "Tera"
-class_data = ExtResource("23_rmf8s")
-abilities = Array[ExtResource("21_efnms")]([ExtResource("22_x18w8")])
-equipped_weapon = ExtResource("29_cinder_rod")
-equipped_armor = ExtResource("21_purifier_armor")
-equipped_accessory = ExtResource("22_prayer_beads")
-metadata/_custom_type_script = "uid://dinfajkodigdx"
-
 [sub_resource type="Resource" id="Resource_m1h8s"]
 script = ExtResource("13_d3c05")
 hp = 16
@@ -539,14 +513,6 @@ minimum_gain_intervals = {
 "SPD": 0,
 "STR": 0
 }
-
-[sub_resource type="Resource" id="Resource_u5s1f"]
-script = ExtResource("16_vtv1r")
-display_name = "Silas"
-class_data = ExtResource("27_0a6tx")
-equipped_weapon = ExtResource("28_training_bow")
-equipped_armor = ExtResource("19_armor")
-metadata/_custom_type_script = "uid://dinfajkodigdx"
 
 [sub_resource type="Resource" id="Resource_y2ebn"]
 script = ExtResource("13_d3c05")
@@ -640,13 +606,13 @@ grid = ExtResource("2_gh08p")
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(375, 212)
-character_data = SubResource("Resource_ddai4")
+character_data = ExtResource("13_mwyqx")
 current_stats = SubResource("Resource_rt72a")
 
 [node name="Orc2" parent="GameBoard" unique_id=376372171 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(441, 210)
-character_data = SubResource("Resource_ddai4")
+character_data = ExtResource("13_mwyqx")
 current_stats = SubResource("Resource_45ywn")
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
@@ -656,12 +622,12 @@ current_stats = SubResource("Resource_bhsje")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(323, 471)
-character_data = SubResource("Resource_vey2m")
+character_data = ExtResource("18_hejk3")
 current_stats = SubResource("Resource_m1h8s")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
 position = Vector2(443, 471)
-character_data = SubResource("Resource_u5s1f")
+character_data = ExtResource("20_t05iy")
 current_stats = SubResource("Resource_y2ebn")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
