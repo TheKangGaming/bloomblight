@@ -57,4 +57,4 @@ func play_hit() -> void:
 
 func play_death() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
-		msca_player.travel_to_anim("Death", _facing)
+		msca_player.travel_to_anim("DeathBounce", Vector2.DOWN)

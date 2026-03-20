@@ -5,8 +5,11 @@ extends CanvasLayer
 
 var _defender_can_counter: bool = false
 var _defender_survived: bool = true
-
-
+var _attacker_hit: bool = true
+var _defender_hit: bool = true
+var _attacker_survived: bool = true
+var _attacker_crit: bool = false
+var _defender_crit: bool = false
 var _combat_distance: int = 1
 var _attacker_data: CharacterData
 var _defender_data: CharacterData
@@ -30,7 +33,13 @@ func _ready() -> void:
 	_attacker_stats = payload.attacker_stats
 	_defender_stats = payload.defender_stats
 	_defender_can_counter = payload.defender_can_counter
+	_attacker_survived = payload.attacker_survived
 	_defender_survived = payload.defender_survived
+	_attacker_hit = payload.attacker_hit
+	_defender_hit = payload.defender_hit
+	_attacker_crit = payload.attacker_crit
+	_defender_crit = payload.defender_crit
+	
 	
 	# Save the distance so we know if a counterattack is possible!
 	_combat_distance = payload.distance

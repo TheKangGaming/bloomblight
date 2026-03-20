@@ -41,3 +41,7 @@ func play_hit() -> void:
 func play_death() -> void:
 	if _visual_driver and _visual_driver.has_method("play_death"):
 		_visual_driver.play_death()
+		
+func play_evade() -> void:
+	if _visual_driver and _visual_driver.has_method("play_evade"):
+		_visual_driver.play_evade()

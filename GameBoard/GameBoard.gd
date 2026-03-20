@@ -892,10 +892,10 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	await TransitionManager.overlay_closed
 	
 	# --- 3. APPLY THE ACTUAL COMBAT RESULTS ---
-	defender.current_stats.hp -= payload.attacker_damage_to_deal
+	defender.apply_battle_result_damage(payload.attacker_damage_to_deal)
 	
 	if payload.defender_can_counter and payload.defender_survived:
-		attacker.current_stats.hp -= payload.defender_damage_to_deal
+		attacker.apply_battle_result_damage(payload.defender_damage_to_deal)
 		
 	# FIX: Use die() so the board registers the kill and updates the grid!
 	if defender.current_stats.hp <= 0:

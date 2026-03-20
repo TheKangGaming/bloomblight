@@ -619,6 +619,19 @@ func _update_hp_bar(instant: bool = false) -> void:
 		else:
 			_hp_fill_style.bg_color = Color(0.3, 0.8, 0.3) # Healthy Player Green
 			
+func apply_battle_result_damage(amount: int) -> void:
+	if amount <= 0 or current_stats == null or health <= 0:
+		return
+
+	current_stats.apply_delta({"HP": -amount})
+	current_stats.clamp_to_caps()
+	_sync_player_hp_to_global()
+	_update_hp_bar(true)
+
+	if health <= 0:
+		current_stats.hp = 0
+		die()
+			
 ## Checks if an ability is ready to be used
 func is_ability_ready(ability: AbilityData) -> bool:
 	return not ability_cooldowns.has(ability)
