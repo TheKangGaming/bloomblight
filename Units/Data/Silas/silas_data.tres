@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://344jqu6h5ryl" path="res://scenes/battle/silas_battle_actor.tscn" id="2_5b2ij"]
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://Units/Data/Archer.tres" id="2_ver7o"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://Armor/LeatherVest.tres" id="3_5b2ij"]
-[ext_resource type="Resource" path="res://Weapons/TrainingBow.tres" id="4_qsq73"]
+[ext_resource type="Resource" uid="uid://bt8r218v5t4mw" path="res://Weapons/TrainingBow.tres" id="4_qsq73"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="5_a8dig"]
 
 [resource]

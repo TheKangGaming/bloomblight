@@ -2,6 +2,8 @@
 class_name WeaponData
 extends Resource
 
+# This creates a nice dropdown menu in the Godot Inspector!
+@export_enum("Sword", "Axe", "Lance", "Bow", "Tome", "Staff") var weapon_type: String = "Sword"
 @export var weapon_name: String = "Rusty Sword"
 @export var description: String = "A weathered blade."
 @export var icon: Texture2D

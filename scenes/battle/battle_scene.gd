@@ -3,6 +3,8 @@ extends Node2D
 @onready var left_spawn: Marker2D = $LeftSpawn
 @onready var right_spawn: Marker2D = $RightSpawn
 
+
+var _combat_distance: int = 1
 var _attacker_data: CharacterData
 var _defender_data: CharacterData
 var _attacker_stats: UnitStats
@@ -14,18 +16,6 @@ var active_defender: BattleActor
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
 	
-	# --- DEBUG INJECTION ---
-	# If we hit F6 to run this scene by itself, build a fake payload for testing!
-	if payload == null and OS.is_debug_build():
-		push_warning("BattleScene: No payload found. Injecting DEBUG Savannah Mirror Match!")
-		payload = CombatPayload.new()
-		# Make sure this path points exactly to your saved .tres file!
-		var debug_savannah = load("res://Units/Data/Savannah/savannah_data.tres") as CharacterData
-		payload.attacker_data = debug_savannah
-		payload.defender_data = debug_savannah # Savannah fights her own clone for now!
-		payload.attacker_stats = UnitStats.new()
-		payload.defender_stats = UnitStats.new()
-	# -----------------------
 		
 	if payload == null:
 		push_error("BattleScene Error: Booted up without a CombatPayload!")
@@ -37,11 +27,15 @@ func _ready() -> void:
 	_attacker_stats = payload.attacker_stats
 	_defender_stats = payload.defender_stats
 	
+	# Save the distance so we know if a counterattack is possible!
+	_combat_distance = payload.distance
+	
 	# Clear the payload from the Autoload
 	CombatManager.clear_payload()
 	
 	# Spawn them in
 	_spawn_actors()
+	_execute_battle_sequence()
 
 func _spawn_actors() -> void:
 	# 1. Spawn Attacker (Left Side, Facing Right)
@@ -62,3 +56,55 @@ func _spawn_actors() -> void:
 		active_defender.setup_from_combat_snapshot(_defender_data, _defender_stats, false)
 	else:
 		push_error("BattleScene: Defender missing battle_actor_scene in CharacterData!")
+
+func _execute_battle_sequence() -> void:
+	# 1. Dramatic pause as the camera loads in
+	await get_tree().create_timer(0.5).timeout
+	
+	# --- PHASE 1: THE INITIATOR STRIKES ---
+	if active_attacker:
+		active_attacker.play_attack()
+		
+	# Wait for the sword/spell to visually connect
+	await get_tree().create_timer(0.4).timeout
+	
+	if active_defender:
+		active_defender.play_hit()
+		
+	# Let the dust settle and give the defender a moment to recover
+	await get_tree().create_timer(0.8).timeout
+	
+	# --- PHASE 2: THE COUNTERATTACK ---
+	# If they are fighting in adjacent grid cells (Melee), the defender swings back.
+	# (In the future, you will wrap this in an 'if defender.current_hp > 0' check!)
+	if _combat_distance == 1 and active_defender:
+		active_defender.play_attack()
+		
+		# Wait for the counterattack to connect
+		await get_tree().create_timer(0.4).timeout
+		
+		if active_attacker:
+			active_attacker.play_hit()
+			
+		# Let the attacker recover from the hit
+		await get_tree().create_timer(0.8).timeout
+	
+	# --- PHASE 3: THE RETURN ---
+	# A final brief pause before the screen fades out
+	await get_tree().create_timer(0.4).timeout
+	_return_to_map()
+	
+func _return_to_map() -> void:
+	# NOTE: Ensure this path perfectly matches your tactical map's file path!
+	var map_path := "res://scenes/level/CombatMap_1.tscn"
+	var map_scene := load(map_path) as PackedScene
+	
+	if map_scene == null:
+		push_error("BattleScene: Could not load the return map!")
+		return
+		
+	if TransitionManager and TransitionManager.has_method("change_scene"):
+		TransitionManager.change_scene(map_scene)
+	else:
+		# Failsafe if TransitionManager isn't hooked up for the return trip
+		get_tree().change_scene_to_packed(map_scene)	
