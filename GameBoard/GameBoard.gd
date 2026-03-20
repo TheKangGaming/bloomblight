@@ -896,19 +896,6 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	
 	if payload.defender_can_counter and payload.defender_survived:
 		attacker.apply_battle_result_damage(payload.defender_damage_to_deal)
-		
-	# FIX: Use die() so the board registers the kill and updates the grid!
-	if defender.current_stats.hp <= 0:
-		if defender.has_method("die"):
-			defender.die() 
-		else:
-			defender.queue_free()
-			
-	if attacker.current_stats.hp <= 0:
-		if attacker.has_method("die"):
-			attacker.die()
-		else:
-			attacker.queue_free()
 
 	# Wiping out the bad patch: 
 	# REMOVE _cursor.is_active = true
