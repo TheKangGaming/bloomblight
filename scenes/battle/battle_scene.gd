@@ -1,5 +1,12 @@
 extends CanvasLayer
 
+# --- DYNAMIC STAGING VARIABLES ---
+var _attacker_start_pos: Vector2
+var _defender_start_pos: Vector2
+var _melee_anchor_attacker: Vector2
+var _melee_anchor_defender: Vector2
+
+
 @onready var left_spawn: Marker2D = $LeftSpawn
 @onready var right_spawn: Marker2D = $RightSpawn
 
@@ -38,6 +45,24 @@ func _ready() -> void:
 	# FIX: Only run the sequence if spawning succeeds
 	if _spawn_actors():
 		_execute_battle_sequence()
+		
+# --- THE STAGING DIRECTOR ---
+func _setup_staging() -> void:
+	# 1. Record where they spawned (Your LeftSpawn and RightSpawn markers)
+	_attacker_start_pos = active_attacker.global_position
+	_defender_start_pos = active_defender.global_position
+	
+	# 2. Find the exact middle of the screen (assuming standard 1920x1080 or similar)
+	var screen_center = get_viewport().get_visible_rect().size / 2.0
+	
+	# 3. Create the "Clash" points right in the center of the screen
+	# We push the attacker slightly left of center, and defender slightly right
+	_melee_anchor_attacker = screen_center + Vector2(-60, 50) # Tweak these numbers!
+	_melee_anchor_defender = screen_center + Vector2(60, 50)
+	
+	# Optional: If your sprites look too small in the overlay, you can scale them up here!
+	active_attacker.scale = Vector2(2.0, 2.0)
+	active_defender.scale = Vector2(2.0, 2.0)
 
 func _spawn_actors() -> bool:
 	# 1. Spawn Attacker (Left Side, Facing Right)

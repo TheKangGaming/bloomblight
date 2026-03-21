@@ -1,5 +1,9 @@
 class_name CombatStrike extends RefCounted
 
+# The presentation classification
+enum AttackKind { MELEE, RANGED, MAGIC }
+var attack_kind: AttackKind = AttackKind.MELEE
+
 var is_attacker_striking: bool = true
 var is_hit: bool = false
 var is_crit: bool = false
