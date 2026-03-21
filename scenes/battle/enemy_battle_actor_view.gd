@@ -23,7 +23,14 @@ func set_facing(dir: Vector2) -> void:
 	if sprite:
 		# Assuming your monster sprites are drawn facing LEFT by default:
 		sprite.flip_h = (dir == Vector2.RIGHT) 
-
+func play_idle() -> void:
+	if anim_player and anim_player.has_animation("idle"):
+		anim_player.play("idle")
+	else:
+		# Ultimate Failsafe: Just freeze the sprite on whatever frame it's on!
+		if anim_player:
+			anim_player.stop()
+			
 func play_attack() -> void:
 	if anim_player and anim_player.has_animation("attack"):
 		anim_player.play("attack")

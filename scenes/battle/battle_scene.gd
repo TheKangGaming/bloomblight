@@ -131,8 +131,11 @@ func _execute_battle_sequence() -> void:
 		# ---------------------------------
 		
 		# The Reaction
+		# The Reaction
 		if strike.is_hit:
-			# TODO: Spawn a floating damage number UI here!
+			# -> SPAWN THE NUMBER!
+			_spawn_damage_popup(target, strike)
+			
 			if strike.target_survived:
 				target.play_hit()
 			else:
@@ -142,7 +145,9 @@ func _execute_battle_sequence() -> void:
 				else:
 					attacker_survived = false
 		else:
-			# TODO: Spawn a "Miss!" UI here!
+			# -> SPAWN THE MISS!
+			_spawn_damage_popup(target, strike)
+			
 			if target.has_method("play_evade"):
 				target.play_evade()
 			else:
@@ -217,3 +222,44 @@ func _return_to_map() -> void:
 	else:
 		queue_free()
 		get_tree().paused = false
+
+# --- VISUAL EFFECTS ---
+func _spawn_damage_popup(target: BattleActor, strike: CombatStrike) -> void:
+	var popup = Label.new()
+	
+	# 1. Format the Text and Color!
+	if not strike.is_hit:
+		popup.text = "Miss"
+		popup.modulate = Color(0.7, 0.7, 0.7) # Gray
+	elif strike.is_crit:
+		popup.text = str(strike.damage_dealt) + "!"
+		popup.modulate = Color(1.0, 0.8, 0.0) # Gold
+		popup.scale = Vector2(1.5, 1.5) # Make crits huge!
+	else:
+		popup.text = str(strike.damage_dealt)
+		popup.modulate = Color(1.0, 1.0, 1.0) # White
+		
+	# 2. Make it look nice (Bold outline)
+	popup.add_theme_color_override("font_outline_color", Color.BLACK)
+	popup.add_theme_constant_override("outline_size", 4)
+	popup.add_theme_font_size_override("font_size", 24)
+	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# 3. Put it in the BattleWorld so it zooms with the camera
+	battle_world.add_child(popup)
+	
+	# Center it directly over the target's head
+	# (We offset X by -50 so the center of the text aligns with the unit)
+	popup.position = target.position + Vector2(-50, -40) 
+	
+	# 4. The Float & Fade Animation
+	var tween = create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	
+	# Float up 30 pixels
+	tween.tween_property(popup, "position:y", popup.position.y - 30, 0.6)
+	# Fade to transparent
+	tween.tween_property(popup, "modulate:a", 0.0, 0.6)
+	
+	# Delete the label out of memory when the animation finishes!
+	tween.chain().tween_callback(popup.queue_free)
