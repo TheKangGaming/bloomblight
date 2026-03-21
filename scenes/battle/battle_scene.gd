@@ -19,6 +19,7 @@ var _defender_data: CharacterData
 var _attacker_stats: UnitStats
 var _defender_stats: UnitStats
 
+var _combat_strikes: Array[CombatStrike] = []
 var active_attacker: BattleActor
 var active_defender: BattleActor
 
@@ -42,6 +43,7 @@ func _ready() -> void:
 	_defender_hit = payload.defender_hit
 	_attacker_crit = payload.attacker_crit
 	_defender_crit = payload.defender_crit
+	_combat_strikes = payload.strikes
 	
 	
 	# Save the distance so we know if a counterattack is possible!
@@ -86,7 +88,7 @@ func _execute_battle_sequence() -> void:
 	await get_tree().create_timer(0.5).timeout
 	
 	# THE MOVIE PLAYER: Iterate through the pre-calculated script!
-	for strike in payload.strikes:
+	for strike in _combat_strikes:
 		
 		# 1. Figure out who is swinging and who is getting hit
 		var striker: BattleActor = active_attacker if strike.is_attacker_striking else active_defender
