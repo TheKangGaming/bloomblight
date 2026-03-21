@@ -52,6 +52,17 @@ func play_idle() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		msca_player.travel_to_anim("Idle", _facing)
 
+func play_run() -> void:
+	if msca_player and msca_player.has_method("travel_to_anim"):
+		# Note: Check your MSCA AnimationTree! It might be named "Walk" or "Run" 
+		# depending on which specific MSCA base pack you are using.
+		msca_player.travel_to_anim("Run", _facing)
+		
+func play_jump() -> void:
+	if msca_player and msca_player.has_method("travel_to_anim"):
+		# Double check this exact string in your AnimationTree!
+		msca_player.travel_to_anim("Jump", _facing)
+
 func play_attack() -> void:
 	if not msca_player or not msca_player.has_method("travel_to_anim"):
 		return

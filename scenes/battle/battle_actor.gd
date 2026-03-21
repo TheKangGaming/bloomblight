@@ -38,6 +38,14 @@ func play_idle() -> void:
 func play_attack() -> void:
 	if _visual_driver and _visual_driver.has_method("play_attack"):
 		_visual_driver.play_attack()
+		
+func play_run() -> void:
+	if _visual_driver and _visual_driver.has_method("play_run"):
+		_visual_driver.play_run()
+		
+func play_jump() -> void:
+	if _visual_driver and _visual_driver.has_method("play_jump"):
+		_visual_driver.play_jump()
 
 func play_hit() -> void:
 	if _visual_driver and _visual_driver.has_method("play_hit"):

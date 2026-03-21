@@ -95,45 +95,120 @@ func _spawn_actors() -> bool:
 
 func _execute_battle_sequence() -> void:
 	# A dramatic pause as the arena fades in
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(0.4).timeout
 	
-	# THE MOVIE PLAYER: Iterate through the pre-calculated script!
-	for i in _combat_strikes.size():
-		var strike := _combat_strikes[i]
+	# --- 1. THE DASH ---
+	await _play_approach()
+	
+	var attacker_survived = true
+	var defender_survived = true
+	
+	# --- 2. THE MOVIE PLAYER ---
+	for strike in _combat_strikes:
 		
-		# 1. Figure out who is swinging and who is getting hit
 		var striker: BattleActor = active_attacker if strike.is_attacker_striking else active_defender
 		var target: BattleActor = active_defender if strike.is_attacker_striking else active_attacker
 		
-		# 2. Initiate the attack animation
+		# Initiate the attack animation
 		striker.play_attack()
 		
-		# 3. Wait for the EXACT frame the weapon connects
+		# Wait for the EXACT frame the weapon connects
 		await striker.strike_impact
 		
-		# 4. The Reaction
+		# --- THE JUICE: LOCAL HIT-STOP ---
 		if strike.is_hit:
-			# TODO: Spawn a floating damage number UI here! (strike.damage_dealt)
+			# Freeze the actors (pauses their AnimationPlayers exactly on impact!)
+			striker.process_mode = Node.PROCESS_MODE_DISABLED
+			target.process_mode = Node.PROCESS_MODE_DISABLED
+			
+			# Wait a split second (Freeze longer if it's a CRITICAL HIT!)
+			var stop_time = 0.25 if strike.is_crit else 0.08
+			await get_tree().create_timer(stop_time).timeout
+			
+			# Unfreeze them so the follow-through continues
+			striker.process_mode = Node.PROCESS_MODE_INHERIT
+			target.process_mode = Node.PROCESS_MODE_INHERIT
+		# ---------------------------------
+		
+		# The Reaction
+		if strike.is_hit:
+			# TODO: Spawn a floating damage number UI here!
 			if strike.target_survived:
 				target.play_hit()
 			else:
 				target.play_death()
+				if strike.is_attacker_striking:
+					defender_survived = false
+				else:
+					attacker_survived = false
 		else:
 			# TODO: Spawn a "Miss!" UI here!
 			if target.has_method("play_evade"):
 				target.play_evade()
 			else:
-				target.play_hit() # Fallback if you don't have a dodge animation yet
+				target.play_hit() 
 				
-		# 5. Wait for the attacker to finish their follow-through
+		# Wait for the attacker to finish their swing
 		await striker.animation_finished_playing
 		
 		# A tiny buffer between strikes so they don't blend together
 		await get_tree().create_timer(0.2).timeout
 
+	# --- 3. THE RETREAT ---
+	await _play_retreat(attacker_survived, defender_survived)
+
 	# The script is over! Let the dust settle, then close the overlay.
-	await get_tree().create_timer(0.6).timeout
+	await get_tree().create_timer(0.5).timeout
 	_return_to_map()
+	
+# --- THE MOVEMENT DIRECTORS ---
+
+func _play_approach() -> void:
+	if _combat_distance > 1:
+		return
+		
+	# --- 1. START RUNNING! ---
+	active_attacker.play_run()
+	active_defender.play_run()
+		
+	var tween = create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	
+	tween.tween_property(active_attacker, "position", attacker_melee.position, 0.4)
+	tween.tween_property(active_defender, "position", defender_melee.position, 0.4)
+	
+	await tween.finished
+	
+	# --- 2. STOP RUNNING! ---
+	active_attacker.play_idle()
+	active_defender.play_idle()
+	
+	await get_tree().create_timer(0.1).timeout
+
+func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
+	if _combat_distance > 1:
+		return
+		
+	var tween = create_tween().set_parallel(true)
+	# (Optional: If the jump feels too slow, change 0.3 to 0.25!)
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	
+	# --- 1. START JUMPING (Backwards) ---
+	if attacker_survived and is_instance_valid(active_attacker):
+		active_attacker.play_jump() # <--- CHANGED THIS
+		tween.tween_property(active_attacker, "position", attacker_start.position, 0.3)
+		
+	if defender_survived and is_instance_valid(active_defender):
+		active_defender.play_jump() # <--- CHANGED THIS
+		tween.tween_property(active_defender, "position", defender_start.position, 0.3)
+		
+	await tween.finished
+	
+	# --- 2. LAND IN IDLE! ---
+	if attacker_survived and is_instance_valid(active_attacker):
+		active_attacker.play_idle()
+	if defender_survived and is_instance_valid(active_defender):
+		active_defender.play_idle()
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map
