@@ -21,7 +21,6 @@
 [ext_resource type="Resource" uid="uid://b6wnmas847bmy" path="res://Units/Data/Silas/silas_data.tres" id="20_t05iy"]
 [ext_resource type="PackedScene" uid="uid://bxc8jd65qx0h" path="res://Units/tera.tscn" id="24_jk2x1"]
 [ext_resource type="PackedScene" uid="uid://cav5av4vtw4yn" path="res://Units/Silas.tscn" id="26_kk0qh"]
-[ext_resource type="AudioStream" uid="uid://66huqdsx1df6" path="res://audio/Music_Norest.wav" id="33_u5s1f"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
 texture = ExtResource("14_2qf2x")
@@ -340,6 +339,50 @@ terrain_set_0/terrain_0/name = "Path"
 terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_gh08p")
 
+[sub_resource type="Resource" id="Resource_yjnxd"]
+script = ExtResource("13_d3c05")
+hp = 24
+max_hp = 24
+str = 8
+physical_def = 3
+magic_def = 2
+dex = 4
+int_stat = 1
+mov = 5
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 15,
+"DEX": 30,
+"HP": 85,
+"INT": 5,
+"MDEF": 10,
+"MOV": 0,
+"SPD": 40,
+"STR": 70
+}
+stat_caps = {
+"ATK_RNG": 1,
+"DEF": 15,
+"DEX": 20,
+"INT": 10,
+"MAX_HP": 80,
+"MDEF": 14,
+"MOV": 5,
+"SPD": 24,
+"STR": 30
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
+
 [sub_resource type="Resource" id="Resource_mwyqx"]
 script = ExtResource("13_d3c05")
 hp = 24
@@ -386,50 +429,6 @@ minimum_gain_intervals = {
 
 [sub_resource type="Resource" id="Resource_hejk3"]
 script = ExtResource("13_d3c05")
-hp = 24
-max_hp = 24
-str = 8
-physical_def = 3
-magic_def = 2
-dex = 4
-int_stat = 1
-mov = 5
-growth_rates = {
-"ATK_RNG": 0,
-"DEF": 15,
-"DEX": 30,
-"HP": 85,
-"INT": 5,
-"MDEF": 10,
-"MOV": 0,
-"SPD": 40,
-"STR": 70
-}
-stat_caps = {
-"ATK_RNG": 1,
-"DEF": 15,
-"DEX": 20,
-"INT": 10,
-"MAX_HP": 80,
-"MDEF": 14,
-"MOV": 5,
-"SPD": 24,
-"STR": 30
-}
-minimum_gain_intervals = {
-"ATK_RNG": 0,
-"DEF": 0,
-"DEX": 0,
-"INT": 0,
-"MAX_HP": 0,
-"MDEF": 0,
-"MOV": 0,
-"SPD": 0,
-"STR": 0
-}
-
-[sub_resource type="Resource" id="Resource_t05iy"]
-script = ExtResource("13_d3c05")
 str = 6
 physical_def = 5
 magic_def = 5
@@ -470,7 +469,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_efnms"]
+[sub_resource type="Resource" id="Resource_t05iy"]
 script = ExtResource("13_d3c05")
 hp = 16
 max_hp = 16
@@ -514,7 +513,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_x18w8"]
+[sub_resource type="Resource" id="Resource_efnms"]
 script = ExtResource("13_d3c05")
 hp = 18
 max_hp = 18
@@ -607,31 +606,30 @@ grid = ExtResource("2_gh08p")
 y_sort_enabled = true
 position = Vector2(375, 212)
 character_data = ExtResource("13_mwyqx")
-current_stats = SubResource("Resource_mwyqx")
+current_stats = SubResource("Resource_yjnxd")
 
 [node name="Orc2" parent="GameBoard" unique_id=376372171 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
 position = Vector2(441, 210)
 character_data = ExtResource("13_mwyqx")
-current_stats = SubResource("Resource_hejk3")
+current_stats = SubResource("Resource_mwyqx")
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(383, 438)
 character_data = ExtResource("18_0a6tx")
-current_stats = SubResource("Resource_t05iy")
+current_stats = SubResource("Resource_hejk3")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(323, 471)
 character_data = ExtResource("18_hejk3")
-current_stats = SubResource("Resource_efnms")
+current_stats = SubResource("Resource_t05iy")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
 position = Vector2(443, 471)
 character_data = ExtResource("20_t05iy")
-current_stats = SubResource("Resource_x18w8")
+current_stats = SubResource("Resource_efnms")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
-stream = ExtResource("33_u5s1f")
 volume_db = -10.0
 autoplay = true
 
