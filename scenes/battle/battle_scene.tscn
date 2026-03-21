@@ -7,6 +7,22 @@ process_mode = 3
 layer = 10
 script = ExtResource("1_3hov6")
 
+[node name="BattleWorld" type="Node2D" parent="." unique_id=510328595]
+
+[node name="CenterAnchor" type="Marker2D" parent="BattleWorld" unique_id=1453056431]
+
+[node name="AttackerStart" type="Marker2D" parent="BattleWorld" unique_id=1209044055]
+position = Vector2(-150, 0)
+
+[node name="DefenderStart" type="Marker2D" parent="BattleWorld" unique_id=646739626]
+position = Vector2(150, 0)
+
+[node name="AttackerMelee" type="Marker2D" parent="BattleWorld" unique_id=834177747]
+position = Vector2(-40, 0)
+
+[node name="DefenderMelee" type="Marker2D" parent="BattleWorld" unique_id=982298957]
+position = Vector2(40, 0)
+
 [node name="ColorRect" type="ColorRect" parent="." unique_id=347300026]
 offset_right = 2556.0
 offset_bottom = 1443.0
@@ -17,3 +33,5 @@ position = Vector2(1158, 442)
 
 [node name="RightSpawn" type="Marker2D" parent="." unique_id=1027645305]
 position = Vector2(1481, 442)
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=997848474]

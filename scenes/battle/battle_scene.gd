@@ -1,15 +1,16 @@
 extends CanvasLayer
 
-# --- DYNAMIC STAGING VARIABLES ---
-var _attacker_start_pos: Vector2
-var _defender_start_pos: Vector2
-var _melee_anchor_attacker: Vector2
-var _melee_anchor_defender: Vector2
+# --- NODE REFERENCES ---
+@onready var battle_world: Node2D = $BattleWorld
 
+# --- STAGING ANCHORS ---
+@onready var center_anchor: Marker2D = $BattleWorld/CenterAnchor
+@onready var attacker_start: Marker2D = $BattleWorld/AttackerStart
+@onready var defender_start: Marker2D = $BattleWorld/DefenderStart
+@onready var attacker_melee: Marker2D = $BattleWorld/AttackerMelee
+@onready var defender_melee: Marker2D = $BattleWorld/DefenderMelee
 
-@onready var left_spawn: Marker2D = $LeftSpawn
-@onready var right_spawn: Marker2D = $RightSpawn
-
+# --- COMBAT DATA ---
 var _combat_distance: int = 1
 var _attacker_data: CharacterData
 var _defender_data: CharacterData
@@ -22,10 +23,10 @@ var active_defender: BattleActor
 
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
-	
 		
 	if payload == null:
 		push_error("BattleScene Error: Booted up without a CombatPayload!")
+		_return_to_map() # <--- SAFETY NET ADDED HERE
 		return
 		
 	# Extract the data
@@ -35,7 +36,6 @@ func _ready() -> void:
 	_defender_stats = payload.defender_stats
 	_combat_strikes = payload.strikes
 	
-	
 	# Save the distance so we know if a counterattack is possible!
 	_combat_distance = payload.distance
 	
@@ -44,31 +44,33 @@ func _ready() -> void:
 	
 	# FIX: Only run the sequence if spawning succeeds
 	if _spawn_actors():
+		_setup_staging()
 		_execute_battle_sequence()
 		
 # --- THE STAGING DIRECTOR ---
 func _setup_staging() -> void:
-	# 1. Record where they spawned (Your LeftSpawn and RightSpawn markers)
-	_attacker_start_pos = active_attacker.global_position
-	_defender_start_pos = active_defender.global_position
-	
-	# 2. Find the exact middle of the screen (assuming standard 1920x1080 or similar)
+	# 1. Move the entire BattleWorld to the exact center of your monitor
 	var screen_center = get_viewport().get_visible_rect().size / 2.0
+	battle_world.global_position = screen_center
 	
-	# 3. Create the "Clash" points right in the center of the screen
-	# We push the attacker slightly left of center, and defender slightly right
-	_melee_anchor_attacker = screen_center + Vector2(-60, 50) # Tweak these numbers!
-	_melee_anchor_defender = screen_center + Vector2(60, 50)
+	# 2. "Zoom" in by scaling the world! (Adjust these numbers for perfect framing)
+	battle_world.scale = Vector2(2.5, 2.5) 
 	
-	# Optional: If your sprites look too small in the overlay, you can scale them up here!
-	active_attacker.scale = Vector2(2.0, 2.0)
-	active_defender.scale = Vector2(2.0, 2.0)
+	# 3. Snap actors to their designated starting corners inside the world
+	active_attacker.position = attacker_start.position
+	active_defender.position = defender_start.position
+	
+	# 4. Ensure they are facing each other
+	if active_attacker.has_method("set_facing"):
+		active_attacker.set_facing("right")
+	if active_defender.has_method("set_facing"):
+		active_defender.set_facing("left")
 
 func _spawn_actors() -> bool:
 	# 1. Spawn Attacker (Left Side, Facing Right)
 	if _attacker_data and _attacker_data.battle_actor_scene:
 		active_attacker = _attacker_data.battle_actor_scene.instantiate() as BattleActor
-		left_spawn.add_child(active_attacker)
+		battle_world.add_child(active_attacker)
 		# Ensure their position is snapped exactly to the marker
 		active_attacker.position = Vector2.ZERO 
 		active_attacker.setup_from_combat_snapshot(_attacker_data, _attacker_stats, true)
@@ -78,7 +80,7 @@ func _spawn_actors() -> bool:
 	# 2. Spawn Defender (Right Side, Facing Left)
 	if _defender_data and _defender_data.battle_actor_scene:
 		active_defender = _defender_data.battle_actor_scene.instantiate() as BattleActor
-		right_spawn.add_child(active_defender)
+		battle_world.add_child(active_defender)
 		active_defender.position = Vector2.ZERO
 		active_defender.setup_from_combat_snapshot(_defender_data, _defender_stats, false)
 	else:
