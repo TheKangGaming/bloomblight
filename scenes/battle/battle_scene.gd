@@ -1,5 +1,8 @@
 extends CanvasLayer
 
+signal strike_impact
+signal animation_finished_playing
+
 @onready var left_spawn: Marker2D = $LeftSpawn
 @onready var right_spawn: Marker2D = $RightSpawn
 
@@ -79,37 +82,44 @@ func _spawn_actors() -> bool:
 	return true # Tell _ready() it's safe to proceed!
 
 func _execute_battle_sequence() -> void:
+	# A dramatic pause as the arena fades in
 	await get_tree().create_timer(0.5).timeout
-
-	# --- PHASE 1: ATTACKER STRIKES ---
-	active_attacker.play_attack()
-	await get_tree().create_timer(0.4).timeout
-
-	if not _attacker_hit:
-		active_defender.play_evade()
-	elif not _defender_survived:
-		active_defender.play_death()
-	else:
-		active_defender.play_hit()
-
-	await get_tree().create_timer(0.8).timeout
-
-	# --- PHASE 2: DEFENDER COUNTERS ---
-	if _defender_can_counter:
-		active_defender.play_attack()
-		await get_tree().create_timer(0.4).timeout
-
-		if not _defender_hit:
-			active_attacker.play_evade()
-		elif not _attacker_survived:
-			active_attacker.play_death()
+	
+	# THE MOVIE PLAYER: Iterate through the pre-calculated script!
+	for strike in payload.strikes:
+		
+		# 1. Figure out who is swinging and who is getting hit
+		var striker: BattleActor = active_attacker if strike.is_attacker_striking else active_defender
+		var target: BattleActor = active_defender if strike.is_attacker_striking else active_attacker
+		
+		# 2. Initiate the attack animation
+		striker.play_attack()
+		
+		# 3. Wait for the EXACT frame the weapon connects
+		await striker.strike_impact
+		
+		# 4. The Reaction
+		if strike.is_hit:
+			# TODO: Spawn a floating damage number UI here! (strike.damage_dealt)
+			if strike.target_survived:
+				target.play_hit()
+			else:
+				target.play_death()
 		else:
-			active_attacker.play_hit()
+			# TODO: Spawn a "Miss!" UI here!
+			if target.has_method("play_evade"):
+				target.play_evade()
+			else:
+				target.play_hit() # Fallback if you don't have a dodge animation yet
+				
+		# 5. Wait for the attacker to finish their follow-through
+		await striker.animation_finished_playing
+		
+		# A tiny buffer between strikes so they don't blend together
+		await get_tree().create_timer(0.2).timeout
 
-		await get_tree().create_timer(0.8).timeout
-
-	# --- PHASE 3: RETURN ---
-	await get_tree().create_timer(0.4).timeout
+	# The script is over! Let the dust settle, then close the overlay.
+	await get_tree().create_timer(0.6).timeout
 	_return_to_map()
 	
 func _return_to_map() -> void:

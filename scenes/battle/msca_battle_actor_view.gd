@@ -2,9 +2,28 @@ extends Node2D
 
 # Point this to wherever your MSCA AnimationTree controller is in the child scene
 @onready var msca_player = $Player # Adjust this path to point to your MSCA visual rig!
+@onready var parent_actor = get_parent()
+@onready var anim_player: AnimationPlayer = $Player/SpriteLayers/AnimationPlayer
 
 var _character_data: CharacterData
 var _facing := Vector2.RIGHT
+
+func _ready() -> void:
+	# (Keep whatever you already have in _ready here, then add:)
+	
+	# Automatically listen for the built-in Godot completion signal
+	if anim_player:
+		anim_player.animation_finished.connect(_on_anim_finished)
+
+# 1. The automatic completion trigger
+func _on_anim_finished(anim_name: String) -> void:
+	if parent_actor and parent_actor.has_user_signal("animation_finished_playing"):
+		parent_actor.animation_finished_playing.emit()
+
+# 2. The manual impact trigger (The Animation Editor will call this!)
+func emit_impact() -> void:
+	if parent_actor and parent_actor.has_user_signal("strike_impact"):
+		parent_actor.strike_impact.emit()
 
 func apply_combat_snapshot(data: CharacterData, stats: UnitStats) -> void:
 	_character_data = data

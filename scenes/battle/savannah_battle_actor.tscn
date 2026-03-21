@@ -7,22 +7,22 @@
 
 [node name="01body" parent="VisualDriver/Player/SpriteLayers" parent_id_path=PackedInt32Array(1320460682) index="2" unique_id=1236124321]
 texture = ExtResource("2_13kv2")
-flip_h = true
-frame = 32
+frame = 133
 
 [node name="farmer_1h_weapon" parent="VisualDriver/Player/SpriteLayers" parent_id_path=PackedInt32Array(1320460682) index="5" unique_id=772274409]
 visible = true
+offset = Vector2(0, -10)
 
 [node name="farmer_bow" parent="VisualDriver/Player/SpriteLayers" parent_id_path=PackedInt32Array(1320460682) index="6" unique_id=759977788]
-rotation = 0.0
-offset = Vector2(0, -10)
-frame = 3
+rotation = 1.5707964
+offset = Vector2(-2, 0)
+frame = 0
 
 [node name="32x32_anims" parent="VisualDriver/Player/SpriteLayers" parent_id_path=PackedInt32Array(1320460682) index="9" unique_id=1271317916]
-offset = Vector2(-8, -10)
+offset = Vector2(0, -2)
 
 [node name="64x64_anims" parent="VisualDriver/Player/SpriteLayers" parent_id_path=PackedInt32Array(1320460682) index="10" unique_id=1705665691]
-offset = Vector2(-8, -10)
+offset = Vector2(0, -2)
 
 [node name="slash_effects" parent="VisualDriver/Player/SpriteLayers" parent_id_path=PackedInt32Array(1320460682) index="11" unique_id=1001389866]
 visible = true

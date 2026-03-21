@@ -854,35 +854,13 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	# 1. Pack the briefcase FIRST
 	var payload := CombatManager.setup_combat(attacker, defender, terrain_modifier, distance)
 	
-	# 2. Check for null IMMEDIATELY
 	if payload == null:
 		push_error("GameBoard: Failed to build combat payload. Aborting combat transition.")
 		return false
 	
-	# 3. Add the Math (Temporary hardcoded test logic)
-	payload.attacker_hit = true
-	payload.attacker_crit = false
-	payload.attacker_damage_to_deal = 5
-	
-	# FIX: Use attack_range instead of max_range
-	var def_weapon = defender.character_data.equipped_weapon
-	var def_range = def_weapon.attack_range if def_weapon else 1
-	
-	payload.defender_can_counter = (distance <= def_range)
-	payload.defender_hit = payload.defender_can_counter
-	payload.defender_crit = false
-	
-	var def_hp = defender.current_stats.hp if defender.current_stats else 10
-	payload.defender_survived = (def_hp - payload.attacker_damage_to_deal > 0)
-	
-	var atk_hp = attacker.current_stats.hp if attacker.current_stats else 10
-	payload.attacker_survived = true
-	
-	if payload.defender_can_counter and payload.defender_hit and payload.defender_survived:
-		payload.defender_damage_to_deal = 3
-		payload.attacker_survived = (atk_hp - payload.defender_damage_to_deal > 0)
-	else:
-		payload.defender_damage_to_deal = 0
+	# 2. Ask the Calculator to roll the dice and write the combat script!
+	var strikes := CombatCalculator.resolve_combat(attacker, defender, distance)
+	payload.strikes = strikes
 
 	# 3. Clean up the map UI so it isn't stuck open when we return
 	_target_unit_for_forecast = null
@@ -902,11 +880,27 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	await TransitionManager.overlay_closed
 	
 	# --- 3. APPLY THE ACTUAL COMBAT RESULTS ---
-	defender.apply_battle_result_damage(payload.attacker_damage_to_deal)
-	
-	if payload.defender_can_counter and payload.defender_survived:
-		attacker.apply_battle_result_damage(payload.defender_damage_to_deal)
-
+	# Iterate through the script and apply the exact damage that was rolled
+	for strike in payload.strikes:
+		if strike.is_attacker_striking:
+			defender.current_stats.hp -= strike.damage_dealt
+		else:
+			attacker.current_stats.hp -= strike.damage_dealt
+			
+	# Check for deaths and remove them from the tactical map
+	if defender.current_stats.hp <= 0:
+		if defender.has_method("die"):
+			defender.die() 
+		else:
+			defender.queue_free()
+			
+	if attacker.current_stats.hp <= 0:
+		if attacker.has_method("die"):
+			attacker.die()
+		else:
+			attacker.queue_free()
+			
+			# The battle is fully resolved, hand control back to the caller!
 	return true
 
 ## Generates a miniature, scaled-down Strategy RPG preview window
