@@ -7,24 +7,8 @@ var defender_data: CharacterData
 var attacker_is_player: bool = false
 var defender_is_player: bool = false
 
-# --- The Return Ticket ---
-var map_scene_path: String = ""
-
-# --- The Combat Math ---
-var attacker_damage_to_deal: int = 0
-var defender_damage_to_deal: int = 0
-
-var attacker_hit: bool = true
-var defender_hit: bool = true
-
-var attacker_crit: bool = false
-var defender_crit: bool = false
-
-var attacker_survived: bool = true
-var defender_survived: bool = true
-
-# --- The Rules ---
-var defender_can_counter: bool = false
+# The entire combat sequence, pre-calculated and ordered!
+var strikes: Array[CombatStrike] = []
 
 # Runtime stat snapshots
 var attacker_stats: UnitStats
