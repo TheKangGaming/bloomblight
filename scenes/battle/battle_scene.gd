@@ -54,7 +54,7 @@ func _setup_staging() -> void:
 	battle_world.global_position = screen_center
 	
 	# 2. "Zoom" in by scaling the world! (Adjust these numbers for perfect framing)
-	battle_world.scale = Vector2(2.5, 2.5) 
+	battle_world.scale = Vector2(4, 4) 
 	
 	# 3. Snap actors to their designated starting corners inside the world
 	active_attacker.position = attacker_start.position

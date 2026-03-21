@@ -1,6 +1,7 @@
-[gd_scene format=3 uid="uid://qncwrt0hsivb"]
+[gd_scene format=4 uid="uid://qncwrt0hsivb"]
 
 [ext_resource type="Script" uid="uid://ddfo2x3m1ulaj" path="res://scenes/battle/battle_scene.gd" id="1_3hov6"]
+[ext_resource type="TileSet" uid="uid://b8uqxw86b8u65" path="res://Epic_Tileset.tres" id="2_6iigb"]
 
 [node name="BattleScene" type="CanvasLayer" unique_id=104459711]
 process_mode = 3
@@ -8,6 +9,10 @@ layer = 10
 script = ExtResource("1_3hov6")
 
 [node name="BattleWorld" type="Node2D" parent="." unique_id=510328595]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="BattleWorld" unique_id=842336525]
+tile_map_data = PackedByteArray("AAD7/wAAAgAXACMAAAD8/wAAAgAWACIAAAD9/wAAAgAXACMAAAD+/wAAAgAVACMAAAD//wAAAgAWACQAAAAAAAAAAgAWACIAAAABAAAAAgAWACQAAAACAAAAAgAXACMAAAADAAAAAgAWACMAAAAEAAAAAgAXACMAAAAEAAEAAgAWACUAAAADAAEAAgAWACUAAAACAAEAAgAWACUAAAABAAEAAgAWACkAAAAAAAEAAgAWACUAAAD//wEAAgAYACkAAAD+/wEAAgAYACkAAAD9/wEAAgAWACkAAAD8/wEAAgAXACkAAAD7/wEAAgAYACkAAAD7////AgAWACQAAAD8////AgAVACMAAAD9////AgAWACQAAAD+////AgAWACMAAAD/////AgAWACQAAAAAAP//AgAWACQAAAABAP//AgAXACMAAAACAP//AgAWACQAAAADAP//AgAXACMAAAAEAP//AgAWACIAAAD7//7/AgAVACkAAAD8//7/AgAWACEAAAD9//7/AgAWACEAAAD+//7/AgAVACkAAAD///7/AgAUACkAAAAAAP7/AgAWACEAAAABAP7/AgAWACEAAAACAP7/AgAWACEAAAADAP7/AgAWACEAAAAEAP7/AgAWACEAAAD6//7/AgAUACIAAAD6////AgAXACgAAAD6/wAAAgAUACMAAAD6/wEAAgAUACQAAAAFAP7/AgAXACEAAAAFAP//AgAWACgAAAAFAAAAAgAWACgAAAAFAAEAAgAXACUAAAA=")
+tile_set = ExtResource("2_6iigb")
 
 [node name="CenterAnchor" type="Marker2D" parent="BattleWorld" unique_id=1453056431]
 
@@ -22,16 +27,5 @@ position = Vector2(-40, 0)
 
 [node name="DefenderMelee" type="Marker2D" parent="BattleWorld" unique_id=982298957]
 position = Vector2(40, 0)
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=347300026]
-offset_right = 2556.0
-offset_bottom = 1443.0
-color = Color(0, 0, 0, 1)
-
-[node name="LeftSpawn" type="Marker2D" parent="." unique_id=1511196624]
-position = Vector2(1158, 442)
-
-[node name="RightSpawn" type="Marker2D" parent="." unique_id=1027645305]
-position = Vector2(1481, 442)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=997848474]
