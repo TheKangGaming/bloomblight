@@ -71,7 +71,8 @@ func _execute_battle_sequence() -> void:
 	await get_tree().create_timer(0.5).timeout
 	
 	# THE MOVIE PLAYER: Iterate through the pre-calculated script!
-	for strike in _combat_strikes:
+	for i in _combat_strikes.size():
+		var strike := _combat_strikes[i]
 		
 		# 1. Figure out who is swinging and who is getting hit
 		var striker: BattleActor = active_attacker if strike.is_attacker_striking else active_defender

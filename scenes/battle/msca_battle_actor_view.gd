@@ -3,26 +3,27 @@ extends Node2D
 # Point this to wherever your MSCA AnimationTree controller is in the child scene
 @onready var msca_player = $Player # Adjust this path to point to your MSCA visual rig!
 @onready var parent_actor = get_parent()
-@onready var anim_player: AnimationPlayer = $Player/SpriteLayers/AnimationPlayer
+@onready var sprite_layers: Node = $Player/SpriteLayers
 
 var _character_data: CharacterData
 var _facing := Vector2.RIGHT
+var _pending_attack_state := ""
 
 func _ready() -> void:
-	# (Keep whatever you already have in _ready here, then add:)
-	
-	# Automatically listen for the built-in Godot completion signal
-	if anim_player:
-		anim_player.animation_finished.connect(_on_anim_finished)
+	if sprite_layers and sprite_layers.has_signal("animation_state_finished"):
+		sprite_layers.connect("animation_state_finished", Callable(self, "_on_animation_state_finished"))
 
-# 1. The automatic completion trigger
-func _on_anim_finished(anim_name: String) -> void:
-	if parent_actor and parent_actor.has_user_signal("animation_finished_playing"):
+func _on_animation_state_finished(state_name: String, _wait_time: float = 0.0) -> void:
+	if state_name != _pending_attack_state:
+		return
+
+	_pending_attack_state = ""
+
+	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
 		parent_actor.animation_finished_playing.emit()
 
-# 2. The manual impact trigger (The Animation Editor will call this!)
 func emit_impact() -> void:
-	if parent_actor and parent_actor.has_user_signal("strike_impact"):
+	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
 		parent_actor.strike_impact.emit()
 
 func apply_combat_snapshot(data: CharacterData, stats: UnitStats) -> void:
@@ -54,21 +55,22 @@ func play_idle() -> void:
 func play_attack() -> void:
 	if not msca_player or not msca_player.has_method("travel_to_anim"):
 		return
-		
-	# Smart Animation Routing based on Weapon Type
-	var weapon_type = ""
+
+	_pending_attack_state = _get_attack_animation_name()
+	msca_player.travel_to_anim(_pending_attack_state, _facing)
+
+func _get_attack_animation_name() -> String:
+	var weapon_type := ""
 	if _character_data and _character_data.equipped_weapon:
-		# Assuming your WeaponData has a way to check its type/category
-		weapon_type = _character_data.equipped_weapon.weapon_type 
-		
+		weapon_type = _character_data.equipped_weapon.weapon_type
+
 	match weapon_type:
 		"Bow":
-			msca_player.travel_to_anim("BowShot", _facing)
+			return "BowShot"
 		"Tome", "Staff":
-			msca_player.travel_to_anim("CastSpell1", _facing)
+			return "CastSpell1"
 		_:
-			# Default to melee for Swords, Axes, Lances, etc.
-			msca_player.travel_to_anim("StrikeForehandOneHandWeapon", _facing)
+			return "StrikeForehandOneHandWeapon"
 
 func play_hit() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
