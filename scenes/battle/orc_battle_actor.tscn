@@ -41,6 +41,7 @@ _data = {
 
 [node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
 texture = ExtResource("2_0gj1f")
+offset = Vector2(0, -36)
 
 [node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1" unique_id=414594588]
 libraries/ = SubResource("AnimationLibrary_0gj1f")
