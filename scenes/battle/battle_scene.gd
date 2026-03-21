@@ -26,6 +26,10 @@ var _defender_will_counter := false
 var _attacker_has_advanced := false
 var _defender_has_advanced := false
 
+const APPROACH_DURATION := 0.7
+const APPROACH_SETTLE_TIME := 0.12
+const RETREAT_DURATION := 0.35
+
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
 		
@@ -199,18 +203,25 @@ func _play_approach() -> void:
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var movement_happened = false
 	
-	# The opener only pre-positions the attacker. The defender should not
-	# step in early just because they might counter later.
+	# If a combatant is melee in this exchange, bring them into the clash
+	# space up front so melee-vs-melee reads as a shared approach.
 	if _attacker_is_melee:
 		active_attacker.play_run()
-		tween.tween_property(active_attacker, "position", attacker_melee.position, 0.4)
+		tween.tween_property(active_attacker, "position", attacker_melee.position, APPROACH_DURATION)
 		_attacker_has_advanced = true
+		movement_happened = true
+
+	if _defender_will_counter and _defender_is_melee:
+		active_defender.play_run()
+		tween.tween_property(active_defender, "position", defender_melee.position, APPROACH_DURATION)
+		_defender_has_advanced = true
 		movement_happened = true
 		
 	if movement_happened:
 		await tween.finished
 		if _attacker_is_melee: active_attacker.play_idle()
-		await get_tree().create_timer(0.1).timeout
+		if _defender_will_counter and _defender_is_melee: active_defender.play_idle()
+		await get_tree().create_timer(APPROACH_SETTLE_TIME).timeout
 
 func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
 	var tween = create_tween().set_parallel(true)
@@ -220,12 +231,12 @@ func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
 	# Only hop back if they actually dashed forward in the first place!
 	if attacker_survived and _attacker_has_advanced and is_instance_valid(active_attacker):
 		active_attacker.play_jump()
-		tween.tween_property(active_attacker, "position", attacker_start.position, 0.3)
+		tween.tween_property(active_attacker, "position", attacker_start.position, RETREAT_DURATION)
 		movement_happened = true
 		
 	if defender_survived and _defender_has_advanced and is_instance_valid(active_defender):
 		active_defender.play_jump()
-		tween.tween_property(active_defender, "position", defender_start.position, 0.3)
+		tween.tween_property(active_defender, "position", defender_start.position, RETREAT_DURATION)
 		movement_happened = true
 		
 	if movement_happened:
@@ -259,10 +270,10 @@ func _advance_actor_to_melee(actor: BattleActor, destination: Vector2) -> void:
 	actor.play_run()
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(actor, "position", destination, 0.35)
+	tween.tween_property(actor, "position", destination, APPROACH_DURATION)
 	await tween.finished
 	actor.play_idle()
-	await get_tree().create_timer(0.08).timeout
+	await get_tree().create_timer(APPROACH_SETTLE_TIME).timeout
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map
