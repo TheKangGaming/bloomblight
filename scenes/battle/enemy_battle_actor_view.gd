@@ -12,17 +12,20 @@ func _ready() -> void:
 		anim_player.animation_finished.connect(_on_anim_finished)
 
 func _on_anim_finished(_anim_name: String) -> void:
-	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
-		parent_actor.animation_finished_playing.emit()
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()
 
 func emit_impact() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
 		parent_actor.strike_impact.emit()
 
-func set_facing(dir: Vector2) -> void:
-	if sprite:
-		# Assuming your monster sprites are drawn facing LEFT by default:
-		sprite.flip_h = (dir == Vector2.RIGHT) 
+func set_facing(direction: Vector2) -> void:
+	# A simple sprite flip based on the X direction!
+	if direction == Vector2.LEFT:
+		scale.x = -1 # Flip horizontally
+	elif direction == Vector2.RIGHT:
+		scale.x = 1  # Standard facing
+
 func play_idle() -> void:
 	if anim_player and anim_player.has_animation("idle"):
 		anim_player.play("idle")
@@ -73,11 +76,11 @@ func _fake_attack_animation() -> void:
 	emit_impact()
 	
 	await get_tree().create_timer(0.3).timeout
-	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
-		parent_actor.animation_finished_playing.emit()
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()
 
 func _fake_reaction_animation(_kind: String) -> void:
 	# Reactions should not emit an attack impact.
 	await get_tree().create_timer(0.3).timeout
-	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
-		parent_actor.animation_finished_playing.emit()
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()

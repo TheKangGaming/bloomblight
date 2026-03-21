@@ -95,9 +95,6 @@ static func resolve_combat(attacker: Unit, defender: Unit, distance: int) -> Arr
 	var atk_kind = get_attack_kind.call(attacker.character_data.equipped_weapon)
 	var def_kind = get_attack_kind.call(defender.character_data.equipped_weapon)
 	
-	var current_defender_hp = defender.current_stats.hp
-	var current_attacker_hp = attacker.current_stats.hp
-	
 	# --- Helper Function to Process a Single Strike ---
 	var process_strike = func(is_attacker: bool, dmg: int, hit_chance: int, crit_chance: int, is_counter: bool, is_follow_up: bool) -> bool:
 		var strike = CombatStrike.new()
@@ -115,16 +112,16 @@ static func resolve_combat(attacker: Unit, defender: Unit, distance: int) -> Arr
 			strike.damage_dealt = dmg * 3 if strike.is_crit else dmg
 			
 			if is_attacker:
-				current_defender_hp -= strike.damage_dealt
-				strike.target_hp_after_strike = current_defender_hp
-				strike.target_survived = current_defender_hp > 0
+				hp_state["defender"] = int(hp_state["defender"]) - strike.damage_dealt
+				strike.target_hp_after_strike = int(hp_state["defender"])
+				strike.target_survived = int(hp_state["defender"]) > 0
 			else:
-				current_attacker_hp -= strike.damage_dealt
-				strike.target_hp_after_strike = current_attacker_hp
-				strike.target_survived = current_attacker_hp > 0
+				hp_state["attacker"] = int(hp_state["attacker"]) - strike.damage_dealt
+				strike.target_hp_after_strike = int(hp_state["attacker"])
+				strike.target_survived = int(hp_state["attacker"]) > 0
 		else:
 			strike.damage_dealt = 0
-			strike.target_hp_after_strike = current_defender_hp if is_attacker else current_attacker_hp
+			strike.target_hp_after_strike = int(hp_state["defender"] if is_attacker else hp_state["attacker"])
 			strike.target_survived = true
 			
 		strikes.append(strike)

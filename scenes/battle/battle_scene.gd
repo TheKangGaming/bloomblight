@@ -20,6 +20,11 @@ var _defender_stats: UnitStats
 var _combat_strikes: Array[CombatStrike] = []
 var active_attacker: BattleActor
 var active_defender: BattleActor
+var _attacker_is_melee := false
+var _defender_is_melee := false
+var _defender_will_counter := false
+var _attacker_has_advanced := false
+var _defender_has_advanced := false
 
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
@@ -60,11 +65,11 @@ func _setup_staging() -> void:
 	active_attacker.position = attacker_start.position
 	active_defender.position = defender_start.position
 	
-	# 4. Ensure they are facing each other
+	# 4. Ensure they are facing each other using Vectors!
 	if active_attacker.has_method("set_facing"):
-		active_attacker.set_facing("right")
+		active_attacker.set_facing(Vector2.RIGHT)
 	if active_defender.has_method("set_facing"):
-		active_defender.set_facing("left")
+		active_defender.set_facing(Vector2.LEFT)
 
 func _spawn_actors() -> bool:
 	# 1. Spawn Attacker (Left Side, Facing Right)
@@ -108,6 +113,9 @@ func _execute_battle_sequence() -> void:
 		
 		var striker: BattleActor = active_attacker if strike.is_attacker_striking else active_defender
 		var target: BattleActor = active_defender if strike.is_attacker_striking else active_attacker
+		var waits_for_reaction := false
+
+		await _prepare_striker_for_strike(strike)
 		
 		# Initiate the attack animation
 		striker.play_attack()
@@ -134,6 +142,7 @@ func _execute_battle_sequence() -> void:
 		if strike.is_hit:
 			# -> SPAWN THE NUMBER!
 			_spawn_damage_popup(target, strike)
+			waits_for_reaction = true
 			
 			if strike.target_survived:
 				target.play_hit()
@@ -146,6 +155,7 @@ func _execute_battle_sequence() -> void:
 		else:
 			# -> SPAWN THE MISS!
 			_spawn_damage_popup(target, strike)
+			waits_for_reaction = true
 			
 			if target.has_method("play_evade"):
 				target.play_evade()
@@ -153,18 +163,9 @@ func _execute_battle_sequence() -> void:
 				target.play_hit() 
 				
 		# Wait for the attacker to finish their swing follow-through
-		await striker.animation_finished_playing
-		
-		# --- FIX: REACTION BUFFER ---
-		# Give the target time to visually finish their reaction before the next 
-		# strike or retreat begins! This prevents animations from clipping.
-		if not strike.target_survived:
-			await get_tree().create_timer(0.8).timeout # Death animations take the longest!
-		elif not strike.is_hit:
-			await get_tree().create_timer(0.4).timeout # Evades take a bit of time
-		else:
-			await get_tree().create_timer(0.15).timeout # Standard hits are usually quick
-		# ----------------------------
+		await striker.wait_for_tracked_action()
+		if waits_for_reaction:
+			await target.wait_for_tracked_action()
 		
 		# A tiny buffer between strikes so they don't blend together
 		await get_tree().create_timer(0.1).timeout
@@ -176,12 +177,13 @@ func _execute_battle_sequence() -> void:
 	await get_tree().create_timer(0.5).timeout
 	_return_to_map()
 	
-# --- THE MOVEMENT DIRECTORS ---
-var _attacker_is_melee := false
-var _defender_is_melee := false
-var _defender_will_counter := false
-
 func _determine_combatants_reach() -> void:
+	_attacker_is_melee = false
+	_defender_is_melee = false
+	_defender_will_counter = false
+	_attacker_has_advanced = false
+	_defender_has_advanced = false
+
 	# Peek at the script to see who is using a Melee weapon!
 	for strike in _combat_strikes:
 		if strike.is_attacker_striking:
@@ -197,21 +199,17 @@ func _play_approach() -> void:
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var movement_happened = false
 	
-	# Only dash if they are actually using a melee weapon!
+	# The opener only pre-positions the attacker. The defender should not
+	# step in early just because they might counter later.
 	if _attacker_is_melee:
 		active_attacker.play_run()
 		tween.tween_property(active_attacker, "position", attacker_melee.position, 0.4)
-		movement_happened = true
-		
-	if _defender_will_counter and _defender_is_melee:
-		active_defender.play_run()
-		tween.tween_property(active_defender, "position", defender_melee.position, 0.4)
+		_attacker_has_advanced = true
 		movement_happened = true
 		
 	if movement_happened:
 		await tween.finished
 		if _attacker_is_melee: active_attacker.play_idle()
-		if _defender_will_counter and _defender_is_melee: active_defender.play_idle()
 		await get_tree().create_timer(0.1).timeout
 
 func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
@@ -220,22 +218,51 @@ func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
 	var movement_happened = false
 	
 	# Only hop back if they actually dashed forward in the first place!
-	if attacker_survived and _attacker_is_melee and is_instance_valid(active_attacker):
+	if attacker_survived and _attacker_has_advanced and is_instance_valid(active_attacker):
 		active_attacker.play_jump()
 		tween.tween_property(active_attacker, "position", attacker_start.position, 0.3)
 		movement_happened = true
 		
-	if defender_survived and _defender_will_counter and _defender_is_melee and is_instance_valid(active_defender):
+	if defender_survived and _defender_has_advanced and is_instance_valid(active_defender):
 		active_defender.play_jump()
 		tween.tween_property(active_defender, "position", defender_start.position, 0.3)
 		movement_happened = true
 		
 	if movement_happened:
 		await tween.finished
-		if attacker_survived and _attacker_is_melee and is_instance_valid(active_attacker):
+		if attacker_survived and _attacker_has_advanced and is_instance_valid(active_attacker):
 			active_attacker.play_idle()
-		if defender_survived and _defender_will_counter and _defender_is_melee and is_instance_valid(active_defender):
+		if defender_survived and _defender_has_advanced and is_instance_valid(active_defender):
 			active_defender.play_idle()
+
+func _prepare_striker_for_strike(strike: CombatStrike) -> void:
+	if strike.attack_kind != CombatStrike.AttackKind.MELEE:
+		return
+
+	if strike.is_attacker_striking:
+		if _attacker_has_advanced:
+			return
+		await _advance_actor_to_melee(active_attacker, attacker_melee.position)
+		_attacker_has_advanced = true
+		return
+
+	if _defender_has_advanced:
+		return
+
+	await _advance_actor_to_melee(active_defender, defender_melee.position)
+	_defender_has_advanced = true
+
+func _advance_actor_to_melee(actor: BattleActor, destination: Vector2) -> void:
+	if not is_instance_valid(actor):
+		return
+
+	actor.play_run()
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(actor, "position", destination, 0.35)
+	await tween.finished
+	actor.play_idle()
+	await get_tree().create_timer(0.08).timeout
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map

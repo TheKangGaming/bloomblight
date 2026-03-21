@@ -7,20 +7,20 @@ extends Node2D
 
 var _character_data: CharacterData
 var _facing := Vector2.RIGHT
-var _pending_attack_state := ""
+var _pending_finish_state := ""
 
 func _ready() -> void:
 	if sprite_layers and sprite_layers.has_signal("animation_state_finished"):
 		sprite_layers.connect("animation_state_finished", Callable(self, "_on_animation_state_finished"))
 
 func _on_animation_state_finished(state_name: String, _wait_time: float = 0.0) -> void:
-	if state_name != _pending_attack_state:
+	if state_name != _pending_finish_state:
 		return
 
-	_pending_attack_state = ""
+	_pending_finish_state = ""
 
-	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
-		parent_actor.animation_finished_playing.emit()
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()
 
 func emit_impact() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
@@ -50,16 +50,19 @@ func set_facing(dir: Vector2) -> void:
 
 func play_idle() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
+		_pending_finish_state = ""
 		msca_player.travel_to_anim("Idle", _facing)
 
 func play_run() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
+		_pending_finish_state = ""
 		# Note: Check your MSCA AnimationTree! It might be named "Walk" or "Run" 
 		# depending on which specific MSCA base pack you are using.
 		msca_player.travel_to_anim("Run", _facing)
 		
 func play_jump() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
+		_pending_finish_state = ""
 		# Double check this exact string in your AnimationTree!
 		msca_player.travel_to_anim("Jump", _facing)
 
@@ -67,8 +70,8 @@ func play_attack() -> void:
 	if not msca_player or not msca_player.has_method("travel_to_anim"):
 		return
 
-	_pending_attack_state = _get_attack_animation_name()
-	msca_player.travel_to_anim(_pending_attack_state, _facing)
+	_pending_finish_state = _get_attack_animation_name()
+	msca_player.travel_to_anim(_pending_finish_state, _facing)
 
 func _get_attack_animation_name() -> String:
 	var weapon_type := ""
@@ -85,12 +88,15 @@ func _get_attack_animation_name() -> String:
 
 func play_hit() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
+		_pending_finish_state = "Hurt"
 		msca_player.travel_to_anim("Hurt", _facing)
 
 func play_death() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
+		_pending_finish_state = "DeathBounce"
 		msca_player.travel_to_anim("DeathBounce", Vector2.DOWN)
 		
 func play_evade() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
+		_pending_finish_state = "Evade"
 		msca_player.travel_to_anim("Evade", _facing)
