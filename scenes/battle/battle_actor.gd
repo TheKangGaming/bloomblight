@@ -58,3 +58,7 @@ func play_death() -> void:
 func play_evade() -> void:
 	if _visual_driver and _visual_driver.has_method("play_evade"):
 		_visual_driver.play_evade()
+		
+func set_facing(direction: String) -> void:
+	if _visual_driver and _visual_driver.has_method("set_facing"):
+		_visual_driver.set_facing(direction)
