@@ -1,6 +1,8 @@
 class_name BattleActor extends Node2D
 
+@warning_ignore("unused_signal")
 signal strike_impact
+@warning_ignore("unused_signal")
 signal animation_finished_playing
 
 var _character_data: CharacterData

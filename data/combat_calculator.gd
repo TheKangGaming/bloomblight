@@ -80,8 +80,10 @@ static func resolve_combat(attacker: Unit, defender: Unit, distance: int) -> Arr
 	var forecast = get_combat_forecast(attacker, defender, distance)
 	
 	# Track the HP dynamically as the strikes resolve
-	var current_defender_hp = defender.current_stats.hp
-	var current_attacker_hp = attacker.current_stats.hp
+	var hp_state := {
+		"defender": defender.current_stats.hp,
+		"attacker": attacker.current_stats.hp
+	}
 	
 	# --- Helper Function to Process a Single Strike ---
 	var process_strike = func(is_attacker: bool, dmg: int, hit_chance: int, crit_chance: int, is_counter: bool, is_follow_up: bool) -> bool:
@@ -100,17 +102,17 @@ static func resolve_combat(attacker: Unit, defender: Unit, distance: int) -> Arr
 			
 			# Apply damage to the correct target
 			if is_attacker:
-				current_defender_hp -= strike.damage_dealt
-				strike.target_hp_after_strike = current_defender_hp
-				strike.target_survived = current_defender_hp > 0
+				hp_state["defender"] = int(hp_state["defender"]) - strike.damage_dealt
+				strike.target_hp_after_strike = int(hp_state["defender"])
+				strike.target_survived = int(hp_state["defender"]) > 0
 			else:
-				current_attacker_hp -= strike.damage_dealt
-				strike.target_hp_after_strike = current_attacker_hp
-				strike.target_survived = current_attacker_hp > 0
+				hp_state["attacker"] = int(hp_state["attacker"]) - strike.damage_dealt
+				strike.target_hp_after_strike = int(hp_state["attacker"])
+				strike.target_survived = int(hp_state["attacker"]) > 0
 		else:
 			# Missed!
 			strike.damage_dealt = 0
-			strike.target_hp_after_strike = current_defender_hp if is_attacker else current_attacker_hp
+			strike.target_hp_after_strike = int(hp_state["defender"] if is_attacker else hp_state["attacker"])
 			strike.target_survived = true
 			
 		strikes.append(strike)

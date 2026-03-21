@@ -48,6 +48,7 @@ var last_battle_result := {
 	"returned_at_unix": 0
 }
 
+@warning_ignore("unused_signal")
 signal day_changed(new_day: int)
 
 # --- TIME & CALENDAR STATE ---

@@ -4,14 +4,14 @@ extends Node2D
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 @onready var parent_actor = get_parent()
 
-func apply_combat_snapshot(data: CharacterData, stats: UnitStats) -> void:
+func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats) -> void:
 	pass # In the future, you can swap monster textures or colors here!
 
 func _ready() -> void:
 	if anim_player:
 		anim_player.animation_finished.connect(_on_anim_finished)
 
-func _on_anim_finished(anim_name: String) -> void:
+func _on_anim_finished(_anim_name: String) -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
 		parent_actor.animation_finished_playing.emit()
 
@@ -57,7 +57,7 @@ func _fake_attack_animation() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
 		parent_actor.animation_finished_playing.emit()
 
-func _fake_reaction_animation(kind: String) -> void:
+func _fake_reaction_animation(_kind: String) -> void:
 	# Reactions should not emit an attack impact.
 	await get_tree().create_timer(0.3).timeout
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("animation_finished_playing"):
