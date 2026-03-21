@@ -1,5 +1,8 @@
 class_name BattleActor extends Node2D
 
+signal strike_impact
+signal animation_finished_playing
+
 var _character_data: CharacterData
 var _runtime_stats: UnitStats
 var _is_attacker: bool

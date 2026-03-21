@@ -880,25 +880,17 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	await TransitionManager.overlay_closed
 	
 	# --- 3. APPLY THE ACTUAL COMBAT RESULTS ---
-	# Iterate through the script and apply the exact damage that was rolled
+	# Iterate through the script and let the Unit script handle the exact damage!
 	for strike in payload.strikes:
 		if strike.is_attacker_striking:
-			defender.current_stats.hp -= strike.damage_dealt
+			if is_instance_valid(defender):
+				defender.apply_battle_result_damage(strike.damage_dealt)
 		else:
-			attacker.current_stats.hp -= strike.damage_dealt
-			
-	# Check for deaths and remove them from the tactical map
-	if defender.current_stats.hp <= 0:
-		if defender.has_method("die"):
-			defender.die() 
-		else:
-			defender.queue_free()
-			
-	if attacker.current_stats.hp <= 0:
-		if attacker.has_method("die"):
-			attacker.die()
-		else:
-			attacker.queue_free()
+			if is_instance_valid(attacker):
+				attacker.apply_battle_result_damage(strike.damage_dealt)
+
+	# (The manual queue_free / die() checks are DELETED here because 
+	# apply_battle_result_damage() already handles death natively!)
 			
 			# The battle is fully resolved, hand control back to the caller!
 	return true
