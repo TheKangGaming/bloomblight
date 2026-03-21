@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://btp0fm5m4wl8c"]
 
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_20oxd"]
-[ext_resource type="PackedScene" uid="uid://ceqn8w1yyldvk" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="2_4y01d"]
+[ext_resource type="PackedScene" uid="uid://b1kv632btcd6n" path="res://scenes/battle/orc_battle_actor.tscn" id="2_20oxd"]
 [ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="3_wp4wc"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="4_m6rwx"]
 
@@ -9,5 +9,5 @@
 script = ExtResource("4_m6rwx")
 display_name = "Orc"
 class_data = ExtResource("3_wp4wc")
-battle_actor_scene = ExtResource("2_4y01d")
+battle_actor_scene = ExtResource("2_20oxd")
 metadata/_custom_type_script = "uid://dinfajkodigdx"

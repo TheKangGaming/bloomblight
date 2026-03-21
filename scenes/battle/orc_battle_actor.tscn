@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://b1kv632btcd6n"]
+
+[ext_resource type="PackedScene" uid="uid://ceqn8w1yyldvk" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="1_v4aar"]
+[ext_resource type="Texture2D" uid="uid://d1207snsbh1hs" path="res://graphics/enemies/orc/orc melee - all animations with fx.png" id="2_0gj1f"]
+
+[sub_resource type="Animation" id="Animation_v4aar"]
+resource_name = "attack"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(),
+"transitions": PackedFloat32Array(),
+"update": 1,
+"values": []
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.43),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"emit_impact"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_0gj1f"]
+_data = {
+&"attack": SubResource("Animation_v4aar")
+}
+
+[node name="EnemyBattleActorBase" unique_id=740323681 instance=ExtResource("1_v4aar")]
+
+[node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
+texture = ExtResource("2_0gj1f")
+
+[node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1" unique_id=414594588]
+libraries/ = SubResource("AnimationLibrary_0gj1f")
