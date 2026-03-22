@@ -10,5 +10,7 @@ script = ExtResource("1_rr3n2")
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1653555840]
 
 [node name="EffectAnchor" type="Marker2D" parent="." unique_id=659649175]
+position = Vector2(0, -30)
 
 [node name="DamageAnchor" type="Marker2D" parent="." unique_id=1559358158]
+position = Vector2(0, -40)

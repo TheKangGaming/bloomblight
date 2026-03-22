@@ -71,11 +71,15 @@ func set_facing(direction: Vector2) -> void:
 		_visual_driver.set_facing(direction)
 
 func get_damage_anchor_position() -> Vector2:
+	if _visual_driver and _visual_driver.has_method("get_damage_anchor_position"):
+		return _visual_driver.get_damage_anchor_position()
 	if _damage_anchor:
 		return _damage_anchor.global_position
 	return global_position + Vector2(0.0, -40.0)
 
 func get_effect_anchor_position() -> Vector2:
+	if _visual_driver and _visual_driver.has_method("get_effect_anchor_position"):
+		return _visual_driver.get_effect_anchor_position()
 	if _effect_anchor:
 		return _effect_anchor.global_position
 	return global_position

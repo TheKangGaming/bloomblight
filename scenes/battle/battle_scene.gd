@@ -30,6 +30,7 @@ const APPROACH_DURATION := 0.7
 const APPROACH_SETTLE_TIME := 0.12
 const RETREAT_DURATION := 0.35
 const MELEE_STANDOFF := 80.0
+const EFFECT_VERTICAL_OFFSET := Vector2.ZERO
 
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
@@ -372,9 +373,9 @@ func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool) -
 
 	battle_world.add_child(arrow)
 	
-	var start_pos = striker.get_effect_anchor_position()
+	var start_pos = striker.get_effect_anchor_position() + EFFECT_VERTICAL_OFFSET
 	arrow.global_position = start_pos
-	var target_pos = target.get_damage_anchor_position()
+	var target_pos = target.get_damage_anchor_position() + EFFECT_VERTICAL_OFFSET
 	
 	if is_hit:
 		arrow.rotation = (target_pos - start_pos).angle()
@@ -412,7 +413,7 @@ func _play_magic_vfx(striker: BattleActor, target: BattleActor, is_hit: bool) ->
 	battle_world.add_child(magic)
 	
 	# Start at their feet/effect anchor
-	var spawn_pos = target.get_effect_anchor_position()
+	var spawn_pos = target.get_effect_anchor_position() + EFFECT_VERTICAL_OFFSET
 	
 	# WHIFF LOGIC: If it's a miss, offset the pillar so the player can read the whiff!
 	if not is_hit:

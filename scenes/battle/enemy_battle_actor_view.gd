@@ -87,3 +87,13 @@ func _fake_reaction_animation(_kind: String) -> void:
 	await get_tree().create_timer(0.3).timeout
 	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
 		parent_actor.finish_tracked_action()
+
+func get_effect_anchor_position() -> Vector2:
+	if sprite:
+		return sprite.global_position + Vector2(0.0, -30.0)
+	return global_position + Vector2(0.0, -30.0)
+
+func get_damage_anchor_position() -> Vector2:
+	if sprite:
+		return sprite.global_position + Vector2(0.0, -40.0)
+	return global_position + Vector2(0.0, -40.0)

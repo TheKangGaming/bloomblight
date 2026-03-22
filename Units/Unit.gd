@@ -85,6 +85,7 @@ var _is_walking := false:
 @onready var _sprite: Sprite2D = $PathFollow2D/Visuals/Sprite2D
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
+@onready var _visual_anim_player: AnimationPlayer = get_node_or_null("PathFollow2D/Visuals/AnimationPlayer")
 
 var health: int:
 	get:
@@ -127,6 +128,7 @@ func _ready() -> void:
 	_path_follow = $PathFollow2D
 	_sprite = $PathFollow2D/Visuals/Sprite2D
 	_anim_player = $AnimationPlayer
+	_visual_anim_player = get_node_or_null("PathFollow2D/Visuals/AnimationPlayer")
 
 	if current_stats == null:
 		current_stats = UnitStats.new()
@@ -160,6 +162,8 @@ func _ready() -> void:
 		move_state_machine = animation_tree.get("parameters/MoveStateMachine/playback")
 		move_state_machine.travel("idle")
 		animation_tree.set("parameters/MoveStateMachine/idle/blend_position", Vector2(0, 1))
+	elif _visual_anim_player and _visual_anim_player.has_animation("idle"):
+		_visual_anim_player.play("idle")
 
 
 func apply_runtime_stats(new_stats: UnitStats) -> void:
@@ -192,6 +196,8 @@ func _process(delta: float) -> void:
 			# Stop the walking animation!
 			if move_state_machine:
 				move_state_machine.travel("idle")
+			elif _visual_anim_player and _visual_anim_player.has_animation("idle"):
+				_visual_anim_player.play("idle")
 
 			# (Your existing cleanup code)
 			_path_follow.progress = 0.0
@@ -211,6 +217,12 @@ func walk_along(path: PackedVector2Array) -> void:
 	# 1. Start the walk animation!
 	if move_state_machine:
 		move_state_machine.travel("run")
+	elif _visual_anim_player:
+		if _visual_anim_player.has_animation("run_start") and _visual_anim_player.has_animation("run"):
+			_visual_anim_player.play("run_start")
+			_visual_anim_player.queue("run")
+		elif _visual_anim_player.has_animation("run"):
+			_visual_anim_player.play("run")
 
 	# CRITICAL: Clear the old path before drawing the new one!
 	curve.clear_points()

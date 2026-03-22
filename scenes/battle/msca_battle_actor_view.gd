@@ -4,6 +4,7 @@ extends Node2D
 @onready var msca_player = $Player # Adjust this path to point to your MSCA visual rig!
 @onready var parent_actor = get_parent()
 @onready var sprite_layers: Node = $Player/SpriteLayers
+@onready var body_sprite: Sprite2D = get_node_or_null("Player/SpriteLayers/01body")
 @onready var one_h_weapon: CanvasItem = $Player/SpriteLayers/farmer_1h_weapon
 @onready var bow_weapon: CanvasItem = $Player/SpriteLayers/farmer_bow
 
@@ -133,3 +134,16 @@ func _apply_weapon_visibility(mode: String) -> void:
 		one_h_weapon.visible = (mode == "one_h")
 	if bow_weapon:
 		bow_weapon.visible = (mode == "bow")
+
+func get_effect_anchor_position() -> Vector2:
+	if bow_weapon and bow_weapon.visible:
+		var bow_x := 12.0 if _facing == Vector2.RIGHT else -12.0
+		return bow_weapon.global_position + Vector2(bow_x, -20.0)
+	if body_sprite:
+		return body_sprite.global_position + Vector2(0.0, -34.0)
+	return global_position + Vector2(0.0, -34.0)
+
+func get_damage_anchor_position() -> Vector2:
+	if body_sprite:
+		return body_sprite.global_position + Vector2(0.0, -42.0)
+	return global_position + Vector2(0.0, -42.0)

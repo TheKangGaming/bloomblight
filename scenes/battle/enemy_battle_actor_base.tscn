@@ -7,8 +7,10 @@
 script = ExtResource("1_r5cjv")
 
 [node name="EffectAnchor" type="Marker2D" parent="." unique_id=2022233145]
+position = Vector2(0, -30)
 
 [node name="DamageAnchor" type="Marker2D" parent="." unique_id=726271048]
+position = Vector2(0, -40)
 
 [node name="VisualDriver" type="Node2D" parent="." unique_id=660136953]
 script = ExtResource("2_587va")
