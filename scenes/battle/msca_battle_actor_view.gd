@@ -4,6 +4,8 @@ extends Node2D
 @onready var msca_player = $Player # Adjust this path to point to your MSCA visual rig!
 @onready var parent_actor = get_parent()
 @onready var sprite_layers: Node = $Player/SpriteLayers
+@onready var one_h_weapon: CanvasItem = $Player/SpriteLayers/farmer_1h_weapon
+@onready var bow_weapon: CanvasItem = $Player/SpriteLayers/farmer_bow
 
 var _character_data: CharacterData
 var _facing := Vector2.RIGHT
@@ -18,6 +20,7 @@ func _on_animation_state_finished(state_name: String, _wait_time: float = 0.0) -
 		return
 
 	_pending_finish_state = ""
+	_apply_weapon_visibility("neutral")
 
 	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
 		parent_actor.finish_tracked_action()
@@ -32,6 +35,7 @@ func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats) -> void:
 
 func set_facing(dir: Vector2) -> void:
 	_facing = dir
+	scale.x = 1.0
 	
 	if msca_player != null:
 		# 1. Force the MSCA internal variable to update
@@ -48,14 +52,18 @@ func set_facing(dir: Vector2) -> void:
 		if sprite and "flip_h" in sprite:
 			sprite.flip_h = (dir == Vector2.LEFT)
 
+	_apply_weapon_visibility("neutral")
+
 func play_idle() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = ""
+		_apply_weapon_visibility("neutral")
 		msca_player.travel_to_anim("Idle", _facing)
 
 func play_run() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = ""
+		_apply_weapon_visibility("neutral")
 		# Note: Check your MSCA AnimationTree! It might be named "Walk" or "Run" 
 		# depending on which specific MSCA base pack you are using.
 		msca_player.travel_to_anim("Run", _facing)
@@ -63,6 +71,7 @@ func play_run() -> void:
 func play_jump() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = ""
+		_apply_weapon_visibility("neutral")
 		# Double check this exact string in your AnimationTree!
 		msca_player.travel_to_anim("Jump", _facing)
 
@@ -71,6 +80,7 @@ func play_attack() -> void:
 		return
 
 	_pending_finish_state = _get_attack_animation_name()
+	_apply_weapon_visibility(_get_weapon_visibility_mode())
 	msca_player.travel_to_anim(_pending_finish_state, _facing)
 
 func _get_attack_animation_name() -> String:
@@ -89,14 +99,37 @@ func _get_attack_animation_name() -> String:
 func play_hit() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "Hurt"
+		_apply_weapon_visibility("neutral")
 		msca_player.travel_to_anim("Hurt", _facing)
 
 func play_death() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "DeathBounce"
+		_apply_weapon_visibility("neutral")
+		scale.x = -1.0 if _facing == Vector2.LEFT else 1.0
 		msca_player.travel_to_anim("DeathBounce", Vector2.DOWN)
 		
 func play_evade() -> void:
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "Evade"
+		_apply_weapon_visibility("neutral")
 		msca_player.travel_to_anim("Evade", _facing)
+
+func _get_weapon_visibility_mode() -> String:
+	var weapon_type := ""
+	if _character_data and _character_data.equipped_weapon:
+		weapon_type = _character_data.equipped_weapon.weapon_type
+
+	match weapon_type:
+		"Bow":
+			return "bow"
+		"Tome", "Staff":
+			return "neutral"
+		_:
+			return "one_h"
+
+func _apply_weapon_visibility(mode: String) -> void:
+	if one_h_weapon:
+		one_h_weapon.visible = (mode == "one_h")
+	if bow_weapon:
+		bow_weapon.visible = (mode == "bow")

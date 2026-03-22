@@ -12,6 +12,8 @@ var _waiting_for_action_finish := false
 
 # We look for a dedicated child node to handle the actual visuals
 @onready var _visual_driver: Node2D = get_node_or_null("VisualDriver")
+@onready var _effect_anchor: Marker2D = get_node_or_null("EffectAnchor")
+@onready var _damage_anchor: Marker2D = get_node_or_null("DamageAnchor")
 
 func setup_from_combat_snapshot(data: CharacterData, stats: UnitStats, is_attacker: bool) -> void:
 	_character_data = data
@@ -67,6 +69,16 @@ func play_evade() -> void:
 func set_facing(direction: Vector2) -> void:
 	if _visual_driver and _visual_driver.has_method("set_facing"):
 		_visual_driver.set_facing(direction)
+
+func get_damage_anchor_position() -> Vector2:
+	if _damage_anchor:
+		return _damage_anchor.global_position
+	return global_position + Vector2(0.0, -40.0)
+
+func get_effect_anchor_position() -> Vector2:
+	if _effect_anchor:
+		return _effect_anchor.global_position
+	return global_position
 
 func finish_tracked_action() -> void:
 	_waiting_for_action_finish = false

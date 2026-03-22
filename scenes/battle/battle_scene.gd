@@ -29,6 +29,7 @@ var _defender_has_advanced := false
 const APPROACH_DURATION := 0.7
 const APPROACH_SETTLE_TIME := 0.12
 const RETREAT_DURATION := 0.35
+const MELEE_STANDOFF := 80.0
 
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
@@ -182,19 +183,11 @@ func _execute_battle_sequence() -> void:
 	_return_to_map()
 	
 func _determine_combatants_reach() -> void:
-	_attacker_is_melee = false
-	_defender_is_melee = false
-	_defender_will_counter = false
+	_attacker_is_melee = (_get_attack_kind_for_data(_attacker_data) == CombatStrike.AttackKind.MELEE)
+	_defender_is_melee = (_get_attack_kind_for_data(_defender_data) == CombatStrike.AttackKind.MELEE)
+	_defender_will_counter = _combat_distance <= _get_attack_range_for_data(_defender_data)
 	_attacker_has_advanced = false
 	_defender_has_advanced = false
-
-	# Peek at the script to see who is using a Melee weapon!
-	for strike in _combat_strikes:
-		if strike.is_attacker_striking:
-			_attacker_is_melee = (strike.attack_kind == CombatStrike.AttackKind.MELEE)
-		else:
-			_defender_will_counter = true
-			_defender_is_melee = (strike.attack_kind == CombatStrike.AttackKind.MELEE)
 
 func _play_approach() -> void:
 	_determine_combatants_reach() # Figure out who has swords!
@@ -202,18 +195,18 @@ func _play_approach() -> void:
 	var tween: Tween = null
 	var movement_happened = false
 	
-	# If a combatant is melee in this exchange, bring them into the clash
-	# space up front so melee-vs-melee reads as a shared approach.
+	# Melee-vs-melee uses the center clash anchors. If only the attacker is
+	# melee, close to the defender's actual position instead.
 	if _attacker_is_melee:
 		if tween == null:
 			tween = create_tween().set_parallel(true)
 			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		active_attacker.play_run()
-		tween.tween_property(active_attacker, "position", attacker_melee.position, APPROACH_DURATION)
+		tween.tween_property(active_attacker, "position", _get_opening_destination_for_attacker(), APPROACH_DURATION)
 		_attacker_has_advanced = true
 		movement_happened = true
 
-	if _defender_will_counter and _defender_is_melee:
+	if _attacker_is_melee and _defender_will_counter and _defender_is_melee:
 		if tween == null:
 			tween = create_tween().set_parallel(true)
 			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -263,14 +256,14 @@ func _prepare_striker_for_strike(strike: CombatStrike) -> void:
 	if strike.is_attacker_striking:
 		if _attacker_has_advanced:
 			return
-		await _advance_actor_to_melee(active_attacker, attacker_melee.position)
+		await _advance_actor_to_melee(active_attacker, _get_dynamic_melee_destination(true))
 		_attacker_has_advanced = true
 		return
 
 	if _defender_has_advanced:
 		return
 
-	await _advance_actor_to_melee(active_defender, defender_melee.position)
+	await _advance_actor_to_melee(active_defender, _get_dynamic_melee_destination(false))
 	_defender_has_advanced = true
 
 func _advance_actor_to_melee(actor: BattleActor, destination: Vector2) -> void:
@@ -284,6 +277,36 @@ func _advance_actor_to_melee(actor: BattleActor, destination: Vector2) -> void:
 	await tween.finished
 	actor.play_idle()
 	await get_tree().create_timer(APPROACH_SETTLE_TIME).timeout
+
+func _get_opening_destination_for_attacker() -> Vector2:
+	if _defender_will_counter and _defender_is_melee:
+		return attacker_melee.position
+	return _get_dynamic_melee_destination(true)
+
+func _get_dynamic_melee_destination(is_attacker_striking: bool) -> Vector2:
+	var target := active_defender if is_attacker_striking else active_attacker
+	if not is_instance_valid(target):
+		return attacker_melee.position if is_attacker_striking else defender_melee.position
+
+	var x_offset := -MELEE_STANDOFF if is_attacker_striking else MELEE_STANDOFF
+	return target.position + Vector2(x_offset, 0.0)
+
+func _get_attack_kind_for_data(data: CharacterData) -> CombatStrike.AttackKind:
+	if data == null or data.equipped_weapon == null:
+		return CombatStrike.AttackKind.MELEE
+
+	match data.equipped_weapon.weapon_type:
+		"Bow":
+			return CombatStrike.AttackKind.RANGED
+		"Tome", "Staff":
+			return CombatStrike.AttackKind.MAGIC
+		_:
+			return CombatStrike.AttackKind.MELEE
+
+func _get_attack_range_for_data(data: CharacterData) -> int:
+	if data == null or data.equipped_weapon == null:
+		return 1
+	return data.equipped_weapon.attack_range
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map
@@ -317,10 +340,7 @@ func _spawn_damage_popup(target: BattleActor, strike: CombatStrike) -> void:
 	
 	# 3. Put it in the BattleWorld so it zooms with the camera
 	battle_world.add_child(popup)
-	
-	# Center it directly over the target's head
-	# (We offset X by -50 so the center of the text aligns with the unit)
-	popup.position = target.position + Vector2(-50, -40) 
+	popup.position = battle_world.to_local(target.get_damage_anchor_position())
 	
 	# 4. The Float & Fade Animation
 	var tween = create_tween().set_parallel(true)

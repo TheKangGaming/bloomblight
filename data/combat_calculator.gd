@@ -7,70 +7,21 @@ const FOLLOW_UP_SPEED_DIFF: int = 4
 ## 1. THE FORECAST: Generates the raw numbers for the UI and the RNG resolver.
 static func get_combat_forecast(attacker: Unit, defender: Unit, distance: int) -> CombatForecast:
 	var forecast = CombatForecast.new()
-	var atk_stats = attacker.current_stats
-	var def_stats = defender.current_stats
-	
-	# --- ATTACKER MATH ---
-	var atk_weapon = attacker.character_data.equipped_weapon
-	
-	# Default to Strength vs Physical Defense
-	var atk_base_stat: int = atk_stats.str
-	var def_resistance: int = def_stats.physical_def
-	
-	if atk_weapon:
-		if atk_weapon.weapon_type == "Tome" or atk_weapon.weapon_type == "Staff":
-			atk_base_stat = atk_stats.int_stat
-			def_resistance = def_stats.magic_def
-		elif atk_weapon.weapon_type == "Bow":
-			# RESTORED ARCHER WEIGHTING: 40% STR, 60% DEX
-			atk_base_stat = int(floor((atk_stats.str * 0.4) + (atk_stats.dex * 0.6)))
-			
-	var atk_power = atk_base_stat + (atk_weapon.might if atk_weapon else 0)
-	forecast.attacker_damage = maxi(0, atk_power - def_resistance) 
-	
-	# Hit Rate: Weapon Hit + (Dexterity * 2) - (Enemy Speed * 2)
-	var atk_base_hit = atk_weapon.hit_rate if atk_weapon else 0
-	var atk_accuracy = atk_base_hit + (atk_stats.dex * 2)
-	var def_evasion = def_stats.spd * 2
-	forecast.attacker_hit_chance = clampi(atk_accuracy - def_evasion, 0, 100)
-	
-	# Crit Rate: Dexterity / 2
-	forecast.attacker_crit_chance = clampi(atk_stats.dex / 2, 0, 100)
-	
-	# Double Attack: Speed Difference
-	forecast.attacker_can_double = (atk_stats.spd - def_stats.spd) >= FOLLOW_UP_SPEED_DIFF
-	
-	# --- DEFENDER MATH ---
-	var def_weapon = defender.character_data.equipped_weapon
-	var def_range = def_weapon.attack_range if def_weapon else 1
-	
+	var attacker_preview := attacker.get_combat_stats(defender)
+	var defender_preview := defender.get_combat_stats(attacker)
+
+	forecast.attacker_damage = int(attacker_preview.get("damage", 0))
+	forecast.attacker_hit_chance = int(attacker_preview.get("hit", 0))
+	forecast.attacker_crit_chance = int(attacker_preview.get("crit", 0))
+	forecast.attacker_can_double = (attacker.speed - defender.speed) >= FOLLOW_UP_SPEED_DIFF
+
 	# CRITICAL: Only calculate a counterattack if the defender can actually reach the attacker!
-	if distance <= def_range:
+	if distance <= defender.attack_range:
 		forecast.defender_can_counter = true
-		
-		# Figure out what stat the defender uses
-		var def_base_stat: int = def_stats.str
-		var atk_resistance: int = atk_stats.physical_def
-		
-		if def_weapon:
-			if def_weapon.weapon_type == "Tome" or def_weapon.weapon_type == "Staff":
-				def_base_stat = def_stats.int_stat
-				atk_resistance = atk_stats.magic_def
-			elif def_weapon.weapon_type == "Bow":
-				# RESTORED ARCHER WEIGHTING: 40% STR, 60% DEX
-				def_base_stat = int(floor((def_stats.str * 0.4) + (def_stats.dex * 0.6)))
-				
-		var def_power = def_base_stat + (def_weapon.might if def_weapon else 0)
-		forecast.defender_damage = maxi(0, def_power - atk_resistance)
-		
-		# Accuracy and Crit
-		var def_base_hit = def_weapon.hit_rate if def_weapon else 0
-		var def_accuracy = def_base_hit + (def_stats.dex * 2)
-		var atk_evasion = atk_stats.spd * 2
-		forecast.defender_hit_chance = clampi(def_accuracy - atk_evasion, 0, 100)
-		
-		forecast.defender_crit_chance = clampi(def_stats.dex / 2, 0, 100)
-		forecast.defender_can_double = (def_stats.spd - atk_stats.spd) >= FOLLOW_UP_SPEED_DIFF
+		forecast.defender_damage = int(defender_preview.get("damage", 0))
+		forecast.defender_hit_chance = int(defender_preview.get("hit", 0))
+		forecast.defender_crit_chance = int(defender_preview.get("crit", 0))
+		forecast.defender_can_double = (defender.speed - attacker.speed) >= FOLLOW_UP_SPEED_DIFF
 		
 	return forecast
 
