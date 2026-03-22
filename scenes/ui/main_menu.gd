@@ -31,8 +31,8 @@ const NAV_LEFT_ACTIONS: Array[StringName] = [&"left", &"ui_left"]
 const NAV_RIGHT_ACTIONS: Array[StringName] = [&"right", &"ui_right"]
 const NAV_UP_ACTIONS: Array[StringName] = [&"up", &"ui_up"]
 const NAV_DOWN_ACTIONS: Array[StringName] = [&"down", &"ui_down"]
-const NAV_REPEAT_INITIAL_DELAY_MS := 220
-const NAV_REPEAT_INTERVAL_MS := 140
+const NAV_REPEAT_INITIAL_DELAY_MS := 460
+const NAV_REPEAT_INTERVAL_MS := 320
 
 var _last_nav_action: StringName = StringName()
 var _last_nav_time_ms: int = -100000

@@ -52,7 +52,7 @@ func _update_view(force := false) -> void:
 		# Lock in the silence phase immediately
 		if _active_music_phase != "silence":
 			_active_music_phase = "silence"
-			MusicManager.fade_to_silence(1.5)
+			MusicManager.fade_to_silence(0.45)
 			
 		return # Halt all further UI updates for this frame
 
@@ -102,9 +102,9 @@ func _check_music_transition(clock_hour_24: int) -> void:
 	_active_music_phase = target_phase
 
 	if target_phase == "day" and day_music:
-		MusicManager.crossfade_to(day_music)
+		MusicManager.crossfade_to(day_music, 0.35)
 	elif target_phase == "night" and night_music:
-		MusicManager.crossfade_to(night_music)
+		MusicManager.crossfade_to(night_music, 0.35)
 
 
 func _update_clock(force := false) -> void:

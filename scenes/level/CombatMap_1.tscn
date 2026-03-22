@@ -632,7 +632,7 @@ current_stats = SubResource("Resource_x18w8")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("21_mwyqx")
-volume_db = -7.0
+volume_db = -4.0
 
 [node name="MapDirector" type="Node" parent="." unique_id=1086377815]
 script = ExtResource("13_sfjbq")

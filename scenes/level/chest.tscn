@@ -70,15 +70,19 @@ collision_mask = 2
 position = Vector2(1, -51)
 shape = SubResource("CircleShape2D_yx5m8")
 
-[node name="LootPopup" type="Label" parent="." unique_id=986611912]
+[node name="LootPopup" type="PanelContainer" parent="." unique_id=986611912]
 visible = false
 y_sort_enabled = true
-offset_left = -63.0
-offset_top = -122.0
-offset_right = 61.0
-offset_bottom = -99.0
-theme_override_colors/font_color = Color(0.97521156, 0.79350454, 3.85046e-07, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+offset_left = -88.0
+offset_top = -126.0
+offset_right = 86.0
+offset_bottom = -88.0
+
+[node name="Label" type="Label" parent="LootPopup" unique_id=1591016470]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 text = "+ Seeds & Tools!"
-horizontal_alignment = 1
-vertical_alignment = 1

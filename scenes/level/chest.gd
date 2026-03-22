@@ -1,19 +1,23 @@
 extends StaticBody2D
 
 @onready var animation_player = $AnimationPlayer
-@onready var loot_popup = $LootPopup
+@onready var loot_popup: PanelContainer = $LootPopup
+@onready var loot_popup_label: Label = $LootPopup/Label
+var _loot_popup_start_position := Vector2.ZERO
 
 var is_open := false
 var player_in_range := false
 
 func _ready():
+	WorldPopupStyle.apply(loot_popup, loot_popup_label, 18)
+	_loot_popup_start_position = loot_popup.position
 	# Connect the Area2D signals
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
 
 
 func _is_interact_press(event: InputEvent) -> bool:
-	if not event.is_action_pressed("interact"):
+	if not (event.is_action_pressed("interact") or event.is_action_pressed("ui_accept")):
 		return false
 	if event is InputEventKey and event.echo:
 		return false
@@ -48,6 +52,8 @@ func give_loot():
 	Global.inventory_updated.emit()
 
 	loot_popup.visible = true
+	loot_popup.position = _loot_popup_start_position
+	loot_popup.modulate.a = 1.0
 	
 	var tween = get_tree().create_tween()
 	

@@ -23,7 +23,9 @@ const IMG_APPLE = preload("res://graphics/plants/apple.png")
 # This dictionary maps the Item Enum -> The specific sheet and coordinates
 var item_map: Dictionary = {}
 var _focus_tooltip: ItemTooltip
+var _focus_tooltip_layer: CanvasLayer
 var _focus_tooltip_text := ""
+var _is_hovered := false
 const FOCUS_TINT := Color(1.0, 0.95, 0.72, 1.0)
 const DEFAULT_TINT := Color(1, 1, 1, 1)
 const FOCUS_BORDER_COLOR := Color(1.0, 0.88, 0.3, 1.0)
@@ -36,8 +38,8 @@ func _ready():
 	focus_mode = Control.FOCUS_ALL
 	focus_entered.connect(_on_focus_entered)
 	focus_exited.connect(_on_focus_exited)
-	mouse_entered.connect(_on_focus_entered)
-	mouse_exited.connect(_on_focus_exited)
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 	_apply_focus_visual(false)
 
 	# Define where everything lives. 
@@ -148,11 +150,27 @@ func _exit_tree() -> void:
 
 func _on_focus_entered() -> void:
 	_apply_focus_visual(true)
-	_show_focus_tooltip()
+	_show_focus_tooltip(_is_hovered)
 
 func _on_focus_exited() -> void:
-	_apply_focus_visual(false)
-	_hide_focus_tooltip()
+	_apply_focus_visual(_is_hovered)
+	if _is_hovered:
+		_show_focus_tooltip(true)
+	else:
+		_hide_focus_tooltip()
+
+func _on_mouse_entered() -> void:
+	_is_hovered = true
+	_apply_focus_visual(true)
+	_show_focus_tooltip(true)
+
+func _on_mouse_exited() -> void:
+	_is_hovered = false
+	_apply_focus_visual(has_focus())
+	if has_focus():
+		_show_focus_tooltip(false)
+	else:
+		_hide_focus_tooltip()
 
 func _apply_focus_visual(is_focused: bool) -> void:
 	self_modulate = FOCUS_TINT if is_focused else DEFAULT_TINT
@@ -171,25 +189,14 @@ func _apply_focus_visual(is_focused: bool) -> void:
 
 	add_theme_stylebox_override("panel", style)
 
-func _show_focus_tooltip() -> void:
+func _show_focus_tooltip(prefer_cursor: bool = false) -> void:
 	if _focus_tooltip_text.is_empty():
 		return
 
 	var tooltip := _get_or_create_focus_tooltip()
 	tooltip.setup(_focus_tooltip_text, 320.0, 18)
 
-	var slot_rect: Rect2 = get_global_rect()
-	var tooltip_size: Vector2 = tooltip.size
-	var viewport_size: Vector2 = get_viewport_rect().size
-
-	var target_position: Vector2 = slot_rect.position + Vector2(slot_rect.size.x + 8.0, 0.0)
-	if target_position.x + tooltip_size.x > viewport_size.x:
-		target_position.x = slot_rect.position.x - tooltip_size.x - 8.0
-	if target_position.y + tooltip_size.y > viewport_size.y:
-		target_position.y = max(8.0, viewport_size.y - tooltip_size.y - 8.0)
-	target_position.y = max(8.0, target_position.y)
-
-	tooltip.position = target_position.round()
+	_position_focus_tooltip(tooltip, prefer_cursor)
 	tooltip.visible = true
 
 func _hide_focus_tooltip(force_free: bool = false) -> void:
@@ -198,24 +205,54 @@ func _hide_focus_tooltip(force_free: bool = false) -> void:
 
 	_focus_tooltip.hide()
 	if force_free:
-		_focus_tooltip.queue_free()
+		if is_instance_valid(_focus_tooltip_layer):
+			_focus_tooltip_layer.queue_free()
+		_focus_tooltip_layer = null
 		_focus_tooltip = null
 
 func _get_or_create_focus_tooltip() -> ItemTooltip:
 	if is_instance_valid(_focus_tooltip):
 		return _focus_tooltip
 
+	_focus_tooltip_layer = CanvasLayer.new()
+	_focus_tooltip_layer.layer = 200
+	get_tree().root.add_child(_focus_tooltip_layer)
+
 	var tooltip: ItemTooltip = ItemTooltipPanel.new()
 	tooltip.name = "FocusTooltip"
 	tooltip.visible = false
 	tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tooltip.z_index = 100
-
-	get_tree().root.add_child(tooltip)
+	_focus_tooltip_layer.add_child(tooltip)
 	_focus_tooltip = tooltip
 	return _focus_tooltip
 
+func _position_focus_tooltip(tooltip: ItemTooltip, prefer_cursor: bool) -> void:
+	var tooltip_size: Vector2 = tooltip.size
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var target_position := Vector2.ZERO
+
+	if prefer_cursor:
+		target_position = get_viewport().get_mouse_position() + Vector2(18.0, 20.0)
+	else:
+		var slot_rect: Rect2 = get_global_rect()
+		target_position = slot_rect.position + Vector2(slot_rect.size.x + 12.0, 0.0)
+		if target_position.x + tooltip_size.x > viewport_size.x:
+			target_position.x = slot_rect.position.x - tooltip_size.x - 12.0
+		target_position.y = slot_rect.position.y + ((slot_rect.size.y - tooltip_size.y) * 0.5)
+
+	if target_position.x + tooltip_size.x > viewport_size.x:
+		target_position.x = viewport_size.x - tooltip_size.x - 8.0
+	if target_position.y + tooltip_size.y > viewport_size.y:
+		target_position.y = viewport_size.y - tooltip_size.y - 8.0
+
+	target_position.x = maxf(target_position.x, 8.0)
+	target_position.y = maxf(target_position.y, 8.0)
+	tooltip.position = target_position.round()
+
 func _gui_input(event: InputEvent) -> void:
+	if _is_hovered and event is InputEventMouseMotion and is_instance_valid(_focus_tooltip) and _focus_tooltip.visible:
+		_position_focus_tooltip(_focus_tooltip, true)
+
 	# Detect a Left Mouse Button click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_try_interact()

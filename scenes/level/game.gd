@@ -208,12 +208,15 @@ func _process_night_transition():
 	if encounter.is_empty():
 		# --- PEACEFUL DAY ---
 		level_reset() # Run your existing crop math!
+		Global.pending_day_transition = false
+		var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+		if hud and hud.has_method("_update_view"):
+			hud._update_view(true)
 		
 		# Fade the screen back in
 		var tween = create_tween()
 		tween.tween_interval(1.0)
 		tween.tween_property($CanvasLayer/ColorRect, 'modulate:a', 0.0, 1.0)
-		tween.tween_callback(func(): Global.pending_day_transition = false)
 	else:
 		# --- THREAT INTERCEPTOR ---
 		Global.pending_combat_scene_path = String(encounter.get("combat_scene", ""))

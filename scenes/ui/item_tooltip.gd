@@ -1,7 +1,8 @@
 class_name ItemTooltip
 extends PanelContainer
 
-const TOOLTIP_WIDTH_PADDING := 24.0
+const TOOLTIP_MARGIN_X := 12.0
+const TOOLTIP_MARGIN_Y := 8.0
 
 var _text_label: Label
 
@@ -12,13 +13,19 @@ func _init() -> void:
 func setup(text: String, min_width: float = 320.0, font_size: int = 18) -> ItemTooltip:
 	_build_content()
 	custom_minimum_size = Vector2(min_width, 0.0)
-	_text_label.custom_minimum_size = Vector2(maxf(min_width - TOOLTIP_WIDTH_PADDING, 0.0), 0.0)
-	_text_label.text = text
 	_text_label.add_theme_font_size_override("font_size", font_size)
+	var label_width := maxf(min_width - (TOOLTIP_MARGIN_X * 2.0), 0.0)
+	_text_label.custom_minimum_size = Vector2(label_width, 0.0)
+	_text_label.size = Vector2(label_width, 0.0)
+	_text_label.text = text
 	_text_label.reset_size()
-	minimum_size_changed()
-	reset_size()
-	size = get_combined_minimum_size()
+	update_minimum_size()
+	var label_size := _text_label.get_combined_minimum_size()
+	size = Vector2(
+		maxf(min_width, label_size.x + (TOOLTIP_MARGIN_X * 2.0)),
+		label_size.y + (TOOLTIP_MARGIN_Y * 2.0)
+	)
+	custom_minimum_size = size
 	return self
 
 func _build_content() -> void:
@@ -39,10 +46,10 @@ func _build_content() -> void:
 	add_theme_stylebox_override("panel", tooltip_style)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_left", int(TOOLTIP_MARGIN_X))
+	margin.add_theme_constant_override("margin_right", int(TOOLTIP_MARGIN_X))
+	margin.add_theme_constant_override("margin_top", int(TOOLTIP_MARGIN_Y))
+	margin.add_theme_constant_override("margin_bottom", int(TOOLTIP_MARGIN_Y))
 	add_child(margin)
 
 	_text_label = Label.new()

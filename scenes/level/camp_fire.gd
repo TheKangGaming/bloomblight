@@ -8,7 +8,8 @@ var _cooking_menu = null
 @onready var fire_sprite = $Fire
 @onready var smoke_sprite = $Smoke
 @onready var anim_player = $AnimationPlayer
-@onready var feedback_label = $FeedbackLabel
+@onready var feedback_popup: PanelContainer = $FeedbackPopup
+@onready var feedback_label: Label = $FeedbackPopup/Label
 @onready var feedback_timer = $FeedbackTimer
 
 func get_cooking_menu():
@@ -22,6 +23,7 @@ func _ready():
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
 	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
+	WorldPopupStyle.apply(feedback_popup, feedback_label, 18)
 	var cooking_menu = get_cooking_menu()
 	if cooking_menu:
 		if not cooking_menu.menu_opened.is_connected(_on_cooking_menu_opened):
@@ -109,8 +111,9 @@ func _set_player_movement_locked(locked: bool) -> void:
 
 func show_feedback(message: String):
 	feedback_label.text = message
-	feedback_label.visible = true
+	feedback_popup.visible = true
+	feedback_popup.modulate.a = 1.0
 	feedback_timer.start()
 
 func _on_feedback_timer_timeout():
-	feedback_label.visible = false
+	feedback_popup.visible = false

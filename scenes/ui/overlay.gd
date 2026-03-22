@@ -14,6 +14,7 @@ var toolbar_visible_state := true
 
 func _ready() -> void:
 	_setup_quest_ui()
+	_setup_toolbar_ui()
 	if not Global.tutorial_updated.is_connected(_on_tutorial_updated):
 		Global.tutorial_updated.connect(_on_tutorial_updated)
 	player_ref = get_tree().get_first_node_in_group("Player")
@@ -25,6 +26,13 @@ func _try_bind_to_player_signal() -> void:
 		return
 	if not player_ref.is_connected("tool_changed", Callable(self, "_on_player_tool_changed")):
 		player_ref.connect("tool_changed", Callable(self, "_on_player_tool_changed"))
+
+func _setup_toolbar_ui() -> void:
+	tool_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	tool_label.add_theme_font_override("font", QUEST_FONT)
+	tool_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
+	tool_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	tool_label.add_theme_constant_override("outline_size", 2)
 
 func _on_player_tool_changed(tool: Global.Tools) -> void:
 	_update_tool_display(tool)
