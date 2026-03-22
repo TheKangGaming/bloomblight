@@ -128,6 +128,14 @@ func _execute_battle_sequence() -> void:
 		# Wait for the EXACT frame the weapon connects
 		await striker.strike_impact
 		
+		# --- DELIVER THE RANGED/MAGIC PAYLOAD ---
+		# Melee bypasses this and connects instantly. Ranged pauses the loop for travel time!
+		if strike.attack_kind == CombatStrike.AttackKind.RANGED:
+			await _play_projectile(striker, target, strike.is_hit)
+		elif strike.attack_kind == CombatStrike.AttackKind.MAGIC:
+			await _play_magic_vfx(target, strike.is_hit)
+		# ----------------------------------------
+		
 		# --- THE JUICE: LOCAL HIT-STOP ---
 		if strike.is_hit:
 			# Freeze the actors (pauses their AnimationPlayers exactly on impact!)
@@ -353,3 +361,70 @@ func _spawn_damage_popup(target: BattleActor, strike: CombatStrike) -> void:
 	
 	# Delete the label out of memory when the animation finishes!
 	tween.chain().tween_callback(popup.queue_free)
+
+func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool) -> void:
+	# 1. Create a "Silver Arrow" placeholder
+	var arrow = ColorRect.new()
+	arrow.color = Color(0.8, 0.8, 0.8) 
+	arrow.size = Vector2(20, 4)
+	
+	battle_world.add_child(arrow)
+	
+	# Spawn perfectly at the striker's effect anchor
+	var start_pos = striker.get_effect_anchor_position()
+	arrow.global_position = start_pos
+	
+	# Aim directly for the target's chest/damage anchor
+	var end_pos = target.get_damage_anchor_position()
+	
+	# If the RNG said "Miss", intentionally shoot it way past the target!
+	if not is_hit:
+		var direction = (end_pos - start_pos).normalized()
+		end_pos += direction * 250 # Overshoot dramatically
+		
+	# Point the arrow exactly where it's going
+	arrow.rotation = (end_pos - start_pos).angle()
+	
+	# 2. Tween the arrow through the air
+	var tween = create_tween()
+	tween.tween_property(arrow, "global_position", end_pos, 0.25).set_trans(Tween.TRANS_LINEAR)
+	
+	# The loop STOPS here and waits for the arrow to finish flying
+	await tween.finished
+	arrow.queue_free()
+
+
+func _play_magic_vfx(target: BattleActor, is_hit: bool) -> void:
+	# 1. Create a "Pillar of Arcane Light" placeholder
+	var magic = ColorRect.new()
+	magic.color = Color(0.5, 0.1, 1.0, 0.8) # Translucent Purple
+	magic.size = Vector2(40, 0) # Start completely flat
+	
+	battle_world.add_child(magic)
+	
+	# Start at their feet/effect anchor
+	var spawn_pos = target.get_effect_anchor_position()
+	
+	# WHIFF LOGIC: If it's a miss, offset the pillar so the player can read the whiff!
+	if not is_hit:
+		# Push it 60 pixels away from the center of the arena
+		var whiff_dir = 1 if target.global_position.x > battle_world.global_position.x else -1
+		spawn_pos.x += 60 * whiff_dir
+		
+	# Center the 40px width on the calculated spawn position
+	magic.global_position = spawn_pos + Vector2(-20, 0)
+	
+	# 2. Animate it shooting upward
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(magic, "size:y", 120, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(magic, "global_position:y", magic.global_position.y - 120, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	
+	# Wait for the pillar to hit maximum height before doing damage
+	await tween.finished
+	
+	# 3. Fade it out quickly
+	var fade_tween = create_tween()
+	fade_tween.tween_property(magic, "modulate:a", 0.0, 0.2)
+	
+	# Notice we DON'T 'await' the fade! We want the hit-stop to trigger while it's fading!
+	fade_tween.chain().tween_callback(magic.queue_free)
