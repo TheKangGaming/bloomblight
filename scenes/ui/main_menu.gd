@@ -4,7 +4,6 @@ extends Control
 @onready var tabs: TabContainer = $CenterContainer/TabContainer
 
 
-# Column 2: Stats
 @onready var lbl_vit: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblVIT
 @onready var lbl_str: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSTR
 @onready var lbl_dex: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDEX
@@ -17,13 +16,11 @@ extends Control
 @onready var lbl_class: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblClass
 @onready var lbl_level: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblLevel
 
-# Column 3: Equipment + Meal
 @onready var slot_weapon: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotWeapon
 @onready var slot_armor: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotArmor
 @onready var slot_accessory: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotAccessory
 @onready var lbl_food = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox/LblFoodBuff
 
-# Preload the slot scene
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn")
 const TAB_PREV_ACTIONS: Array[StringName] = [&"tool_backward", &"ui_page_up"]
 const TAB_NEXT_ACTIONS: Array[StringName] = [&"tool_forward", &"ui_page_down"]
@@ -98,7 +95,6 @@ func toggle_menu():
 	update_status_page()
 	
 	if visible:
-		# Default to Inventory tab (Index 1) for now
 		if tabs:
 			tabs.current_tab = 1
 		update_inventory()
@@ -286,18 +282,15 @@ func _control_center(control: Control) -> Vector2:
 func update_inventory():
 	if not inventory_grid: return
 
-	# 1. Clear existing slots
 	for child in inventory_grid.get_children():
 		child.queue_free()
 	
-	# 2. Add slots for current inventory
 	for item_enum in Global.inventory:
 		var count = Global.inventory[item_enum]
 		if count > 0:
 			var slot = SLOT_SCENE.instantiate()
 			inventory_grid.add_child(slot)
 			
-			# UPDATE: Pass the ENUM, not the Name string
 			slot.setup(item_enum, count)
 
 	if visible and tabs and tabs.current_tab == 1:
@@ -324,7 +317,6 @@ func update_status_page():
 		else:
 			return "%s: %d" % [stat_name, base_val]
 
-	# Show permanent value plus temporary modifier, mirroring combat calculations.
 	lbl_vit.bbcode_text = format_stat.call("VIT", int(permanent_stats.get("VIT", 0)), int(temporary_modifiers.get("VIT", 0)))
 	lbl_str.bbcode_text = format_stat.call("STR", int(permanent_stats.get("STR", 0)), int(temporary_modifiers.get("STR", 0)))
 	lbl_dex.bbcode_text = format_stat.call("DEX", int(permanent_stats.get("DEX", 0)), int(temporary_modifiers.get("DEX", 0)))
@@ -341,7 +333,6 @@ func update_status_page():
 	lbl_class.text = "Class: %s" % _resolve_player_class_name()
 	_update_equipment_visuals(player_unit, weapon)
 	
-	# Update Meal Text
 	if Global.active_food_buff.item != null:
 		var meal_item: Global.Items = Global.active_food_buff.item
 		var meal_name: String = String(Global.Items.keys()[meal_item]).replace("_", " ").capitalize()
@@ -405,19 +396,16 @@ func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, 
 	return preview_text
 
 
-# 1. THE MASTER HELPER: Finds the character data from the live unit OR the Progression Service
+# Prefer the live unit when we are in battle, then fall back to saved progression data.
 func _resolve_player_character_data(player_unit: Unit = null) -> CharacterData:
-	# Trust the live map unit first (if we are currently in a battle)
 	if player_unit != null and player_unit.character_data != null:
 		return player_unit.character_data
 
-	# Fallback to the Progression Service (if we are in a town, menu, or title screen)
 	if ProgressionService != null and ProgressionService.has_method("get_player_character_data"):
 		return ProgressionService.get_player_character_data()
 
 	return null
 
-# 2. THE CLEAN GETTERS: All route through the master helper
 func _resolve_player_weapon_from_roster(player_unit: Unit = null) -> WeaponData:
 	var data := _resolve_player_character_data(player_unit)
 	return data.equipped_weapon if data != null else null
@@ -474,19 +462,15 @@ func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
 	return null
 
 func _resolve_player_class_name(player_unit: Unit = null) -> String:
-	# 1. Get the authoritative data first
 	var class_data := _resolve_player_class_data(player_unit)
 	
 	if class_data != null:
-		# Changed from class_name to metadata_name!
 		var final_name: String = String(class_data.metadata_name).strip_edges() 
 		
 		if not final_name.is_empty():
-			# Sync Global so the save file has the correct string, then return it
 			Global.set_player_class_name(final_name)
 			return final_name
 
-	# 2. Absolute fallback if all else fails
 	return String(Global.get_player_class_name())
 
 

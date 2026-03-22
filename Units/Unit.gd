@@ -1,6 +1,3 @@
-## Represents a unit on the game board.
-## The board manages its position inside the game grid.
-## The unit itself holds stats and a visual representation that moves smoothly in the game world.
 @tool
 class_name Unit
 extends Path2D
@@ -8,17 +5,13 @@ extends Path2D
 var _hp_bar: ProgressBar
 var _hp_fill_style: StyleBoxFlat
 @onready var animation_tree: AnimationTree = get_node_or_null("PathFollow2D/Visuals/AnimationTree")
-var move_state_machine = null # We will set this in _ready if the tree exists
+var move_state_machine = null
 
-## Emitted when the unit reached the end of a path along which it was walking.
 signal walk_finished
 signal died(unit)
 
-# --- ABILITIES & COOLDOWNS ---
-# Tracks active cooldowns. Key = AbilityData, Value = int (turns remaining)
 var ability_cooldowns: Dictionary = {}
 
-## Shared resource of type Grid, used to calculate map coordinates.
 @export var grid: Resource
 
 @export var is_enemy: bool
@@ -29,11 +22,9 @@ var ability_cooldowns: Dictionary = {}
 @export var is_player: bool = false
 @export var is_wait := false
 
-## Distance to which the unit can walk in cells.
 var move_range: int:
 	get:
 		return current_stats.mov
-## The unit's move speed when it's moving along a path.
 @export var move_speed := 150.0
 
 var attack_range: int:
@@ -44,16 +35,13 @@ var attack_range: int:
 			return maxi(1, current_stats.atk_rng)
 		return 1
 
-## Texture representing the unit.
 @export var skin: Texture:
 	set(value):
 		skin = value
 		if not _sprite:
-			# This will resume execution after this node's _ready()
 			await ready
 		_sprite.texture = value
 
-## Offset to apply to the `skin` sprite in pixels.
 @export var skin_offset := Vector2.ZERO:
 	set(value):
 		skin_offset = value
@@ -61,14 +49,10 @@ var attack_range: int:
 			await ready
 		_sprite.position = value
 
-## Coordinates of the current cell the cursor moved to.
 var cell := Vector2.ZERO:
 	set(value):
-		# When changing the cell's value, we don't want to allow coordinates outside
-		#	the grid, so we clamp them
 		cell = grid.grid_clamp(value)
 
-## Toggles the "selected" animation on the unit.
 var is_selected := false:
 	set(value):
 		is_selected = value
@@ -138,7 +122,6 @@ func _ready() -> void:
 	_initialize_unit_data()
 
 	if is_player:
-		# Override class-derived stats with persisted player stats + active buffs.
 		_load_player_stats()
 
 	if health <= 0:
@@ -151,12 +134,9 @@ func _ready() -> void:
 	cell = grid.calculate_grid_coordinates(position)
 	position = grid.calculate_map_position(cell)
 
-	# We create the curve resource here because creating it in the editor prevents us from
-	# moving the unit.
 	if not Engine.is_editor_hint():
 		curve = Curve2D.new()
 
-	# Wake up the puppet!
 	if animation_tree:
 		animation_tree.active = true
 		move_state_machine = animation_tree.get("parameters/MoveStateMachine/playback")
@@ -177,44 +157,36 @@ func apply_runtime_stats(new_stats: UnitStats) -> void:
 
 func _process(delta: float) -> void:
 	if _is_walking:
-		# A. Save her current position before she steps forward
 		var old_pos = _path_follow.position
 
-		# (Your existing movement math)
 		_path_follow.progress += move_speed * delta
 
-		# B. Calculate which direction she just stepped, and feed it to the puppet!
+		# Use actual path motion for facing so the rig stays honest on diagonal turns.
 		var direction = (old_pos.direction_to(_path_follow.position)).normalized()
 		if direction != Vector2.ZERO and animation_tree:
 			animation_tree.set("parameters/MoveStateMachine/run/blend_position", direction)
 			animation_tree.set("parameters/MoveStateMachine/idle/blend_position", direction)
 
-		# C. When she reaches the final tile...
 		if _path_follow.progress_ratio >= 1.0:
 			_is_walking = false
 
-			# Stop the walking animation!
 			if move_state_machine:
 				move_state_machine.travel("idle")
 			elif _visual_anim_player and _visual_anim_player.has_animation("idle"):
 				_visual_anim_player.play("idle")
 
-			# (Your existing cleanup code)
 			_path_follow.progress = 0.0
 			position = grid.calculate_map_position(cell)
 			curve.clear_points()
 			walk_finished.emit()
 
 
-## Starts walking along the `path`.
-## `path` is an array of grid coordinates that the function converts to map coordinates.
 func walk_along(path: PackedVector2Array) -> void:
 	if path.is_empty() or path.size() == 1:
 		_is_walking = false
 		walk_finished.emit()
 		return
 
-	# 1. Start the walk animation!
 	if move_state_machine:
 		move_state_machine.travel("run")
 	elif _visual_anim_player:
@@ -224,14 +196,13 @@ func walk_along(path: PackedVector2Array) -> void:
 		elif _visual_anim_player.has_animation("run"):
 			_visual_anim_player.play("run")
 
-	# CRITICAL: Clear the old path before drawing the new one!
 	curve.clear_points()
 
 	for point in path:
 		curve.add_point(grid.calculate_map_position(point) - position)
 
 	cell = path[-1]
-	_path_follow.progress = 0.0 # Reset animation progress to the start
+	_path_follow.progress = 0.0
 	_is_walking = true
 
 

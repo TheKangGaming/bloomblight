@@ -1,6 +1,3 @@
-## Represents and manages the game board. Stores references to entities that are in each cell and
-## tells whether cells are occupied or not.
-## Units can only move around the grid one at a time.
 class_name GameBoard
 extends Node2D
 
@@ -9,7 +6,6 @@ const OBSTACLE_ATLAS_ID = 2
 const FOLLOW_UP_SPEED_DIFF := 4
 const PauseMenu = preload("res://Menus/PauseMenu.tscn")
 const ActionMenu = preload("res://Menus/ActionMenu.tscn")
-## Resource of type Grid.
 @export var grid: Resource
 
 const DEFAULT_BATTLE_SCENE = preload("res://scenes/battle/battle_scene.tscn")
@@ -18,11 +14,7 @@ const DEFAULT_BATTLE_SCENE = preload("res://scenes/battle/battle_scene.tscn")
 enum TurnPhase { PLAYER, ENEMY }
 var current_phase: TurnPhase = TurnPhase.PLAYER
 
-
-# Tracks active battle plants. Key = Vector2 (cell), Value = Node2D (the plant)
 var _battle_plants := {}
-
-## Mapping of coordinates of a cell to a reference to the unit it contains.
 var _units := {}
 var _enemies_defeated: int = 0
 var _active_unit: Unit
@@ -54,10 +46,6 @@ var _unit_hover_label: RichTextLabel = null
 const MAX_VALUE: int = 99999
 
 func _ready() -> void:
-	
-	##var generator = $"../MapDirector" # Ensure this name matches the node you added!
-	##if generator:
-		##generator.generate_new_map()
 	_movement_costs = _map.get_movement_costs()
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
 	_cursor.moved.connect(_on_Cursor_moved)
@@ -99,20 +87,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if _active_unit and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel")):
 		
-		# NEW: If viewing forecast, back out to targeting mode
 		if _target_unit_for_forecast != null:
 			_target_unit_for_forecast = null
 			_hide_combat_forecast()
 			return
 			
 		if _is_targeting_attack:
-			# Player canceled targeting: clear the red tiles and bring the menu back
 			_is_targeting_attack = false
 			_valid_target_cells.clear()
 			_unit_overlay.clear()
 			_show_action_menu() 
 		else:
-			# Player canceled moving entirely: teleport back
 			_reset_unit()
 
 
@@ -123,23 +108,18 @@ func _get_configuration_warning() -> String:
 	return warning
 
 
-## Returns `true` if the cell is occupied by a unit.
 func is_occupied(cell: Vector2) -> bool:
 	return _units.has(cell)
 
 
-## Returns an array of cells a given unit can walk using Dijkstra.
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit, unit.move_range, false)
 	
-### Calculates attackable cells by extending outward from all walkable cells using math
-## Calculates attackable cells using high-speed dictionary lookups (O(1)) instead of arrays
 func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) -> Array:
 	var attackable_dict = {}
 	var walkable_dict = {}
 	var attack_offsets = _get_attack_offsets(attack_range)
 	
-	# Convert our walkable array into a high-speed dictionary
 	for cell in walkable_cells:
 		walkable_dict[cell] = true
 		
@@ -154,20 +134,15 @@ func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) 
 			var target_cell = cell + offset
 
 			if grid.is_within_bounds(target_cell):
-				# CRITICAL FIX: Using .has() on a dictionary is exponentially faster!
 				if not walkable_dict.has(target_cell) and not attackable_dict.has(target_cell):
 
 					if is_occupied(target_cell) and _units[target_cell].is_enemy == unit.is_enemy:
 						continue
 
-					# Add to our high-speed dictionary
 					attackable_dict[target_cell] = true
 							
-	# Return just the keys (the Vector2 coordinates) as an Array
 	return attackable_dict.keys()
 
-
-## Clears, and refills the `_units` dictionary with game objects that are on the board.
 func _reinitialize() -> void:
 	_units.clear()
 
@@ -176,16 +151,12 @@ func _reinitialize() -> void:
 		if not unit:
 			continue
 			
-		# CRITICAL FIX: Force the cell to be a perfect integer to prevent float crashes!
 		unit.cell = unit.cell.round()
 		_units[unit.cell] = unit
 		
-		# Safely connect the died signal so memory is cleared when enemies are defeated
 		if not unit.died.is_connected(_on_unit_died):
 			unit.died.connect(_on_unit_died)
 
-
-## Returns an array with all the coordinates of walkable cells based on the `max_distance`.
 func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 	var full_array := []
 	var wall_array := []
@@ -207,7 +178,6 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 		for direction in DIRECTIONS:
 			var coordinates: Vector2 = current + direction
 			
-			# FIX: get_cell_source_id requires a Vector2i in Godot 4!
 			var coord_v2i = Vector2i(int(coordinates.x), int(coordinates.y))
 			if _map.get_cell_source_id(coord_v2i) == OBSTACLE_ATLAS_ID:
 				wall_array.append(coordinates)
@@ -221,24 +191,20 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 			
 	return full_array.filter(func(i): return i not in wall_array)
 
-## Generates a list of walkable cells based on unit movement value and tile movement cost
-## Generates a list of walkable cells based on unit movement value and tile movement cost
 func _dijkstra(unit: Unit, max_distance: int, _attackable_check: bool) -> Array:
 	var start_cell = unit.cell.round()
 	
-	# Dictionary to store the absolute shortest distance to each cell
 	var distances = {}
 	distances[start_cell] = 0
 	
 	var queue = PriorityQueue.new()
-	queue.push(start_cell, 0) # starting cell
+	queue.push(start_cell, 0)
 	
 	while not queue.is_empty():
 		var current_node = queue.pop()
 		var current_cell = current_node.value
 		var current_dist = current_node.priority
 		
-		# If we already found a shorter path to this cell, skip it
 		if current_dist > distances.get(current_cell, MAX_VALUE):
 			continue
 			
@@ -248,7 +214,7 @@ func _dijkstra(unit: Unit, max_distance: int, _attackable_check: bool) -> Array:
 			if not grid.is_within_bounds(neighbor):
 				continue
 				
-			# Enemies act as solid brick walls! Use .get() for 100% safety
+			# Opposing units block movement. Allies can be moved through.
 			var neighbor_unit = _units.get(neighbor)
 			if neighbor_unit != null and neighbor_unit.is_enemy != unit.is_enemy:
 				continue
@@ -257,38 +223,30 @@ func _dijkstra(unit: Unit, max_distance: int, _attackable_check: bool) -> Array:
 			var tile_cost = _movement_costs.get(coord_v2i, 1) 
 			var new_cost = current_dist + tile_cost 
 			
-			# If we can reach the tile, and this is the fastest route we've found so far...
 			if new_cost <= max_distance:
 				if new_cost < distances.get(neighbor, MAX_VALUE):
 					distances[neighbor] = new_cost
 					queue.push(neighbor, new_cost) 
 	
-	# Return all the keys we found. These are our blue tiles!
 	return distances.keys()
 
-
-## Moves the active unit to the new cell and optionally shows the action menu
 func _move_active_unit(new_cell: Vector2, show_action_menu: bool = true) -> void:
-	# 1. Validate and explicitly draw the path to the target
 	if _unit_path._pathfinder == null:
 		_unit_path.initialize(_walkable_cells)
 	_unit_path.draw(_active_unit.cell, new_cell)
 	
-	# 2. Safety Check: If the path is somehow empty or doesn't reach the target, abort
 	if _unit_path.current_path.is_empty() or _unit_path.current_path[-1] != new_cell:
 		return 
 	
-	# 3. Path is secure! Safe to clear visual memory.
 	_walkable_cells.clear()
 	_attackable_cells.clear()
 	_unit_overlay.clear()
 	_cursor.is_active = false
 	
-	# 4. CRITICAL FIX: Erase the old position from the board's memory and log the new one!
+	# Update board occupancy before the walk starts so follow-up logic sees the right state.
 	_units.erase(_active_unit.cell)
 	_units[new_cell] = _active_unit
 	
-	# 5. Tell the unit to walk, and wait for the specific 'walk_finished' signal!
 	_active_unit.walk_along(_unit_path.current_path)
 	await _active_unit.walk_finished
 	
@@ -301,8 +259,6 @@ func _move_active_unit(new_cell: Vector2, show_action_menu: bool = true) -> void
 	
 
 
-## Selects the unit in the `cell` if there's one there.
-## Sets it as the `_active_unit` and draws its walkable cells and interactive move path. 
 func _select_unit(cell: Vector2) -> void:
 	if not _units.has(cell):
 		return
@@ -369,28 +325,20 @@ func _hover_display(cell: Vector2) -> void:
 	if is_occupied(cell):
 		var curr_unit = _units[cell]
 		
-		# 1. Get the blue cells
 		_walkable_cells = get_walkable_cells(curr_unit)
-		
-		# 2. Pass those blue cells directly into the red cell math!
 		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range, curr_unit)
-		
-		# 3. Clear the old tiles ONCE here:
 		_unit_overlay.clear() 
-		
-		# 4. Draw the red tiles first, then the blue ones on top!
 		_unit_overlay.draw_attackable_cells(_attackable_cells)
 		_unit_overlay.draw_walkable_cells(_walkable_cells)
 
 
-## Safely opens the pause menu, guaranteeing we don't stack duplicates.
 func _show_pause_menu() -> void:
 	if has_node("PauseMenu"):
-		return # Menu is already open, do nothing!
+		return
 		
 	_hide_unit_hover_tooltip()
 	var pause_menu = PauseMenu.instantiate()
-	pause_menu.name = "PauseMenu" # Explicitly name it so has_node() works
+	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
 	if pause_menu.has_method("_set_units"):
 		pause_menu.call("_set_units", _units.values())
@@ -399,26 +347,21 @@ func _show_pause_menu() -> void:
 
 
 func _reset_unit() -> void:
-	# 1. Remove the menu if it's open so it can't keep the cursor disabled.
 	if has_node("ActionMenu"):
 		$ActionMenu.queue_free()
 
 	if _active_unit != null:
-		# 2. Only physically teleport her if she actually moved away from her start tile
 		if _active_unit.cell != _prev_cell:
 			_active_unit.position = _prev_position
 			_units.erase(_active_unit.cell)
 			_units[_prev_cell] = _active_unit
 			_active_unit.cell = _prev_cell
 			
-		# 3. ALWAYS clear out these memory variables, even if she didn't move
 		_prev_cell = null
 		_prev_position = null
 		
-		# 4. Deselect her so the animations reset and the board forgets her
 		_deselect_active_unit()
 		
-	# 5. CRITICAL FIX: Give control back to the player!
 	_cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	_cursor.show()
 	_cursor.is_active = true
@@ -427,8 +370,6 @@ func _reset_unit() -> void:
 func _is_distance_in_attack_range(distance: int, attack_range: int) -> bool:
 	return CombatCalculator.can_attack_at_distance(distance, attack_range)
 		
-## Deselects the active unit, clearing the cells overlay and interactive path drawing.
-## Universally clears the active unit, resets their animations, and wipes the overlays.
 func _deselect_active_unit() -> void:
 	if _active_unit:
 		_active_unit.is_selected = false
@@ -445,14 +386,11 @@ func _deselect_active_unit() -> void:
 	_unit_path.stop()
 
 
-## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _battle_ended:
 		return
 
-	# --- 0. CONFIRM FORECAST STATE ---
 	if _target_unit_for_forecast != null:
-		# (Keep your existing forecast code here...)
 		var target = _target_unit_for_forecast
 		_target_unit_for_forecast = null
 		_hide_combat_forecast()
@@ -473,7 +411,6 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			_cursor.is_active = true
 		return
 
-	# --- 1. TARGETING STATE INTERCEPT ---
 	if _is_targeting_attack:
 		if cell in _valid_target_cells and is_occupied(cell):
 			var target_unit = _units[cell]
@@ -481,7 +418,6 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_begin_attack_preview_on_target(target_unit)
 		return
 		
-	# --- 1.5 ABILITY TARGETING INTERCEPT ---
 	if _is_targeting_ability:
 		if cell in _valid_target_cells:
 			var success = execute_ability(_active_unit, _selected_ability, cell)
@@ -495,30 +431,23 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				finish_unit_turn() 
 		return
 		
-	# --- 2. MOVEMENT / SELECTION INTERCEPT ---
 	if not _active_unit and _units.has(cell):
 		var unit = _units[cell]
 		
-		# NEW: If the unit is an enemy, the player CANNOT move them!
 		if unit.is_enemy:
-			# Later, we can make clicking an enemy show their danger radius.
-			# For now, we just completely ignore the click.
 			return 
 		
-		# Check if the player unit has already taken its turn!
 		if unit.is_wait:
 			_show_pause_menu()
 		else:
 			_select_unit(cell)
 			
 	elif _active_unit != null: 
-		# 1. Player clicked the active unit (waiting in place without moving)
 		if is_occupied(cell) and _units[cell] == _active_unit:
 			_unit_overlay.clear()
 			_unit_path.stop()
 			_show_action_menu()
 			
-		# 2. Player clicked an enemy directly while still in move phase.
 		elif is_occupied(cell):
 			var target_unit = _units[cell]
 			if target_unit.is_enemy != _active_unit.is_enemy:
@@ -528,15 +457,12 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 						await _move_active_unit(attack_from_cell, false)
 					_begin_attack_preview_on_target(target_unit)
 
-		# 3. Player clicked an empty blue tile to move
 		elif not is_occupied(cell) and _walkable_cells.has(cell):
 			await _move_active_unit(cell) 
 	else:
-		# Player clicked an empty tile
 		_show_pause_menu()
 
 
-## Updates the interactive path's drawing if there's an active and selected unit.
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected:
 		_hide_unit_hover_tooltip()
@@ -553,7 +479,6 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		else:
 			_hide_unit_hover_tooltip()
 
-		# CRITICAL FIX: Only show hover range if the unit hasn't taken their turn yet!
 		if _units.has(new_cell) and not _units[new_cell].is_wait:
 			_hover_display(new_cell)
 		else:
@@ -561,12 +486,10 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 			_walkable_cells.clear()
 		
 func _on_unit_died(unit: Unit) -> void:
-	# 1. The Double-Trigger Fix! 
-	# If we already erased this unit, ignore the second death signal!
+	# Death cleanup can be triggered more than once during combat resolution.
 	if not _units.has(unit.cell):
 		return
 		
-	# --- Your Existing UI Cleanup ---
 	_units.erase(unit.cell)
 	if _target_unit_for_forecast == unit:
 		_target_unit_for_forecast = null
@@ -575,7 +498,6 @@ func _on_unit_died(unit: Unit) -> void:
 	if _active_unit == unit:
 		_deselect_active_unit()
 		
-	# --- Win/Loss Logic ---
 	if unit.is_enemy:
 		_enemies_defeated += 1
 		
@@ -592,9 +514,6 @@ func _show_action_menu() -> void:
 	action_menu.show()
 	if action_menu.has_method("_reset_menu_focus"):
 		action_menu.call_deferred("_reset_menu_focus")
-	
-	# REMOVED: All the screen_pos and offset calculations.
-	# The menu will now rely on the static anchors you set in ActionMenu.tscn!
 	
 	_cursor.is_active = false
 

@@ -4,23 +4,13 @@ extends PanelContainer
 
 const ItemTooltipPanel = preload("res://scenes/ui/item_tooltip.gd")
 
-# We need a variable to remember what item this slot is holding!
 var stored_item_enum: Global.Items
 
-# --- TEXTURE SOURCES ---
-# 1. The Farm Sheet (Seeds & Crops)
 const SHEET_FARM = preload("res://graphics/plants/Atlas-Props4-crops update.png")
-
-# 2. The Loot Sheet (Wood, etc)
 const SHEET_LOOT = preload("res://graphics/loot/loot-drops.png") 
-# 3. Props
 const SHEET_FURNITURE = preload("res://graphics/tilesets/furniture_and_props.png")
-
-# 4. Single Images
 const IMG_APPLE = preload("res://graphics/plants/apple.png")
 
-# --- COORDINATES (X, Y) on the Sheets ---
-# This dictionary maps the Item Enum -> The specific sheet and coordinates
 var item_map: Dictionary = {}
 var _focus_tooltip: ItemTooltip
 var _focus_tooltip_layer: CanvasLayer
@@ -41,11 +31,6 @@ func _ready():
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	_apply_focus_visual(false)
-
-	# Define where everything lives. 
-	# Format: ItemEnum : [TextureResource, Vector2i(Column, Row)]
-	
-	# -- SEEDS (On Farm Sheet) --
 	item_map[Global.Items.BLUEBERRY_SEED] = [SHEET_FARM, Vector2i(3, 17)]
 	item_map[Global.Items.WHEAT_SEED] = [SHEET_FARM, Vector2i(4, 17)]
 	item_map[Global.Items.MELON_SEED] = [SHEET_FARM, Vector2i(5, 17)]
@@ -68,8 +53,6 @@ func _ready():
 	item_map[Global.Items.EGGPLANT_SEED] = [SHEET_FARM, Vector2i(27, 17)]
 	item_map[Global.Items.BOK_CHOY_SEED] = [SHEET_FARM, Vector2i(28, 17)]
 	item_map[Global.Items.GRAPE_SEED] = [SHEET_FARM, Vector2i(29, 17)]
-	
-	# -- CROPS (On Farm Sheet) --
 	item_map[Global.Items.BLUEBERRY] = [SHEET_FARM, Vector2i(10, 8)]
 	item_map[Global.Items.WHEAT] = [SHEET_FARM, Vector2i(10, 9)]
 	item_map[Global.Items.MELON] = [SHEET_FARM, Vector2i(10, 10)]
@@ -92,13 +75,8 @@ func _ready():
 	item_map[Global.Items.EGGPLANT] = [SHEET_FARM, Vector2i(30, 11)]
 	item_map[Global.Items.BOK_CHOY] = [SHEET_FARM, Vector2i(30, 12)]
 	item_map[Global.Items.GRAPE] = [SHEET_FARM, Vector2i(30, 13)]
-	
-	# -- LOOT (On Loot Sheet) --
 	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)]
 	item_map[Global.Items.STONE] = [SHEET_LOOT, Vector2i(5, 2)] 
-	
-	# Props
-	
 	item_map[Global.Items.ROASTED_CORN] = [SHEET_FURNITURE, Vector2i(23,4)]
 	item_map[Global.Items.TOMATO_SOUP] = [SHEET_FURNITURE, Vector2i(21,4)]
 	item_map[Global.Items.HERBAL_HASH] = [SHEET_FURNITURE, Vector2i(22,4)]
@@ -116,20 +94,16 @@ func _ready():
 func setup(item_enum: Global.Items, quantity: int):
 	
 	stored_item_enum = item_enum
-	# 1. Tooltip Logic
 	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
 	_focus_tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
 	tooltip_text = ""
 	if has_focus():
 		_show_focus_tooltip()
 	
-	# 2. Icon Logic
 	if item_enum == Global.Items.APPLE:
-		# Apple is a special case: Single PNG
 		icon.texture = IMG_APPLE
 		
 	elif item_enum in item_map:
-		# It's on a sprite sheet (Farm, Loot, or Stone)
 		var data = item_map[item_enum]
 		var texture_source = data[0]
 		var coords = data[1]
@@ -253,7 +227,6 @@ func _gui_input(event: InputEvent) -> void:
 	if _is_hovered and event is InputEventMouseMotion and is_instance_valid(_focus_tooltip) and _focus_tooltip.visible:
 		_position_focus_tooltip(_focus_tooltip, true)
 
-	# Detect a Left Mouse Button click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_try_interact()
 
@@ -261,12 +234,10 @@ func _gui_input(event: InputEvent) -> void:
 		_try_interact()
 
 func _try_interact() -> void:
-	# Check if we selected a food item AND we actually have some in our inventory.
 	if stored_item_enum in Global.food_stats and Global.inventory[stored_item_enum] > 0:
 		eat_food()
 
 func eat_food():
-	# 1. Consume the item first (This already triggers the inventory_updated signal!)
 	if not Global.remove_item(stored_item_enum, 1):
 		return
 
@@ -278,7 +249,6 @@ func eat_food():
 	applied_stats["MOV"] = mini(int(applied_stats.get("MOV", 0)), Global.EARLY_FOOD_MOVEMENT_CAP)
 	Global.active_food_buff.stats = Global._normalize_temporary_bucket(applied_stats)
 
-	# 2. Apply the buff! We duplicate and normalize so consumed food always matches the status/combat pipeline.
 	Global.stats_updated.emit()
 	
 	print("Ate a delicious ", Global.Items.keys()[stored_item_enum], "!")

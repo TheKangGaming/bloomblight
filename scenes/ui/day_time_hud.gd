@@ -8,11 +8,9 @@ const TIME_TICK_MINUTES := 30
 @onready var time_label: Label = $VBoxContainer/TimeLabel
 @onready var time_icon: AnimatedSprite2D = $TimeIcon
 
-# Drag your audio files from the FileSystem into these variables!
 @export var day_music: AudioStream
 @export var night_music: AudioStream
 
-# Tracks the current audio phase so we don't spam the MusicManager
 var _active_music_phase: String = ""
 var day_timer: Timer
 var _last_rendered_day := -1
@@ -22,11 +20,7 @@ var _last_animation := ""
 func _ready() -> void:
 	_resolve_day_timer()
 	_update_view(true)
-	
-	# 2. Set the text immediately on boot
 	_update_day_display(Global.current_day)
-	
-	# 3. Connect to the global signal so we never have to poll it in _process
 	Global.day_changed.connect(_update_day_display)
 	
 func _update_day_display(new_day: int) -> void:
@@ -44,19 +38,16 @@ func _resolve_day_timer() -> void:
 		day_timer = main_scene.get_node("DayTimer") as Timer
 
 func _update_view(force := false) -> void:
-	# 1. The Ultimate Override: Is the day ending?
 	if Global.pending_day_transition:
 		_set_time_label("Midnight", force)
 		_set_icon_animation("night", force)
 		
-		# Lock in the silence phase immediately
 		if _active_music_phase != "silence":
 			_active_music_phase = "silence"
 			MusicManager.fade_to_silence(0.45)
 			
-		return # Halt all further UI updates for this frame
+		return
 
-	# 2. Normal Gameplay: Is the timer running?
 	if not day_timer.is_stopped():
 		_update_clock(force)
 
@@ -81,24 +72,17 @@ func _set_icon_animation(next_animation: String, force := false) -> void:
 	_last_animation = next_animation
 	
 	if time_icon.animation != next_animation:
-		# --- ELEGANT FADE TRANSITION ---
 		var tween = create_tween()
-		# 1. Fade the current icon to 0% opacity over 0.5 seconds
 		tween.tween_property(time_icon, "modulate:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE)
-		# 2. Swap the animation while it's invisible
 		tween.tween_callback(func(): time_icon.play(next_animation))
-		# 3. Fade the new icon back to 100% opacity over 0.5 seconds
 		tween.tween_property(time_icon, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 
 func _check_music_transition(clock_hour_24: int) -> void:
-	# Determine what the music phase *should* be right now
 	var target_phase: String = "day" if (clock_hour_24 >= 6 and clock_hour_24 < 18) else "night"
 
-	# If we are already in this phase, bail out immediately. Zero Autoload traffic.
 	if target_phase == _active_music_phase:
 		return
 
-	# Otherwise, the phase just changed! Update the cache and trigger the crossfade.
 	_active_music_phase = target_phase
 
 	if target_phase == "day" and day_music:
@@ -122,7 +106,6 @@ func _update_clock(force := false) -> void:
 
 	var hours = DAY_START_HOUR + int(displayed_minutes / 60.0)
 	
-	# Normalize to a strict 0-23 format
 	var clock_hour_24 = hours % 24 
 	var minutes = displayed_minutes % 60
 	
@@ -154,6 +137,4 @@ func _update_clock(force := false) -> void:
 		current_anim = "night"
 
 	_set_icon_animation(current_anim, force)
-	
-	# Safely trigger music checks based purely on the clock math
 	_check_music_transition(clock_hour_24)

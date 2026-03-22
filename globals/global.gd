@@ -5,13 +5,12 @@ func _ready() -> void:
 	ensure_player_stat_formats()
 	_validate_early_food_balance()
 	
-	# If we are NOT loading from a save file, ask ProgressionService for the base level
 	if player_level <= 0:
 		if ProgressionService and ProgressionService.has_method("get_starting_player_level"):
 			player_level = ProgressionService.get_starting_player_level()
 		else:
-			player_level = 1 # Absolute failsafe
-	# Sync the class name so early saves don't default to "Deserter"
+			player_level = 1
+	# Older saves can still come through with the placeholder class name.
 	if player_class_name == "Deserter" or player_class_name == "":
 		if ProgressionService and ProgressionService.has_method("get_player_character_data"):
 			var player_data = ProgressionService.get_player_character_data()
@@ -51,28 +50,19 @@ var last_battle_result := {
 @warning_ignore("unused_signal")
 signal day_changed(new_day: int)
 
-# --- TIME & CALENDAR STATE ---
 var current_day: int = 1
 var pending_day_transition: bool = false
-
-# Tracks which encounters have been beaten (for save/load later)
 var resolved_encounters: Array = [] 
-
-# Used to temporarily hold the specific map we need to load
 var pending_combat_scene_path: String = ""
-# -----------------------------
 
-# --- TUTORIAL SYSTEM ---
 signal tutorial_updated(text: String)
 var tutorial_step: int = 0
 const MAX_TUTORIAL_STEP := 15
 
-## Progresses to the next quest and tells the UI to update
 func advance_tutorial() -> void:
 	tutorial_step = min(tutorial_step + 1, MAX_TUTORIAL_STEP)
 	update_tutorial_ui()
 
-## Broadcasts the current quest text to the screen
 func update_tutorial_ui() -> void:
 	match tutorial_step:
 		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
@@ -90,9 +80,9 @@ func update_tutorial_ui() -> void:
 		12: tutorial_updated.emit("Quest: Open inventory (Tab) and eat the meal.")
 		13: tutorial_updated.emit("Quest: Sleep to trigger the battle warning, then press Defend the Sanctuary!")
 		14: tutorial_updated.emit("Quest: Defeat the enemy and return to the farm!")
-		15: tutorial_updated.emit("") # An empty string will hide the UI!
+		15: tutorial_updated.emit("")
 		_:
-			tutorial_updated.emit("") # An empty string will hide the UI!
+			tutorial_updated.emit("")
 
 var combat_transition := {
 	"started_at_unix": 0.0
@@ -111,30 +101,20 @@ func consume_combat_elapsed_seconds() -> float:
 	return elapsed
 
 
-# 1. THE MASTER ITEM LIST
-# We distinguish between the SEED (what you plant) and the CROP (what you eat/sell)
 enum Items {
-	# Seeds
 	BLUEBERRY_SEED, WHEAT_SEED, MELON_SEED, CORN_SEED, HOT_PEPPER_SEED, RADISH_SEED, RED_CABBAGE_SEED, TOMATO_SEED,
 	CARROT_SEED, CAULIFLOWER_SEED, POTATO_SEED, PARSNIP_SEED, GARLIC_SEED, GREEN_BEANS_SEED, STRAWBERRY_SEED, COFFEE_BEAN_SEED,
 	PUMPKIN_SEED, BROCCOLI_SEED, ARTICHOKE_SEED, EGGPLANT_SEED, BOK_CHOY_SEED, GRAPE_SEED,
-	# Crops
 	BLUEBERRY, WHEAT, MELON, CORN, HOT_PEPPER, RADISH, RED_CABBAGE, TOMATO,
 	CARROT, CAULIFLOWER, POTATO, PARSNIP, GARLIC, GREEN_BEANS, STRAWBERRY, COFFEE_BEAN,
 	PUMPKIN, BROCCOLI, ARTICHOKE, EGGPLANT, BOK_CHOY, GRAPE,
-	# Resources
 	WOOD, APPLE, STONE , WATER,
-	
-	# Food
-	
 	ROASTED_CORN, TOMATO_SOUP, HERBAL_HASH,
 	GARLIC_MASHED_POTATOES, GLAZED_CARROTS, ROASTED_ROOT_MEDLEY,
 	CAULIFLOWER_STEAK, GREEN_BEAN_SAUTE, STRAWBERRY_ENERGY_BOWL,
 	MORNING_COFFEE, PARSNIP_SOUP
 }
 
-# 2. HARVEST MAPPING
-# This tells the game: "If I harvest a CORN_SEED plant, give me a CORN item."
 const HARVEST_DROPS = {
 	Items.BLUEBERRY_SEED: Items.BLUEBERRY,
 	Items.WHEAT_SEED: Items.WHEAT,
