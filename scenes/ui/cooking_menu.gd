@@ -7,6 +7,9 @@ const ROLE_SORT_ORDER := {
 	"Purifier": 2
 }
 
+signal menu_opened
+signal menu_closed
+
 @onready var recipe_list: VBoxContainer = $Panel/MarginContainer/Layout/RecipeScroll/RecipeList
 
 var _recipe_rows: Array = []
@@ -31,15 +34,20 @@ func _ready() -> void:
 	Global.recipe_knowledge_updated.connect(_on_recipe_knowledge_updated)
 
 func open_menu() -> void:
-	visible = true
+	if not visible:
+		visible = true
+		menu_opened.emit()
 	_refresh_recipe_rows()
 	_focus_first_available_button()
 
 func close_menu() -> void:
+	if not visible:
+		return
 	visible = false
+	menu_closed.emit()
 
 func _unhandled_input(event) -> void:
-	if visible and event.is_action_pressed("cancel"):
+	if visible and (event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel")):
 		close_menu()
 		get_viewport().set_input_as_handled()
 

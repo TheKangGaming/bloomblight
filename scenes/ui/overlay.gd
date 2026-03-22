@@ -1,5 +1,7 @@
 extends Control
 
+const QUEST_FONT = preload("res://assets/fonts/Cinzel_Spaced.tres")
+
 @onready var tool_label = $ToolBar/Label
 @onready var tool_icon = $ToolBar/ToolDisplay/Sprite2D
 
@@ -36,21 +38,34 @@ func _setup_quest_ui() -> void:
 	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(320, 0)
-	panel.self_modulate = Color(1, 1, 1, 0.9)
+	panel.custom_minimum_size = Vector2(420, 0)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.07, 0.03, 0.92)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.82, 0.7, 0.28, 0.95)
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	panel_style.corner_radius_bottom_right = 8
+	panel_style.corner_radius_bottom_left = 8
+	panel.add_theme_stylebox_override("panel", panel_style)
 
 	var content = MarginContainer.new()
-	content.add_theme_constant_override("margin_top", 4)
-	content.add_theme_constant_override("margin_bottom", 4)
-	content.add_theme_constant_override("margin_left", 8)
-	content.add_theme_constant_override("margin_right", 8)
+	content.add_theme_constant_override("margin_top", 8)
+	content.add_theme_constant_override("margin_bottom", 8)
+	content.add_theme_constant_override("margin_left", 12)
+	content.add_theme_constant_override("margin_right", 12)
 
 	quest_label = Label.new()
 	quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	quest_label.add_theme_font_size_override("font_size", 16)
+	quest_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	quest_label.add_theme_font_override("font", QUEST_FONT)
+	quest_label.add_theme_font_size_override("font_size", 24)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
 	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	quest_label.add_theme_constant_override("outline_size", 2)
+	quest_label.add_theme_constant_override("outline_size", 3)
 	quest_label.text = ""
 
 	content.add_child(quest_label)

@@ -46,7 +46,7 @@ horizontal_alignment = 1
 modulate = Color(0.84, 0.84, 0.84, 1)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Cook role meals. ↑/↓ select, Enter craft."
+text = "Cook role meals. Up/Down select, Enter to cook."
 horizontal_alignment = 1
 
 [node name="Header" type="HBoxContainer" parent="Panel/MarginContainer/Layout" unique_id=1006960615]
@@ -75,10 +75,10 @@ theme_override_font_sizes/font_size = 26
 text = "Buff"
 
 [node name="ActionHeader" type="Label" parent="Panel/MarginContainer/Layout/Header" unique_id=1889556949]
-custom_minimum_size = Vector2(160, 0)
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Action"
+text = "Cook"
 horizontal_alignment = 1
 
 [node name="Divider" type="HSeparator" parent="Panel/MarginContainer/Layout" unique_id=98696410]

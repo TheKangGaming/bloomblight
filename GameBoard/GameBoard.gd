@@ -76,7 +76,7 @@ func _sync_scene_music_to_manager() -> void:
 
 	scene_music.autoplay = false
 	if MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(scene_music.stream, 0.01, scene_music.volume_db)
+		MusicManager.crossfade_to(scene_music.stream, 1.25, scene_music.volume_db)
 	scene_music.stop()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -267,8 +267,8 @@ func _dijkstra(unit: Unit, max_distance: int, _attackable_check: bool) -> Array:
 	return distances.keys()
 
 
-## Moves the active unit to the new cell and shows the action menu
-func _move_active_unit(new_cell: Vector2) -> void:
+## Moves the active unit to the new cell and optionally shows the action menu
+func _move_active_unit(new_cell: Vector2, show_action_menu: bool = true) -> void:
 	# 1. Validate and explicitly draw the path to the target
 	if _unit_path._pathfinder == null:
 		_unit_path.initialize(_walkable_cells)
@@ -292,7 +292,12 @@ func _move_active_unit(new_cell: Vector2) -> void:
 	_active_unit.walk_along(_unit_path.current_path)
 	await _active_unit.walk_finished
 	
-	_show_action_menu()
+	if show_action_menu:
+		_show_action_menu()
+	else:
+		_cursor.process_mode = Node.PROCESS_MODE_INHERIT
+		_cursor.show()
+		_cursor.is_active = true
 	
 
 
@@ -442,10 +447,6 @@ func _deselect_active_unit() -> void:
 
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
-	print("--- CURSOR ACCEPT CLICKED ---")
-	print("Clicked Cell: ", cell)
-	print("Targeting Ability Mode: ", _is_targeting_ability)
-	
 	if _battle_ended:
 		return
 
@@ -482,11 +483,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		
 	# --- 1.5 ABILITY TARGETING INTERCEPT ---
 	if _is_targeting_ability:
-		print("SUCCESS: We are in Ability Mode!")
-		print("Valid Target Cells array contains: ", _valid_target_cells)
-		
 		if cell in _valid_target_cells:
-			print("SUCCESS: Cell is valid! Firing execution math...")
 			var success = execute_ability(_active_unit, _selected_ability, cell)
 			
 			if success:
@@ -496,10 +493,6 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_unit_overlay.clear()
 				_cursor.is_active = false
 				finish_unit_turn() 
-			else:
-				print("FAIL: Ability cast failed in the math block.")
-		else:
-			print("FAIL: You clicked a cell outside of the valid red tiles!")
 		return
 		
 	# --- 2. MOVEMENT / SELECTION INTERCEPT ---
@@ -532,9 +525,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				var attack_from_cell = _find_attack_origin_for_target(cell)
 				if attack_from_cell != null:
 					if attack_from_cell != _active_unit.cell:
-						await _move_active_unit(attack_from_cell)
-						if has_node("ActionMenu"):
-							$ActionMenu.hide()
+						await _move_active_unit(attack_from_cell, false)
 					_begin_attack_preview_on_target(target_unit)
 
 		# 3. Player clicked an empty blue tile to move
@@ -591,16 +582,12 @@ func _on_unit_died(unit: Unit) -> void:
 	_check_win_loss()
 	
 func _show_action_menu() -> void:
-	var action_menu
-	
 	if has_node("ActionMenu"):
-		action_menu = $ActionMenu
-	else:
-		action_menu = ActionMenu.instantiate()
-		action_menu.name = "ActionMenu"
-		# Optional: Add it to a dedicated UI layer if you have one, 
-		# e.g., get_node("/root/Main/CanvasLayer").add_child(action_menu)
-		add_child(action_menu)
+		$ActionMenu.queue_free()
+
+	var action_menu = ActionMenu.instantiate()
+	action_menu.name = "ActionMenu"
+	add_child(action_menu)
 		
 	action_menu.show()
 	if action_menu.has_method("_reset_menu_focus"):
@@ -625,7 +612,7 @@ func finish_unit_turn() -> void:
 		_active_unit.is_wait = true
 		
 	if has_node("ActionMenu"):
-		$ActionMenu.hide()
+		$ActionMenu.queue_free()
 		
 	_deselect_active_unit()
 	
@@ -643,8 +630,6 @@ func end_player_phase() -> void:
 	# 1. Lock the player out entirely
 	_cursor.is_active = false
 	current_phase = TurnPhase.ENEMY
-	
-	print("ENEMY PHASE START")
 	
 	# 2. Trigger the Enemy Phase Logic (We will build the AI inside this!)
 	start_enemy_phase()

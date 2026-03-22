@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bmgvxhavos3cp" path="res://scenes/ui/main_menu.gd" id="1_sl1te"]
 [ext_resource type="Texture2D" uid="uid://dy71joucadqo" path="res://graphics/characters/Savannah.png" id="2_fe2o3"]
+[ext_resource type="Script" path="res://scenes/ui/tooltipped_texture_rect.gd" id="3_x1a8u"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sl1te"]
 bg_color = Color(0, 0, 0, 0.78431374)
@@ -197,6 +198,7 @@ custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
+script = ExtResource("3_x1a8u")
 
 [node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=350771874]
 texture_filter = 1
@@ -204,6 +206,7 @@ custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
+script = ExtResource("3_x1a8u")
 
 [node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1711539566]
 texture_filter = 1
@@ -211,6 +214,7 @@ custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
+script = ExtResource("3_x1a8u")
 
 [node name="MealSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=2087827878]
 layout_mode = 2

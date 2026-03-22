@@ -13,6 +13,7 @@ func setup(recipe_output: Global.Items, recipe_name: String, ingredients_summary
 	$NameLabel.text = recipe_name
 	$IngredientsLabel.text = ingredients_summary
 	$BuffLabel.text = buff_summary
+	$CraftButton.text = "Cook"
 	$CraftButton.disabled = not can_craft
 
 func get_craft_button() -> Button:

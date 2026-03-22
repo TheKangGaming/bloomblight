@@ -139,7 +139,8 @@ func _load_combat_scene() -> void:
 	var reveal := scene_tree.create_tween()
 	reveal.set_ease(Tween.EASE_IN_OUT)
 	reveal.set_trans(Tween.TRANS_SINE)
-	reveal.tween_property(fade_rect, "color:a", 0.0, 0.35)
+	reveal.tween_interval(0.12)
+	reveal.tween_property(fade_rect, "color:a", 0.0, 0.9)
 	await reveal.finished
 
 	if is_instance_valid(previous_scene):

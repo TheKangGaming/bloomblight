@@ -2,6 +2,8 @@ extends PanelContainer
 
 @onready var icon = $Icon
 
+const ItemTooltipPanel = preload("res://scenes/ui/item_tooltip.gd")
+
 # We need a variable to remember what item this slot is holding!
 var stored_item_enum: Global.Items
 
@@ -20,7 +22,7 @@ const IMG_APPLE = preload("res://graphics/plants/apple.png")
 # --- COORDINATES (X, Y) on the Sheets ---
 # This dictionary maps the Item Enum -> The specific sheet and coordinates
 var item_map: Dictionary = {}
-var _focus_tooltip: PanelContainer
+var _focus_tooltip: ItemTooltip
 var _focus_tooltip_text := ""
 const FOCUS_TINT := Color(1.0, 0.95, 0.72, 1.0)
 const DEFAULT_TINT := Color(1, 1, 1, 1)
@@ -173,13 +175,11 @@ func _show_focus_tooltip() -> void:
 	if _focus_tooltip_text.is_empty():
 		return
 
-	var tooltip: PanelContainer = _get_or_create_focus_tooltip()
-	var text_label: Label = tooltip.get_node("Margin/Text") as Label
-	text_label.text = _focus_tooltip_text
-	text_label.add_theme_font_size_override("font_size", 22)
+	var tooltip := _get_or_create_focus_tooltip()
+	tooltip.setup(_focus_tooltip_text, 320.0, 18)
 
 	var slot_rect: Rect2 = get_global_rect()
-	var tooltip_size: Vector2 = text_label.get_combined_minimum_size() + Vector2(16.0, 12.0)
+	var tooltip_size: Vector2 = tooltip.size
 	var viewport_size: Vector2 = get_viewport_rect().size
 
 	var target_position: Vector2 = slot_rect.position + Vector2(slot_rect.size.x + 8.0, 0.0)
@@ -189,7 +189,6 @@ func _show_focus_tooltip() -> void:
 		target_position.y = max(8.0, viewport_size.y - tooltip_size.y - 8.0)
 	target_position.y = max(8.0, target_position.y)
 
-	tooltip.custom_minimum_size = tooltip_size
 	tooltip.position = target_position.round()
 	tooltip.visible = true
 
@@ -202,29 +201,15 @@ func _hide_focus_tooltip(force_free: bool = false) -> void:
 		_focus_tooltip.queue_free()
 		_focus_tooltip = null
 
-func _get_or_create_focus_tooltip() -> PanelContainer:
+func _get_or_create_focus_tooltip() -> ItemTooltip:
 	if is_instance_valid(_focus_tooltip):
 		return _focus_tooltip
 
-	var tooltip: PanelContainer = PanelContainer.new()
+	var tooltip: ItemTooltip = ItemTooltipPanel.new()
 	tooltip.name = "FocusTooltip"
 	tooltip.visible = false
 	tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tooltip.z_index = 100
-
-	var margin: MarginContainer = MarginContainer.new()
-	margin.name = "Margin"
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 6)
-	margin.add_theme_constant_override("margin_bottom", 6)
-
-	var text_label: Label = Label.new()
-	text_label.name = "Text"
-	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	margin.add_child(text_label)
-	tooltip.add_child(margin)
 
 	get_tree().root.add_child(tooltip)
 	_focus_tooltip = tooltip

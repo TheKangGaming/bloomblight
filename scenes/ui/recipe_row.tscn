@@ -35,7 +35,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="CraftButton" type="Button" parent="." unique_id=1127360929]
-custom_minimum_size = Vector2(160, 56)
+custom_minimum_size = Vector2(180, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "Craft"
+text = "Cook"
