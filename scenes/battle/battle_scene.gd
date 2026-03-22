@@ -199,19 +199,24 @@ func _determine_combatants_reach() -> void:
 func _play_approach() -> void:
 	_determine_combatants_reach() # Figure out who has swords!
 	
-	var tween = create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var tween: Tween = null
 	var movement_happened = false
 	
 	# If a combatant is melee in this exchange, bring them into the clash
 	# space up front so melee-vs-melee reads as a shared approach.
 	if _attacker_is_melee:
+		if tween == null:
+			tween = create_tween().set_parallel(true)
+			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		active_attacker.play_run()
 		tween.tween_property(active_attacker, "position", attacker_melee.position, APPROACH_DURATION)
 		_attacker_has_advanced = true
 		movement_happened = true
 
 	if _defender_will_counter and _defender_is_melee:
+		if tween == null:
+			tween = create_tween().set_parallel(true)
+			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		active_defender.play_run()
 		tween.tween_property(active_defender, "position", defender_melee.position, APPROACH_DURATION)
 		_defender_has_advanced = true
@@ -224,17 +229,22 @@ func _play_approach() -> void:
 		await get_tree().create_timer(APPROACH_SETTLE_TIME).timeout
 
 func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
-	var tween = create_tween().set_parallel(true)
-	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var tween: Tween = null
 	var movement_happened = false
 	
 	# Only hop back if they actually dashed forward in the first place!
 	if attacker_survived and _attacker_has_advanced and is_instance_valid(active_attacker):
+		if tween == null:
+			tween = create_tween().set_parallel(true)
+			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		active_attacker.play_jump()
 		tween.tween_property(active_attacker, "position", attacker_start.position, RETREAT_DURATION)
 		movement_happened = true
 		
 	if defender_survived and _defender_has_advanced and is_instance_valid(active_defender):
+		if tween == null:
+			tween = create_tween().set_parallel(true)
+			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		active_defender.play_jump()
 		tween.tween_property(active_defender, "position", defender_start.position, RETREAT_DURATION)
 		movement_happened = true
