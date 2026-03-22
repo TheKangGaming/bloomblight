@@ -47,7 +47,10 @@ func play_hit() -> void:
 		_fake_reaction_animation("hit")
 		
 func play_run() -> void:
-	if anim_player and anim_player.has_animation("run"):
+	if anim_player and anim_player.has_animation("run_start") and anim_player.has_animation("run"):
+		anim_player.play("run_start")
+		anim_player.queue("run")
+	elif anim_player and anim_player.has_animation("run"):
 		anim_player.play("run")
 	elif anim_player and anim_player.has_animation("walk"):
 		anim_player.play("walk")
