@@ -15,22 +15,26 @@ var _pending_finish_state := ""
 var _is_dying: bool = false
 
 func _ready() -> void:
+	if sprite_layers and sprite_layers.has_signal("animation_state_started"):
+		sprite_layers.connect("animation_state_started", Callable(self, "_on_animation_state_started"))
 	if sprite_layers and sprite_layers.has_signal("animation_state_finished"):
 		sprite_layers.connect("animation_state_finished", Callable(self, "_on_animation_state_finished"))
+
+func _on_animation_state_started(state_name: String, _wait_time: float = 0.0) -> void:
+	if _pending_finish_state.is_empty():
+		return
+
+	# BowShot and other short battle reactions can occasionally flow back into
+	# idle without the exact finish callback we are waiting on. If the rig has
+	# clearly transitioned home, unblock the battle loop instead of hanging.
+	if state_name != _pending_finish_state and _is_idle_state(state_name) and not _is_dying:
+		_complete_pending_action()
 
 func _on_animation_state_finished(state_name: String, _wait_time: float = 0.0) -> void:
 	if state_name != _pending_finish_state:
 		return
 
-	_pending_finish_state = ""
-	_apply_weapon_visibility("neutral")
-
-	# --- THE INTERCEPTOR ---
-	if _is_dying:
-		_begin_death_sink()
-	else:
-		if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
-			parent_actor.finish_tracked_action()
+	_complete_pending_action()
 
 func emit_impact() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
@@ -175,3 +179,17 @@ func _begin_death_sink() -> void:
 	
 	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
 		parent_actor.finish_tracked_action()
+
+func _complete_pending_action() -> void:
+	_pending_finish_state = ""
+	_apply_weapon_visibility("neutral")
+
+	if _is_dying:
+		_begin_death_sink()
+		return
+
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()
+
+func _is_idle_state(state_name: String) -> bool:
+	return state_name == "Idle" or state_name == "Idle2"
