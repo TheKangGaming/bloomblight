@@ -55,15 +55,11 @@ const SHAKE_DURATION_CRIT := 0.18
 const SHAKE_INTENSITY_NORMAL := 14.0
 const SHAKE_INTENSITY_CRIT := 24.0
 const EFFECT_VERTICAL_OFFSET := Vector2.ZERO
-const FRAME_WIDTH_RATIO := 0.94
-const FRAME_HEIGHT_RATIO := 0.84
-const FRAME_MAX_SIZE := Vector2(1440.0, 860.0)
-const FRAME_BORDER_COLOR := Color(0.96, 0.86, 0.62, 0.96)
-const FRAME_FILL_COLOR := Color(0.04, 0.05, 0.07, 0.08)
-const FRAME_SHADOW_COLOR := Color(0.0, 0.0, 0.0, 0.24)
-const FRAME_OUTER_DIM_COLOR := Color(0.0, 0.0, 0.0, 0.38)
-const FRAME_BORDER_WIDTH := 5
-const FRAME_SHADOW_MARGIN := 12.0
+const LETTERBOX_HEIGHT_RATIO := 0.17
+const LETTERBOX_MAX_HEIGHT := 156.0
+const LETTERBOX_COLOR := Color(0.01, 0.01, 0.02, 0.82)
+const LETTERBOX_EDGE_COLOR := Color(0.96, 0.86, 0.62, 0.72)
+const LETTERBOX_EDGE_HEIGHT := 3.0
 
 func _ready() -> void:
 	var payload := CombatManager.get_payload()
@@ -531,75 +527,27 @@ func _setup_presentation_overlay() -> void:
 	_presentation_overlay = overlay
 
 	var viewport_size := get_viewport().get_visible_rect().size
-	var frame_size := Vector2(
-		minf(viewport_size.x * FRAME_WIDTH_RATIO, FRAME_MAX_SIZE.x),
-		minf(viewport_size.y * FRAME_HEIGHT_RATIO, FRAME_MAX_SIZE.y)
-	)
-	var frame_position := ((viewport_size - frame_size) * 0.5).round()
-	var frame_rect := Rect2(frame_position, frame_size)
+	var bar_height := minf(viewport_size.y * LETTERBOX_HEIGHT_RATIO, LETTERBOX_MAX_HEIGHT)
+	var top_bar_rect := Rect2(Vector2.ZERO, Vector2(viewport_size.x, bar_height))
+	var bottom_bar_rect := Rect2(Vector2(0.0, viewport_size.y - bar_height), Vector2(viewport_size.x, bar_height))
 
-	_add_outer_dim_rect(overlay, Rect2(Vector2.ZERO, Vector2(viewport_size.x, frame_rect.position.y)))
-	_add_outer_dim_rect(
-		overlay,
-		Rect2(Vector2.ZERO, Vector2(frame_rect.position.x, viewport_size.y))
-	)
-	_add_outer_dim_rect(
-		overlay,
-		Rect2(
-			Vector2(frame_rect.end.x, 0.0),
-			Vector2(maxf(0.0, viewport_size.x - frame_rect.end.x), viewport_size.y)
-		)
-	)
-	_add_outer_dim_rect(
-		overlay,
-		Rect2(
-			Vector2(0.0, frame_rect.end.y),
-			Vector2(viewport_size.x, maxf(0.0, viewport_size.y - frame_rect.end.y))
-		)
-	)
+	_add_letterbox_bar(overlay, top_bar_rect, false)
+	_add_letterbox_bar(overlay, bottom_bar_rect, true)
 
-	var shadow := Panel.new()
-	shadow.position = (frame_rect.position - Vector2.ONE * FRAME_SHADOW_MARGIN).round()
-	shadow.size = (frame_rect.size + Vector2.ONE * FRAME_SHADOW_MARGIN * 2.0).round()
-	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shadow.add_theme_stylebox_override("panel", _build_frame_style(FRAME_SHADOW_COLOR, Color.TRANSPARENT, 0))
-	overlay.add_child(shadow)
+func _add_letterbox_bar(parent: Control, rect: Rect2, edge_on_top: bool) -> void:
+	var bar := ColorRect.new()
+	bar.position = rect.position.round()
+	bar.size = rect.size.round()
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.color = LETTERBOX_COLOR
+	parent.add_child(bar)
 
-	var frame := Panel.new()
-	frame.position = frame_rect.position
-	frame.size = frame_rect.size
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	frame.add_theme_stylebox_override("panel", _build_frame_style(FRAME_FILL_COLOR, FRAME_BORDER_COLOR, FRAME_BORDER_WIDTH))
-	overlay.add_child(frame)
-
-	var inner_glow := Panel.new()
-	inner_glow.position = (frame_rect.position + Vector2.ONE * 8.0).round()
-	inner_glow.size = (frame_rect.size - Vector2.ONE * 16.0).round()
-	inner_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inner_glow.add_theme_stylebox_override("panel", _build_frame_style(Color.TRANSPARENT, Color(1.0, 1.0, 1.0, 0.08), 2))
-	overlay.add_child(inner_glow)
-
-func _add_outer_dim_rect(parent: Control, rect: Rect2) -> void:
-	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
-		return
-
-	var dim := ColorRect.new()
-	dim.position = rect.position.round()
-	dim.size = rect.size.round()
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dim.color = FRAME_OUTER_DIM_COLOR
-	parent.add_child(dim)
-
-func _build_frame_style(fill_color: Color, border_color: Color, border_width: int) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = fill_color
-	style.border_color = border_color
-	style.border_width_left = border_width
-	style.border_width_top = border_width
-	style.border_width_right = border_width
-	style.border_width_bottom = border_width
-	style.corner_radius_top_left = 12
-	style.corner_radius_top_right = 12
-	style.corner_radius_bottom_left = 12
-	style.corner_radius_bottom_right = 12
-	return style
+	var edge := ColorRect.new()
+	edge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	edge.color = LETTERBOX_EDGE_COLOR
+	edge.position = Vector2(
+		rect.position.x,
+		rect.position.y if edge_on_top else rect.end.y - LETTERBOX_EDGE_HEIGHT
+	).round()
+	edge.size = Vector2(rect.size.x, LETTERBOX_EDGE_HEIGHT)
+	parent.add_child(edge)
