@@ -3,6 +3,7 @@ extends Node2D
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 @onready var parent_actor = get_parent()
+var _is_dying: bool = false
 
 func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats, _weapon: WeaponData = null) -> void:
 	pass # In the future, you can swap monster textures or colors here!
@@ -12,8 +13,12 @@ func _ready() -> void:
 		anim_player.animation_finished.connect(_on_anim_finished)
 
 func _on_anim_finished(_anim_name: String) -> void:
-	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
-		parent_actor.finish_tracked_action()
+	# --- THE INTERCEPTOR ---
+	if _is_dying:
+		_begin_death_sink()
+	else:
+		if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+			parent_actor.finish_tracked_action()
 
 func emit_impact() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
@@ -62,6 +67,7 @@ func play_jump() -> void:
 		play_idle() # Failsafe: Just slide backwards in an idle pose!
 
 func play_death() -> void:
+	_is_dying = true
 	if anim_player and anim_player.has_animation("death"):
 		anim_player.play("death")
 	else:
@@ -85,8 +91,15 @@ func _fake_attack_animation() -> void:
 func _fake_reaction_animation(_kind: String) -> void:
 	# Reactions should not emit an attack impact.
 	await get_tree().create_timer(0.3).timeout
-	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
-		parent_actor.finish_tracked_action()
+	
+	# --- THE FALLBACK INTERCEPTOR ---
+	if _is_dying and _kind == "death":
+		# Optional: Flash them red so the player knows the fake animation was a death!
+		modulate = Color(0.8, 0.4, 0.4) 
+		_begin_death_sink()
+	else:
+		if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+			parent_actor.finish_tracked_action()
 
 func get_effect_anchor_position() -> Vector2:
 	if sprite:
@@ -97,3 +110,15 @@ func get_damage_anchor_position() -> Vector2:
 	if sprite:
 		return sprite.global_position + Vector2(0.0, -40.0)
 	return global_position + Vector2(0.0, -40.0)
+
+func _begin_death_sink() -> void:
+	var sink_tween = create_tween().set_parallel(true)
+	# Sink down 40 pixels and fade out over 1.5 seconds
+	sink_tween.tween_property(self, "position:y", position.y + 40, 1.5)
+	sink_tween.tween_property(self, "modulate:a", 0.0, 1.5)
+	
+	await sink_tween.finished
+	
+	# NOW tell the BattleActor we are officially dead and the action is over!
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()

@@ -12,6 +12,7 @@ var _character_data: CharacterData
 var _weapon_snapshot: WeaponData
 var _facing := Vector2.RIGHT
 var _pending_finish_state := ""
+var _is_dying: bool = false
 
 func _ready() -> void:
 	if sprite_layers and sprite_layers.has_signal("animation_state_finished"):
@@ -24,8 +25,12 @@ func _on_animation_state_finished(state_name: String, _wait_time: float = 0.0) -
 	_pending_finish_state = ""
 	_apply_weapon_visibility("neutral")
 
-	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
-		parent_actor.finish_tracked_action()
+	# --- THE INTERCEPTOR ---
+	if _is_dying:
+		_begin_death_sink()
+	else:
+		if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+			parent_actor.finish_tracked_action()
 
 func emit_impact() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
@@ -108,6 +113,7 @@ func play_hit() -> void:
 		msca_player.travel_to_anim("Hurt", _facing)
 
 func play_death() -> void:
+	_is_dying = true
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "DeathBounce"
 		_apply_weapon_visibility("neutral")
@@ -153,3 +159,13 @@ func get_damage_anchor_position() -> Vector2:
 	if body_sprite:
 		return body_sprite.global_position + Vector2(0.0, -42.0)
 	return global_position + Vector2(0.0, -42.0)
+	
+func _begin_death_sink() -> void:
+	var sink_tween = create_tween().set_parallel(true)
+	sink_tween.tween_property(self, "position:y", position.y + 40, 1.5)
+	sink_tween.tween_property(self, "modulate:a", 0.0, 1.5)
+	
+	await sink_tween.finished
+	
+	if is_instance_valid(parent_actor) and parent_actor.has_method("finish_tracked_action"):
+		parent_actor.finish_tracked_action()
