@@ -129,11 +129,11 @@ func _execute_battle_sequence() -> void:
 		await striker.strike_impact
 		
 		# --- DELIVER THE RANGED/MAGIC PAYLOAD ---
-		# Melee bypasses this and connects instantly. Ranged pauses the loop for travel time!
 		if strike.attack_kind == CombatStrike.AttackKind.RANGED:
 			await _play_projectile(striker, target, strike.is_hit)
 		elif strike.attack_kind == CombatStrike.AttackKind.MAGIC:
-			await _play_magic_vfx(target, strike.is_hit)
+			# ADDED THE 'striker' VARIABLE HERE!
+			await _play_magic_vfx(striker, target, strike.is_hit)
 		# ----------------------------------------
 		
 		# --- THE JUICE: LOCAL HIT-STOP ---
@@ -363,42 +363,51 @@ func _spawn_damage_popup(target: BattleActor, strike: CombatStrike) -> void:
 	tween.chain().tween_callback(popup.queue_free)
 
 func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool) -> void:
-	# 1. Create a "Silver Arrow" placeholder
 	var arrow = ColorRect.new()
 	arrow.color = Color(0.8, 0.8, 0.8) 
 	arrow.size = Vector2(20, 4)
 	
+	# FIX 2: Set the pivot to the center so it flies perfectly straight!
+	arrow.pivot_offset = arrow.size / 2.0
+
 	battle_world.add_child(arrow)
 	
-	# Spawn perfectly at the striker's effect anchor
 	var start_pos = striker.get_effect_anchor_position()
 	arrow.global_position = start_pos
+	var target_pos = target.get_damage_anchor_position()
 	
-	# Aim directly for the target's chest/damage anchor
-	var end_pos = target.get_damage_anchor_position()
-	
-	# If the RNG said "Miss", intentionally shoot it way past the target!
-	if not is_hit:
-		var direction = (end_pos - start_pos).normalized()
-		end_pos += direction * 250 # Overshoot dramatically
-		
-	# Point the arrow exactly where it's going
-	arrow.rotation = (end_pos - start_pos).angle()
-	
-	# 2. Tween the arrow through the air
-	var tween = create_tween()
-	tween.tween_property(arrow, "global_position", end_pos, 0.25).set_trans(Tween.TRANS_LINEAR)
-	
-	# The loop STOPS here and waits for the arrow to finish flying
-	await tween.finished
-	arrow.queue_free()
+	if is_hit:
+		arrow.rotation = (target_pos - start_pos).angle()
+		var tween = create_tween()
+		tween.tween_property(arrow, "global_position", target_pos, 0.25).set_trans(Tween.TRANS_LINEAR)
+		await tween.finished
+		arrow.queue_free()
+	else:
+		# FIX 1: The Near-Miss Split!
+		var direction = (target_pos - start_pos).normalized()
+		var overshoot_pos = target_pos + (direction * 250)
+
+		arrow.rotation = (overshoot_pos - start_pos).angle()
+		var tween = create_tween()
+
+		# Tween part 1: Fly to the target's face (takes 0.15s)
+		tween.tween_property(arrow, "global_position", target_pos, 0.15).set_trans(Tween.TRANS_LINEAR)
+
+		# Wait ONLY for the exact moment the arrow reaches the target...
+		await get_tree().create_timer(0.15).timeout
+
+		# Tween part 2: Continue flying into the void in the background!
+		tween.tween_property(arrow, "global_position", overshoot_pos, 0.15).set_trans(Tween.TRANS_LINEAR)
+		tween.tween_callback(arrow.queue_free)
+
+		# Return control to the main loop IMMEDIATELY so play_evade() triggers!
+		return
 
 
-func _play_magic_vfx(target: BattleActor, is_hit: bool) -> void:
-	# 1. Create a "Pillar of Arcane Light" placeholder
+func _play_magic_vfx(striker: BattleActor, target: BattleActor, is_hit: bool) -> void:
 	var magic = ColorRect.new()
-	magic.color = Color(0.5, 0.1, 1.0, 0.8) # Translucent Purple
-	magic.size = Vector2(40, 0) # Start completely flat
+	magic.color = Color(0.5, 0.1, 1.0, 0.8)
+	magic.size = Vector2(40, 0)
 	
 	battle_world.add_child(magic)
 	
@@ -407,11 +416,12 @@ func _play_magic_vfx(target: BattleActor, is_hit: bool) -> void:
 	
 	# WHIFF LOGIC: If it's a miss, offset the pillar so the player can read the whiff!
 	if not is_hit:
-		# Push it 60 pixels away from the center of the arena
-		var whiff_dir = 1 if target.global_position.x > battle_world.global_position.x else -1
+		# FIX 3: Dynamic Relative Whiff!
+		# If target is to the right of the striker, miss further to the right (+1)
+		# If target is to the left of the striker, miss further to the left (-1)
+		var whiff_dir = 1 if target.global_position.x > striker.global_position.x else -1
 		spawn_pos.x += 60 * whiff_dir
 		
-	# Center the 40px width on the calculated spawn position
 	magic.global_position = spawn_pos + Vector2(-20, 0)
 	
 	# 2. Animate it shooting upward
