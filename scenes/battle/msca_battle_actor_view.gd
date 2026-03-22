@@ -162,8 +162,13 @@ func get_damage_anchor_position() -> Vector2:
 	
 func _begin_death_sink() -> void:
 	var sink_tween = create_tween().set_parallel(true)
-	sink_tween.tween_property(self, "position:y", position.y + 40, 1.5)
-	sink_tween.tween_property(self, "modulate:a", 0.0, 1.5)
+	
+	# NEW: 'EASE_IN' makes the movement start slow and accelerate, simulating gravity!
+	sink_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	
+	# Sped up from 1.5 seconds to a snappy 0.4 seconds!
+	sink_tween.tween_property(self, "position:y", position.y + 40, 0.4)
+	sink_tween.tween_property(self, "modulate:a", 0.0, 0.4)
 	
 	await sink_tween.finished
 	
