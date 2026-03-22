@@ -3,7 +3,18 @@ class_name CombatCalculator extends RefCounted
 # Locking in your repo's official threshold
 const FOLLOW_UP_SPEED_DIFF: int = 4 
 
-## 1. THE FORECAST: Generates the raw numbers for the UI and the RNG resolver.
+static func can_attack_at_distance(distance: int, attack_range: int) -> bool:
+	return attack_range > 0 and distance == attack_range
+
+static func get_attack_kind(weapon: WeaponData) -> CombatStrike.AttackKind:
+	if not weapon:
+		return CombatStrike.AttackKind.MELEE
+	if weapon.weapon_type == "Bow":
+		return CombatStrike.AttackKind.RANGED
+	if weapon.weapon_type == "Tome" or weapon.weapon_type == "Staff":
+		return CombatStrike.AttackKind.MAGIC
+	return CombatStrike.AttackKind.MELEE
+
 ## 1. THE FORECAST: Generates the raw numbers for the UI and the RNG resolver.
 static func get_combat_forecast(attacker: Unit, defender: Unit, distance: int) -> CombatForecast:
 	var forecast = CombatForecast.new()
@@ -16,7 +27,7 @@ static func get_combat_forecast(attacker: Unit, defender: Unit, distance: int) -
 	forecast.attacker_can_double = (attacker.speed - defender.speed) >= FOLLOW_UP_SPEED_DIFF
 
 	# CRITICAL: Only calculate a counterattack if the defender can actually reach the attacker!
-	if distance <= defender.attack_range:
+	if can_attack_at_distance(distance, defender.attack_range):
 		forecast.defender_can_counter = true
 		forecast.defender_damage = int(defender_preview.get("damage", 0))
 		forecast.defender_hit_chance = int(defender_preview.get("hit", 0))
@@ -35,16 +46,8 @@ static func resolve_combat(attacker: Unit, defender: Unit, distance: int) -> Arr
 		"defender": defender.current_stats.hp,
 		"attacker": attacker.current_stats.hp
 	}
-	
-	# --- Helper to determine Attack Kind ---
-	var get_attack_kind = func(weapon: WeaponData) -> CombatStrike.AttackKind:
-		if not weapon: return CombatStrike.AttackKind.MELEE
-		if weapon.weapon_type == "Bow": return CombatStrike.AttackKind.RANGED
-		if weapon.weapon_type == "Tome" or weapon.weapon_type == "Staff": return CombatStrike.AttackKind.MAGIC
-		return CombatStrike.AttackKind.MELEE
-
-	var atk_kind = get_attack_kind.call(attacker.character_data.equipped_weapon)
-	var def_kind = get_attack_kind.call(defender.character_data.equipped_weapon)
+	var atk_kind = get_attack_kind(attacker.character_data.equipped_weapon)
+	var def_kind = get_attack_kind(defender.character_data.equipped_weapon)
 	
 	# --- Helper Function to Process a Single Strike ---
 	var process_strike = func(is_attacker: bool, dmg: int, hit_chance: int, crit_chance: int, is_counter: bool, is_follow_up: bool) -> bool:

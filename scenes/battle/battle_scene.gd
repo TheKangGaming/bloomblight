@@ -16,6 +16,8 @@ var _attacker_data: CharacterData
 var _defender_data: CharacterData
 var _attacker_stats: UnitStats
 var _defender_stats: UnitStats
+var _attacker_weapon: WeaponData
+var _defender_weapon: WeaponData
 
 var _combat_strikes: Array[CombatStrike] = []
 var active_attacker: BattleActor
@@ -45,6 +47,8 @@ func _ready() -> void:
 	_defender_data = payload.defender_data
 	_attacker_stats = payload.attacker_stats
 	_defender_stats = payload.defender_stats
+	_attacker_weapon = payload.attacker_weapon
+	_defender_weapon = payload.defender_weapon
 	_combat_strikes = payload.strikes
 	
 	# Save the distance so we know if a counterattack is possible!
@@ -84,7 +88,7 @@ func _spawn_actors() -> bool:
 		battle_world.add_child(active_attacker)
 		# Ensure their position is snapped exactly to the marker
 		active_attacker.position = Vector2.ZERO 
-		active_attacker.setup_from_combat_snapshot(_attacker_data, _attacker_stats, true)
+		active_attacker.setup_from_combat_snapshot(_attacker_data, _attacker_stats, true, _attacker_weapon)
 	else:
 		push_error("BattleScene: Attacker missing battle_actor_scene in CharacterData!")
 
@@ -93,7 +97,7 @@ func _spawn_actors() -> bool:
 		active_defender = _defender_data.battle_actor_scene.instantiate() as BattleActor
 		battle_world.add_child(active_defender)
 		active_defender.position = Vector2.ZERO
-		active_defender.setup_from_combat_snapshot(_defender_data, _defender_stats, false)
+		active_defender.setup_from_combat_snapshot(_defender_data, _defender_stats, false, _defender_weapon)
 	else:
 		push_error("BattleScene: Defender missing battle_actor_scene in CharacterData!")
 		
@@ -192,9 +196,9 @@ func _execute_battle_sequence() -> void:
 	_return_to_map()
 	
 func _determine_combatants_reach() -> void:
-	_attacker_is_melee = (_get_attack_kind_for_data(_attacker_data) == CombatStrike.AttackKind.MELEE)
-	_defender_is_melee = (_get_attack_kind_for_data(_defender_data) == CombatStrike.AttackKind.MELEE)
-	_defender_will_counter = _combat_distance <= _get_attack_range_for_data(_defender_data)
+	_attacker_is_melee = (_get_attack_kind_for_weapon(_attacker_weapon) == CombatStrike.AttackKind.MELEE)
+	_defender_is_melee = (_get_attack_kind_for_weapon(_defender_weapon) == CombatStrike.AttackKind.MELEE)
+	_defender_will_counter = CombatCalculator.can_attack_at_distance(_combat_distance, _get_attack_range_for_weapon(_defender_weapon, _defender_stats))
 	_attacker_has_advanced = false
 	_defender_has_advanced = false
 
@@ -300,22 +304,15 @@ func _get_dynamic_melee_destination(is_attacker_striking: bool) -> Vector2:
 	var x_offset := -MELEE_STANDOFF if is_attacker_striking else MELEE_STANDOFF
 	return target.position + Vector2(x_offset, 0.0)
 
-func _get_attack_kind_for_data(data: CharacterData) -> CombatStrike.AttackKind:
-	if data == null or data.equipped_weapon == null:
-		return CombatStrike.AttackKind.MELEE
+func _get_attack_kind_for_weapon(weapon: WeaponData) -> CombatStrike.AttackKind:
+	return CombatCalculator.get_attack_kind(weapon)
 
-	match data.equipped_weapon.weapon_type:
-		"Bow":
-			return CombatStrike.AttackKind.RANGED
-		"Tome", "Staff":
-			return CombatStrike.AttackKind.MAGIC
-		_:
-			return CombatStrike.AttackKind.MELEE
-
-func _get_attack_range_for_data(data: CharacterData) -> int:
-	if data == null or data.equipped_weapon == null:
+func _get_attack_range_for_weapon(weapon: WeaponData, stats: UnitStats) -> int:
+	if weapon == null:
+		if stats != null:
+			return maxi(1, int(stats.atk_rng))
 		return 1
-	return data.equipped_weapon.attack_range
+	return weapon.attack_range
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map

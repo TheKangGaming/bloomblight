@@ -4,7 +4,7 @@ extends Node2D
 @onready var anim_player: AnimationPlayer = $AnimationPlayer
 @onready var parent_actor = get_parent()
 
-func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats) -> void:
+func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats, _weapon: WeaponData = null) -> void:
 	pass # In the future, you can swap monster textures or colors here!
 
 func _ready() -> void:

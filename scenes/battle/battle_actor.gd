@@ -15,7 +15,7 @@ var _waiting_for_action_finish := false
 @onready var _effect_anchor: Marker2D = get_node_or_null("EffectAnchor")
 @onready var _damage_anchor: Marker2D = get_node_or_null("DamageAnchor")
 
-func setup_from_combat_snapshot(data: CharacterData, stats: UnitStats, is_attacker: bool) -> void:
+func setup_from_combat_snapshot(data: CharacterData, stats: UnitStats, is_attacker: bool, weapon: WeaponData = null) -> void:
 	_character_data = data
 	_runtime_stats = stats
 	_is_attacker = is_attacker
@@ -25,7 +25,7 @@ func setup_from_combat_snapshot(data: CharacterData, stats: UnitStats, is_attack
 	
 	if _visual_driver:
 		if _visual_driver.has_method("apply_combat_snapshot"):
-			_visual_driver.apply_combat_snapshot(data, stats)
+			_visual_driver.apply_combat_snapshot(data, stats, weapon)
 			
 		if _visual_driver.has_method("set_facing"):
 			_visual_driver.set_facing(facing)

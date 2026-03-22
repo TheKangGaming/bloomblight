@@ -39,14 +39,14 @@ func setup_combat(attacker, defender, terrain_modifier: int = 0, distance: int =
 
 	# 3. Equipment Snapshots
 	if attacker.character_data:
-		payload.attacker_weapon = attacker.character_data.equipped_weapon
-		payload.attacker_armor = attacker.character_data.equipped_armor
-		payload.attacker_accessory = attacker.character_data.equipped_accessory
+		payload.attacker_weapon = attacker.character_data.equipped_weapon.duplicate(true) if attacker.character_data.equipped_weapon else null
+		payload.attacker_armor = attacker.character_data.equipped_armor.duplicate(true) if attacker.character_data.equipped_armor else null
+		payload.attacker_accessory = attacker.character_data.equipped_accessory.duplicate(true) if attacker.character_data.equipped_accessory else null
 
 	if defender.character_data:
-		payload.defender_weapon = defender.character_data.equipped_weapon
-		payload.defender_armor = defender.character_data.equipped_armor
-		payload.defender_accessory = defender.character_data.equipped_accessory
+		payload.defender_weapon = defender.character_data.equipped_weapon.duplicate(true) if defender.character_data.equipped_weapon else null
+		payload.defender_armor = defender.character_data.equipped_armor.duplicate(true) if defender.character_data.equipped_armor else null
+		payload.defender_accessory = defender.character_data.equipped_accessory.duplicate(true) if defender.character_data.equipped_accessory else null
 
 	# 4. Context
 	payload.terrain_modifier = terrain_modifier

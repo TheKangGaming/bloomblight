@@ -405,7 +405,7 @@ func _reset_unit() -> void:
 
 
 func _is_distance_in_attack_range(distance: int, attack_range: int) -> bool:
-	return attack_range > 0 and distance == attack_range
+	return CombatCalculator.can_attack_at_distance(distance, attack_range)
 		
 ## Deselects the active unit, clearing the cells overlay and interactive path drawing.
 ## Universally clears the active unit, resets their animations, and wipes the overlays.
@@ -1011,8 +1011,10 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 	
+	var dist = _manhattan_distance(defender.cell, attacker.cell)
+	var forecast = CombatCalculator.get_combat_forecast(attacker, defender, dist)
+
 	# 1. Attacker Stats
-	var atk_stats = attacker.get_combat_stats(defender)
 	var title = Label.new()
 	title.text = ">> " + attacker.name + " <<"
 	title.add_theme_color_override("font_color", Color.AQUA)
@@ -1021,9 +1023,9 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	vbox.add_child(title)
 	
 	vbox.add_child(_create_stat_row("HP", str(attacker.health) + "/" + str(attacker.max_health)))
-	vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(attacker, defender, atk_stats["damage"])))
-	vbox.add_child(_create_stat_row("HIT", str(atk_stats["hit"]) + "%"))
-	vbox.add_child(_create_stat_row("CRIT", str(atk_stats["crit"]) + "%"))
+	vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(forecast.attacker_damage, forecast.attacker_can_double)))
+	vbox.add_child(_create_stat_row("HIT", str(forecast.attacker_hit_chance) + "%"))
+	vbox.add_child(_create_stat_row("CRIT", str(forecast.attacker_crit_chance) + "%"))
 	
 	vbox.add_child(HSeparator.new())
 	
@@ -1037,12 +1039,10 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	
 	vbox.add_child(_create_stat_row("HP", str(defender.health) + "/" + str(defender.max_health)))
 	
-	var dist = _manhattan_distance(defender.cell, attacker.cell)
-	if _is_distance_in_attack_range(dist, defender.attack_range):
-		var def_stats = defender.get_combat_stats(attacker)
-		vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(defender, attacker, def_stats["damage"])))
-		vbox.add_child(_create_stat_row("HIT", str(def_stats["hit"]) + "%"))
-		vbox.add_child(_create_stat_row("CRIT", str(def_stats["crit"]) + "%"))
+	if forecast.defender_can_counter:
+		vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(forecast.defender_damage, forecast.defender_can_double)))
+		vbox.add_child(_create_stat_row("HIT", str(forecast.defender_hit_chance) + "%"))
+		vbox.add_child(_create_stat_row("CRIT", str(forecast.defender_crit_chance) + "%"))
 	else:
 		var no_counter = Label.new()
 		no_counter.text = "-- No Counter --"
@@ -1089,15 +1089,8 @@ func _can_unit_attack_target(unit: Unit, target: Unit) -> bool:
 	return _is_distance_in_attack_range(dist, unit.attack_range)
 
 
-func _can_unit_follow_up(unit: Unit, target: Unit) -> bool:
-	if not _can_unit_attack_target(unit, target):
-		return false
-
-	return (unit.speed - target.speed) >= FOLLOW_UP_SPEED_DIFF
-
-
-func _format_forecast_damage(unit: Unit, target: Unit, base_damage: int) -> String:
-	if _can_unit_follow_up(unit, target):
+func _format_forecast_damage(base_damage: int, can_double: bool) -> String:
+	if can_double:
 		return str(base_damage) + " x2"
 
 	return str(base_damage)

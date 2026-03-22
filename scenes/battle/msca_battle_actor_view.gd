@@ -9,6 +9,7 @@ extends Node2D
 @onready var bow_weapon: CanvasItem = $Player/SpriteLayers/farmer_bow
 
 var _character_data: CharacterData
+var _weapon_snapshot: WeaponData
 var _facing := Vector2.RIGHT
 var _pending_finish_state := ""
 
@@ -30,8 +31,9 @@ func emit_impact() -> void:
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
 		parent_actor.strike_impact.emit()
 
-func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats) -> void:
+func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats, weapon: WeaponData = null) -> void:
 	_character_data = _data
+	_weapon_snapshot = weapon
 	# Future: Swap weapon sprites, color palettes, or armor layers here based on the data!
 
 func set_facing(dir: Vector2) -> void:
@@ -86,7 +88,9 @@ func play_attack() -> void:
 
 func _get_attack_animation_name() -> String:
 	var weapon_type := ""
-	if _character_data and _character_data.equipped_weapon:
+	if _weapon_snapshot:
+		weapon_type = _weapon_snapshot.weapon_type
+	elif _character_data and _character_data.equipped_weapon:
 		weapon_type = _character_data.equipped_weapon.weapon_type
 
 	match weapon_type:
@@ -118,7 +122,9 @@ func play_evade() -> void:
 
 func _get_weapon_visibility_mode() -> String:
 	var weapon_type := ""
-	if _character_data and _character_data.equipped_weapon:
+	if _weapon_snapshot:
+		weapon_type = _weapon_snapshot.weapon_type
+	elif _character_data and _character_data.equipped_weapon:
 		weapon_type = _character_data.equipped_weapon.weapon_type
 
 	match weapon_type:
