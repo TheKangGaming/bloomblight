@@ -51,7 +51,7 @@ tracks/0/keys = {
 
 [sub_resource type="Animation" id="Animation_8t5fi"]
 resource_name = "hit"
-length = 0.36
+length = 0.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -59,10 +59,10 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [112, 113, 114, 115, 116, 117, 118]
+"values": [112, 113, 114, 115, 116, 117]
 }
 
 [sub_resource type="Animation" id="Animation_q5m2b"]
