@@ -61,8 +61,23 @@ func _ready() -> void:
 	_movement_costs = _map.get_movement_costs()
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
 	_cursor.moved.connect(_on_Cursor_moved)
+	_sync_scene_music_to_manager()
 	
 	_reinitialize()
+
+func _sync_scene_music_to_manager() -> void:
+	var scene_root := get_parent()
+	if scene_root == null:
+		return
+
+	var scene_music := scene_root.get_node_or_null("AudioStreamPlayer") as AudioStreamPlayer
+	if scene_music == null or scene_music.stream == null:
+		return
+
+	scene_music.autoplay = false
+	if MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(scene_music.stream, 0.01, scene_music.volume_db)
+	scene_music.stop()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu_toggle"):
@@ -1195,13 +1210,8 @@ func _check_win_loss() -> void:
 func _show_results_screen(is_victory: bool) -> void:
 	_cursor.is_active = false 
 	
-	# 3. Fade Out Map Music! 
-	# This searches the Map for the AudioStreamPlayer and tweens it to silence
-	for child in get_parent().get_children():
-		if child is AudioStreamPlayer and child.playing:
-			var bgm_tween = create_tween()
-			bgm_tween.tween_property(child, "volume_db", -80.0, 1.5)
-			bgm_tween.tween_callback(child.stop)
+	if MusicManager and MusicManager.has_method("fade_to_silence"):
+		MusicManager.fade_to_silence(1.5)
 	
 	if is_instance_valid(_results_canvas):
 		_results_canvas.queue_free()

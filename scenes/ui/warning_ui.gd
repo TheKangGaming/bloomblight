@@ -113,7 +113,7 @@ func _load_combat_scene() -> void:
 	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
 	if is_instance_valid(combat_music):
 		combat_music.autoplay = false
-		combat_music.volume_db = -40.0
+		combat_music.stop()
 
 	var previous_scene := scene_tree.current_scene
 	if Global.tutorial_step == 13:
@@ -127,11 +127,7 @@ func _load_combat_scene() -> void:
 	await scene_tree.process_frame
 
 	if is_instance_valid(combat_music):
-		combat_music.play()
-		var combat_fade := scene_tree.create_tween()
-		combat_fade.set_ease(Tween.EASE_OUT)
-		combat_fade.set_trans(Tween.TRANS_SINE)
-		combat_fade.tween_property(combat_music, "volume_db", -10.0, 1.5)
+		combat_music.stop()
 
 	var savannah: Node = combat_scene.get_node_or_null("GameBoard/Savannah")
 	var cursor: Node = combat_scene.get_node_or_null("GameBoard/Cursor")

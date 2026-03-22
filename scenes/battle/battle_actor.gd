@@ -5,6 +5,9 @@ signal strike_impact
 @warning_ignore("unused_signal")
 signal animation_finished_playing
 
+const DEATH_SINK_DISTANCE := 40.0
+const DEATH_SINK_DURATION := 0.4
+
 var _character_data: CharacterData
 var _runtime_stats: UnitStats
 var _is_attacker: bool

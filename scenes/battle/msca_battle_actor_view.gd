@@ -39,6 +39,8 @@ func emit_impact() -> void:
 func apply_combat_snapshot(_data: CharacterData, _stats: UnitStats, weapon: WeaponData = null) -> void:
 	_character_data = _data
 	_weapon_snapshot = weapon
+	_is_dying = false
+	modulate = Color.WHITE
 	# Future: Swap weapon sprites, color palettes, or armor layers here based on the data!
 
 func set_facing(dir: Vector2) -> void:
@@ -166,9 +168,8 @@ func _begin_death_sink() -> void:
 	# NEW: 'EASE_IN' makes the movement start slow and accelerate, simulating gravity!
 	sink_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	
-	# Sped up from 1.5 seconds to a snappy 0.4 seconds!
-	sink_tween.tween_property(self, "position:y", position.y + 40, 0.4)
-	sink_tween.tween_property(self, "modulate:a", 0.0, 0.4)
+	sink_tween.tween_property(self, "position:y", position.y + BattleActor.DEATH_SINK_DISTANCE, BattleActor.DEATH_SINK_DURATION)
+	sink_tween.tween_property(self, "modulate:a", 0.0, BattleActor.DEATH_SINK_DURATION)
 	
 	await sink_tween.finished
 	
