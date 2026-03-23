@@ -346,9 +346,10 @@ func _run_post_chest_sequence() -> void:
 	tera_actor.face_side(true)
 
 	await _play_story_dialogue([
-		{"speaker": "Tera", "text": "Farming tools. That's your territory, right?"},
-		{"speaker": "Savannah", "text": "Yeah. If we can find seed, we can make this place work."},
-		{"speaker": "Tera", "text": "Then let's search the trees before the light goes."}
+		{"speaker": "Tera", "text": "An old chest. Rusted shut."},
+		{"speaker": "Savannah", "text": "Steel spades. Shears. The handles are rotting, but the iron is still good."},
+		{"speaker": "Tera", "text": "Can you use them?"},
+		{"speaker": "Savannah", "text": "If we find seed. We should move before the light goes."}
 	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.SEARCH_FOREST
@@ -389,8 +390,8 @@ func _run_forest_encounter() -> void:
 		{"speaker": "Tera", "text": "Hungry. There's a difference."},
 		{"speaker": "Silas", "text": "I walk these woods every week. There's no land out here worth claiming."},
 		{"speaker": "Savannah", "text": "There is. We saw it."},
-		{"speaker": "Silas", "text": "Prove it. I scavenged a carrot seed and a parsnip seed from a dead caravan. Old, dry, useless by now."},
-		{"speaker": "Silas", "text": "If you can make those grow, I'll come see this miracle field for myself."}
+		{"speaker": "Silas", "text": "Then take these and waste your evening. I ripped them off a dead caravan. Dry as bone."},
+		{"speaker": "Silas", "text": "Bury them in the dirt, eat them raw, I don't care. Just get out of my woods."}
 	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
 
 	Global.add_item(Global.Items.CARROT_SEED, 1)
