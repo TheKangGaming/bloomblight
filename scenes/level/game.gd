@@ -281,6 +281,7 @@ func _begin_intro_sequence() -> void:
 	tera_actor.visible = true
 	tera_actor.global_position = _marker_pos(&"IntroEntryTera", INTRO_ENTRY_TERA_POS)
 	tera_actor.face_down()
+	tera_actor.play_idle()
 	silas_actor.visible = false
 
 	await _focus_cutscene_on_nodes([player, tera_actor], 0.35, CUTSCENE_GROUP_ZOOM)
@@ -534,9 +535,12 @@ func _play_story_dialogue(lines: Array[Dictionary], focus_nodes: Array[Node2D] =
 	await story_dialogue.dialogue_finished
 
 func _move_node(node: Node2D, destination: Vector2, duration: float) -> void:
+	var travel := destination - node.global_position
+	_play_cutscene_move(node, travel)
 	var tween = create_tween()
 	tween.tween_property(node, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+	_play_cutscene_idle(node, travel)
 
 func _fade_to_black(duration: float) -> void:
 	var tween = create_tween()
@@ -565,9 +569,13 @@ func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zo
 	target /= float(positions.size())
 
 	if not cutscene_camera.is_current():
-		cutscene_camera.global_position = player.global_position
+		cutscene_camera.position_smoothing_enabled = false
+		cutscene_camera.global_position = _get_current_camera_center()
 		cutscene_camera.zoom = player_camera.zoom
+		if cutscene_camera.has_method("reset_smoothing"):
+			cutscene_camera.reset_smoothing()
 	cutscene_camera.make_current()
+	cutscene_camera.position_smoothing_enabled = true
 
 	var tween = create_tween()
 	tween.parallel().tween_property(cutscene_camera, "global_position", target, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -575,7 +583,11 @@ func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zo
 	await tween.finished
 
 func _restore_player_camera() -> void:
+	if player and player.has_method("clear_cutscene_animation"):
+		player.clear_cutscene_animation()
 	if player_camera:
+		if player_camera.has_method("reset_smoothing"):
+			player_camera.reset_smoothing()
 		player_camera.make_current()
 
 func _marker_pos(marker_name: StringName, fallback: Vector2) -> Vector2:
@@ -585,3 +597,43 @@ func _marker_pos(marker_name: StringName, fallback: Vector2) -> Vector2:
 	if marker == null:
 		return fallback
 	return marker.global_position
+
+func _get_current_camera_center() -> Vector2:
+	if player_camera and player_camera.is_inside_tree():
+		return player_camera.get_screen_center_position()
+	return player.global_position
+
+func _play_cutscene_move(node: Node2D, travel: Vector2) -> void:
+	var direction := _cardinalize_direction(travel)
+	if node == player and player.has_method("play_cutscene_move"):
+		player.play_cutscene_move(direction)
+		return
+	if node.has_method("face_up") and node.has_method("face_down") and node.has_method("face_side"):
+		_face_story_actor(node, direction)
+	if node.has_method("play_walk"):
+		node.play_walk()
+
+func _play_cutscene_idle(node: Node2D, travel: Vector2) -> void:
+	var direction := _cardinalize_direction(travel)
+	if node == player and player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(direction)
+		return
+	if node.has_method("face_up") and node.has_method("face_down") and node.has_method("face_side"):
+		_face_story_actor(node, direction)
+	if node.has_method("play_idle"):
+		node.play_idle()
+
+func _face_story_actor(node: Node, direction: Vector2) -> void:
+	if direction == Vector2.UP and node.has_method("face_up"):
+		node.face_up()
+	elif direction == Vector2.DOWN and node.has_method("face_down"):
+		node.face_down()
+	elif node.has_method("face_side"):
+		node.face_side(direction != Vector2.LEFT)
+
+func _cardinalize_direction(direction: Vector2) -> Vector2:
+	if direction == Vector2.ZERO:
+		return Vector2.DOWN
+	if absf(direction.x) > absf(direction.y):
+		return Vector2.RIGHT if direction.x > 0.0 else Vector2.LEFT
+	return Vector2.DOWN if direction.y > 0.0 else Vector2.UP

@@ -17,8 +17,8 @@
 [ext_resource type="PackedScene" uid="uid://vf2y3h4ibrd" path="res://scenes/ui/day_time_hud.tscn" id="15_mr15t"]
 [ext_resource type="PackedScene" path="res://scenes/level/story_actor.tscn" id="16_3h3nc"]
 [ext_resource type="PackedScene" path="res://scenes/ui/story_dialogue_box.tscn" id="17_1jx2l"]
-[ext_resource type="Texture2D" uid="uid://13hqfraocrr8" path="res://graphics/characters/Tera.png" id="18_x80w4"]
-[ext_resource type="Texture2D" uid="uid://cd6428w70xi1y" path="res://graphics/characters/Silas.png" id="19_r5m8d"]
+[ext_resource type="PackedScene" uid="uid://cyqtsfss5xi2d" path="res://scenes/battle/tera_battle_actor.tscn" id="20_f2h2m"]
+[ext_resource type="PackedScene" uid="uid://344jqu6h5ryl" path="res://scenes/battle/silas_battle_actor.tscn" id="21_nk3t2"]
 
 [sub_resource type="Gradient" id="Gradient_ig4jx"]
 offsets = PackedFloat32Array(0, 0.509434, 1)
@@ -2636,12 +2636,14 @@ metadata/_edit_horizontal_guides_ = [-16.0]
 
 [node name="TeraActor" parent="Objects" unique_id=2026344014 instance=ExtResource("16_3h3nc")]
 position = Vector2(1078, 1482)
-character_texture = ExtResource("18_x80w4")
+actor_scene = ExtResource("20_f2h2m")
+visual_offset = Vector2(0, -12)
 
 [node name="SilasActor" parent="Objects" unique_id=668614827 instance=ExtResource("16_3h3nc")]
 visible = false
 position = Vector2(1608, 662)
-character_texture = ExtResource("19_r5m8d")
+actor_scene = ExtResource("21_nk3t2")
+visual_offset = Vector2(0, -12)
 
 [node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]
 y_sort_enabled = true
@@ -2719,10 +2721,10 @@ position = Vector2(1096, 1628)
 position = Vector2(1078, 1482)
 
 [node name="TeraWander" type="Marker2D" parent="StoryMarkers" unique_id=1134724863]
-position = Vector2(1070, 1221)
+position = Vector2(1070, 1205)
 
 [node name="TeraField" type="Marker2D" parent="StoryMarkers" unique_id=861883249]
-position = Vector2(1292, 734)
+position = Vector2(1271, 688)
 
 [node name="ChestApproach" type="Marker2D" parent="StoryMarkers" unique_id=1241442094]
 position = Vector2(1264, 812)

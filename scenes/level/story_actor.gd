@@ -1,48 +1,56 @@
 extends Node2D
 
-const IDLE_DOWN_FRAME := 0
-const IDLE_UP_FRAME := 16
-const IDLE_SIDE_FRAME := 32
-
-@export var character_texture: Texture2D
-@export var idle_frame := IDLE_DOWN_FRAME
-@export var sprite_flip_h := false
+@export var actor_scene: PackedScene
 @export var actor_scale := Vector2(1.5, 1.5)
+@export var visual_offset := Vector2(0, 0)
 
-@onready var sprite: Sprite2D = $Sprite2D
+var _actor_instance: Node2D = null
 
 func _ready() -> void:
-	_apply_appearance()
-
-func set_character(texture: Texture2D, frame: int = IDLE_DOWN_FRAME) -> void:
-	character_texture = texture
-	idle_frame = frame
-	_apply_appearance()
-
-func set_idle_frame(frame: int) -> void:
-	idle_frame = frame
-	_apply_appearance()
+	_rebuild_actor()
 
 func face_down() -> void:
-	idle_frame = IDLE_DOWN_FRAME
-	sprite_flip_h = false
-	_apply_appearance()
+	_set_facing(Vector2.DOWN)
 
 func face_up() -> void:
-	idle_frame = IDLE_UP_FRAME
-	sprite_flip_h = false
-	_apply_appearance()
+	_set_facing(Vector2.UP)
 
 func face_side(face_right: bool) -> void:
-	idle_frame = IDLE_SIDE_FRAME
-	sprite_flip_h = not face_right
-	_apply_appearance()
+	_set_facing(Vector2.RIGHT if face_right else Vector2.LEFT)
 
-func _apply_appearance() -> void:
-	if sprite == null:
+func play_idle() -> void:
+	if _actor_instance and _actor_instance.has_method("play_idle"):
+		_actor_instance.play_idle()
+
+func play_walk() -> void:
+	if _actor_instance and _actor_instance.has_method("play_run"):
+		_actor_instance.play_run()
+
+func set_actor_scene(scene: PackedScene) -> void:
+	actor_scene = scene
+	_rebuild_actor()
+
+func _set_facing(direction: Vector2) -> void:
+	if _actor_instance and _actor_instance.has_method("set_facing"):
+		_actor_instance.set_facing(direction)
+	play_idle()
+
+func _rebuild_actor() -> void:
+	if not is_inside_tree():
 		return
 
-	sprite.texture = character_texture
-	sprite.frame = idle_frame
-	sprite.flip_h = sprite_flip_h
-	scale = actor_scale
+	if _actor_instance and is_instance_valid(_actor_instance):
+		_actor_instance.queue_free()
+		_actor_instance = null
+
+	if actor_scene == null:
+		return
+
+	_actor_instance = actor_scene.instantiate() as Node2D
+	if _actor_instance == null:
+		return
+
+	add_child(_actor_instance)
+	_actor_instance.position = visual_offset
+	_actor_instance.scale = actor_scale
+	play_idle()

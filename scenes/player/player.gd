@@ -14,6 +14,8 @@ var last_direction: Vector2 = Vector2.DOWN
 var current_speed := walk_speed
 var can_move : bool = true
 var current_tool: Global.Tools = Global.Tools.AXE
+var _cutscene_anim_state: StringName = &""
+var _cutscene_anim_direction: Vector2 = Vector2.DOWN
 
 const tool_connection = {
 	Global.Tools.HOE: 'hoe',
@@ -137,6 +139,11 @@ func _ready() -> void:
 	$Visuals/AnimationTree.animation_finished.connect(_on_animation_tree_animation_finished)
 
 func animation():
+	if _cutscene_anim_state != &"":
+		update_animation_blend_positions(_cutscene_anim_direction)
+		move_state_machine.travel(String(_cutscene_anim_state))
+		return
+
 	if direction:
 		if current_speed == run_speed:
 			move_state_machine.travel('run')
@@ -156,6 +163,38 @@ func update_animation_blend_positions(target_vec: Vector2):
 
 	for state in tool_connection.values():
 		$Visuals/AnimationTree.set('parameters/ToolStateMachine/' + state + '/blend_position', blend_pos)
+
+func face_direction(target_vec: Vector2) -> void:
+	_clear_cutscene_anim_override()
+	last_direction = _to_cardinal_direction(target_vec)
+	update_animation_blend_positions(last_direction)
+	move_state_machine.travel('idle')
+
+func play_cutscene_move(target_vec: Vector2) -> void:
+	last_direction = _to_cardinal_direction(target_vec)
+	direction = Vector2.ZERO
+	current_speed = walk_speed
+	_set_cutscene_anim_override(&"move", last_direction)
+
+func play_cutscene_idle(target_vec: Vector2 = last_direction) -> void:
+	last_direction = _to_cardinal_direction(target_vec)
+	direction = Vector2.ZERO
+	_set_cutscene_anim_override(&"idle", last_direction)
+
+func clear_cutscene_animation() -> void:
+	_clear_cutscene_anim_override()
+	direction = Vector2.ZERO
+	update_animation_blend_positions(last_direction)
+	move_state_machine.travel('idle')
+
+func _set_cutscene_anim_override(state: StringName, facing: Vector2) -> void:
+	_cutscene_anim_state = state
+	_cutscene_anim_direction = _to_cardinal_direction(facing)
+	update_animation_blend_positions(_cutscene_anim_direction)
+	move_state_machine.travel(String(_cutscene_anim_state))
+
+func _clear_cutscene_anim_override() -> void:
+	_cutscene_anim_state = &""
 
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	print("Player was successfully unlocked!")

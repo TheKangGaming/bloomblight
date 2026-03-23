@@ -5,10 +5,3 @@
 [node name="StoryActor" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_yttrf")
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-y_sort_enabled = true
-position = Vector2(0, -12)
-offset = Vector2(0, -12)
-hframes = 16
-vframes = 16

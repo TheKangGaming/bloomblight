@@ -12,6 +12,9 @@ var _line_index := -1
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	speaker_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	prompt_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func play(lines: Array[Dictionary]) -> void:
 	_lines = lines.duplicate(true)
