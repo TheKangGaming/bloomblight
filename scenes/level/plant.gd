@@ -160,6 +160,14 @@ func grow(watered: bool):
 			if not sparkle_fx.visible:
 				sparkle_fx.visible = true
 				sparkle_fx.play("sparkle")
+
+func force_mature() -> void:
+	age = max_age
+	var origin = plant_data[plant_type]['origin']
+	$Sprite2D.frame_coords = Vector2i(origin.x + max_age, origin.y)
+	if not sparkle_fx.visible:
+		sparkle_fx.visible = true
+		sparkle_fx.play("sparkle")
 	
 func _ready() -> void:
 	add_to_group('Plants')

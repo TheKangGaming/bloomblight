@@ -58,10 +58,21 @@ var pending_combat_scene_path: String = ""
 signal tutorial_updated(text: String)
 var tutorial_step: int = 0
 const MAX_TUTORIAL_STEP := 15
+var tutorial_enabled := true
+var intro_sequence_complete := false
 
 func advance_tutorial() -> void:
+	if not tutorial_enabled:
+		return
 	tutorial_step = min(tutorial_step + 1, MAX_TUTORIAL_STEP)
 	update_tutorial_ui()
+
+func set_tutorial_step(step: int) -> void:
+	tutorial_step = clampi(step, 0, MAX_TUTORIAL_STEP)
+	update_tutorial_ui()
+
+func show_tutorial_text(text: String) -> void:
+	tutorial_updated.emit(text)
 
 func update_tutorial_ui() -> void:
 	match tutorial_step:

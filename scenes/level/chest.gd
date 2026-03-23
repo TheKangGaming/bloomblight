@@ -1,5 +1,13 @@
 extends StaticBody2D
 
+signal opened
+
+@export var grant_tools := true
+@export var carrot_seed_reward := 5
+@export var parsnip_seed_reward := 5
+@export var grant_glazed_carrots_recipe := true
+@export var reward_popup_text := "+ Seeds & Tools!"
+
 @onready var animation_player = $AnimationPlayer
 @onready var loot_popup: PanelContainer = $LootPopup
 @onready var loot_popup_label: Label = $LootPopup/Label
@@ -11,6 +19,7 @@ var player_in_range := false
 func _ready():
 	WorldPopupStyle.apply(loot_popup, loot_popup_label, 18)
 	_loot_popup_start_position = loot_popup.position
+	loot_popup_label.text = reward_popup_text
 	# Connect the Area2D signals
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
@@ -34,23 +43,27 @@ func open_chest():
 	animation_player.play('open')
 	give_loot()
 	$InteractArea/CollisionShape2D.set_deferred("disabled", true)
+	opened.emit()
 
 func give_loot():
 	print("Chest opened! Loot distributed.")
 
-	Global.inventory[Global.Items.CARROT_SEED] += 5
-	Global.inventory[Global.Items.PARSNIP_SEED] += 5
+	if carrot_seed_reward > 0:
+		Global.inventory[Global.Items.CARROT_SEED] += carrot_seed_reward
+	if parsnip_seed_reward > 0:
+		Global.inventory[Global.Items.PARSNIP_SEED] += parsnip_seed_reward
 
-	if not Global.unlocked_tools.has(Global.Tools.HOE):
+	if grant_tools and not Global.unlocked_tools.has(Global.Tools.HOE):
 		Global.unlocked_tools.append(Global.Tools.HOE)
 		Global.unlocked_tools.append(Global.Tools.WATER)
 		Global.unlocked_tools.append(Global.Tools.AXE)
 
-	if Global.learn_recipe(Global.Items.GLAZED_CARROTS):
+	if grant_glazed_carrots_recipe and Global.learn_recipe(Global.Items.GLAZED_CARROTS):
 		print("You found the Glazed Carrots recipe!")
 
 	Global.inventory_updated.emit()
 
+	loot_popup_label.text = reward_popup_text
 	loot_popup.visible = true
 	loot_popup.position = _loot_popup_start_position
 	loot_popup.modulate.a = 1.0

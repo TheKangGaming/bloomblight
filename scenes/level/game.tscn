@@ -15,6 +15,10 @@
 [ext_resource type="PackedScene" uid="uid://d1c28n15wopmi" path="res://scenes/ui/cooking_menu.tscn" id="13_bften"]
 [ext_resource type="PackedScene" uid="uid://82ji0j6uwvpc" path="res://scenes/level/sign.tscn" id="13_lw8he"]
 [ext_resource type="PackedScene" uid="uid://vf2y3h4ibrd" path="res://scenes/ui/day_time_hud.tscn" id="15_mr15t"]
+[ext_resource type="PackedScene" path="res://scenes/level/story_actor.tscn" id="16_3h3nc"]
+[ext_resource type="PackedScene" path="res://scenes/ui/story_dialogue_box.tscn" id="17_1jx2l"]
+[ext_resource type="Texture2D" uid="uid://13hqfraocrr8" path="res://graphics/characters/Tera.png" id="18_x80w4"]
+[ext_resource type="Texture2D" uid="uid://cd6428w70xi1y" path="res://graphics/characters/Silas.png" id="19_r5m8d"]
 
 [sub_resource type="Gradient" id="Gradient_ig4jx"]
 offsets = PackedFloat32Array(0, 0.509434, 1)
@@ -2596,6 +2600,9 @@ sources/0 = SubResource("TileSetAtlasSource_0o7gw")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g35fm"]
 size = Vector2(10, 18)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_story_forest"]
+size = Vector2(420, 180)
+
 [node name="Game" type="Node2D" unique_id=1723638860]
 y_sort_enabled = true
 script = ExtResource("1_f2w0s")
@@ -2617,11 +2624,24 @@ y_sort_enabled = true
 [node name="Chest" parent="Objects" unique_id=1601134114 instance=ExtResource("5_lw8he")]
 y_sort_enabled = true
 position = Vector2(1335, 629)
+carrot_seed_reward = 0
+parsnip_seed_reward = 0
+grant_glazed_carrots_recipe = false
+reward_popup_text = "+ Old Tools!"
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
 position = Vector2(1036, 1492)
 scale = Vector2(1.5, 1.5)
 metadata/_edit_horizontal_guides_ = [-16.0]
+
+[node name="TeraActor" parent="Objects" instance=ExtResource("16_3h3nc")]
+position = Vector2(1136, 1492)
+character_texture = ExtResource("18_x80w4")
+
+[node name="SilasActor" parent="Objects" instance=ExtResource("16_3h3nc")]
+visible = false
+position = Vector2(1608, 662)
+character_texture = ExtResource("19_r5m8d")
 
 [node name="Trees" type="Node2D" parent="Objects" unique_id=1885544261]
 y_sort_enabled = true
@@ -2665,16 +2685,11 @@ position = Vector2(1612, 517)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 1192)
-sign_text = "Welcome! This is a SUPER SUPER EARLY Demo just to show progress! Continue ahead to find some tools!"
+sign_text = "The southern road is gone. Blight swallowed it whole."
 
 [node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 908)
-sign_text = "Hold Shift or LT on controller = Run
-E or A/B on controler = Interact
-Space or RT on controller = Use Tool
-1 or LB/RB = Change Tools
-Tab = Menu
-"
+sign_text = "Abandoned fields ahead. Shelter, if the roof still holds."
 
 [node name="RegularSign" type="StaticBody2D" parent="Objects" unique_id=1859774796]
 y_sort_enabled = true
@@ -2711,8 +2726,17 @@ visible = false
 
 [node name="MainMenu" parent="CanvasLayer" unique_id=235357107 instance=ExtResource("9_0o7gw")]
 
+[node name="StoryDialogueBox" parent="CanvasLayer" instance=ExtResource("17_1jx2l")]
+
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1575379906]
 color = Color(0.99607843, 0.9098039, 0.7176471, 1)
+
+[node name="ForestExitTrigger" type="Area2D" parent="." unique_id=1611175520]
+collision_mask = 2
+position = Vector2(1110, 1498)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ForestExitTrigger" unique_id=471035521]
+shape = SubResource("RectangleShape2D_story_forest")
 
 [node name="DayTimer" type="Timer" parent="." unique_id=1375416276]
 wait_time = 600.0
@@ -2724,4 +2748,5 @@ wait_time = 60.0
 autostart = true
 
 [connection signal="tool_use" from="Objects/Player" to="." method="_on_player_tool_use"]
+[connection signal="body_entered" from="ForestExitTrigger" to="." method="_on_forest_exit_trigger_body_entered"]
 [connection signal="timeout" from="GrowTimer" to="." method="_on_grow_timer_timeout"]
