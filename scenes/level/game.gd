@@ -349,7 +349,7 @@ func _run_post_chest_sequence() -> void:
 		{"speaker": "Tera", "text": "An old chest. Rusted shut."},
 		{"speaker": "Savannah", "text": "Steel spades. Shears. The handles are rotting, but the iron is still good."},
 		{"speaker": "Tera", "text": "Can you use them?"},
-		{"speaker": "Savannah", "text": "If we find seed. We should move before the light goes."}
+		{"speaker": "Savannah", "text": "If we find seeds. We should move before the light goes."}
 	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.SEARCH_FOREST
