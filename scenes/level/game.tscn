@@ -2634,11 +2634,11 @@ position = Vector2(1036, 1492)
 scale = Vector2(1.5, 1.5)
 metadata/_edit_horizontal_guides_ = [-16.0]
 
-[node name="TeraActor" parent="Objects" instance=ExtResource("16_3h3nc")]
-position = Vector2(1136, 1492)
+[node name="TeraActor" parent="Objects" unique_id=2026344014 instance=ExtResource("16_3h3nc")]
+position = Vector2(1078, 1482)
 character_texture = ExtResource("18_x80w4")
 
-[node name="SilasActor" parent="Objects" instance=ExtResource("16_3h3nc")]
+[node name="SilasActor" parent="Objects" unique_id=668614827 instance=ExtResource("16_3h3nc")]
 visible = false
 position = Vector2(1608, 662)
 character_texture = ExtResource("19_r5m8d")
@@ -2704,6 +2704,53 @@ flip_h = true
 position = Vector2(1040, 632)
 shape = SubResource("RectangleShape2D_g35fm")
 
+[node name="StoryMarkers" type="Node2D" parent="." unique_id=1642267877]
+
+[node name="IntroEntryPlayer" type="Marker2D" parent="StoryMarkers" unique_id=1378258303]
+position = Vector2(1036, 1628)
+
+[node name="IntroEntryPlayerStop" type="Marker2D" parent="StoryMarkers" unique_id=1226561949]
+position = Vector2(1038, 1488)
+
+[node name="IntroEntryTera" type="Marker2D" parent="StoryMarkers" unique_id=962824641]
+position = Vector2(1096, 1628)
+
+[node name="IntroEntryTeraStop" type="Marker2D" parent="StoryMarkers" unique_id=321188369]
+position = Vector2(1078, 1482)
+
+[node name="TeraWander" type="Marker2D" parent="StoryMarkers" unique_id=1134724863]
+position = Vector2(1070, 1221)
+
+[node name="TeraField" type="Marker2D" parent="StoryMarkers" unique_id=861883249]
+position = Vector2(1292, 734)
+
+[node name="ChestApproach" type="Marker2D" parent="StoryMarkers" unique_id=1241442094]
+position = Vector2(1264, 812)
+
+[node name="ForestReturn" type="Marker2D" parent="StoryMarkers" unique_id=1234851428]
+position = Vector2(1086, 1452)
+
+[node name="ForestTera" type="Marker2D" parent="StoryMarkers" unique_id=596150444]
+position = Vector2(1044, 1561)
+
+[node name="ForestSilas" type="Marker2D" parent="StoryMarkers" unique_id=1841742947]
+position = Vector2(1140, 1562)
+
+[node name="MorningPlayer" type="Marker2D" parent="StoryMarkers" unique_id=1978546160]
+position = Vector2(1452, 748)
+
+[node name="MorningTera" type="Marker2D" parent="StoryMarkers" unique_id=156193536]
+position = Vector2(1508, 734)
+
+[node name="MorningSilas" type="Marker2D" parent="StoryMarkers" unique_id=295211107]
+position = Vector2(1320, 698)
+
+[node name="CampTera" type="Marker2D" parent="StoryMarkers" unique_id=405032851]
+position = Vector2(1496, 670)
+
+[node name="CampSilas" type="Marker2D" parent="StoryMarkers" unique_id=1762447241]
+position = Vector2(1576, 670)
+
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
 
 [node name="DayTimeHUD" parent="CanvasLayer" unique_id=1114614844 instance=ExtResource("15_mr15t")]
@@ -2726,14 +2773,24 @@ visible = false
 
 [node name="MainMenu" parent="CanvasLayer" unique_id=235357107 instance=ExtResource("9_0o7gw")]
 
-[node name="StoryDialogueBox" parent="CanvasLayer" instance=ExtResource("17_1jx2l")]
+[node name="StoryDialogueBox" parent="CanvasLayer" unique_id=1842729074 instance=ExtResource("17_1jx2l")]
+
+[node name="CutsceneCamera" type="Camera2D" parent="." unique_id=454271930]
+zoom = Vector2(1.7, 1.7)
+process_callback = 0
+limit_left = 0
+limit_top = 0
+limit_right = 2560
+limit_bottom = 1920
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1575379906]
 color = Color(0.99607843, 0.9098039, 0.7176471, 1)
 
 [node name="ForestExitTrigger" type="Area2D" parent="." unique_id=1611175520]
-collision_mask = 2
 position = Vector2(1110, 1498)
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ForestExitTrigger" unique_id=471035521]
 shape = SubResource("RectangleShape2D_story_forest")

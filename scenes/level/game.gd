@@ -1,21 +1,23 @@
 extends Node2D
 
 const TILE_SIZE = 32
-const INTRO_ENTRY_PLAYER_POS := Vector2(1036, 1610)
-const INTRO_ENTRY_PLAYER_STOP := Vector2(1036, 1492)
-const INTRO_ENTRY_TERA_POS := Vector2(1100, 1610)
-const INTRO_ENTRY_TERA_STOP := Vector2(1136, 1492)
-const INTRO_TERA_WANDER_POS := Vector2(1208, 1416)
-const INTRO_TERA_FIELD_POS := Vector2(1276, 720)
-const INTRO_CHEST_APPROACH_POS := Vector2(1264, 782)
-const INTRO_FOREST_RETURN_POS := Vector2(1108, 1408)
-const INTRO_FOREST_TERA_POS := Vector2(1156, 1404)
-const INTRO_FOREST_SILAS_POS := Vector2(1278, 1392)
-const INTRO_MORNING_PLAYER_POS := Vector2(1452, 700)
-const INTRO_MORNING_TERA_POS := Vector2(1512, 700)
-const INTRO_MORNING_SILAS_POS := Vector2(1332, 742)
-const INTRO_CAMP_TERA_POS := Vector2(1512, 662)
-const INTRO_CAMP_SILAS_POS := Vector2(1608, 662)
+const INTRO_ENTRY_PLAYER_POS := Vector2(1036, 1628)
+const INTRO_ENTRY_PLAYER_STOP := Vector2(1038, 1488)
+const INTRO_ENTRY_TERA_POS := Vector2(1096, 1628)
+const INTRO_ENTRY_TERA_STOP := Vector2(1078, 1482)
+const INTRO_TERA_WANDER_POS := Vector2(1142, 1362)
+const INTRO_TERA_FIELD_POS := Vector2(1292, 734)
+const INTRO_CHEST_APPROACH_POS := Vector2(1264, 812)
+const INTRO_FOREST_RETURN_POS := Vector2(1086, 1452)
+const INTRO_FOREST_TERA_POS := Vector2(1140, 1444)
+const INTRO_FOREST_SILAS_POS := Vector2(1258, 1418)
+const INTRO_MORNING_PLAYER_POS := Vector2(1452, 748)
+const INTRO_MORNING_TERA_POS := Vector2(1508, 734)
+const INTRO_MORNING_SILAS_POS := Vector2(1320, 730)
+const INTRO_CAMP_TERA_POS := Vector2(1496, 670)
+const INTRO_CAMP_SILAS_POS := Vector2(1576, 670)
+const CUTSCENE_GROUP_ZOOM := Vector2(1.7, 1.7)
+const CUTSCENE_CLOSE_ZOOM := Vector2(1.9, 1.9)
 
 enum IntroState {
 	INACTIVE,
@@ -29,6 +31,9 @@ enum IntroState {
 }
 
 @onready var player = $Objects/Player
+@onready var player_camera: Camera2D = $Objects/Player/Camera2D
+@onready var cutscene_camera: Camera2D = $CutsceneCamera
+@onready var story_markers: Node = $StoryMarkers
 @onready var tera_actor = $Objects/TeraActor
 @onready var silas_actor = $Objects/SilasActor
 @onready var story_dialogue = $CanvasLayer/StoryDialogueBox
@@ -272,35 +277,38 @@ func _begin_intro_sequence() -> void:
 	Global.show_tutorial_text("")
 	player.can_move = false
 	player.direction = Vector2.ZERO
-	player.global_position = INTRO_ENTRY_PLAYER_POS
+	player.global_position = _marker_pos(&"IntroEntryPlayer", INTRO_ENTRY_PLAYER_POS)
 	tera_actor.visible = true
-	tera_actor.global_position = INTRO_ENTRY_TERA_POS
+	tera_actor.global_position = _marker_pos(&"IntroEntryTera", INTRO_ENTRY_TERA_POS)
+	tera_actor.face_down()
 	silas_actor.visible = false
 
-	await _move_node(player, INTRO_ENTRY_PLAYER_STOP, 1.4)
-	await _move_node(tera_actor, INTRO_ENTRY_TERA_STOP, 1.4)
+	await _focus_cutscene_on_nodes([player, tera_actor], 0.35, CUTSCENE_GROUP_ZOOM)
+	await _move_node(player, _marker_pos(&"IntroEntryPlayerStop", INTRO_ENTRY_PLAYER_STOP), 1.4)
+	await _move_node(tera_actor, _marker_pos(&"IntroEntryTeraStop", INTRO_ENTRY_TERA_STOP), 1.4)
 	await _play_story_dialogue([
-		{"speaker": "Savannah", "text": "We made it out... somehow."},
-		{"speaker": "Tera", "text": "Yeah. But where exactly did we end up?"},
-		{"speaker": "Savannah", "text": "I don't know yet. Stay close."},
-		{"speaker": "Tera", "text": "I will. Mostly."}
-	])
-	await _move_node(tera_actor, INTRO_TERA_WANDER_POS, 0.7)
-	await _play_story_dialogue([
-		{"speaker": "Tera", "text": "Wait. Savannah... I see something."}
-	])
-	await _move_node(tera_actor, INTRO_TERA_FIELD_POS, 0.9)
+		{"speaker": "Savannah", "text": "We made it out. Barely."},
+		{"speaker": "Tera", "text": "I know. I just... don't know where we are."},
+		{"speaker": "Savannah", "text": "It's quiet. That's enough for now."},
+		{"speaker": "Tera", "text": "Wait. There. I think I found something."}
+	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
+
+	await _focus_cutscene_on_nodes([tera_actor], 0.25, CUTSCENE_CLOSE_ZOOM)
+	await _move_node(tera_actor, _marker_pos(&"TeraWander", INTRO_TERA_WANDER_POS), 0.7)
+	await _move_node(tera_actor, _marker_pos(&"TeraField", INTRO_TERA_FIELD_POS), 0.9)
+	tera_actor.face_down()
 
 	_intro_state = IntroState.FIND_TERA
 	_intro_busy = false
 	player.can_move = true
+	_restore_player_camera()
 	Global.show_tutorial_text("Objective: Find Tera.")
 
 func _process_intro_progress() -> void:
 	if Global.intro_sequence_complete or _intro_busy:
 		return
 
-	if _intro_state == IntroState.FIND_TERA and player.global_position.distance_to(tera_actor.global_position) < 92.0:
+	if _intro_state == IntroState.FIND_TERA and player.global_position.distance_to(tera_actor.global_position) < 96.0:
 		call_deferred("_on_player_found_tera")
 
 func _on_player_found_tera() -> void:
@@ -310,17 +318,19 @@ func _on_player_found_tera() -> void:
 	_intro_busy = true
 	player.can_move = false
 	player.direction = Vector2.ZERO
+	tera_actor.face_down()
 
 	await _play_story_dialogue([
-		{"speaker": "Tera", "text": "Savannah! Over here!"},
-		{"speaker": "Tera", "text": "Looks like this used to be a farm."},
-		{"speaker": "Savannah", "text": "If the soil still turns, this could keep us alive."},
-		{"speaker": "Tera", "text": "Then let's see if whoever lived here left anything useful behind."}
-	])
+		{"speaker": "Tera", "text": "Savannah, look."},
+		{"speaker": "Tera", "text": "An old farm. Or what's left of one."},
+		{"speaker": "Savannah", "text": "Roof, soil, space to work. That's more than we had a minute ago."},
+		{"speaker": "Tera", "text": "If the owners ran when the blight hit, maybe they left something behind."}
+	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.OPEN_CHEST
 	_intro_busy = false
 	player.can_move = true
+	_restore_player_camera()
 	Global.show_tutorial_text("Objective: Open the old chest by the ruined field.")
 
 func _on_story_chest_opened() -> void:
@@ -332,16 +342,18 @@ func _run_post_chest_sequence() -> void:
 	_intro_busy = true
 	player.can_move = false
 	player.direction = Vector2.ZERO
+	tera_actor.face_side(true)
 
 	await _play_story_dialogue([
-		{"speaker": "Tera", "text": "Old farming tools. You still know how to use these, right?"},
-		{"speaker": "Savannah", "text": "Yeah. If we can find seed, we might not starve."},
-		{"speaker": "Tera", "text": "Then let's try the tree line. Maybe something survived out there."}
-	])
+		{"speaker": "Tera", "text": "Farming tools. That's your territory, right?"},
+		{"speaker": "Savannah", "text": "Yeah. If we can find seed, we can make this place work."},
+		{"speaker": "Tera", "text": "Then let's search the trees before the light goes."}
+	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.SEARCH_FOREST
 	_intro_busy = false
 	player.can_move = true
+	_restore_player_camera()
 	Global.show_tutorial_text("Objective: Search the forest edge for seeds.")
 
 func _on_forest_exit_trigger_body_entered(body: Node) -> void:
@@ -359,35 +371,41 @@ func _run_forest_encounter() -> void:
 	player.direction = Vector2.ZERO
 
 	await _fade_to_black(0.25)
-	player.global_position = INTRO_FOREST_RETURN_POS
+	player.global_position = _marker_pos(&"ForestReturn", INTRO_FOREST_RETURN_POS)
 	tera_actor.visible = true
-	tera_actor.global_position = INTRO_FOREST_TERA_POS
+	tera_actor.global_position = _marker_pos(&"ForestTera", INTRO_FOREST_TERA_POS)
+	tera_actor.face_side(true)
 	silas_actor.visible = true
-	silas_actor.global_position = INTRO_FOREST_SILAS_POS
+	silas_actor.global_position = _marker_pos(&"ForestSilas", INTRO_FOREST_SILAS_POS)
+	silas_actor.face_side(false)
 	await _fade_from_black(0.25)
 
 	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "Stop there. Who are you, and what are you doing out here?"},
-		{"speaker": "Savannah", "text": "Looking for supplies. We found an abandoned farm nearby."},
-		{"speaker": "Tera", "text": "We need something to plant before our luck runs out."},
-		{"speaker": "Silas", "text": "There isn't any usable land left in these woods."},
-		{"speaker": "Tera", "text": "There is. We found it."},
-		{"speaker": "Silas", "text": "Then prove it. I pulled a carrot seed and a parsnip seed off a dead caravan. Dried out. Probably useless."},
-		{"speaker": "Silas", "text": "Make them grow, and I'll believe you."}
-	])
+		{"speaker": "Silas", "text": "Stop. One more step and I loose the arrow."},
+		{"speaker": "Savannah", "text": "We're not looking for trouble."},
+		{"speaker": "Tera", "text": "We found an abandoned farm nearby. We need seed."},
+		{"speaker": "Silas", "text": "Then you're desperate, or stupid."},
+		{"speaker": "Tera", "text": "Hungry. There's a difference."},
+		{"speaker": "Silas", "text": "I walk these woods every week. There's no land out here worth claiming."},
+		{"speaker": "Savannah", "text": "There is. We saw it."},
+		{"speaker": "Silas", "text": "Prove it. I scavenged a carrot seed and a parsnip seed from a dead caravan. Old, dry, useless by now."},
+		{"speaker": "Silas", "text": "If you can make those grow, I'll come see this miracle field for myself."}
+	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
 
 	Global.add_item(Global.Items.CARROT_SEED, 1)
 	Global.add_item(Global.Items.PARSNIP_SEED, 1)
 
 	await _fade_to_black(0.25)
-	player.global_position = INTRO_CHEST_APPROACH_POS
-	tera_actor.global_position = INTRO_TERA_FIELD_POS
+	player.global_position = _marker_pos(&"ChestApproach", INTRO_CHEST_APPROACH_POS)
+	tera_actor.global_position = _marker_pos(&"TeraField", INTRO_TERA_FIELD_POS)
+	tera_actor.face_down()
 	silas_actor.visible = false
 	await _fade_from_black(0.25)
 
 	_intro_state = IntroState.PLANT_AND_WATER
 	_intro_busy = false
 	player.can_move = true
+	_restore_player_camera()
 	Global.show_tutorial_text("Objective: Plant the carrot and parsnip seeds, then water them.")
 
 func _register_intro_plant(seed_type: int, plant: StaticBody2D) -> void:
@@ -425,13 +443,20 @@ func _run_magic_reveal() -> void:
 	_intro_state = IntroState.MAGIC_REVEAL
 	player.can_move = false
 	player.direction = Vector2.ZERO
+	tera_actor.face_down()
 
 	await _play_story_dialogue([
-		{"speaker": "Savannah", "text": "That's the last of the water."},
-		{"speaker": "Tera", "text": "Good. Then let me try something."},
-		{"speaker": "Savannah", "text": "Tera... not too much."},
-		{"speaker": "Tera", "text": "Just enough to keep us alive."}
-	])
+		{"speaker": "Savannah", "text": "Water's done."},
+		{"speaker": "Tera", "text": "Good. Then watch the soil."},
+		{"speaker": "Savannah", "text": "Tera. Keep it controlled."},
+		{"speaker": "Tera", "text": "I am."}
+	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
+
+	var reveal_targets: Array[Node2D] = [tera_actor]
+	for plant in _story_plants:
+		if is_instance_valid(plant):
+			reveal_targets.append(plant)
+	await _focus_cutscene_on_nodes(reveal_targets, 0.25, CUTSCENE_CLOSE_ZOOM)
 
 	for plant in _story_plants:
 		if is_instance_valid(plant) and plant.has_method("force_mature"):
@@ -439,10 +464,10 @@ func _run_magic_reveal() -> void:
 			await get_tree().create_timer(0.25).timeout
 
 	await _play_story_dialogue([
-		{"speaker": "Savannah", "text": "They actually grew."},
-		{"speaker": "Tera", "text": "Please don't make me explain that to strangers yet."},
-		{"speaker": "Savannah", "text": "Then we rest, and we deal with tomorrow in the morning."}
-	])
+		{"speaker": "Savannah", "text": "One day. That's all it took."},
+		{"speaker": "Tera", "text": "Not a word to anyone until we know we can trust them."},
+		{"speaker": "Savannah", "text": "Then inside. Before someone starts asking questions."}
+	], reveal_targets, CUTSCENE_CLOSE_ZOOM)
 
 	await _advance_intro_day()
 	await _run_morning_reveal()
@@ -456,10 +481,12 @@ func _advance_intro_day() -> void:
 	level_reset()
 	Global.pending_day_transition = false
 
-	player.global_position = INTRO_MORNING_PLAYER_POS
-	tera_actor.global_position = INTRO_MORNING_TERA_POS
+	player.global_position = _marker_pos(&"MorningPlayer", INTRO_MORNING_PLAYER_POS)
+	tera_actor.global_position = _marker_pos(&"MorningTera", INTRO_MORNING_TERA_POS)
+	tera_actor.face_side(false)
 	silas_actor.visible = true
-	silas_actor.global_position = INTRO_MORNING_SILAS_POS
+	silas_actor.global_position = _marker_pos(&"MorningSilas", INTRO_MORNING_SILAS_POS)
+	silas_actor.face_side(true)
 
 	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
 	if hud and hud.has_method("_update_view"):
@@ -470,13 +497,14 @@ func _run_morning_reveal() -> void:
 	await _fade_from_black(0.8)
 
 	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "I came back for my seeds. Instead I find this."},
-		{"speaker": "Silas", "text": "How did you grow them in one night?"},
-		{"speaker": "Tera", "text": "Help us keep this place alive, and maybe I'll tell you."},
-		{"speaker": "Silas", "text": "...Fine. I'll stay. Name's Silas."},
+		{"speaker": "Silas", "text": "I expected dead seeds. Maybe dead girls. Not this."},
+		{"speaker": "Silas", "text": "How did you grow them overnight?"},
+		{"speaker": "Tera", "text": "Help us hold this place together, and maybe you earn that answer."},
+		{"speaker": "Silas", "text": "...Fine. I'm in."},
+		{"speaker": "Silas", "text": "Silas. Since we're pretending to be civilized."},
 		{"speaker": "Tera", "text": "Nice to meet you, Silas."},
-		{"speaker": "Savannah", "text": "Then let's get to work."}
-	])
+		{"speaker": "Savannah", "text": "Then let's harvest these before anything else goes wrong."}
+	], [player, tera_actor, silas_actor], CUTSCENE_GROUP_ZOOM)
 
 	_complete_intro()
 
@@ -489,14 +517,19 @@ func _complete_intro() -> void:
 	player.can_move = true
 	player.direction = Vector2.ZERO
 	_setup_story_camp_state()
+	_restore_player_camera()
 
 func _setup_story_camp_state() -> void:
 	tera_actor.visible = true
-	tera_actor.global_position = INTRO_CAMP_TERA_POS
+	tera_actor.global_position = _marker_pos(&"CampTera", INTRO_CAMP_TERA_POS)
+	tera_actor.face_down()
 	silas_actor.visible = true
-	silas_actor.global_position = INTRO_CAMP_SILAS_POS
+	silas_actor.global_position = _marker_pos(&"CampSilas", INTRO_CAMP_SILAS_POS)
+	silas_actor.face_side(false)
 
-func _play_story_dialogue(lines: Array[Dictionary]) -> void:
+func _play_story_dialogue(lines: Array[Dictionary], focus_nodes: Array[Node2D] = [], zoom: Vector2 = CUTSCENE_GROUP_ZOOM) -> void:
+	if not focus_nodes.is_empty():
+		await _focus_cutscene_on_nodes(focus_nodes, 0.3, zoom)
 	story_dialogue.play(lines)
 	await story_dialogue.dialogue_finished
 
@@ -514,3 +547,41 @@ func _fade_from_black(duration: float) -> void:
 	var tween = create_tween()
 	tween.tween_property($CanvasLayer/ColorRect, "modulate:a", 0.0, duration)
 	await tween.finished
+
+func _focus_cutscene_on_nodes(nodes: Array[Node2D], duration: float, zoom: Vector2) -> void:
+	var positions: Array[Vector2] = []
+	for node in nodes:
+		if node != null and is_instance_valid(node):
+			positions.append(node.global_position)
+	await _focus_cutscene_on_positions(positions, duration, zoom)
+
+func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zoom: Vector2) -> void:
+	if positions.is_empty():
+		return
+
+	var target := Vector2.ZERO
+	for position in positions:
+		target += position
+	target /= float(positions.size())
+
+	if not cutscene_camera.is_current():
+		cutscene_camera.global_position = player.global_position
+		cutscene_camera.zoom = player_camera.zoom
+	cutscene_camera.make_current()
+
+	var tween = create_tween()
+	tween.parallel().tween_property(cutscene_camera, "global_position", target, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.parallel().tween_property(cutscene_camera, "zoom", zoom, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+
+func _restore_player_camera() -> void:
+	if player_camera:
+		player_camera.make_current()
+
+func _marker_pos(marker_name: StringName, fallback: Vector2) -> Vector2:
+	if story_markers == null:
+		return fallback
+	var marker := story_markers.get_node_or_null(String(marker_name)) as Node2D
+	if marker == null:
+		return fallback
+	return marker.global_position
