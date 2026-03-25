@@ -59,9 +59,9 @@ func _on_start_pressed() -> void:
 	var card = DEMO_STORY_CARD_SCENE.instantiate()
 	add_child(card)
 	card.configure({
-		"title": "Where The Demo Begins",
-		"body": "Savannah, a deserter from the army hunting Tera, got her out before they could take her.\n\nThis demo begins in the first fragile hours after that escape, when they stumble onto abandoned ground and try to stay ahead of the blight.",
-		"confirm_hint": "start the demo",
+		"title": "A Fragile Escape",
+		"body": "Savannah was part of the very army hunting Tera - until she chose to save her instead.\n\nNow, in the desperate hours following their flight, they have stumbled onto a pocket of quiet on an abandoned farm. The army is behind them, the Blight is all around them, and survival is the only thing that matters.",
+		"confirm_hint": "start the prologue",
 		"skip_hint": "skip the prologue",
 		"allow_skip": true
 	})

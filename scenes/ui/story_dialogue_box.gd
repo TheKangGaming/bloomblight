@@ -17,12 +17,10 @@ const REVEAL_FRAMES_PER_CHAR := 2
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	speaker_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_apply_text_legibility()
 	body_label.bbcode_enabled = true
 	body_label.fit_content = false
 	body_label.scroll_active = false
-	prompt_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	if DemoDirector and not DemoDirector.input_mode_changed.is_connected(_on_input_mode_changed):
 		DemoDirector.input_mode_changed.connect(_on_input_mode_changed)
 	_update_prompt_text()
@@ -145,3 +143,16 @@ func _build_reveal_markup(text: String, reveal_index: int, alpha: float) -> Stri
 
 func _escape_bbcode(text: String) -> String:
 	return text.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
+
+func _apply_text_legibility() -> void:
+	speaker_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	prompt_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+	speaker_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	speaker_label.add_theme_constant_override("outline_size", 2)
+	body_label.add_theme_color_override("default_color", Color(0.95, 0.94, 0.89, 1.0))
+	body_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	body_label.add_theme_constant_override("outline_size", 2)
+	prompt_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	prompt_label.add_theme_constant_override("outline_size", 1)

@@ -21,11 +21,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	modulate.a = 0.0
-	background.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	title_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	confirm_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	skip_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_apply_text_legibility()
 	_apply_panel_style()
 
 	if DemoDirector and not DemoDirector.input_mode_changed.is_connected(_on_input_mode_changed):
@@ -148,3 +144,19 @@ func _apply_panel_style() -> void:
 	style.corner_radius_bottom_right = 14
 	style.corner_radius_bottom_left = 14
 	panel.add_theme_stylebox_override("panel", style)
+
+func _apply_text_legibility() -> void:
+	background.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	title_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	confirm_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	skip_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+	title_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	title_label.add_theme_constant_override("outline_size", 4)
+	body_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	body_label.add_theme_constant_override("outline_size", 3)
+	confirm_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	confirm_label.add_theme_constant_override("outline_size", 2)
+	skip_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	skip_label.add_theme_constant_override("outline_size", 2)

@@ -117,6 +117,38 @@ func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	if hud and hud.has_method("_update_view"):
 		hud._update_view(true)
 
+func _apply_story_time_passage(elapsed_seconds: float) -> void:
+	var day_timer = $DayTimer
+	var grow_timer = $GrowTimer
+	var story_seconds := clampf(elapsed_seconds, 0.0, maxf(day_timer.time_left - 2.0, 0.0))
+	if story_seconds <= 0.0:
+		return
+
+	var grow_time_left = max(grow_timer.time_left, 0.001)
+	var grow_interval = _grow_timer_cycle_seconds
+	var ticks_to_simulate := 0
+	if story_seconds >= grow_time_left:
+		ticks_to_simulate = 1 + int(floor((story_seconds - grow_time_left) / grow_interval))
+
+	for _i in range(ticks_to_simulate):
+		if has_method("_on_grow_timer_timeout"):
+			_on_grow_timer_timeout()
+
+	var new_day_time = day_timer.time_left - story_seconds
+	day_timer.start(max(new_day_time, 1.0))
+	day_timer.wait_time = _day_timer_cycle_seconds
+
+	var remainder_grow = story_seconds - (ticks_to_simulate * grow_interval)
+	var new_grow_time = grow_time_left - remainder_grow
+	if new_grow_time <= 0:
+		new_grow_time += grow_interval
+	grow_timer.start(max(new_grow_time, 0.01))
+	grow_timer.wait_time = _grow_timer_cycle_seconds
+
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud and hud.has_method("_update_view"):
+		hud._update_view(true)
+
 func _on_seed_menu_cancelled() -> void:
 	player.can_move = true
 
@@ -499,16 +531,21 @@ func _run_magic_reveal() -> void:
 		{"speaker": "Tera", "text": "I've got it. Just... give me a moment."}
 	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
 
-	var reveal_targets: Array[Node2D] = [tera_actor]
-	for plant in _story_plants:
-		if is_instance_valid(plant):
-			reveal_targets.append(plant)
-	await _focus_cutscene_on_nodes(reveal_targets, 0.25, CUTSCENE_CLOSE_ZOOM)
+	await _fade_to_black(0.85)
+	await _apply_story_time_passage(_day_timer_cycle_seconds * 0.28)
 
 	for plant in _story_plants:
 		if is_instance_valid(plant) and plant.has_method("force_mature"):
 			plant.force_mature()
-			await get_tree().create_timer(0.25).timeout
+			await get_tree().create_timer(0.12).timeout
+
+	await _fade_from_black(0.85)
+
+	var reveal_targets: Array[Node2D] = [tera_actor]
+	for plant in _story_plants:
+		if is_instance_valid(plant):
+			reveal_targets.append(plant)
+	await _focus_cutscene_on_nodes(reveal_targets, 0.3, CUTSCENE_CLOSE_ZOOM)
 
 	await _play_story_dialogue([
 		{"speaker": "Savannah", "text": "Hours. It should have taken months. You're getting stronger."},
@@ -521,7 +558,10 @@ func _run_magic_reveal() -> void:
 
 func _advance_intro_day() -> void:
 	player.can_move = false
-	await _fade_to_black(0.8)
+	if MusicManager and MusicManager.has_method("fade_to_silence"):
+		MusicManager.fade_to_silence(1.0)
+	await _fade_to_black(1.15)
+	await get_tree().create_timer(0.45).timeout
 
 	Global.pending_day_transition = true
 	Global.current_day += 1
@@ -534,14 +574,20 @@ func _advance_intro_day() -> void:
 	silas_actor.visible = true
 	silas_actor.global_position = _marker_pos(&"MorningSilas", INTRO_MORNING_SILAS_POS)
 	silas_actor.face_side(true)
+	await _focus_cutscene_on_nodes([player, tera_actor, silas_actor], 0.45, CUTSCENE_GROUP_ZOOM)
 
 	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
 	if hud and hud.has_method("_update_view"):
 		hud._update_view(true)
 
+	if hud and "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(hud.day_music, 0.55)
+
+	await get_tree().create_timer(0.35).timeout
+
 func _run_morning_reveal() -> void:
 	_intro_state = IntroState.MORNING_REVEAL
-	await _fade_from_black(0.8)
+	await _fade_from_black(1.05)
 
 	await _play_story_dialogue([
 		{"speaker": "Silas", "text": "I expected to find two frozen corpses. Not... this."},
@@ -625,6 +671,12 @@ func _run_post_meal_warning_sequence() -> void:
 		{"speaker": "Savannah", "text": "That's... actually not bad, Silas. You have a talent."},
 		{"speaker": "Silas", "text": "Don't get used to it. We have compa-"}
 	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
+
+	if DemoDirector:
+		DemoDirector.show_context_prompt("food_buff_blurb")
+	await get_tree().create_timer(1.8).timeout
+	if DemoDirector:
+		DemoDirector.clear_prompt()
 
 	var rustle_player := AudioStreamPlayer.new()
 	rustle_player.stream = _warning_rustle_sfx

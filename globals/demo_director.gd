@@ -281,6 +281,8 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 			template = "Objective: Plant the carrot and parsnip seeds, then water them."
 		"farm_water_both":
 			template = "Objective: Water both planted seeds."
+		"food_buff_blurb":
+			template = "Tutorial: Eating cooked food temporarily boosts the party's stats and morale for the day. More on morale later."
 		_:
 			template = ""
 
