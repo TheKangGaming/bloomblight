@@ -3,17 +3,25 @@ extends Control
 signal dialogue_finished
 
 @onready var speaker_label: Label = $MarginContainer/PanelContainer/MarginContainer/VBoxContainer/SpeakerLabel
-@onready var body_label: Label = $MarginContainer/PanelContainer/MarginContainer/VBoxContainer/BodyLabel
+@onready var body_label: RichTextLabel = $MarginContainer/PanelContainer/MarginContainer/VBoxContainer/BodyLabel
 @onready var prompt_label: Label = $MarginContainer/PanelContainer/MarginContainer/VBoxContainer/PromptLabel
 
 var _lines: Array[Dictionary] = []
 var _line_index := -1
+var _is_revealing := false
+var _reveal_generation := 0
+var _current_body_text := ""
+
+const REVEAL_FRAMES_PER_CHAR := 2
 
 func _ready() -> void:
 	visible = false
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	speaker_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	body_label.bbcode_enabled = true
+	body_label.fit_content = false
+	body_label.scroll_active = false
 	prompt_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	if DemoDirector and not DemoDirector.input_mode_changed.is_connected(_on_input_mode_changed):
 		DemoDirector.input_mode_changed.connect(_on_input_mode_changed)
@@ -22,6 +30,8 @@ func _ready() -> void:
 func play(lines: Array[Dictionary]) -> void:
 	_lines = lines.duplicate(true)
 	_line_index = -1
+	_is_revealing = false
+	_reveal_generation += 1
 	visible = true
 	_advance()
 
@@ -29,6 +39,11 @@ func hide_box() -> void:
 	visible = false
 	_lines.clear()
 	_line_index = -1
+	_is_revealing = false
+	_reveal_generation += 1
+	_current_body_text = ""
+	if body_label:
+		body_label.clear()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
@@ -50,6 +65,10 @@ func _is_advance_press(event: InputEvent) -> bool:
 	return true
 
 func _advance() -> void:
+	if _is_revealing:
+		_finish_current_reveal()
+		return
+
 	_line_index += 1
 	if _line_index >= _lines.size():
 		hide_box()
@@ -58,7 +77,7 @@ func _advance() -> void:
 
 	var line: Dictionary = _lines[_line_index]
 	speaker_label.text = String(line.get("speaker", ""))
-	body_label.text = String(line.get("text", ""))
+	_start_body_reveal(String(line.get("text", "")))
 	_update_prompt_text()
 
 func _exit_tree() -> void:
@@ -73,3 +92,56 @@ func _update_prompt_text() -> void:
 		prompt_label.text = DemoDirector.get_continue_prompt_text()
 	else:
 		prompt_label.text = "Press E to continue"
+
+func _start_body_reveal(text: String) -> void:
+	_is_revealing = true
+	_current_body_text = text
+	var reveal_generation := _reveal_generation + 1
+	_reveal_generation = reveal_generation
+	body_label.clear()
+	call_deferred("_reveal_body_text", text, reveal_generation)
+
+func _finish_current_reveal() -> void:
+	_is_revealing = false
+	_reveal_generation += 1
+	body_label.clear()
+	body_label.append_text(_escape_bbcode(_current_body_text))
+
+func _reveal_body_text(text: String, reveal_generation: int) -> void:
+	await get_tree().process_frame
+	if reveal_generation != _reveal_generation:
+		return
+
+	if text.is_empty():
+		body_label.clear()
+		_is_revealing = false
+		return
+
+	for char_index in range(text.length()):
+		for frame_index in range(REVEAL_FRAMES_PER_CHAR):
+			if reveal_generation != _reveal_generation:
+				return
+
+			var alpha := float(frame_index + 1) / float(REVEAL_FRAMES_PER_CHAR)
+			body_label.clear()
+			body_label.append_text(_build_reveal_markup(text, char_index, alpha))
+			await get_tree().process_frame
+
+	if reveal_generation != _reveal_generation:
+		return
+
+	body_label.clear()
+	body_label.append_text(_escape_bbcode(text))
+	_is_revealing = false
+
+func _build_reveal_markup(text: String, reveal_index: int, alpha: float) -> String:
+	var prefix := _escape_bbcode(text.substr(0, reveal_index))
+	if reveal_index >= text.length():
+		return prefix
+
+	var current_char := _escape_bbcode(text.substr(reveal_index, 1))
+	var alpha_code := Color(1.0, 1.0, 1.0, clampf(alpha, 0.0, 1.0)).to_html(true)
+	return "%s[color=%s]%s[/color]" % [prefix, alpha_code, current_char]
+
+func _escape_bbcode(text: String) -> String:
+	return text.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")

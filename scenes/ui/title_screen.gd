@@ -60,9 +60,9 @@ func _on_start_pressed() -> void:
 	add_child(card)
 	card.configure({
 		"title": "Where The Demo Begins",
-		"body": "Savannah and Tera have already escaped the worst of the collapse.\n\nThis demo begins in the first fragile hours after that flight, when the two of them stumble onto abandoned ground and try to build something that might survive the blight.",
+		"body": "Savannah, a deserter from the army hunting Tera, got her out before they could take her.\n\nThis demo begins in the first fragile hours after that escape, when they stumble onto abandoned ground and try to stay ahead of the blight.",
 		"confirm_hint": "start the demo",
-		"skip_hint": "skip the setup",
+		"skip_hint": "skip the prologue",
 		"allow_skip": true
 	})
 	card.confirmed.connect(_begin_demo_scene_transition)

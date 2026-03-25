@@ -4,6 +4,7 @@ var player_in_range := false
 var is_lit := false
 var _player_body: CharacterBody2D = null
 var _cooking_menu = null
+var _interaction_block_until_msec := 0
 
 @onready var fire_sprite = $Fire
 @onready var smoke_sprite = $Smoke
@@ -36,6 +37,10 @@ func _ready():
 
 func _unhandled_input(event):
 	if not player_in_range:
+		return
+	if _player_body != null and is_instance_valid(_player_body) and not _player_body.can_move:
+		return
+	if Time.get_ticks_msec() < _interaction_block_until_msec:
 		return
 
 	var cooking_menu = get_cooking_menu()
@@ -110,6 +115,9 @@ func _set_player_movement_locked(locked: bool) -> void:
 	_player_body.can_move = not locked
 	if locked:
 		_player_body.direction = Vector2.ZERO
+
+func block_interaction_for(seconds: float) -> void:
+	_interaction_block_until_msec = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
 
 func show_feedback(message: String):
 	feedback_label.text = message

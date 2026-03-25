@@ -77,6 +77,9 @@ func _ready() -> void:
 	_sync_scene_music_to_manager()
 	
 	_reinitialize()
+	call_deferred("_finish_demo_battle_setup")
+
+func _finish_demo_battle_setup() -> void:
 	_setup_demo_support_nodes()
 
 	if DemoDirector and DemoDirector.consume_pending_day_two_battle_intro():

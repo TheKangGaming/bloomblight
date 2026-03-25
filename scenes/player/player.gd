@@ -3,6 +3,7 @@ extends CharacterBody2D
 @onready var move_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/MoveStateMachine/playback')
 @onready var tool_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/ToolStateMachine/playback')
 @onready var tool_particles = $ToolParticles
+@onready var visuals_root: Node2D = $Visuals
 
 @export var tool_direction_offset := 30
 @export var chest_offset := 40
@@ -16,6 +17,9 @@ var can_move : bool = true
 var current_tool: Global.Tools = Global.Tools.AXE
 var _cutscene_anim_state: StringName = &""
 var _cutscene_anim_direction: Vector2 = Vector2.DOWN
+var _cutscene_emote_tween: Tween = null
+var _cutscene_emote_base_position := Vector2.ZERO
+var _cutscene_emote_active := false
 
 const tool_connection = {
 	Global.Tools.HOE: 'hoe',
@@ -171,23 +175,35 @@ func face_direction(target_vec: Vector2) -> void:
 	move_state_machine.travel('idle')
 
 func play_cutscene_move(target_vec: Vector2) -> void:
+	_clear_cutscene_emote()
 	last_direction = _to_cardinal_direction(target_vec)
 	direction = Vector2.ZERO
 	current_speed = walk_speed
 	_set_cutscene_anim_override(&"move", last_direction)
 
 func play_cutscene_idle(target_vec: Vector2 = last_direction) -> void:
+	_clear_cutscene_emote()
 	last_direction = _to_cardinal_direction(target_vec)
 	direction = Vector2.ZERO
 	_set_cutscene_anim_override(&"idle", last_direction)
 
+func play_cutscene_shock(target_vec: Vector2 = last_direction) -> void:
+	play_cutscene_idle(target_vec)
+	_play_cutscene_emote_shake(Vector2(2.5, 1.8), 0.24, 3)
+
+func play_cutscene_impatient(target_vec: Vector2 = last_direction) -> void:
+	play_cutscene_idle(target_vec)
+	_play_cutscene_emote_shake(Vector2(1.5, 1.0), 0.42, 4)
+
 func clear_cutscene_animation() -> void:
+	_clear_cutscene_emote()
 	_clear_cutscene_anim_override()
 	direction = Vector2.ZERO
 	update_animation_blend_positions(last_direction)
 	move_state_machine.travel('idle')
 
 func _set_cutscene_anim_override(state: StringName, facing: Vector2) -> void:
+	_clear_cutscene_emote()
 	_cutscene_anim_state = state
 	_cutscene_anim_direction = _to_cardinal_direction(facing)
 	update_animation_blend_positions(_cutscene_anim_direction)
@@ -195,6 +211,29 @@ func _set_cutscene_anim_override(state: StringName, facing: Vector2) -> void:
 
 func _clear_cutscene_anim_override() -> void:
 	_cutscene_anim_state = &""
+
+func _play_cutscene_emote_shake(amplitude: Vector2, duration: float, shakes: int) -> void:
+	_clear_cutscene_emote()
+	if visuals_root == null or shakes <= 0 or duration <= 0.0:
+		return
+
+	_cutscene_emote_active = true
+	_cutscene_emote_base_position = visuals_root.position
+	_cutscene_emote_tween = create_tween()
+	_cutscene_emote_tween.set_trans(Tween.TRANS_SINE)
+	_cutscene_emote_tween.set_ease(Tween.EASE_IN_OUT)
+
+	var step_duration := duration / float(shakes * 2)
+	for i in range(shakes):
+		var shake_direction := 1.0 if i % 2 == 0 else -1.0
+		_cutscene_emote_tween.tween_property(visuals_root, "position", _cutscene_emote_base_position + Vector2(amplitude.x * shake_direction, -amplitude.y), step_duration)
+		_cutscene_emote_tween.tween_property(visuals_root, "position", _cutscene_emote_base_position, step_duration)
+
+func _clear_cutscene_emote() -> void:
+	if _cutscene_emote_tween:
+		_cutscene_emote_tween.kill()
+		_cutscene_emote_tween = null
+	_cutscene_emote_active = false
 
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
 	print("Player was successfully unlocked!")

@@ -78,6 +78,7 @@ func open(player_pos: Vector2):
 		
 	else:
 		print('no seeds to plant!')
+		menu_cancelled.emit()
 		hide()
 
 func _input(event):

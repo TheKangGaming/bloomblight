@@ -68,6 +68,21 @@ func play_evade() -> void:
 	if _visual_driver and _visual_driver.has_method("play_evade"):
 		_waiting_for_action_finish = true
 		_visual_driver.play_evade()
+
+func play_mood_shocked() -> void:
+	if _visual_driver and _visual_driver.has_method("play_mood_shocked"):
+		_waiting_for_action_finish = false
+		_visual_driver.play_mood_shocked()
+
+func play_mood_impatient() -> void:
+	if _visual_driver and _visual_driver.has_method("play_mood_impatient"):
+		_waiting_for_action_finish = false
+		_visual_driver.play_mood_impatient()
+
+func play_bow_aim() -> void:
+	if _visual_driver and _visual_driver.has_method("play_bow_aim"):
+		_waiting_for_action_finish = false
+		_visual_driver.play_bow_aim()
 		
 func set_facing(direction: Vector2) -> void:
 	if _visual_driver and _visual_driver.has_method("set_facing"):

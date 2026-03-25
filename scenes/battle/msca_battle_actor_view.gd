@@ -4,6 +4,8 @@ extends Node2D
 @onready var msca_player = $Player # Adjust this path to point to your MSCA visual rig!
 @onready var parent_actor = get_parent()
 @onready var sprite_layers: Node = $Player/SpriteLayers
+@onready var anim_player: AnimationPlayer = $Player/SpriteLayers/AnimationPlayer
+@onready var anim_tree: AnimationTree = $Player/SpriteLayers/AnimationTree
 @onready var body_sprite: Sprite2D = get_node_or_null("Player/SpriteLayers/01body")
 @onready var one_h_weapon: CanvasItem = $Player/SpriteLayers/farmer_1h_weapon
 @onready var bow_weapon: CanvasItem = $Player/SpriteLayers/farmer_bow
@@ -69,12 +71,14 @@ func set_facing(dir: Vector2) -> void:
 	_apply_weapon_visibility("neutral")
 
 func play_idle() -> void:
+	_set_anim_tree_active(true)
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = ""
 		_apply_weapon_visibility("neutral")
 		msca_player.travel_to_anim("Idle", _facing)
 
 func play_run() -> void:
+	_set_anim_tree_active(true)
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = ""
 		_apply_weapon_visibility("neutral")
@@ -83,6 +87,7 @@ func play_run() -> void:
 		msca_player.travel_to_anim("Run", _facing)
 		
 func play_jump() -> void:
+	_set_anim_tree_active(true)
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = ""
 		_apply_weapon_visibility("neutral")
@@ -93,6 +98,7 @@ func play_attack() -> void:
 	if not msca_player or not msca_player.has_method("travel_to_anim"):
 		return
 
+	_set_anim_tree_active(true)
 	_pending_finish_state = _get_attack_animation_name()
 	_apply_weapon_visibility(_get_weapon_visibility_mode())
 	msca_player.travel_to_anim(_pending_finish_state, _facing)
@@ -113,6 +119,7 @@ func _get_attack_animation_name() -> String:
 			return "StrikeForehandOneHandWeapon"
 
 func play_hit() -> void:
+	_set_anim_tree_active(true)
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "Hurt"
 		_apply_weapon_visibility("neutral")
@@ -120,6 +127,7 @@ func play_hit() -> void:
 
 func play_death() -> void:
 	_is_dying = true
+	_set_anim_tree_active(true)
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "DeathBounce"
 		_apply_weapon_visibility("neutral")
@@ -127,10 +135,20 @@ func play_death() -> void:
 		msca_player.travel_to_anim("DeathBounce", Vector2.DOWN)
 		
 func play_evade() -> void:
+	_set_anim_tree_active(true)
 	if msca_player and msca_player.has_method("travel_to_anim"):
 		_pending_finish_state = "Evade"
 		_apply_weapon_visibility("neutral")
 		msca_player.travel_to_anim("Evade", _facing)
+
+func play_mood_shocked() -> void:
+	_play_story_animation("MoodShocked", "neutral")
+
+func play_mood_impatient() -> void:
+	_play_story_animation("MoodImpatient", "neutral")
+
+func play_bow_aim() -> void:
+	_play_story_animation("BowShot", "bow", 0.18)
 
 func _get_weapon_visibility_mode() -> String:
 	var weapon_type := ""
@@ -152,6 +170,36 @@ func _apply_weapon_visibility(mode: String) -> void:
 		one_h_weapon.visible = (mode == "one_h")
 	if bow_weapon:
 		bow_weapon.visible = (mode == "bow")
+
+func _play_story_animation(base_name: String, weapon_mode: String, pause_at: float = -1.0) -> void:
+	if anim_player == null:
+		return
+
+	_pending_finish_state = ""
+	_set_anim_tree_active(false)
+	_apply_weapon_visibility(weapon_mode)
+	var animation_name := _resolve_directional_animation_name(base_name)
+	if not anim_player.has_animation(animation_name):
+		_set_anim_tree_active(true)
+		return
+
+	anim_player.play(animation_name)
+	if pause_at >= 0.0:
+		anim_player.seek(pause_at, true)
+		anim_player.pause()
+
+func _resolve_directional_animation_name(base_name: String) -> String:
+	if _facing == Vector2.LEFT:
+		return base_name + "Left"
+	if _facing == Vector2.RIGHT:
+		return base_name + "Right"
+	if _facing == Vector2.UP:
+		return base_name + "Up"
+	return base_name + "Down"
+
+func _set_anim_tree_active(is_active: bool) -> void:
+	if anim_tree:
+		anim_tree.active = is_active
 
 func get_effect_anchor_position() -> Vector2:
 	if bow_weapon and bow_weapon.visible:

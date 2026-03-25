@@ -306,9 +306,9 @@ func _begin_intro_sequence() -> void:
 	await _move_node(tera_actor, _marker_pos(&"IntroEntryTeraStop", INTRO_ENTRY_TERA_STOP), 1.4)
 	await _play_story_dialogue([
 		{"speaker": "Savannah", "text": "We made it out. Barely."},
-		{"speaker": "Tera", "text": "I know. I just... don't know where we are."},
-		{"speaker": "Savannah", "text": "It's quiet. That's enough for now."},
-		{"speaker": "Tera", "text": "Wait. There. I think I found something."}
+		{"speaker": "Tera", "text": "I know. I just... I don't recognize these stars, Savannah. I don't know where we are."},
+		{"speaker": "Savannah", "text": "Quiet is all I care about right now. We stop here."},
+		{"speaker": "Tera", "text": "Wait. Look there. That silhouette against the trees."}
 	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
 
 	await _focus_cutscene_on_nodes([tera_actor], 0.25, CUTSCENE_CLOSE_ZOOM)
@@ -340,10 +340,9 @@ func _on_player_found_tera() -> void:
 	tera_actor.face_down()
 
 	await _play_story_dialogue([
-		{"speaker": "Tera", "text": "Savannah, look."},
-		{"speaker": "Tera", "text": "An old farm. Or what's left of one."},
-		{"speaker": "Savannah", "text": "Roof, soil, space to work. That's more than we had a minute ago."},
-		{"speaker": "Tera", "text": "If the owners ran when the blight hit, maybe they left something behind."}
+		{"speaker": "Tera", "text": "It's a farm. Or what's left of one."},
+		{"speaker": "Savannah", "text": "A roof that holds, and soil that isn't ash yet. That's a miracle in this reach."},
+		{"speaker": "Tera", "text": "If the owners fled the blight, they might have left the essentials behind. Let's look around."}
 	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.OPEN_CHEST
@@ -366,9 +365,9 @@ func _run_post_chest_sequence() -> void:
 
 	await _play_story_dialogue([
 		{"speaker": "Tera", "text": "An old chest. Rusted shut."},
-		{"speaker": "Savannah", "text": "Steel spades. Shears. The handles are rotting, but the iron is still good."},
-		{"speaker": "Tera", "text": "Can you use them?"},
-		{"speaker": "Savannah", "text": "If we find seeds. We should move before the light goes."}
+		{"speaker": "Savannah", "text": "Spades... shears. The handles are rotted through, but the iron is still good. I can work with these."},
+		{"speaker": "Tera", "text": "Good. Now we just need something to put in the ground."},
+		{"speaker": "Savannah", "text": "And we need to find it before the light fails us. Let's check the forest edge."}
 	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.SEARCH_FOREST
@@ -401,17 +400,42 @@ func _run_forest_encounter() -> void:
 	silas_actor.global_position = _marker_pos(&"ForestSilas", INTRO_FOREST_SILAS_POS)
 	silas_actor.face_side(false)
 	await _fade_from_black(0.25)
+	if player.has_method("play_cutscene_shock"):
+		player.play_cutscene_shock(Vector2.RIGHT)
+	if tera_actor.has_method("play_shocked"):
+		tera_actor.play_shocked()
+	if silas_actor.has_method("play_bow_aim"):
+		silas_actor.play_bow_aim()
+	elif silas_actor.has_method("play_attack"):
+		silas_actor.play_attack()
+	await get_tree().create_timer(0.2).timeout
 
 	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "Stop. One more step and I loose the arrow."},
-		{"speaker": "Savannah", "text": "We're not looking for trouble."},
-		{"speaker": "Tera", "text": "We found an abandoned farm nearby. We need seed."},
-		{"speaker": "Silas", "text": "Then you're desperate, or stupid."},
-		{"speaker": "Tera", "text": "Hungry. There's a difference."},
-		{"speaker": "Silas", "text": "I walk these woods every week. There's no land out here worth claiming."},
-		{"speaker": "Savannah", "text": "There is. We saw it."},
-		{"speaker": "Silas", "text": "Then take these and waste your evening. I ripped them off a dead caravan. Dry as bone."},
-		{"speaker": "Silas", "text": "Bury them in the dirt, eat them raw, I don't care. Just get out of my woods."}
+		{"speaker": "Silas", "text": "Stop right there. One more step and I put an arrow through that pretty mantle."},
+		{"speaker": "Savannah", "text": "We're survivors, not scavengers. Lower the bow."},
+		{"speaker": "Tera", "text": "We found the old farmstead. We need seeds, if you have them."},
+	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
+
+	if silas_actor.has_method("play_idle"):
+		silas_actor.play_idle()
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.RIGHT)
+	if tera_actor.has_method("play_idle"):
+		tera_actor.play_idle()
+
+	await _play_story_dialogue([
+		{"speaker": "Silas", "text": "The 'old farm'? You're either desperate or delusional. That dirt has been dead for years."},
+		{"speaker": "Tera", "text": "Hungry people don't have the luxury of being delusional."},
+		{"speaker": "Silas", "text": "I walk these woods every week. There isn't a scrap of life worth claiming."},
+		{"speaker": "Savannah", "text": "Then you haven't been looking hard enough."}
+	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
+
+	if silas_actor.has_method("play_impatient"):
+		silas_actor.play_impatient()
+
+	await _play_story_dialogue([
+		{"speaker": "Silas", "text": "Fine. Take these. Ripped them off a dead caravan, dry as bone and twice as useless."},
+		{"speaker": "Silas", "text": "Bury them, eat them, I don't care. Just stay out of my sight."}
 	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
 
 	Global.add_item(Global.Items.CARROT_SEED, 1)
@@ -470,10 +494,10 @@ func _run_magic_reveal() -> void:
 	tera_actor.face_down()
 
 	await _play_story_dialogue([
-		{"speaker": "Savannah", "text": "Water's done."},
-		{"speaker": "Tera", "text": "Good. Then watch the soil."},
-		{"speaker": "Savannah", "text": "Tera. Keep it controlled."},
-		{"speaker": "Tera", "text": "I am."}
+		{"speaker": "Savannah", "text": "Soil's turned. Seeds are in. Your turn."},
+		{"speaker": "Tera", "text": "Watch the earth."},
+		{"speaker": "Savannah", "text": "Tera... keep it small. We don't need a beacon for every Orc in the forest."},
+		{"speaker": "Tera", "text": "I've got it. Just... give me a moment."}
 	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
 
 	var reveal_targets: Array[Node2D] = [tera_actor]
@@ -488,9 +512,9 @@ func _run_magic_reveal() -> void:
 			await get_tree().create_timer(0.25).timeout
 
 	await _play_story_dialogue([
-		{"speaker": "Savannah", "text": "One day. That's all it took."},
-		{"speaker": "Tera", "text": "Not a word to anyone until we know we can trust them."},
-		{"speaker": "Savannah", "text": "Then inside. Before someone starts asking questions."}
+		{"speaker": "Savannah", "text": "Hours. It should have taken months. You're getting stronger."},
+		{"speaker": "Tera", "text": "Don't say that word. Not until we know if we can trust that ranger."},
+		{"speaker": "Savannah", "text": "Inside, then. Before the moon starts asking questions."}
 	], reveal_targets, CUTSCENE_CLOSE_ZOOM)
 
 	await _advance_intro_day()
@@ -521,13 +545,13 @@ func _run_morning_reveal() -> void:
 	await _fade_from_black(0.8)
 
 	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "I expected dead seeds. Maybe dead girls. Not this."},
-		{"speaker": "Silas", "text": "How did you grow them overnight?"},
-		{"speaker": "Tera", "text": "Help us hold this place together, and maybe you earn that answer."},
-		{"speaker": "Silas", "text": "...Fine. I'm in."},
-		{"speaker": "Silas", "text": "Silas. Since we're pretending to be civilized."},
-		{"speaker": "Tera", "text": "Nice to meet you, Silas."},
-		{"speaker": "Savannah", "text": "Then let's harvest these before anything else goes wrong."}
+		{"speaker": "Silas", "text": "I expected to find two frozen corpses. Not... this."},
+		{"speaker": "Silas", "text": "How? That soil was poison yesterday."},
+		{"speaker": "Tera", "text": "Help us keep the walls up, and maybe you'll earn that answer."},
+		{"speaker": "Silas", "text": "...Fine. You have my bow."},
+		{"speaker": "Silas", "text": "Name's Silas. Since we're pretending to be civilized."},
+		{"speaker": "Tera", "text": "Tera. And this is Savannah."},
+		{"speaker": "Savannah", "text": "Nice to meet you, Silas. Now help us harvest this 'miracle' before something else smells it."}
 	], [player, tera_actor, silas_actor], CUTSCENE_GROUP_ZOOM)
 
 	_complete_intro()
@@ -570,20 +594,18 @@ func _run_recipe_scene() -> void:
 	silas_actor.face_side(false)
 
 	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "You can't keep chewing roots raw."},
-		{"speaker": "Silas", "text": "Found some old syrup in that chest. Carrots, parsnips, a hot pan."},
+		{"speaker": "Silas", "text": "You can't live on raw roots and spite."},
+		{"speaker": "Silas", "text": "Found some syrup in the cellar. Mix it with the carrots, char them over the pan."},
 		{"speaker": "Silas", "text": "\"Glazed Carrots\" if you're a noble. Out here, it's just fuel."},
-		{"speaker": "Savannah", "text": "If it keeps us moving, that'll do."},
-		{"speaker": "Tera", "text": "Then let's get the fire going before the light turns on us."}
+		{"speaker": "Savannah", "text": "Fuel is exactly what I need. Let's get the fire going."},
+		{"speaker": "Tera", "text": "Hurry. The shadows are getting long, and they feel... heavy today."}
 	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
 
 	Global.learn_recipe(Global.Items.GLAZED_CARROTS)
 	if DemoDirector:
 		DemoDirector.notify_recipe_learned(Global.Items.GLAZED_CARROTS)
 
-	_intro_busy = false
-	player.can_move = true
-	_restore_player_camera()
+	await _release_overworld_control()
 
 func _on_demo_meal_eaten(_item_type: int) -> void:
 	if _warning_sequence_started or not Global.intro_sequence_complete:
@@ -601,7 +623,7 @@ func _run_post_meal_warning_sequence() -> void:
 	_setup_story_camp_state()
 
 	await _play_story_dialogue([
-		{"speaker": "Savannah", "text": "That's... actually not bad, Silas."},
+		{"speaker": "Savannah", "text": "That's... actually not bad, Silas. You have a talent."},
 		{"speaker": "Silas", "text": "Don't get used to it. We have compa-"}
 	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
 
@@ -681,6 +703,24 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 		transition_layer.queue_free()
 
 func resume_after_combat() -> void:
+	_intro_busy = false
+	player.can_move = true
+	player.direction = Vector2.ZERO
+	_restore_player_camera()
+
+func _release_overworld_control(delay_frames: int = 1) -> void:
+	for _i in range(maxi(delay_frames, 0)):
+		await get_tree().process_frame
+
+	if camp_fire != null and is_instance_valid(camp_fire):
+		var cooking_menu = null
+		if camp_fire.has_method("get_cooking_menu"):
+			cooking_menu = camp_fire.get_cooking_menu()
+		if cooking_menu != null and is_instance_valid(cooking_menu) and cooking_menu.visible and cooking_menu.has_method("close_menu"):
+			cooking_menu.close_menu()
+		if camp_fire.has_method("block_interaction_for"):
+			camp_fire.block_interaction_for(0.2)
+
 	_intro_busy = false
 	player.can_move = true
 	player.direction = Vector2.ZERO
