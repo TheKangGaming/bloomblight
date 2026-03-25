@@ -602,31 +602,32 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
+position = Vector2(432, 496)
 
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
-position = Vector2(375, 212)
+position = Vector2(368, 208)
 character_data = ExtResource("13_mwyqx")
 current_stats = SubResource("Resource_mwyqx")
 
 [node name="Orc2" parent="GameBoard" unique_id=376372171 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
-position = Vector2(441, 210)
+position = Vector2(432, 208)
 character_data = ExtResource("13_mwyqx")
 current_stats = SubResource("Resource_hejk3")
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
-position = Vector2(383, 438)
+position = Vector2(368, 432)
 character_data = ExtResource("18_0a6tx")
 current_stats = SubResource("Resource_t05iy")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
-position = Vector2(323, 471)
+position = Vector2(336, 464)
 character_data = ExtResource("18_hejk3")
 current_stats = SubResource("Resource_efnms")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
-position = Vector2(443, 471)
+position = Vector2(432, 464)
 character_data = ExtResource("20_t05iy")
 current_stats = SubResource("Resource_x18w8")
 

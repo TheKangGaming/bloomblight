@@ -54,8 +54,12 @@ var _demo_first_action_done := false
 var _demo_bloom_prompt_shown := false
 var _demo_bloom_used := false
 var _demo_harvest_done := false
+var _demo_silas_select_done := false
+var _demo_silas_move_done := false
+var _demo_tera_select_done := false
 var _demo_story_dialogue_layer: CanvasLayer = null
 var _demo_story_dialogue: Control = null
+var _demo_overlay_layer: CanvasLayer = null
 var _demo_overlay: Control = null
 var _battle_camera: Camera2D = null
 var _dormant_focus_sprite: Sprite2D = null
@@ -95,10 +99,22 @@ func _sync_scene_music_to_manager() -> void:
 	if scene_music == null or scene_music.stream == null:
 		return
 
+	var music_stream := scene_music.stream
+	var music_volume_db := scene_music.volume_db
 	scene_music.autoplay = false
-	if MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(scene_music.stream, 1.25, scene_music.volume_db)
 	scene_music.stop()
+
+	var intro_delay := 0.0
+	var fade_duration := 1.25
+	if Global and Global.combat_transition.started_at_unix > 0.0:
+		intro_delay = 0.35
+		fade_duration = 1.85
+
+	if intro_delay > 0.0:
+		await get_tree().create_timer(intro_delay).timeout
+
+	if MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(music_stream, fade_duration, music_volume_db)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("menu_toggle"):
@@ -288,6 +304,10 @@ func _move_active_unit(new_cell: Vector2, show_action_menu: bool = true) -> void
 		demo_first_move_completed.emit(_active_unit)
 		if DemoDirector:
 			DemoDirector.show_context_prompt("battle_choose_attack")
+	elif _demo_battle_active and _active_unit != null and _active_unit.name == "Silas" and not _demo_silas_move_done:
+		_demo_silas_move_done = true
+		if DemoDirector:
+			DemoDirector.show_context_prompt("battle_choose_attack_ranged")
 	
 	if show_action_menu:
 		_show_action_menu()
@@ -322,6 +342,14 @@ func _select_unit(cell: Vector2) -> void:
 		demo_first_unit_selected.emit(_active_unit)
 		if DemoDirector:
 			DemoDirector.show_context_prompt("battle_move_savannah")
+	elif _demo_battle_active and _active_unit.name == "Silas" and not _demo_silas_select_done:
+		_demo_silas_select_done = true
+		if DemoDirector:
+			DemoDirector.show_context_prompt("battle_select_silas")
+	elif _demo_battle_active and _active_unit.name == "Tera" and not _demo_tera_select_done:
+		_demo_tera_select_done = true
+		if DemoDirector:
+			DemoDirector.show_context_prompt("battle_select_tera")
 	
 	
 
@@ -678,6 +706,11 @@ func start_enemy_phase() -> void:
 	if _battle_ended:
 		return
 	
+	if _demo_battle_active and _demo_first_action_done and not _demo_bloom_prompt_shown:
+		await _present_demo_bloom_prompt()
+		if _battle_ended:
+			return
+	
 	# 1. Gather all living enemies currently on the board
 	var enemies = []
 	for cell in _units:
@@ -768,9 +801,6 @@ func start_player_phase() -> void:
 			var visuals = unit.get_node_or_null("PathFollow2D/Visuals")
 			if visuals:
 				visuals.modulate = Color.WHITE 
-
-	if _demo_battle_active and _demo_first_action_done and not _demo_bloom_prompt_shown:
-		await _present_demo_bloom_prompt()
 
 	_cursor.is_active = true
 	
@@ -1463,10 +1493,19 @@ func _setup_demo_support_nodes() -> void:
 	if DemoDirector == null or not DemoDirector.is_demo_active():
 		return
 
-	if get_parent() != null and get_parent().get_node_or_null("DemoOverlay") == null:
+	if get_parent() != null and get_parent().get_node_or_null("DemoOverlayLayer") == null:
+		_demo_overlay_layer = CanvasLayer.new()
+		_demo_overlay_layer.name = "DemoOverlayLayer"
+		_demo_overlay_layer.layer = 120
+		get_parent().add_child(_demo_overlay_layer)
+
+	if _demo_overlay_layer == null and get_parent() != null:
+		_demo_overlay_layer = get_parent().get_node_or_null("DemoOverlayLayer") as CanvasLayer
+
+	if _demo_overlay_layer != null and _demo_overlay_layer.get_node_or_null("DemoOverlay") == null:
 		_demo_overlay = OVERLAY_SCENE.instantiate()
 		_demo_overlay.name = "DemoOverlay"
-		get_parent().add_child(_demo_overlay)
+		_demo_overlay_layer.add_child(_demo_overlay)
 
 	if _battle_camera == null:
 		_battle_camera = Camera2D.new()
@@ -1515,13 +1554,19 @@ func _run_demo_battle_opening() -> void:
 	])
 
 	await _focus_battle_camera(_default_camera_focus, 0.4)
+	if _cursor_camera != null:
+		_cursor_camera.position_smoothing_enabled = false
+		_cursor_camera.global_position = _battle_camera.global_position
+		if _cursor_camera.has_method("reset_smoothing"):
+			_cursor_camera.reset_smoothing()
+		_cursor_camera.make_current()
+		_cursor_camera.position_smoothing_enabled = true
+		_cursor_camera.position_smoothing_speed = 8.0
+
 	await _show_phase_banner("PLAYER PHASE", Color(0.1, 0.4, 0.8))
 	if DemoDirector:
 		DemoDirector.set_stage(DemoDirector.DemoStage.BATTLE_TUTORIAL)
 		DemoDirector.show_context_prompt("battle_select_savannah")
-	if _cursor_camera != null:
-		_cursor_camera.reset_smoothing()
-		_cursor_camera.make_current()
 	_cursor.is_active = true
 
 func _compute_default_camera_focus() -> Vector2:

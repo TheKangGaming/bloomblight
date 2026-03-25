@@ -12,7 +12,7 @@ signal moved(new_cell)
 
 
 ## Grid resource, giving the node access to the grid size, and more.
-@export var grid: Resource
+@export var grid: Grid
 ## Time before the cursor can move again in seconds.
 @export var ui_cooldown := 0.1
 
@@ -59,10 +59,11 @@ func _process(_delta: float) -> void:
 		return
 
 	_poll_directional_input()
-	
-	if(is_mouse):
+	var mouse_velocity := Input.get_last_mouse_velocity()
+	if is_mouse or mouse_velocity.length_squared() > 0.0:
+		is_mouse = true
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
-		if(cell != grid_coords):
+		if cell != grid_coords:
 			cell = grid_coords
 
 

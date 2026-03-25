@@ -175,7 +175,7 @@ func get_skip_prompt_text() -> String:
 
 func get_confirm_label() -> String:
 	if current_input_mode == InputMode.CONTROLLER:
-		return "Confirm"
+		return "A"
 	return get_action_label("interact")
 
 func get_action_label(action_name: StringName) -> String:
@@ -248,15 +248,23 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 	var template := ""
 	match prompt_id:
 		"battle_select_savannah":
-			template = "Tutorial: Select Savannah with %s." % get_action_label("confirm")
+			template = "Tutorial: Select Savannah with the cursor."
 		"battle_move_savannah":
-			template = "Tutorial: Move the cursor with %s, then press %s on a blue tile." % [get_move_label(), get_action_label("confirm")]
+			template = "Tutorial: Move the cursor then click/press %s on a blue tile." % get_action_label("confirm")
 		"battle_choose_attack":
-			template = "Tutorial: Choose Attack to strike the scouting party, or Wait to end Savannah's turn."
+			template = "Tutorial: Choose Attack if you are standing next to an enemy. For now, end your turn."
+		"battle_select_silas":
+			template = "Tutorial: Select Silas with the cursor. Move the cursor then click/press %s on a blue tile. Silas fights from range, so he can attack without standing next to an enemy." % get_action_label("confirm")
+		"battle_move_silas":
+			template = "Tutorial: Move the cursor then click/press %s on a blue tile. Silas fights from range, so he can attack without standing next to an enemy." % get_action_label("confirm")
+		"battle_choose_attack_ranged":
+			template = "Tutorial: Choose Attack when the enemy is in range. Silas does not need to stand next to them."
+		"battle_select_tera":
+			template = "Tutorial: Select Tera with the cursor. She is a strong magic user, but she is fragile, so keep her protected."
 		"battle_choose_bloom":
-			template = "Tutorial: Select Tera, choose Bloom, then press %s to awaken the roots around her." % get_action_label("confirm")
+			template = "Tutorial: Select Tera, choose Bloom, then press %s to awaken the dormant sprout." % get_action_label("confirm")
 		"battle_harvest_healflower":
-			template = "Tutorial: Move Savannah onto a Healflower, choose Harvest, then press %s to recover HP." % get_action_label("confirm")
+			template = "Tutorial: Move Savannah next to a Healflower, choose Harvest, then press %s to recover HP." % get_action_label("confirm")
 		"battle_defeat_enemies":
 			template = "Objective: Defeat the scouting party."
 		"farm_controls_intro":
@@ -266,7 +274,7 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 		"farm_open_chest":
 			template = "Objective: Open the old chest by the ruined field."
 		"farm_search_forest":
-			template = "Objective: Search the forest edge for seeds."
+			template = "Objective: Search the forest edge for seeds. Head toward the treeline at the edge of the farm."
 		"farm_farming_controls":
 			template = "Tutorial: Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}, and plant seeds with {plant}.\nObjective: Plant the carrot and parsnip seeds, then water them."
 		"farm_plant_and_water":
@@ -349,9 +357,9 @@ func _format_input_event(event: InputEvent) -> String:
 		var button_event := event as InputEventJoypadButton
 		match button_event.button_index:
 			JOY_BUTTON_A:
-				return "Confirm"
+				return "A"
 			JOY_BUTTON_B:
-				return "Cancel"
+				return "B"
 			JOY_BUTTON_X:
 				return "X"
 			JOY_BUTTON_Y:
@@ -397,9 +405,9 @@ func _keyboard_fallback_label(action_name: StringName) -> String:
 func _controller_fallback_label(action_name: StringName) -> String:
 	match action_name:
 		&"confirm", &"interact", &"ui_accept":
-			return "Confirm"
+			return "A"
 		&"cancel", &"ui_cancel":
-			return "Cancel"
+			return "B"
 		&"menu_toggle":
 			return "L1"
 		&"run":
@@ -407,7 +415,7 @@ func _controller_fallback_label(action_name: StringName) -> String:
 		&"action":
 			return "R2"
 		&"plant":
-			return "Confirm"
+			return "A"
 		&"tool_forward":
 			return "R1"
 		&"tool_backward":

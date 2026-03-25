@@ -1,9 +1,29 @@
 [gd_scene format=3 uid="uid://cp8d533rk1rnl"]
 
 [ext_resource type="PackedScene" uid="uid://bi5rcv355k8pf" path="res://scenes/level/farmmap.tmx" id="1_y5wde"]
+[ext_resource type="Texture2D" uid="uid://cfv0svktdupvk" path="res://graphics/interactables/Abandoned Structures Elements_2.png" id="2_e08np"]
+[ext_resource type="Texture2D" uid="uid://b0suyyowh5nef" path="res://graphics/interactables/Abandoned Structures Elements_1.png" id="3_mrmfm"]
+[ext_resource type="Texture2D" uid="uid://cfxwhsqga0qe0" path="res://graphics/interactables/Abandoned Structures Elements_0.png" id="4_kbnp3"]
 
 [node name="World" unique_id=300117719 instance=ExtResource("1_y5wde")]
 y_sort_enabled = true
 
 [node name="Obstacles" parent="." index="5" unique_id=496332903]
 y_sort_enabled = true
+
+[node name="AbandonedStructuresElements2" type="Sprite2D" parent="Obstacles" index="0" unique_id=1439176673]
+z_index = 1
+y_sort_enabled = true
+position = Vector2(1537, 544)
+texture = ExtResource("2_e08np")
+
+[node name="AbandonedStructuresElements1" type="Sprite2D" parent="Obstacles" index="1" unique_id=1193709631]
+y_sort_enabled = true
+position = Vector2(1536, 431)
+texture = ExtResource("3_mrmfm")
+
+[node name="AbandonedStructuresElements0" type="Sprite2D" parent="Overhead" parent_id_path=PackedInt32Array(814651428) index="0" unique_id=995622414]
+z_index = 2
+y_sort_enabled = true
+position = Vector2(1538, 415)
+texture = ExtResource("4_kbnp3")

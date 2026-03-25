@@ -2682,9 +2682,6 @@ position = Vector2(1207, 548)
 [node name="Tree5" parent="Objects/Trees" unique_id=197772556 instance=ExtResource("5_qrcxb")]
 position = Vector2(1188, 424)
 
-[node name="CampFire" parent="Objects/Trees" unique_id=1975501456 instance=ExtResource("8_g280g")]
-position = Vector2(1612, 517)
-
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
 position = Vector2(1040, 1192)
 sign_text = "The southern road is gone. Blight swallowed it whole."
@@ -2705,6 +2702,9 @@ flip_h = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/RegularSign" unique_id=1483193910]
 position = Vector2(1040, 632)
 shape = SubResource("RectangleShape2D_g35fm")
+
+[node name="CampFire" parent="Objects" unique_id=1975501456 instance=ExtResource("8_g280g")]
+position = Vector2(1698, 592)
 
 [node name="StoryMarkers" type="Node2D" parent="." unique_id=1642267877]
 

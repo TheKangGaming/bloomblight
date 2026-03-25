@@ -13,6 +13,7 @@ var last_tool: int = -1
 var toolbar_visible_state := true
 
 func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_setup_quest_ui()
 	_setup_toolbar_ui()
 	if not Global.tutorial_updated.is_connected(_on_tutorial_updated):
@@ -28,6 +29,7 @@ func _try_bind_to_player_signal() -> void:
 		player_ref.connect("tool_changed", Callable(self, "_on_player_tool_changed"))
 
 func _setup_toolbar_ui() -> void:
+	$ToolBar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tool_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	tool_label.add_theme_font_override("font", QUEST_FONT)
 	tool_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
@@ -37,13 +39,16 @@ func _setup_toolbar_ui() -> void:
 func _on_player_tool_changed(tool: Global.Tools) -> void:
 	_update_tool_display(tool)
 
-## Builds a golden text box in the top-left corner
+## Builds a golden text box near the top of the screen without covering battle forecasts
 func _setup_quest_ui() -> void:
 	var margin = MarginContainer.new()
 	margin.name = "QuestUI"
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	margin.anchor_left = 0.5
+	margin.anchor_right = 0.5
+	margin.anchor_top = 0.0
+	margin.anchor_bottom = 0.0
+	margin.position = Vector2(-220, 20)
+	margin.custom_minimum_size = Vector2(440, 0)
 
 	var panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(420, 0)
@@ -81,6 +86,7 @@ func _setup_quest_ui() -> void:
 	margin.add_child(panel)
 	add_child(margin)
 	quest_ui_root = margin
+	quest_ui_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	quest_ui_root.modulate.a = 0.0
 	quest_ui_root.visible = false
 

@@ -372,10 +372,9 @@ func _run_post_chest_sequence() -> void:
 
 	_intro_state = IntroState.SEARCH_FOREST
 	_intro_busy = false
-	player.can_move = true
-	_restore_player_camera()
 	if DemoDirector:
 		DemoDirector.show_context_prompt("farm_search_forest")
+	await _show_forest_edge_camera_hint()
 
 func _on_forest_exit_trigger_body_entered(body: Node) -> void:
 	if body != player:
@@ -451,7 +450,7 @@ func _run_forest_encounter() -> void:
 	_intro_state = IntroState.PLANT_AND_WATER
 	_intro_busy = false
 	player.can_move = true
-	_restore_player_camera()
+	_restore_player_camera(false)
 	if DemoDirector:
 		DemoDirector.show_context_prompt("farm_farming_controls")
 
@@ -780,13 +779,22 @@ func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zo
 	tween.parallel().tween_property(cutscene_camera, "zoom", zoom, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
 
-func _restore_player_camera() -> void:
+func _restore_player_camera(sync_to_cutscene: bool = true) -> void:
 	if player and player.has_method("clear_cutscene_animation"):
 		player.clear_cutscene_animation()
 	if player_camera:
+		if sync_to_cutscene and is_instance_valid(cutscene_camera):
+			player_camera.position_smoothing_enabled = false
+			player_camera.global_position = cutscene_camera.global_position
+			player_camera.zoom = cutscene_camera.zoom
+		else:
+			player_camera.position_smoothing_enabled = false
+			player_camera.global_position = player.global_position
 		if player_camera.has_method("reset_smoothing"):
 			player_camera.reset_smoothing()
 		player_camera.make_current()
+		player_camera.position_smoothing_enabled = true
+		player_camera.position_smoothing_speed = 8.0
 
 func _marker_pos(marker_name: StringName, fallback: Vector2) -> Vector2:
 	if story_markers == null:
@@ -835,3 +843,19 @@ func _cardinalize_direction(direction: Vector2) -> Vector2:
 	if absf(direction.x) > absf(direction.y):
 		return Vector2.RIGHT if direction.x > 0.0 else Vector2.LEFT
 	return Vector2.DOWN if direction.y > 0.0 else Vector2.UP
+
+func _show_forest_edge_camera_hint() -> void:
+	if _intro_state != IntroState.SEARCH_FOREST:
+		return
+
+	var trigger := get_node_or_null("ForestExitTrigger") as Area2D
+	if trigger == null:
+		return
+
+	var forest_edge_focus := trigger.global_position + Vector2(0.0, -132.0)
+	player.can_move = false
+	await _focus_cutscene_on_positions([forest_edge_focus], 0.95, Vector2(1.55, 1.55))
+	await get_tree().create_timer(0.8).timeout
+	await _focus_cutscene_on_nodes([player], 0.9, CUTSCENE_GROUP_ZOOM)
+	_restore_player_camera(false)
+	player.can_move = true

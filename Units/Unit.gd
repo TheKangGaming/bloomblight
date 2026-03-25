@@ -12,7 +12,7 @@ signal died(unit)
 
 var ability_cooldowns: Dictionary = {}
 
-@export var grid: Resource
+@export var grid: Grid
 
 @export var is_enemy: bool
 @export var character_data: CharacterData
