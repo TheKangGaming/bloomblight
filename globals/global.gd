@@ -75,6 +75,14 @@ func show_tutorial_text(text: String) -> void:
 	tutorial_updated.emit(text)
 
 func update_tutorial_ui() -> void:
+	if DemoDirector and DemoDirector.is_demo_active():
+		DemoDirector.refresh_current_prompt()
+		return
+
+	if not tutorial_enabled:
+		tutorial_updated.emit("")
+		return
+
 	match tutorial_step:
 		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
 		1: tutorial_updated.emit("Quest: Walk up to the sign and read it. (Press E)")
@@ -443,6 +451,37 @@ func add_item(item_type: Items, amount: int = 1):
 	# Emit the signal so the UI knows to refresh!
 	inventory_updated.emit()
 	print("Added ", amount, " of ", Items.keys()[item_type], ". Total: ", inventory[item_type])
+
+func reset_demo_state() -> void:
+	for item_type in inventory.keys():
+		inventory[item_type] = 0
+
+	unlocked_tools.clear()
+	resolved_encounters.clear()
+	pending_combat_scene_path = ""
+	pending_day_transition = false
+	combat_transition.started_at_unix = 0.0
+	saved_farm_scene = null
+	returning_from_combat = false
+	current_day = 1
+	intro_sequence_complete = false
+	tutorial_enabled = false
+	tutorial_step = 0
+	last_battle_result = {
+		"victory": false,
+		"enemies_defeated": 0,
+		"returned_at_unix": 0
+	}
+	reset_known_recipes_to_defaults()
+	active_food_buff.item = null
+	active_food_buff.stats = _build_stat_template()
+	temporary_stat_modifiers.food = _build_stat_template()
+	temporary_stat_modifiers.equipment = _build_stat_template()
+	set_player_unbuffed_hp(int(get_player_permanent_totals().get("MAX_HP", 20)))
+	inventory_updated.emit()
+	recipe_knowledge_updated.emit()
+	stats_updated.emit()
+	tutorial_updated.emit("")
 
 func remove_item(item_type: Items, amount: int = 1) -> bool:
 	if inventory.get(item_type, 0) >= amount:

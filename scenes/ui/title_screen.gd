@@ -5,6 +5,8 @@ extends Control
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var atmosphere_particles: GPUParticles2D = $AtmosphereParticles
 
+const DEMO_STORY_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
+
 @export var title_music: AudioStream 
 @export var game_scene: PackedScene
 
@@ -46,13 +48,28 @@ func _on_fade_in_complete() -> void:
 func _on_start_pressed() -> void:
 	if _is_transitioning:
 		return
-		
+
 	_is_transitioning = true
 	start_button.disabled = true 
 	quit_button.disabled = true
-	
-	TransitionManager.change_scene(game_scene)
 
+	if DemoDirector:
+		DemoDirector.begin_new_demo()
+
+	var card = DEMO_STORY_CARD_SCENE.instantiate()
+	add_child(card)
+	card.configure({
+		"title": "Where The Demo Begins",
+		"body": "Savannah and Tera have already escaped the worst of the collapse.\n\nThis demo begins in the first fragile hours after that flight, when the two of them stumble onto abandoned ground and try to build something that might survive the blight.",
+		"confirm_hint": "start the demo",
+		"skip_hint": "skip the setup",
+		"allow_skip": true
+	})
+	card.confirmed.connect(_begin_demo_scene_transition)
+	card.skipped.connect(_begin_demo_scene_transition)
+
+func _begin_demo_scene_transition() -> void:
+	TransitionManager.change_scene(game_scene)
 
 func _on_quit_pressed() -> void:
 	if _is_transitioning:

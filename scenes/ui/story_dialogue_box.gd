@@ -15,6 +15,9 @@ func _ready() -> void:
 	speaker_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	body_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	prompt_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	if DemoDirector and not DemoDirector.input_mode_changed.is_connected(_on_input_mode_changed):
+		DemoDirector.input_mode_changed.connect(_on_input_mode_changed)
+	_update_prompt_text()
 
 func play(lines: Array[Dictionary]) -> void:
 	_lines = lines.duplicate(true)
@@ -56,4 +59,17 @@ func _advance() -> void:
 	var line: Dictionary = _lines[_line_index]
 	speaker_label.text = String(line.get("speaker", ""))
 	body_label.text = String(line.get("text", ""))
-	prompt_label.text = "Press E to continue"
+	_update_prompt_text()
+
+func _exit_tree() -> void:
+	if DemoDirector and DemoDirector.input_mode_changed.is_connected(_on_input_mode_changed):
+		DemoDirector.input_mode_changed.disconnect(_on_input_mode_changed)
+
+func _on_input_mode_changed(_mode: int) -> void:
+	_update_prompt_text()
+
+func _update_prompt_text() -> void:
+	if DemoDirector:
+		prompt_label.text = DemoDirector.get_continue_prompt_text()
+	else:
+		prompt_label.text = "Press E to continue"

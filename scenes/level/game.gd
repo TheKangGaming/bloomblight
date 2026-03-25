@@ -38,8 +38,12 @@ enum IntroState {
 @onready var silas_actor = $Objects/SilasActor
 @onready var story_dialogue = $CanvasLayer/StoryDialogueBox
 @onready var story_chest = $Objects/Chest
+@onready var camp_fire = $Objects/Trees/CampFire
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
+var _combat_scene_path := "res://scenes/level/CombatMap_1.tscn"
+var _warning_music: AudioStream = preload("res://audio/Music_Norest.wav")
+var _warning_rustle_sfx: AudioStream = preload("res://audio/Light steps.wav")
 @export var daytime_gradient: Gradient
 
 @onready var tillable_layer = $World/Tillable
@@ -55,6 +59,8 @@ var _intro_busy := false
 var _forest_encounter_started := false
 var _story_plants: Array[StaticBody2D] = []
 var _story_seed_types_planted: Array[int] = []
+var _recipe_scene_started := false
+var _warning_sequence_started := false
 
 func _ready() -> void:
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -66,6 +72,12 @@ func _ready() -> void:
 
 	if story_chest and story_chest.has_signal("opened"):
 		story_chest.opened.connect(_on_story_chest_opened)
+	if DemoDirector:
+		if not DemoDirector.story_harvest_ready.is_connected(_on_story_harvest_ready):
+			DemoDirector.story_harvest_ready.connect(_on_story_harvest_ready)
+		if not DemoDirector.meal_eaten.is_connected(_on_demo_meal_eaten):
+			DemoDirector.meal_eaten.connect(_on_demo_meal_eaten)
+		DemoDirector.set_stage(DemoDirector.DemoStage.INTRO)
 
 	if Global.intro_sequence_complete:
 		_setup_story_camp_state()
@@ -114,10 +126,15 @@ func _process(_delta: float) -> void:
 
 	_process_intro_progress()
 
-	if Global.intro_sequence_complete and Input.is_action_just_pressed("time_skip"):
+	if Global.intro_sequence_complete and _can_skip_day() and Input.is_action_just_pressed("time_skip"):
 		if Global.tutorial_step == 8:
 			Global.advance_tutorial()
 		request_end_day()
+
+func _can_skip_day() -> bool:
+	if DemoDirector and DemoDirector.is_demo_active() and DemoDirector.current_stage != DemoDirector.DemoStage.DEMO_COMPLETE:
+		return false
+	return true
 
 func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 	var adjusted_pos = global_pos + Vector2(0, 24)
@@ -303,7 +320,8 @@ func _begin_intro_sequence() -> void:
 	_intro_busy = false
 	player.can_move = true
 	_restore_player_camera()
-	Global.show_tutorial_text("Objective: Find Tera.")
+	if DemoDirector:
+		DemoDirector.show_context_prompt("farm_controls_intro")
 
 func _process_intro_progress() -> void:
 	if Global.intro_sequence_complete or _intro_busy:
@@ -332,7 +350,8 @@ func _on_player_found_tera() -> void:
 	_intro_busy = false
 	player.can_move = true
 	_restore_player_camera()
-	Global.show_tutorial_text("Objective: Open the old chest by the ruined field.")
+	if DemoDirector:
+		DemoDirector.show_context_prompt("farm_open_chest")
 
 func _on_story_chest_opened() -> void:
 	if _intro_busy or _intro_state != IntroState.OPEN_CHEST:
@@ -356,7 +375,8 @@ func _run_post_chest_sequence() -> void:
 	_intro_busy = false
 	player.can_move = true
 	_restore_player_camera()
-	Global.show_tutorial_text("Objective: Search the forest edge for seeds.")
+	if DemoDirector:
+		DemoDirector.show_context_prompt("farm_search_forest")
 
 func _on_forest_exit_trigger_body_entered(body: Node) -> void:
 	if body != player:
@@ -408,7 +428,8 @@ func _run_forest_encounter() -> void:
 	_intro_busy = false
 	player.can_move = true
 	_restore_player_camera()
-	Global.show_tutorial_text("Objective: Plant the carrot and parsnip seeds, then water them.")
+	if DemoDirector:
+		DemoDirector.show_context_prompt("farm_farming_controls")
 
 func _register_intro_plant(seed_type: int, plant: StaticBody2D) -> void:
 	if plant == null:
@@ -423,7 +444,8 @@ func _register_intro_plant(seed_type: int, plant: StaticBody2D) -> void:
 	_story_plants.append(plant)
 	_story_seed_types_planted.append(seed_type)
 	if _story_seed_types_planted.size() >= 2:
-		Global.show_tutorial_text("Objective: Water both planted seeds.")
+		if DemoDirector:
+			DemoDirector.show_context_prompt("farm_water_both")
 
 func _check_intro_water_state() -> void:
 	if _intro_busy or _story_plants.size() < 2:
@@ -512,14 +534,15 @@ func _run_morning_reveal() -> void:
 
 func _complete_intro() -> void:
 	Global.intro_sequence_complete = true
-	Global.tutorial_enabled = true
-	Global.set_tutorial_step(9)
+	Global.tutorial_enabled = false
 	_intro_state = IntroState.COMPLETE
 	_intro_busy = false
 	player.can_move = true
 	player.direction = Vector2.ZERO
 	_setup_story_camp_state()
 	_restore_player_camera()
+	if DemoDirector:
+		DemoDirector.notify_intro_complete()
 
 func _setup_story_camp_state() -> void:
 	tera_actor.visible = true
@@ -528,6 +551,140 @@ func _setup_story_camp_state() -> void:
 	silas_actor.visible = true
 	silas_actor.global_position = _marker_pos(&"CampSilas", INTRO_CAMP_SILAS_POS)
 	silas_actor.face_side(false)
+
+func _on_story_harvest_ready() -> void:
+	if _recipe_scene_started or not Global.intro_sequence_complete:
+		return
+	call_deferred("_run_recipe_scene")
+
+func _run_recipe_scene() -> void:
+	if _recipe_scene_started or _intro_busy:
+		return
+
+	_recipe_scene_started = true
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_setup_story_camp_state()
+	tera_actor.face_side(true)
+	silas_actor.face_side(false)
+
+	await _play_story_dialogue([
+		{"speaker": "Silas", "text": "You can't keep chewing roots raw."},
+		{"speaker": "Silas", "text": "Found some old syrup in that chest. Carrots, parsnips, a hot pan."},
+		{"speaker": "Silas", "text": "\"Glazed Carrots\" if you're a noble. Out here, it's just fuel."},
+		{"speaker": "Savannah", "text": "If it keeps us moving, that'll do."},
+		{"speaker": "Tera", "text": "Then let's get the fire going before the light turns on us."}
+	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
+
+	Global.learn_recipe(Global.Items.GLAZED_CARROTS)
+	if DemoDirector:
+		DemoDirector.notify_recipe_learned(Global.Items.GLAZED_CARROTS)
+
+	_intro_busy = false
+	player.can_move = true
+	_restore_player_camera()
+
+func _on_demo_meal_eaten(_item_type: int) -> void:
+	if _warning_sequence_started or not Global.intro_sequence_complete:
+		return
+	call_deferred("_run_post_meal_warning_sequence")
+
+func _run_post_meal_warning_sequence() -> void:
+	if _warning_sequence_started or _intro_busy:
+		return
+
+	_warning_sequence_started = true
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_setup_story_camp_state()
+
+	await _play_story_dialogue([
+		{"speaker": "Savannah", "text": "That's... actually not bad, Silas."},
+		{"speaker": "Silas", "text": "Don't get used to it. We have compa-"}
+	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
+
+	var rustle_player := AudioStreamPlayer.new()
+	rustle_player.stream = _warning_rustle_sfx
+	rustle_player.volume_db = -7.0
+	add_child(rustle_player)
+	rustle_player.play()
+
+	if MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(_warning_music, 0.7, -4.0)
+
+	await _focus_cutscene_on_positions([
+		_marker_pos(&"ForestReturn", INTRO_FOREST_RETURN_POS),
+		_marker_pos(&"ForestSilas", INTRO_FOREST_SILAS_POS)
+	], 0.55, CUTSCENE_CLOSE_ZOOM)
+	await get_tree().create_timer(0.3).timeout
+
+	if is_instance_valid(rustle_player):
+		rustle_player.queue_free()
+
+	await _fade_to_black(0.7)
+	await _launch_direct_combat_scene(_combat_scene_path)
+
+func _launch_direct_combat_scene(combat_scene_path: String) -> void:
+	if not ResourceLoader.exists(combat_scene_path):
+		push_error("Combat map path is invalid: %s" % combat_scene_path)
+		_intro_busy = false
+		player.can_move = true
+		_restore_player_camera()
+		return
+
+	if DemoDirector:
+		DemoDirector.prepare_day_two_battle_intro()
+
+	var scene_tree := get_tree()
+	Global.saved_farm_scene = self
+	Global.begin_combat_transition()
+
+	var transition_layer := CanvasLayer.new()
+	transition_layer.layer = 100
+	scene_tree.root.add_child(transition_layer)
+
+	var fade_rect := ColorRect.new()
+	fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	fade_rect.color = Color(0, 0, 0, 1)
+	transition_layer.add_child(fade_rect)
+
+	var combat_scene = load(combat_scene_path).instantiate()
+	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
+	if is_instance_valid(combat_music):
+		combat_music.autoplay = false
+		combat_music.stop()
+
+	scene_tree.root.add_child(combat_scene)
+	scene_tree.current_scene = combat_scene
+	scene_tree.root.remove_child(self)
+
+	await scene_tree.process_frame
+
+	var savannah: Node = combat_scene.get_node_or_null("GameBoard/Savannah")
+	var cursor: Node = combat_scene.get_node_or_null("GameBoard/Cursor")
+	if savannah != null and cursor != null and "cell" in savannah and "cell" in cursor:
+		cursor.cell = savannah.cell.round()
+		if "is_active" in cursor:
+			cursor.is_active = true
+
+	var reveal := scene_tree.create_tween()
+	reveal.set_ease(Tween.EASE_IN_OUT)
+	reveal.set_trans(Tween.TRANS_SINE)
+	reveal.tween_interval(0.1)
+	reveal.tween_property(fade_rect, "color:a", 0.0, 0.85)
+	await reveal.finished
+
+	if is_instance_valid(transition_layer):
+		transition_layer.queue_free()
+
+func resume_after_combat() -> void:
+	_intro_busy = false
+	player.can_move = true
+	player.direction = Vector2.ZERO
+	_restore_player_camera()
 
 func _play_story_dialogue(lines: Array[Dictionary], focus_nodes: Array[Node2D] = [], zoom: Vector2 = CUTSCENE_GROUP_ZOOM) -> void:
 	if not focus_nodes.is_empty():
@@ -565,8 +722,8 @@ func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zo
 		return
 
 	var target := Vector2.ZERO
-	for position in positions:
-		target += position
+	for point in positions:
+		target += point
 	target /= float(positions.size())
 
 	if not cutscene_camera.is_current():

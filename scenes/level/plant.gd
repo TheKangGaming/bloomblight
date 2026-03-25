@@ -178,6 +178,8 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 		if plant_type in Global.HARVEST_DROPS:
 			var drop = Global.HARVEST_DROPS[plant_type]
 			Global.add_item(drop)
+			if DemoDirector:
+				DemoDirector.notify_story_crop_harvested(drop)
 		else:
 			Global.add_item(plant_type) 
 

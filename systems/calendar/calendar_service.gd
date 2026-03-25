@@ -9,7 +9,7 @@ signal day_changed(new_day: int, encounter_data: Dictionary)
 
 # A typed dictionary contract for our deterministic encounters
 const THREAT_CALENDAR: Dictionary = {
-	3: {
+	2: {
 		"id": &"orc_scout",
 		"display_name": "Orc Scouting Party",
 		"combat_scene": "res://scenes/level/CombatMap_1.tscn",

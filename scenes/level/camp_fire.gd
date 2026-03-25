@@ -46,6 +46,8 @@ func _unhandled_input(event):
 	if is_confirm:
 		if not is_lit:
 			toggle_fire(true)
+			if DemoDirector:
+				DemoDirector.notify_campfire_lit()
 			if should_advance_tutorial:
 				Global.advance_tutorial()
 			if cooking_menu:

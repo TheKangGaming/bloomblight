@@ -9,6 +9,7 @@ const ROLE_SORT_ORDER := {
 
 signal menu_opened
 signal menu_closed
+signal meal_cooked(recipe_item: int)
 
 @onready var recipe_list: VBoxContainer = $Panel/MarginContainer/Layout/RecipeScroll/RecipeList
 
@@ -183,6 +184,9 @@ func _craft_item(recipe_output: Global.Items) -> void:
 
 	Global.inventory[recipe_output] = int(Global.inventory.get(recipe_output, 0)) + 1
 	Global.inventory_updated.emit()
+	meal_cooked.emit(recipe_output)
+	if DemoDirector:
+		DemoDirector.notify_meal_cooked(recipe_output)
 
 	if Global.tutorial_step == 11:
 		Global.advance_tutorial()

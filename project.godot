@@ -26,6 +26,7 @@ buses/default_bus_layout="uid://b0ncci1a8pr65"
 [autoload]
 
 Global="*uid://bcq8tavlkaxyr"
+DemoDirector="*res://globals/demo_director.gd"
 ProgressionService="*res://systems/progression/progression_service.gd"
 CalendarService="*uid://cp8duraorkxir"
 MusicManager="*uid://ds754ws0s2j6e"

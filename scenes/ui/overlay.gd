@@ -88,14 +88,22 @@ func _setup_quest_ui() -> void:
 func _on_tutorial_updated(text: String) -> void:
 	if quest_tween:
 		quest_tween.kill()
-	quest_tween = create_tween()
 
 	if text == "":
-		if quest_ui_root and quest_ui_root.visible:
-			quest_tween.tween_property(quest_ui_root, "modulate:a", 0.0, 0.25)
-			quest_tween.tween_callback(Callable(self, "_hide_quest_ui"))
+		if quest_label:
+			quest_label.text = ""
+		if quest_ui_root == null or not quest_ui_root.visible:
+			if quest_ui_root:
+				quest_ui_root.visible = false
+				quest_ui_root.modulate.a = 0.0
+			return
+
+		quest_tween = create_tween()
+		quest_tween.tween_property(quest_ui_root, "modulate:a", 0.0, 0.25)
+		quest_tween.tween_callback(Callable(self, "_hide_quest_ui"))
 		return
 
+	quest_tween = create_tween()
 	quest_label.text = text
 	if quest_ui_root:
 		quest_ui_root.visible = true
@@ -107,7 +115,7 @@ func _hide_quest_ui() -> void:
 		quest_ui_root.visible = false
 
 func _process(_delta):
-	var should_show_toolbar = not Global.unlocked_tools.is_empty()
+	var should_show_toolbar = not Global.unlocked_tools.is_empty() and player_ref != null and is_instance_valid(player_ref)
 	if toolbar_visible_state != should_show_toolbar:
 		toolbar_visible_state = should_show_toolbar
 		$ToolBar.visible = should_show_toolbar
