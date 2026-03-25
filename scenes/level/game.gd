@@ -38,7 +38,7 @@ enum IntroState {
 @onready var silas_actor = $Objects/SilasActor
 @onready var story_dialogue = $CanvasLayer/StoryDialogueBox
 @onready var story_chest = $Objects/Chest
-@onready var camp_fire = $Objects/Trees/CampFire
+@onready var camp_fire = $Objects/CampFire
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _combat_scene_path := "res://scenes/level/CombatMap_1.tscn"
