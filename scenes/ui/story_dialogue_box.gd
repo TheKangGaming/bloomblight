@@ -12,7 +12,9 @@ var _is_revealing := false
 var _reveal_generation := 0
 var _current_body_text := ""
 
-const REVEAL_FRAMES_PER_CHAR := 2
+const REVEAL_CHAR_DURATION := 0.018
+const REVEAL_ALPHA_STEPS := 2
+const REVEAL_STEP_DURATION := REVEAL_CHAR_DURATION / float(REVEAL_ALPHA_STEPS)
 
 func _ready() -> void:
 	visible = false
@@ -54,6 +56,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	_advance()
 
 func _is_advance_press(event: InputEvent) -> bool:
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		return mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.pressed
+
 	if not (event.is_action_pressed("interact") or event.is_action_pressed("ui_accept")):
 		return false
 
@@ -116,14 +122,14 @@ func _reveal_body_text(text: String, reveal_generation: int) -> void:
 		return
 
 	for char_index in range(text.length()):
-		for frame_index in range(REVEAL_FRAMES_PER_CHAR):
+		for alpha_step in range(REVEAL_ALPHA_STEPS):
 			if reveal_generation != _reveal_generation:
 				return
 
-			var alpha := float(frame_index + 1) / float(REVEAL_FRAMES_PER_CHAR)
+			var alpha := float(alpha_step + 1) / float(REVEAL_ALPHA_STEPS)
 			body_label.clear()
 			body_label.append_text(_build_reveal_markup(text, char_index, alpha))
-			await get_tree().process_frame
+			await get_tree().create_timer(REVEAL_STEP_DURATION).timeout
 
 	if reveal_generation != _reveal_generation:
 		return

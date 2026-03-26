@@ -7,6 +7,9 @@ const BOW_ATTACK_SFX := preload("res://audio/Bow Attack 1.wav")
 const BOW_IMPACT_SFX := preload("res://audio/Bow Impact Hit 1.wav")
 const SWORD_ATTACK_SFX := preload("res://audio/Sword Attack 1.wav")
 const SWORD_IMPACT_SFX := preload("res://audio/Sword Impact Hit 1.wav")
+const ORC_HIT_SFX := preload("res://audio/Monster_Grunt6.mp3")
+const ORC_DEATH_SFX := preload("res://audio/Monster_Grunt4.mp3")
+const ORC_THUD_SFX := preload("res://audio/Monster_Thud.mp3")
 const BOW_ATTACK_SFX_DELAY := 0.06
 
 # --- NODE REFERENCES ---
@@ -43,6 +46,9 @@ var _current_zoom := 1.0
 var _presentation_overlay: Control
 var _attack_sfx_player: AudioStreamPlayer = null
 var _impact_sfx_player: AudioStreamPlayer = null
+var _orc_hit_sfx_player: AudioStreamPlayer = null
+var _orc_death_sfx_player: AudioStreamPlayer = null
+var _orc_thud_sfx_player: AudioStreamPlayer = null
 
 const ENTRY_REVEAL_DURATION := 0.18
 const EXIT_HIDE_DURATION := 0.16
@@ -193,8 +199,10 @@ func _execute_battle_sequence() -> void:
 			waits_for_reaction = true
 			
 			if strike.target_survived:
+				_play_orc_hit_sfx(target)
 				target.play_hit()
 			else:
+				_play_orc_death_sfx(target)
 				target.play_death()
 				if strike.is_attacker_striking:
 					defender_survived = false
@@ -244,6 +252,21 @@ func _ensure_sfx_players() -> void:
 		_impact_sfx_player.name = "ImpactSfxPlayer"
 		add_child(_impact_sfx_player)
 
+	if _orc_hit_sfx_player == null:
+		_orc_hit_sfx_player = AudioStreamPlayer.new()
+		_orc_hit_sfx_player.name = "OrcHitSfxPlayer"
+		add_child(_orc_hit_sfx_player)
+
+	if _orc_death_sfx_player == null:
+		_orc_death_sfx_player = AudioStreamPlayer.new()
+		_orc_death_sfx_player.name = "OrcDeathSfxPlayer"
+		add_child(_orc_death_sfx_player)
+
+	if _orc_thud_sfx_player == null:
+		_orc_thud_sfx_player = AudioStreamPlayer.new()
+		_orc_thud_sfx_player.name = "OrcThudSfxPlayer"
+		add_child(_orc_thud_sfx_player)
+
 func _play_attack_sfx_for_strike(strike: CombatStrike) -> void:
 	var stream := _get_attack_sfx_for_weapon(_get_weapon_for_strike(strike))
 	if stream == null or _attack_sfx_player == null:
@@ -263,8 +286,33 @@ func _play_impact_sfx_for_strike(strike: CombatStrike) -> void:
 	_impact_sfx_player.stream = stream
 	_impact_sfx_player.play()
 
+func _play_orc_hit_sfx(target: BattleActor) -> void:
+	if not _is_orc_actor(target) or _orc_hit_sfx_player == null:
+		return
+
+	_orc_hit_sfx_player.stream = ORC_HIT_SFX
+	_orc_hit_sfx_player.play()
+
+func _play_orc_death_sfx(target: BattleActor) -> void:
+	if not _is_orc_actor(target) or _orc_death_sfx_player == null or _orc_thud_sfx_player == null:
+		return
+
+	_orc_death_sfx_player.stream = ORC_DEATH_SFX
+	_orc_death_sfx_player.play()
+	await get_tree().create_timer(0.15).timeout
+	if is_instance_valid(_orc_thud_sfx_player):
+		_orc_thud_sfx_player.stream = ORC_THUD_SFX
+		_orc_thud_sfx_player.play()
+
 func _get_weapon_for_strike(strike: CombatStrike) -> WeaponData:
 	return _attacker_weapon if strike.is_attacker_striking else _defender_weapon
+
+func _is_orc_actor(actor: BattleActor) -> bool:
+	if actor == null:
+		return false
+
+	var scene_path := String(actor.scene_file_path)
+	return scene_path.find("orc_battle_actor.tscn") != -1
 
 func _get_attack_sfx_for_weapon(weapon: WeaponData) -> AudioStream:
 	match _get_weapon_sound_family(weapon):

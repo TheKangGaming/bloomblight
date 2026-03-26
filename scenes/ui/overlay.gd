@@ -8,6 +8,11 @@ const QUEST_FONT = preload("res://assets/fonts/Cinzel_Spaced.tres")
 var quest_label: Label
 var quest_ui_root: Control
 var quest_tween: Tween
+var notice_label: Label
+var notice_ui_root: Control
+var notice_tween: Tween
+var targeting_hint_label: Label
+var targeting_hint_root: Control
 var player_ref: Node = null
 var last_tool: int = -1
 var toolbar_visible_state := true
@@ -15,6 +20,8 @@ var toolbar_visible_state := true
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_setup_quest_ui()
+	_setup_notice_ui()
+	_setup_targeting_hint_ui()
 	_setup_toolbar_ui()
 	if not Global.tutorial_updated.is_connected(_on_tutorial_updated):
 		Global.tutorial_updated.connect(_on_tutorial_updated)
@@ -90,6 +97,108 @@ func _setup_quest_ui() -> void:
 	quest_ui_root.modulate.a = 0.0
 	quest_ui_root.visible = false
 
+func _setup_notice_ui() -> void:
+	var margin = MarginContainer.new()
+	margin.name = "NoticeUI"
+	margin.anchor_left = 0.5
+	margin.anchor_right = 0.5
+	margin.anchor_top = 0.0
+	margin.anchor_bottom = 0.0
+	margin.position = Vector2(-220, 92)
+	margin.custom_minimum_size = Vector2(440, 0)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(380, 0)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.09, 0.12, 0.94)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.72, 0.8, 0.94, 0.95)
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	panel_style.corner_radius_bottom_right = 8
+	panel_style.corner_radius_bottom_left = 8
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	var content = MarginContainer.new()
+	content.add_theme_constant_override("margin_top", 7)
+	content.add_theme_constant_override("margin_bottom", 7)
+	content.add_theme_constant_override("margin_left", 12)
+	content.add_theme_constant_override("margin_right", 12)
+
+	notice_label = Label.new()
+	notice_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	notice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	notice_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	notice_label.add_theme_font_override("font", QUEST_FONT)
+	notice_label.add_theme_font_size_override("font_size", 20)
+	notice_label.add_theme_color_override("font_color", Color(0.92, 0.96, 1.0))
+	notice_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	notice_label.add_theme_constant_override("outline_size", 2)
+	notice_label.text = ""
+
+	content.add_child(notice_label)
+	panel.add_child(content)
+	margin.add_child(panel)
+	add_child(margin)
+	notice_ui_root = margin
+	notice_ui_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	notice_ui_root.modulate.a = 0.0
+	notice_ui_root.visible = false
+
+func _setup_targeting_hint_ui() -> void:
+	var margin = MarginContainer.new()
+	margin.name = "TargetingHintUI"
+	margin.anchor_left = 0.5
+	margin.anchor_right = 0.5
+	margin.anchor_top = 1.0
+	margin.anchor_bottom = 1.0
+	margin.position = Vector2(-170, -74)
+	margin.custom_minimum_size = Vector2(340, 0)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(320, 0)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.05, 0.06, 0.88)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.84, 0.84, 0.86, 0.9)
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	panel_style.corner_radius_bottom_right = 8
+	panel_style.corner_radius_bottom_left = 8
+	panel.add_theme_stylebox_override("panel", panel_style)
+
+	var content = MarginContainer.new()
+	content.add_theme_constant_override("margin_top", 6)
+	content.add_theme_constant_override("margin_bottom", 6)
+	content.add_theme_constant_override("margin_left", 12)
+	content.add_theme_constant_override("margin_right", 12)
+
+	targeting_hint_label = Label.new()
+	targeting_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	targeting_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	targeting_hint_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	targeting_hint_label.add_theme_font_override("font", QUEST_FONT)
+	targeting_hint_label.add_theme_font_size_override("font_size", 18)
+	targeting_hint_label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
+	targeting_hint_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	targeting_hint_label.add_theme_constant_override("outline_size", 2)
+	targeting_hint_label.text = ""
+
+	content.add_child(targeting_hint_label)
+	panel.add_child(content)
+	margin.add_child(panel)
+	add_child(margin)
+	targeting_hint_root = margin
+	targeting_hint_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	targeting_hint_root.visible = false
+	targeting_hint_root.modulate.a = 0.0
+
 ## Updates the text and animates it
 func _on_tutorial_updated(text: String) -> void:
 	if quest_tween:
@@ -119,6 +228,40 @@ func _on_tutorial_updated(text: String) -> void:
 func _hide_quest_ui() -> void:
 	if quest_ui_root:
 		quest_ui_root.visible = false
+
+func show_notice(text: String, duration := 1.4) -> void:
+	if notice_ui_root == null or notice_label == null:
+		return
+
+	if notice_tween:
+		notice_tween.kill()
+
+	notice_label.text = text
+	notice_ui_root.visible = true
+	notice_ui_root.modulate.a = 0.0
+
+	notice_tween = create_tween()
+	notice_tween.tween_property(notice_ui_root, "modulate:a", 1.0, 0.18)
+	notice_tween.tween_interval(maxf(duration, 0.2))
+	notice_tween.tween_property(notice_ui_root, "modulate:a", 0.0, 0.22)
+	notice_tween.tween_callback(Callable(self, "_hide_notice_ui"))
+
+func _hide_notice_ui() -> void:
+	if notice_ui_root:
+		notice_ui_root.visible = false
+
+func show_targeting_hint(text: String = "Confirm target / Cancel back") -> void:
+	if targeting_hint_root == null or targeting_hint_label == null:
+		return
+
+	targeting_hint_label.text = text
+	targeting_hint_root.visible = true
+	targeting_hint_root.modulate.a = 1.0
+
+func hide_targeting_hint() -> void:
+	if targeting_hint_root:
+		targeting_hint_root.visible = false
+		targeting_hint_root.modulate.a = 0.0
 
 func _process(_delta):
 	var should_show_toolbar = not Global.unlocked_tools.is_empty() and player_ref != null and is_instance_valid(player_ref)

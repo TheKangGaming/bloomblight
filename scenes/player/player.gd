@@ -117,7 +117,8 @@ func get_input():
 		var player_center = global_position + Vector2(0, -chest_offset)
 		var target_pos = player_center + (last_direction * tool_direction_offset)
 
-		toggle_menu_requested.emit(target_pos)
+		if _has_tilled_soil_at(target_pos):
+			toggle_menu_requested.emit(target_pos)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed('tool_forward'):
@@ -339,3 +340,10 @@ func _reset_footstep_state() -> void:
 	_footstep_last_position = 0.0
 	_footstep_last_animation = ""
 	_footstep_cycle_duration = 0.0
+
+func _has_tilled_soil_at(global_pos: Vector2) -> bool:
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method("is_tilled_soil_at"):
+		return scene.is_tilled_soil_at(global_pos)
+
+	return false

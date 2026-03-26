@@ -20,6 +20,12 @@ func _ready() -> void:
 	panel_style.corner_radius_bottom_left = 8
 	$PanelContainer.add_theme_stylebox_override("panel", panel_style)
 	hide()
+
+func has_available_seeds() -> bool:
+	for item_type in Global.inventory:
+		if item_type in Global.HARVEST_DROPS and int(Global.inventory[item_type]) > 0:
+			return true
+	return false
 	
 func open(player_pos: Vector2):
 	for child in $PanelContainer/Grid.get_children():
@@ -58,6 +64,7 @@ func open(player_pos: Vector2):
 		$PanelContainer.global_position = player_pos
 		$PanelContainer.global_position.x -= $PanelContainer.size.x / 2
 		$PanelContainer.global_position.y -= $PanelContainer.size.y + 20
+		_clamp_panel_to_viewport()
 		
 		$PanelContainer.pivot_offset = $PanelContainer.size / 2
 		$PanelContainer.scale = Vector2.ZERO
@@ -77,7 +84,6 @@ func open(player_pos: Vector2):
 			$PanelContainer/Grid.get_child(0).grab_focus()
 		
 	else:
-		print('no seeds to plant!')
 		menu_cancelled.emit()
 		hide()
 
@@ -92,3 +98,11 @@ func _input(event):
 func _on_seed_selected(seed_type):
 	seed_chosen.emit(seed_type)
 	hide()
+
+func _clamp_panel_to_viewport() -> void:
+	var viewport_size := get_viewport_rect().size
+	var panel_size: Vector2 = $PanelContainer.size
+	var clamped_position: Vector2 = $PanelContainer.global_position
+	clamped_position.x = clampf(clamped_position.x, 8.0, maxf(8.0, viewport_size.x - panel_size.x - 8.0))
+	clamped_position.y = clampf(clamped_position.y, 8.0, maxf(8.0, viewport_size.y - panel_size.y - 8.0))
+	$PanelContainer.global_position = clamped_position.round()

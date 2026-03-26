@@ -63,11 +63,14 @@ var _story_plants: Array[StaticBody2D] = []
 var _story_seed_types_planted: Array[int] = []
 var _recipe_scene_started := false
 var _warning_sequence_started := false
+var _suppress_battle_music_sync := true
 
 func _ready() -> void:
+	var seed_menu = $CanvasLayer/SeedMenu
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
-	$CanvasLayer/SeedMenu.seed_chosen.connect(_on_seed_chosen_from_menu)
-	$CanvasLayer/SeedMenu.menu_cancelled.connect(_on_seed_menu_cancelled)
+	if seed_menu != null:
+		seed_menu.seed_chosen.connect(_on_seed_chosen_from_menu)
+		seed_menu.menu_cancelled.connect(_on_seed_menu_cancelled)
 
 	_day_timer_cycle_seconds = $DayTimer.wait_time
 	_grow_timer_cycle_seconds = $GrowTimer.wait_time
@@ -205,19 +208,31 @@ func _on_player_menu_requested(target_pos: Vector2) -> void:
 	var adjusted_pos = target_pos + Vector2(0, 24)
 	var local_pos = soil_layer.to_local(adjusted_pos)
 	var grid_pos = soil_layer.local_to_map(local_pos)
+	var seed_menu = $CanvasLayer/SeedMenu
 
 	if soil_layer.get_cell_source_id(grid_pos) != -1:
 		for plant in get_tree().get_nodes_in_group("Plants"):
 			if plant.grid_pos == grid_pos:
+				_show_player_notice("That tile is occupied")
 				return
+
+		if seed_menu != null and seed_menu.has_method("has_available_seeds") and not seed_menu.has_available_seeds():
+			_show_player_notice("No seeds available")
+			return
 
 		player.can_move = false
 		pending_plant_pos = adjusted_pos
 
 		var screen_pos = player.get_global_transform_with_canvas().origin
-		$CanvasLayer/SeedMenu.open(screen_pos)
+		seed_menu.open(screen_pos)
 	else:
-		print("You can only plant on tilled soil!")
+		_show_player_notice("Need tilled soil")
+
+func is_tilled_soil_at(global_pos: Vector2) -> bool:
+	var adjusted_pos = global_pos + Vector2(0, 24)
+	var local_pos = soil_layer.to_local(adjusted_pos)
+	var grid_pos = soil_layer.local_to_map(local_pos)
+	return soil_layer.get_cell_source_id(grid_pos) != -1
 
 func _on_seed_chosen_from_menu(seed_type: int) -> void:
 	player.can_move = true
@@ -235,7 +250,7 @@ func _on_seed_chosen_from_menu(seed_type: int) -> void:
 func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
 	var season := CalendarService.get_current_season()
 	if not Global.is_seed_in_season(seed_enum, season):
-		print("%s cannot be planted during %s." % [Global.Items.keys()[seed_enum], String(season).capitalize()])
+		_show_player_notice("That seed is out of season")
 		return null
 
 	var local_pos = soil_layer.to_local(global_pos)
@@ -243,7 +258,7 @@ func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
 
 	for plant in get_tree().get_nodes_in_group("Plants"):
 		if plant.grid_pos == grid_pos:
-			print("Tile is occupied")
+			_show_player_notice("That tile is occupied")
 			return null
 
 	if soil_layer.get_cell_source_id(grid_pos) == -1:
@@ -744,6 +759,7 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	transition_layer.add_child(fade_rect)
 
 	var combat_scene = load(combat_scene_path).instantiate()
+	combat_scene.set_meta("skip_scene_music_sync", _suppress_battle_music_sync)
 	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
 	if is_instance_valid(combat_music):
 		combat_music.autoplay = false
@@ -795,6 +811,11 @@ func _release_overworld_control(delay_frames: int = 1) -> void:
 	player.can_move = true
 	player.direction = Vector2.ZERO
 	_restore_player_camera()
+
+func _show_player_notice(text: String, duration := 1.4) -> void:
+	var overlay := get_node_or_null("CanvasLayer/Overlay")
+	if overlay != null and overlay.has_method("show_notice"):
+		overlay.show_notice(text, duration)
 
 func _play_story_dialogue(lines: Array[Dictionary], focus_nodes: Array[Node2D] = [], zoom: Vector2 = CUTSCENE_GROUP_ZOOM) -> void:
 	if not focus_nodes.is_empty():

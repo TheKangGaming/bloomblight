@@ -15,6 +15,10 @@ func _ready() -> void:
 		if unit.is_ability_ready(ability):
 			_ability_button.text = ability.ability_name
 			_ability_button.disabled = false
+
+			if ability.type == AbilityData.AbilityType.HARVEST and unit.health >= unit.max_health:
+				_ability_button.text = ability.ability_name + " (Full HP)"
+				_ability_button.disabled = true
 			
 			if not _ability_button.pressed.is_connected(_on_ability_button_pressed):
 				_ability_button.pressed.connect(_on_ability_button_pressed.bind(ability))

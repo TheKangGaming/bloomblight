@@ -98,6 +98,9 @@ func _sync_scene_music_to_manager() -> void:
 	if scene_root == null:
 		return
 
+	if bool(scene_root.get_meta("skip_scene_music_sync", false)):
+		return
+
 	var scene_music := scene_root.get_node_or_null("AudioStreamPlayer") as AudioStreamPlayer
 	if scene_music == null or scene_music.stream == null:
 		return
@@ -142,6 +145,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _target_unit_for_forecast != null:
 			_target_unit_for_forecast = null
 			_hide_combat_forecast()
+			_show_targeting_hint()
 			return
 			
 		if _is_targeting_attack:
@@ -149,6 +153,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			_valid_target_cells.clear()
 			_unit_overlay.clear()
 			_show_action_menu() 
+		elif _is_targeting_ability:
+			_is_targeting_ability = false
+			_selected_ability = null
+			_valid_target_cells.clear()
+			_unit_overlay.clear()
+			_show_action_menu()
 		else:
 			_reset_unit()
 
@@ -445,6 +455,7 @@ func _reset_unit() -> void:
 	_cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	_cursor.show()
 	_cursor.is_active = true
+	_hide_targeting_hint()
 
 
 func _is_distance_in_attack_range(distance: int, attack_range: int) -> bool:
@@ -457,6 +468,8 @@ func _deselect_active_unit() -> void:
 	_target_unit_for_forecast = null
 	_hide_combat_forecast()
 	_is_targeting_attack = false
+	_is_targeting_ability = false
+	_selected_ability = null
 	_valid_target_cells.clear()
 		
 	_active_unit = null
@@ -464,6 +477,7 @@ func _deselect_active_unit() -> void:
 	_attackable_cells.clear()
 	_unit_overlay.clear()
 	_unit_path.stop()
+	_hide_targeting_hint()
 
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
@@ -486,6 +500,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		
 		var combat_completed := await execute_combat(_active_unit, target)
 		if not combat_completed:
+			_show_action_menu()
 			return
 		
 		_is_targeting_attack = false
@@ -503,6 +518,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			var target_unit = _units[cell]
 			if target_unit.is_enemy != _active_unit.is_enemy:
 				_begin_attack_preview_on_target(target_unit)
+		else:
+			_show_overlay_notice("Choose a valid target")
 		return
 		
 	if _is_targeting_ability:
@@ -523,6 +540,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_unit_overlay.clear()
 				_cursor.is_active = true
 				_show_action_menu()
+		else:
+			_show_overlay_notice("Choose a valid target")
 		return
 		
 	if not _active_unit and _units.has(cell):
@@ -615,6 +634,7 @@ func _show_action_menu() -> void:
 		action_menu.call_deferred("_reset_menu_focus")
 	
 	_cursor.is_active = false
+	_hide_targeting_hint()
 
 
 ## To be called by the Action Menu when the player chooses "Wait"
@@ -818,6 +838,8 @@ func start_player_phase() -> void:
 ## Enters the targeting state, drawing red squares around the unit's current position
 func enter_attack_targeting() -> void:
 	_is_targeting_attack = true
+	_is_targeting_ability = false
+	_selected_ability = null
 	_valid_target_cells.clear()
 	_unit_overlay.clear()
 	
@@ -836,8 +858,10 @@ func enter_attack_targeting() -> void:
 	
 	# Wake the cursor back up so the player can pick a target
 	_cursor.is_active = true
+	_show_targeting_hint()
 
 func enter_ability_targeting(ability: AbilityData) -> void:
+	_is_targeting_attack = false
 	_is_targeting_ability = true
 	_selected_ability = ability
 	_valid_target_cells.clear()
@@ -862,6 +886,7 @@ func enter_ability_targeting(ability: AbilityData) -> void:
 	
 	# Wake the cursor back up so the player can pick a target
 	_cursor.is_active = true
+	_show_targeting_hint()
 	
 ## Orchestrates the turn-based combat sequence between two units
 func execute_combat(attacker: Unit, defender: Unit) -> bool:
@@ -1472,7 +1497,7 @@ func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 ## Consumes a plant on the grid and heals the caster
 func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	if not _battle_plants.has(target_cell):
-		print("No plant found on that tile!")
+		_show_overlay_notice("No plant to harvest there")
 		return false # Failed cast!
 		
 	var plant = _battle_plants[target_cell]
@@ -1481,7 +1506,7 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	var heal_amount = 10
 	var actual_healed := caster.heal(heal_amount)
 	if actual_healed <= 0:
-		print(caster.name, " could not be healed.")
+		_show_overlay_notice("%s doesn't need healing yet" % caster.name)
 		return false
 		
 	# 2. Visual Cleanup
@@ -1601,6 +1626,7 @@ func _run_demo_battle_opening() -> void:
 	])
 
 	await _focus_battle_camera(_default_camera_focus, 0.4)
+	_crossfade_scene_music_to_manager(1.15)
 	if _cursor_camera != null:
 		_cursor_camera.position_smoothing_enabled = false
 		_cursor_camera.global_position = _battle_camera.global_position
@@ -1661,6 +1687,45 @@ func _pulse_dormant_focus_sprite() -> void:
 	tween.tween_property(_dormant_focus_sprite, "scale", Vector2(1.16, 1.16), 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_dormant_focus_sprite, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+func _crossfade_scene_music_to_manager(fade_duration: float = 1.25, intro_delay: float = 0.0) -> void:
+	var scene_root := get_parent()
+	if scene_root == null:
+		return
+
+	var scene_music := scene_root.get_node_or_null("AudioStreamPlayer") as AudioStreamPlayer
+	if scene_music == null or scene_music.stream == null:
+		return
+
+	scene_music.autoplay = false
+	scene_music.stop()
+
+	if intro_delay > 0.0:
+		await get_tree().create_timer(intro_delay).timeout
+
+	if MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(scene_music.stream, fade_duration, scene_music.volume_db)
+
+func _show_overlay_notice(text: String, duration := 1.4) -> void:
+	var overlay = _demo_overlay
+	if overlay == null and get_parent() != null:
+		overlay = get_parent().get_node_or_null("DemoOverlayLayer/DemoOverlay")
+	if overlay != null and overlay.has_method("show_notice"):
+		overlay.show_notice(text, duration)
+
+func _show_targeting_hint(text: String = "Confirm target / Cancel back") -> void:
+	var overlay = _demo_overlay
+	if overlay == null and get_parent() != null:
+		overlay = get_parent().get_node_or_null("DemoOverlayLayer/DemoOverlay")
+	if overlay != null and overlay.has_method("show_targeting_hint"):
+		overlay.show_targeting_hint(text)
+
+func _hide_targeting_hint() -> void:
+	var overlay = _demo_overlay
+	if overlay == null and get_parent() != null:
+		overlay = get_parent().get_node_or_null("DemoOverlayLayer/DemoOverlay")
+	if overlay != null and overlay.has_method("hide_targeting_hint"):
+		overlay.hide_targeting_hint()
 
 func _focus_battle_camera(target_position: Vector2, duration: float) -> void:
 	if _battle_camera == null:
