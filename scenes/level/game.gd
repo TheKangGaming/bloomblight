@@ -37,10 +37,12 @@ enum IntroState {
 @onready var tera_actor = $Objects/TeraActor
 @onready var silas_actor = $Objects/SilasActor
 @onready var story_dialogue = $CanvasLayer/StoryDialogueBox
+@onready var main_menu = $CanvasLayer/MainMenu
 @onready var story_chest = $Objects/Chest
 @onready var camp_fire = $Objects/CampFire
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
+var _meal_buff_card_scene: PackedScene = preload("res://scenes/ui/demo_story_card.tscn")
 var _combat_scene_path := "res://scenes/level/CombatMap_1.tscn"
 var _warning_music: AudioStream = preload("res://audio/Music_Norest.wav")
 var _warning_rustle_sfx: AudioStream = preload("res://audio/Light steps.wav")
@@ -531,7 +533,7 @@ func _run_magic_reveal() -> void:
 	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
 
 	await _fade_to_black(0.85)
-	await _apply_story_time_passage(_day_timer_cycle_seconds * 0.28)
+	_apply_story_time_passage(_day_timer_cycle_seconds * 0.28)
 
 	for plant in _story_plants:
 		if is_instance_valid(plant) and plant.has_method("force_mature"):
@@ -548,7 +550,7 @@ func _run_magic_reveal() -> void:
 
 	await _play_story_dialogue([
 		{"speaker": "Savannah", "text": "That used to take months. You're getting faster."},
-		{"speaker": "Tera", "text": "Let's not talk about it. Not until we know if we can trust that ranger."},
+		{"speaker": "Tera", "text": "Let's not talk about it. Not until we know if we can trust that hunter."},
 		{"speaker": "Savannah", "text": "Fine. Inside. Before someone sees it."}
 	], reveal_targets, CUTSCENE_CLOSE_ZOOM)
 
@@ -671,10 +673,17 @@ func _run_post_meal_warning_sequence() -> void:
 		{"speaker": "Silas", "text": "Don't get used to it. We have compa-"}
 	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
 
+	await _show_meal_buff_popup()
+	if main_menu and main_menu.has_method("open_status_tab"):
+		main_menu.open_status_tab()
 	if DemoDirector:
-		DemoDirector.show_context_prompt("food_buff_blurb")
-	await get_tree().create_timer(1.8).timeout
-	if DemoDirector:
+		DemoDirector.refresh_current_prompt()
+	if main_menu and main_menu.has_signal("menu_closed"):
+		await main_menu.menu_closed
+
+	if DemoDirector and DemoDirector.current_stage == DemoDirector.DemoStage.MEAL_REVIEW:
+		DemoDirector.set_stage(DemoDirector.DemoStage.WARNING_BEAT)
+	else:
 		DemoDirector.clear_prompt()
 
 	var rustle_player := AudioStreamPlayer.new()
@@ -682,9 +691,6 @@ func _run_post_meal_warning_sequence() -> void:
 	rustle_player.volume_db = -7.0
 	add_child(rustle_player)
 	rustle_player.play()
-
-	if MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(_warning_music, 0.7, -4.0)
 
 	await _focus_cutscene_on_positions([
 		_marker_pos(&"ForestReturn", INTRO_FOREST_RETURN_POS),
@@ -696,7 +702,21 @@ func _run_post_meal_warning_sequence() -> void:
 		rustle_player.queue_free()
 
 	await _fade_to_black(0.7)
+	if MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(_warning_music, 1.0, -4.0)
 	await _launch_direct_combat_scene(_combat_scene_path)
+
+func _show_meal_buff_popup() -> void:
+	var card = _meal_buff_card_scene.instantiate()
+	card.process_mode = Node.PROCESS_MODE_ALWAYS
+	$CanvasLayer.add_child(card)
+	card.configure({
+		"title": "Meal Boost",
+		"body": "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nOpen the Status tab to review the meal buff, then close the menu when you're ready to continue.",
+		"confirm_hint": "dismiss",
+		"allow_skip": false
+	})
+	await card.confirmed
 
 func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	if not ResourceLoader.exists(combat_scene_path):

@@ -69,7 +69,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	if _allow_skip and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel")):
+	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
+		if not _allow_skip:
+			get_viewport().set_input_as_handled()
+			return
 		_dismiss(false)
 		get_viewport().set_input_as_handled()
 

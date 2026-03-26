@@ -2,8 +2,11 @@ extends CharacterBody2D
 
 @onready var move_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/MoveStateMachine/playback')
 @onready var tool_state_machine: AnimationNodeStateMachinePlayback = $Visuals/AnimationTree.get('parameters/ToolStateMachine/playback')
+@onready var visuals_anim_player: AnimationPlayer = $Visuals/AnimationPlayer
 @onready var tool_particles = $ToolParticles
 @onready var visuals_root: Node2D = $Visuals
+@onready var walk_step_player: AudioStreamPlayer2D = $Sounds/Steps
+@onready var run_step_player: AudioStreamPlayer2D = $Sounds/RunSteps
 
 @export var tool_direction_offset := 30
 @export var chest_offset := 40
@@ -20,6 +23,13 @@ var _cutscene_anim_direction: Vector2 = Vector2.DOWN
 var _cutscene_emote_tween: Tween = null
 var _cutscene_emote_base_position := Vector2.ZERO
 var _cutscene_emote_active := false
+var _footstep_mode: StringName = &""
+var _footstep_last_position := 0.0
+var _footstep_last_animation := ""
+var _footstep_cycle_duration := 0.0
+
+@export var walk_footfall_times := PackedFloat32Array([0.0, 0.405])
+@export var run_footfall_times := PackedFloat32Array([0.0, 0.25])
 
 const tool_connection = {
 	Global.Tools.HOE: 'hoe',
@@ -37,7 +47,7 @@ signal tool_use(tool: Global.Tools, pos: Vector2)
 
 signal tool_changed(tool: Global.Tools)
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if can_move:
 		get_input()
 
@@ -46,14 +56,13 @@ func _physics_process(_delta: float) -> void:
 			Global.advance_tutorial()
 
 		last_direction = _to_cardinal_direction(direction)
-		if not $Sounds/StepsTimer.time_left:
-			$Sounds/StepsTimer.start()
 	else:
-		$Sounds/StepsTimer.stop()
+		_reset_footstep_state()
 
 	velocity = direction * current_speed * int(can_move)
 	move_and_slide()
 	animation()
+	_update_footstep_audio(delta)
 
 signal toggle_menu_requested(pos: Vector2)
 
@@ -252,4 +261,81 @@ func axe_use():
 
 
 func _on_steps_timer_timeout() -> void:
-	$Sounds/Steps.play()
+	pass
+
+func _update_footstep_audio(delta: float) -> void:
+	if not can_move or _cutscene_anim_state != &"" or direction == Vector2.ZERO:
+		_reset_footstep_state()
+		return
+
+	if visuals_anim_player == null:
+		return
+
+	var mode: StringName = &"run" if current_speed == run_speed else &"move"
+	var animation_name := _get_locomotion_animation_name(mode, last_direction)
+	if animation_name.is_empty():
+		_reset_footstep_state()
+		return
+
+	var cycle_duration := _get_locomotion_cycle_duration(animation_name, mode)
+	if cycle_duration <= 0.0:
+		_reset_footstep_state()
+		return
+
+	if _footstep_mode != mode or _footstep_last_animation != animation_name or !is_equal_approx(_footstep_cycle_duration, cycle_duration):
+		_footstep_mode = mode
+		_footstep_last_animation = animation_name
+		_footstep_cycle_duration = cycle_duration
+		_footstep_last_position = -0.001
+
+	var animation_position := wrapf(_footstep_last_position + delta, 0.0, cycle_duration)
+	_emit_crossed_footfalls(_footstep_last_position, animation_position, _get_footfall_times_for_mode(mode), mode)
+	_footstep_last_position = animation_position
+
+func _emit_crossed_footfalls(previous_position: float, current_position: float, footfall_times: PackedFloat32Array, mode: StringName) -> void:
+	if footfall_times.is_empty():
+		return
+
+	if current_position < previous_position:
+		_emit_crossed_footfalls(previous_position, INF, footfall_times, mode)
+		previous_position = -0.001
+
+	for footfall_time in footfall_times:
+		if footfall_time > previous_position and footfall_time <= current_position:
+			_play_footstep_for_mode(mode)
+
+func _play_footstep_for_mode(mode: StringName) -> void:
+	if mode == &"run":
+		if run_step_player:
+			run_step_player.play()
+		return
+
+	if walk_step_player:
+		walk_step_player.play()
+
+func _get_footfall_times_for_mode(mode: StringName) -> PackedFloat32Array:
+	return run_footfall_times if mode == &"run" else walk_footfall_times
+
+func _get_locomotion_animation_name(mode: StringName, facing: Vector2) -> StringName:
+	var cardinal := _to_cardinal_direction(facing)
+	if cardinal.x > 0.0:
+		return StringName("%s_right" % mode)
+	if cardinal.x < 0.0:
+		return StringName("%s_left" % mode)
+	if cardinal.y < 0.0:
+		return StringName("%s_up" % mode)
+	return StringName("%s_down" % mode)
+
+func _get_locomotion_cycle_duration(animation_name: StringName, mode: StringName) -> float:
+	if visuals_anim_player != null and visuals_anim_player.has_animation(animation_name):
+		var locomotion_animation := visuals_anim_player.get_animation(animation_name)
+		if locomotion_animation != null and locomotion_animation.length > 0.0:
+			return locomotion_animation.length
+
+	return 0.5 if mode == &"run" else 0.81
+
+func _reset_footstep_state() -> void:
+	_footstep_mode = &""
+	_footstep_last_position = 0.0
+	_footstep_last_animation = ""
+	_footstep_cycle_duration = 0.0

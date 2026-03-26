@@ -2,9 +2,11 @@
 
 [ext_resource type="Script" uid="uid://dpldeju6kawb2" path="res://scenes/ui/day_time_hud.gd" id="1_3icrl"]
 [ext_resource type="AudioStream" uid="uid://cjkpfofk1sbab" path="res://audio/Light steps.wav" id="2_1tixe"]
+[ext_resource type="AudioStream" path="res://audio/Forest Day.wav" id="2_forestday"]
 [ext_resource type="Texture2D" uid="uid://0x2j8vxwgafw" path="res://graphics/animations/1 Dawn/1.png" id="2_owtcy"]
 [ext_resource type="Texture2D" uid="uid://bv0aqayffhrtr" path="res://graphics/animations/1 Dawn/2.png" id="3_eduv7"]
 [ext_resource type="AudioStream" uid="uid://dw3esxfbofsn8" path="res://audio/Calm breeze.wav" id="3_inpwp"]
+[ext_resource type="AudioStream" path="res://audio/Forest Night.wav" id="3_forestnight"]
 [ext_resource type="Texture2D" uid="uid://bgnucicqyr0as" path="res://graphics/animations/1 Dawn/3.png" id="4_1tixe"]
 [ext_resource type="Texture2D" uid="uid://dx6dvec2150ha" path="res://graphics/animations/1 Dawn/4.png" id="5_inpwp"]
 [ext_resource type="Texture2D" uid="uid://bcclhi8jgrcij" path="res://graphics/animations/1 Dawn/5.png" id="6_nxy76"]
@@ -198,6 +200,8 @@ grow_horizontal = 0
 script = ExtResource("1_3icrl")
 day_music = ExtResource("2_1tixe")
 night_music = ExtResource("3_inpwp")
+day_ambience = ExtResource("2_forestday")
+night_ambience = ExtResource("3_forestnight")
 
 [node name="Background" type="TextureRect" parent="." unique_id=1496647735]
 layout_mode = 0

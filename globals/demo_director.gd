@@ -18,6 +18,7 @@ enum DemoStage {
 	LIGHT_CAMPFIRE,
 	COOK_MEAL,
 	EAT_MEAL,
+	MEAL_REVIEW,
 	WARNING_BEAT,
 	BATTLE_INTRO,
 	BATTLE_TUTORIAL,
@@ -156,7 +157,7 @@ func notify_food_eaten(item_type: int) -> void:
 	if current_stage != DemoStage.EAT_MEAL:
 		return
 
-	set_stage(DemoStage.WARNING_BEAT)
+	set_stage(DemoStage.MEAL_REVIEW)
 	meal_eaten.emit(item_type)
 
 func prepare_day_two_battle_intro() -> void:
@@ -241,6 +242,8 @@ func _get_stage_prompt_text(stage: DemoStage) -> String:
 			return "Objective: Cook Glazed Carrots at the campfire."
 		DemoStage.EAT_MEAL:
 			return "Objective: Open inventory (%s) and eat the Glazed Carrots." % get_action_label("menu_toggle")
+		DemoStage.MEAL_REVIEW:
+			return "Objective: Review your meal buff on the Status tab. Close the menu when you're ready to continue."
 		_:
 			return ""
 

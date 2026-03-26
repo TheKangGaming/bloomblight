@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cguxj7vi852u7"]
 
 [ext_resource type="Script" uid="uid://bq6u6s7aa6ytt" path="res://scenes/level/chest.gd" id="1_4rr8t"]
-[ext_resource type="Texture2D" uid="uid://d3ajj4nwf6e82" path="res://graphics/interactables/chests-opening-no horns- with squeeze fx.png" id="1_py4fq"]
+[ext_resource type="Texture2D" uid="uid://celpm0bj8yxbt" path="res://graphics/animations/chest-opening - lock 2.png" id="2_4rr8t"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4rr8t"]
 size = Vector2(66, 15)
@@ -51,7 +51,7 @@ script = ExtResource("1_4rr8t")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=109124410]
 position = Vector2(0, -28)
-texture = ExtResource("1_py4fq")
+texture = ExtResource("2_4rr8t")
 offset = Vector2(0, -26)
 hframes = 9
 region_rect = Rect2(257, 62, 1215, 61)
@@ -79,10 +79,5 @@ offset_right = 86.0
 offset_bottom = -88.0
 
 [node name="Label" type="Label" parent="LootPopup" unique_id=1591016470]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 text = "+ Seeds & Tools!"

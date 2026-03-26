@@ -1,5 +1,8 @@
 extends Control
 
+signal menu_opened
+signal menu_closed
+
 @onready var inventory_grid: GridContainer = $CenterContainer/TabContainer/Inventory/Margin/Grid
 @onready var tabs: TabContainer = $CenterContainer/TabContainer
 
@@ -97,8 +100,25 @@ func toggle_menu():
 	if visible:
 		if tabs:
 			tabs.current_tab = 1
+		menu_opened.emit()
 		update_inventory()
 		_focus_first_interactable_deferred()
+	else:
+		menu_closed.emit()
+
+func open_status_tab() -> void:
+	var was_visible := visible
+	visible = true
+	get_tree().paused = true
+	update_status_page()
+	update_inventory()
+	if tabs:
+		tabs.current_tab = 0
+
+	if not was_visible:
+		menu_opened.emit()
+
+	_focus_first_interactable_deferred()
 
 
 func _activate_focused_control() -> void:

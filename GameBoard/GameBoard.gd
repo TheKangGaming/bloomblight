@@ -9,6 +9,8 @@ const ActionMenu = preload("res://Menus/ActionMenu.tscn")
 const STORY_DIALOGUE_SCENE = preload("res://scenes/ui/story_dialogue_box.tscn")
 const OVERLAY_SCENE = preload("res://scenes/ui/overlay.tscn")
 const DORMANT_SPROUT_TEXTURE = preload("res://graphics/plants/Atlas-Props4-crops update.png")
+const BOW_SELECT_SFX = preload("res://audio/Bow Take Out 1.wav")
+const SWORD_SELECT_SFX = preload("res://audio/Sword Unsheath 1.wav")
 @export var grid: Resource
 
 const DEFAULT_BATTLE_SCENE = preload("res://scenes/battle/battle_scene.tscn")
@@ -65,6 +67,7 @@ var _battle_camera: Camera2D = null
 var _dormant_focus_sprite: Sprite2D = null
 var _dormant_focus_cell := Vector2.ZERO
 var _default_camera_focus := Vector2.ZERO
+var _selection_sfx_player: AudioStreamPlayer = null
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -326,6 +329,7 @@ func _select_unit(cell: Vector2) -> void:
 	_prev_cell = cell
 	_prev_position = _active_unit.position
 	_active_unit.is_selected = true
+	_play_unit_select_sfx(_active_unit)
 	_walkable_cells = get_walkable_cells(_active_unit)
 	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range, _active_unit)
 	
@@ -512,6 +516,13 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_unit_overlay.clear()
 				_cursor.is_active = false
 				finish_unit_turn() 
+			else:
+				_is_targeting_ability = false
+				_selected_ability = null
+				_valid_target_cells.clear()
+				_unit_overlay.clear()
+				_cursor.is_active = true
+				_show_action_menu()
 		return
 		
 	if not _active_unit and _units.has(cell):
@@ -1491,7 +1502,10 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 
 func _setup_demo_support_nodes() -> void:
 	if DemoDirector == null or not DemoDirector.is_demo_active():
+		_ensure_selection_sfx_player()
 		return
+
+	_ensure_selection_sfx_player()
 
 	if get_parent() != null and get_parent().get_node_or_null("DemoOverlayLayer") == null:
 		_demo_overlay_layer = CanvasLayer.new()
@@ -1532,6 +1546,39 @@ func _setup_demo_support_nodes() -> void:
 		camera_start = _cursor_camera.get_screen_center_position()
 	_battle_camera.global_position = camera_start
 	_battle_camera.make_current()
+
+func _ensure_selection_sfx_player() -> void:
+	if _selection_sfx_player != null:
+		return
+
+	_selection_sfx_player = AudioStreamPlayer.new()
+	_selection_sfx_player.name = "SelectionSfxPlayer"
+	add_child(_selection_sfx_player)
+
+func _play_unit_select_sfx(unit: Unit) -> void:
+	if unit == null or _selection_sfx_player == null:
+		return
+
+	var stream := _get_selection_sfx_for_unit(unit)
+	if stream == null:
+		return
+
+	_selection_sfx_player.stream = stream
+	_selection_sfx_player.play()
+
+func _get_selection_sfx_for_unit(unit: Unit) -> AudioStream:
+	var weapon_type := _get_unit_weapon_type(unit)
+	if weapon_type == "Bow":
+		return BOW_SELECT_SFX
+	if weapon_type in ["", "Tome", "Staff"]:
+		return null
+	return SWORD_SELECT_SFX
+
+func _get_unit_weapon_type(unit: Unit) -> String:
+	if unit == null or unit.character_data == null or unit.character_data.equipped_weapon == null:
+		return ""
+
+	return String(unit.character_data.equipped_weapon.weapon_type)
 
 func _run_demo_battle_opening() -> void:
 	_cursor.is_active = false

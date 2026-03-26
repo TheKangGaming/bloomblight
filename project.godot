@@ -37,7 +37,7 @@ CombatManager="*uid://cspanre0amh0d"
 
 window/size/viewport_width=2560
 window/size/viewport_height=1440
-window/size/mode=4
+window/size/mode=3
 window/stretch/mode="canvas_items"
 
 [editor_plugins]

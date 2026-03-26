@@ -3,6 +3,11 @@ extends CanvasLayer
 const DAMAGE_POPUP_SCRIPT := preload("res://scenes/battle/battle_damage_popup.gd")
 const PROJECTILE_VFX_SCRIPT := preload("res://scenes/battle/battle_projectile_vfx.gd")
 const MAGIC_VFX_SCRIPT := preload("res://scenes/battle/battle_magic_vfx.gd")
+const BOW_ATTACK_SFX := preload("res://audio/Bow Attack 1.wav")
+const BOW_IMPACT_SFX := preload("res://audio/Bow Impact Hit 1.wav")
+const SWORD_ATTACK_SFX := preload("res://audio/Sword Attack 1.wav")
+const SWORD_IMPACT_SFX := preload("res://audio/Sword Impact Hit 1.wav")
+const BOW_ATTACK_SFX_DELAY := 0.06
 
 # --- NODE REFERENCES ---
 @onready var battle_world: Node2D = $BattleWorld
@@ -36,6 +41,8 @@ var _screen_center := Vector2.ZERO
 var _current_focus := Vector2.ZERO
 var _current_zoom := 1.0
 var _presentation_overlay: Control
+var _attack_sfx_player: AudioStreamPlayer = null
+var _impact_sfx_player: AudioStreamPlayer = null
 
 const ENTRY_REVEAL_DURATION := 0.18
 const EXIT_HIDE_DURATION := 0.16
@@ -86,6 +93,7 @@ func _ready() -> void:
 	
 	# FIX: Only run the sequence if spawning succeeds
 	if _spawn_actors():
+		_ensure_sfx_players()
 		_setup_staging()
 		_execute_battle_sequence()
 		
@@ -158,6 +166,7 @@ func _execute_battle_sequence() -> void:
 		
 		# Initiate the attack animation
 		striker.play_attack()
+		_play_attack_sfx_for_strike(strike)
 		
 		# Wait for the EXACT frame the weapon connects
 		await striker.strike_impact
@@ -165,9 +174,13 @@ func _execute_battle_sequence() -> void:
 		# --- DELIVER THE RANGED/MAGIC PAYLOAD ---
 		if strike.attack_kind == CombatStrike.AttackKind.RANGED:
 			await _play_projectile(striker, target, strike.is_hit)
+			if strike.is_hit:
+				_play_impact_sfx_for_strike(strike)
 		elif strike.attack_kind == CombatStrike.AttackKind.MAGIC:
 			# ADDED THE 'striker' VARIABLE HERE!
 			await _play_magic_vfx(striker, target, strike.is_hit)
+		elif strike.is_hit:
+			_play_impact_sfx_for_strike(strike)
 		# ----------------------------------------
 		
 		if strike.is_hit:
@@ -219,6 +232,68 @@ func _determine_combatants_reach() -> void:
 	_defender_will_counter = CombatCalculator.can_attack_at_distance(_combat_distance, _get_attack_range_for_weapon(_defender_weapon, _defender_stats))
 	_attacker_has_advanced = false
 	_defender_has_advanced = false
+
+func _ensure_sfx_players() -> void:
+	if _attack_sfx_player == null:
+		_attack_sfx_player = AudioStreamPlayer.new()
+		_attack_sfx_player.name = "AttackSfxPlayer"
+		add_child(_attack_sfx_player)
+
+	if _impact_sfx_player == null:
+		_impact_sfx_player = AudioStreamPlayer.new()
+		_impact_sfx_player.name = "ImpactSfxPlayer"
+		add_child(_impact_sfx_player)
+
+func _play_attack_sfx_for_strike(strike: CombatStrike) -> void:
+	var stream := _get_attack_sfx_for_weapon(_get_weapon_for_strike(strike))
+	if stream == null or _attack_sfx_player == null:
+		return
+
+	if _get_weapon_sound_family(_get_weapon_for_strike(strike)) == "bow" and BOW_ATTACK_SFX_DELAY > 0.0:
+		await get_tree().create_timer(BOW_ATTACK_SFX_DELAY).timeout
+
+	_attack_sfx_player.stream = stream
+	_attack_sfx_player.play()
+
+func _play_impact_sfx_for_strike(strike: CombatStrike) -> void:
+	var stream := _get_impact_sfx_for_weapon(_get_weapon_for_strike(strike))
+	if stream == null or _impact_sfx_player == null:
+		return
+
+	_impact_sfx_player.stream = stream
+	_impact_sfx_player.play()
+
+func _get_weapon_for_strike(strike: CombatStrike) -> WeaponData:
+	return _attacker_weapon if strike.is_attacker_striking else _defender_weapon
+
+func _get_attack_sfx_for_weapon(weapon: WeaponData) -> AudioStream:
+	match _get_weapon_sound_family(weapon):
+		"bow":
+			return BOW_ATTACK_SFX
+		"sword":
+			return SWORD_ATTACK_SFX
+		_:
+			return null
+
+func _get_impact_sfx_for_weapon(weapon: WeaponData) -> AudioStream:
+	match _get_weapon_sound_family(weapon):
+		"bow":
+			return BOW_IMPACT_SFX
+		"sword":
+			return SWORD_IMPACT_SFX
+		_:
+			return null
+
+func _get_weapon_sound_family(weapon: WeaponData) -> String:
+	if weapon == null:
+		return "sword"
+
+	var weapon_type := String(weapon.weapon_type)
+	if weapon_type == "Bow":
+		return "bow"
+	if weapon_type in ["Tome", "Staff"]:
+		return ""
+	return "sword"
 
 func _play_approach() -> void:
 	_determine_combatants_reach() # Figure out who has swords!
