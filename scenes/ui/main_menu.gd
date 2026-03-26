@@ -2,6 +2,7 @@ extends Control
 
 signal menu_opened
 signal menu_closed
+signal status_tab_viewed
 
 @onready var inventory_grid: GridContainer = $CenterContainer/TabContainer/Inventory/Margin/Grid
 @onready var tabs: TabContainer = $CenterContainer/TabContainer
@@ -36,12 +37,18 @@ const NAV_REPEAT_INTERVAL_MS := 320
 
 var _last_nav_action: StringName = StringName()
 var _last_nav_time_ms: int = -100000
+var _status_tab_highlight_enabled := false
+var _status_tab_highlight_root: Control = null
+var _status_tab_highlight_tween: Tween = null
 
 func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Global.inventory_updated.connect(update_inventory)
 	Global.stats_updated.connect(update_status_page)
+	if tabs and not tabs.tab_changed.is_connected(_on_tab_changed):
+		tabs.tab_changed.connect(_on_tab_changed)
+	_setup_status_tab_highlight()
 
 func _shortcut_input(event: InputEvent) -> void:
 	if _handle_menu_toggle_input(event):
@@ -102,8 +109,10 @@ func toggle_menu():
 			tabs.current_tab = 1
 		menu_opened.emit()
 		update_inventory()
+		_refresh_status_tab_highlight()
 		_focus_first_interactable_deferred()
 	else:
+		_hide_status_tab_highlight()
 		menu_closed.emit()
 
 func open_status_tab() -> void:
@@ -118,7 +127,27 @@ func open_status_tab() -> void:
 	if not was_visible:
 		menu_opened.emit()
 
+	_refresh_status_tab_highlight()
 	_focus_first_interactable_deferred()
+
+func open_menu_to_tab(tab_index: int) -> void:
+	var was_visible := visible
+	visible = true
+	get_tree().paused = true
+	update_status_page()
+	update_inventory()
+	if tabs:
+		tabs.current_tab = clampi(tab_index, 0, max(tabs.get_tab_count() - 1, 0))
+
+	if not was_visible:
+		menu_opened.emit()
+
+	_refresh_status_tab_highlight()
+	_focus_first_interactable_deferred()
+
+func set_status_tab_highlight(enabled: bool) -> void:
+	_status_tab_highlight_enabled = enabled
+	_refresh_status_tab_highlight()
 
 
 func _activate_focused_control() -> void:
@@ -172,6 +201,7 @@ func _switch_tab(delta: int) -> void:
 
 	tabs.current_tab = wrapi(tabs.current_tab + delta, 0, count)
 	_focus_first_interactable_deferred()
+	_refresh_status_tab_highlight()
 
 func _focus_first_interactable() -> void:
 	for candidate in _get_tab_focusable_controls():
@@ -594,3 +624,68 @@ func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = 
 	slot_weapon.tooltip_text = _build_weapon_tooltip_text(resolved_weapon)
 	slot_armor.tooltip_text = _build_generic_equipment_tooltip(equipped_armor, "Armor")
 	slot_accessory.tooltip_text = _build_generic_equipment_tooltip(equipped_accessory, "Accessory")
+
+func _setup_status_tab_highlight() -> void:
+	if tabs == null or _status_tab_highlight_root != null:
+		return
+
+	_status_tab_highlight_root = ColorRect.new()
+	_status_tab_highlight_root.name = "StatusTabHighlight"
+	_status_tab_highlight_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status_tab_highlight_root.visible = false
+	_status_tab_highlight_root.color = Color(0.65, 0.86, 1.0, 0.28)
+	_status_tab_highlight_root.z_index = 20
+	add_child(_status_tab_highlight_root)
+
+func _refresh_status_tab_highlight() -> void:
+	if _status_tab_highlight_root == null or tabs == null:
+		return
+
+	if _status_tab_highlight_tween:
+		_status_tab_highlight_tween.kill()
+		_status_tab_highlight_tween = null
+
+	if not visible or not _status_tab_highlight_enabled:
+		_hide_status_tab_highlight()
+		return
+
+	var tab_bar: Control = tabs.get_tab_bar() if tabs.has_method("get_tab_bar") else null
+	if tab_bar == null or not tab_bar.has_method("get_tab_rect"):
+		_hide_status_tab_highlight()
+		return
+
+	var tab_rect: Rect2 = tab_bar.get_tab_rect(0)
+	var pad := Vector2(6.0, 4.0)
+	var tab_bar_rect: Rect2 = tab_bar.get_global_rect()
+	_status_tab_highlight_root.global_position = tab_bar_rect.position + tab_rect.position - pad
+	_status_tab_highlight_root.size = tab_rect.size + (pad * 2.0)
+	_status_tab_highlight_root.visible = true
+	_status_tab_highlight_root.modulate.a = 0.35
+
+	if tabs.current_tab == 0:
+		_status_tab_highlight_enabled = false
+		_status_tab_highlight_root.visible = false
+		status_tab_viewed.emit()
+		return
+
+	_status_tab_highlight_tween = create_tween()
+	_status_tab_highlight_tween.set_loops()
+	_status_tab_highlight_tween.tween_property(_status_tab_highlight_root, "modulate:a", 0.8, 0.55)
+	_status_tab_highlight_tween.tween_property(_status_tab_highlight_root, "modulate:a", 0.25, 0.55)
+
+func _hide_status_tab_highlight() -> void:
+	if _status_tab_highlight_tween:
+		_status_tab_highlight_tween.kill()
+		_status_tab_highlight_tween = null
+	if _status_tab_highlight_root != null:
+		_status_tab_highlight_root.visible = false
+		_status_tab_highlight_root.modulate.a = 0.0
+
+func _on_tab_changed(tab_index: int) -> void:
+	if _status_tab_highlight_enabled and tab_index == 0:
+		_status_tab_highlight_enabled = false
+		_hide_status_tab_highlight()
+		status_tab_viewed.emit()
+		return
+
+	_refresh_status_tab_highlight()

@@ -16,6 +16,7 @@ var _confirm_hint := "continue"
 var _skip_hint := "skip"
 var _fade_tween: Tween
 var _is_dismissing := false
+var _card_type := "story"
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -40,6 +41,7 @@ func configure(config: Dictionary) -> void:
 	_confirm_hint = String(config.get("confirm_hint", "continue"))
 	_skip_hint = String(config.get("skip_hint", "skip"))
 	_allow_skip = bool(config.get("allow_skip", true))
+	_card_type = String(config.get("card_type", "story"))
 
 	var background_texture: Texture2D = config.get("background", null)
 	if background_texture != null:
@@ -52,6 +54,7 @@ func configure(config: Dictionary) -> void:
 		fallback_background.visible = true
 
 	skip_label.visible = _allow_skip
+	_apply_panel_style()
 	_refresh_prompts()
 
 func _exit_tree() -> void:
@@ -136,17 +139,32 @@ func _kill_fade_tween() -> void:
 
 func _apply_panel_style() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.07, 0.05, 0.9)
+	if _card_type == "tutorial":
+		style.bg_color = Color(0.05, 0.07, 0.11, 0.93)
+		style.border_color = Color(0.64, 0.83, 1.0, 0.98)
+	else:
+		style.bg_color = Color(0.08, 0.07, 0.05, 0.9)
+		style.border_color = Color(0.9, 0.77, 0.46, 0.96)
 	style.border_width_left = 3
 	style.border_width_top = 3
 	style.border_width_right = 3
 	style.border_width_bottom = 3
-	style.border_color = Color(0.9, 0.77, 0.46, 0.96)
 	style.corner_radius_top_left = 14
 	style.corner_radius_top_right = 14
 	style.corner_radius_bottom_right = 14
 	style.corner_radius_bottom_left = 14
 	panel.add_theme_stylebox_override("panel", style)
+
+	if _card_type == "tutorial":
+		title_label.add_theme_color_override("font_color", Color(0.86, 0.95, 1.0))
+		body_label.add_theme_color_override("font_color", Color(0.92, 0.96, 1.0))
+		confirm_label.add_theme_color_override("font_color", Color(0.72, 0.88, 1.0))
+		skip_label.add_theme_color_override("font_color", Color(0.84, 0.89, 0.96))
+	else:
+		title_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.68))
+		body_label.add_theme_color_override("font_color", Color(0.94, 0.93, 0.88))
+		confirm_label.add_theme_color_override("font_color", Color(1.0, 0.84, 0.46))
+		skip_label.add_theme_color_override("font_color", Color(0.86, 0.86, 0.86))
 
 func _apply_text_legibility() -> void:
 	background.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR

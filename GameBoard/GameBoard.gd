@@ -8,7 +8,7 @@ const PauseMenu = preload("res://Menus/PauseMenu.tscn")
 const ActionMenu = preload("res://Menus/ActionMenu.tscn")
 const STORY_DIALOGUE_SCENE = preload("res://scenes/ui/story_dialogue_box.tscn")
 const OVERLAY_SCENE = preload("res://scenes/ui/overlay.tscn")
-const DORMANT_SPROUT_TEXTURE = preload("res://graphics/plants/Atlas-Props4-crops update.png")
+const HEALFLOWER_TEXTURE = preload("res://graphics/interactables/items-flowers1_0.png")
 const BOW_SELECT_SFX = preload("res://audio/Bow Take Out 1.wav")
 const SWORD_SELECT_SFX = preload("res://audio/Sword Unsheath 1.wav")
 @export var grid: Resource
@@ -22,7 +22,6 @@ var current_phase: TurnPhase = TurnPhase.PLAYER
 signal demo_first_unit_selected(unit: Unit)
 signal demo_first_move_completed(unit: Unit)
 signal demo_first_action_completed
-signal demo_dormant_plant_discovered
 signal demo_bloom_used
 signal demo_healflower_harvested
 
@@ -53,7 +52,6 @@ var _demo_battle_active := false
 var _demo_first_selection_done := false
 var _demo_first_move_done := false
 var _demo_first_action_done := false
-var _demo_bloom_prompt_shown := false
 var _demo_bloom_used := false
 var _demo_harvest_done := false
 var _demo_silas_select_done := false
@@ -64,8 +62,6 @@ var _demo_story_dialogue: Control = null
 var _demo_overlay_layer: CanvasLayer = null
 var _demo_overlay: Control = null
 var _battle_camera: Camera2D = null
-var _dormant_focus_sprite: Sprite2D = null
-var _dormant_focus_cell := Vector2.ZERO
 var _default_camera_focus := Vector2.ZERO
 var _selection_sfx_player: AudioStreamPlayer = null
 
@@ -315,12 +311,8 @@ func _move_active_unit(new_cell: Vector2, show_action_menu: bool = true) -> void
 	if _demo_battle_active and _active_unit != null and _active_unit.name == "Savannah" and not _demo_first_move_done:
 		_demo_first_move_done = true
 		demo_first_move_completed.emit(_active_unit)
-		if DemoDirector:
-			DemoDirector.show_context_prompt("battle_choose_attack")
 	elif _demo_battle_active and _active_unit != null and _active_unit.name == "Silas" and not _demo_silas_move_done:
 		_demo_silas_move_done = true
-		if DemoDirector:
-			DemoDirector.show_context_prompt("battle_choose_attack_ranged")
 	
 	if show_action_menu:
 		_show_action_menu()
@@ -354,18 +346,12 @@ func _select_unit(cell: Vector2) -> void:
 	if _demo_battle_active and _active_unit.name == "Savannah" and not _demo_first_selection_done:
 		_demo_first_selection_done = true
 		demo_first_unit_selected.emit(_active_unit)
-		if DemoDirector:
-			DemoDirector.show_context_prompt("battle_move_savannah")
 	elif _demo_battle_active and _active_unit.name == "Silas" and not _demo_silas_select_done:
 		_demo_silas_select_done = true
-		if DemoDirector:
-			DemoDirector.show_context_prompt("battle_select_silas")
 	elif _demo_battle_active and _active_unit.name == "Tera" and not _demo_tera_select_done:
 		_demo_tera_select_done = true
-		if DemoDirector:
-			DemoDirector.show_context_prompt("battle_select_tera")
 	
-	
+	await _maybe_show_unit_tutorial(_active_unit)
 
 func _get_attack_cells_from_origin(origin: Vector2, attack_range: int) -> Dictionary:
 	var cells: Dictionary = {}
@@ -484,13 +470,6 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _battle_ended:
 		return
 
-	if _demo_battle_active and not _demo_first_selection_done:
-		var savannah := get_node_or_null("Savannah") as Unit
-		if savannah != null and cell != savannah.cell:
-			if DemoDirector:
-				DemoDirector.show_context_prompt("battle_select_savannah")
-			return
-
 	if _target_unit_for_forecast != null:
 		var target = _target_unit_for_forecast
 		_target_unit_for_forecast = null
@@ -553,14 +532,9 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		if unit.is_wait:
 			_show_pause_menu()
 		else:
-			_select_unit(cell)
+			await _select_unit(cell)
 			
 	elif _active_unit != null: 
-		if _demo_battle_active and _active_unit.name == "Savannah" and _demo_first_selection_done and not _demo_first_move_done and cell == _active_unit.cell:
-			if DemoDirector:
-				DemoDirector.show_context_prompt("battle_move_savannah")
-			return
-
 		if is_occupied(cell) and _units[cell] == _active_unit:
 			_unit_overlay.clear()
 			_unit_path.stop()
@@ -736,11 +710,6 @@ func start_enemy_phase() -> void:
 	await _show_phase_banner("ENEMY PHASE", Color(0.8, 0.1, 0.1))
 	if _battle_ended:
 		return
-	
-	if _demo_battle_active and _demo_first_action_done and not _demo_bloom_prompt_shown:
-		await _present_demo_bloom_prompt()
-		if _battle_ended:
-			return
 	
 	# 1. Gather all living enemies currently on the board
 	var enemies = []
@@ -1466,7 +1435,6 @@ func _execute_bloom_wave(_caster: Unit, center_cell: Vector2, radius: int) -> bo
 		demo_bloom_used.emit()
 		if DemoDirector:
 			DemoDirector.set_stage(DemoDirector.DemoStage.BLOOM_TUTORIAL)
-			DemoDirector.show_context_prompt("battle_harvest_healflower")
 		
 	return true
 
@@ -1476,6 +1444,17 @@ func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 	
 	add_child(new_plant)
 	new_plant.position = grid.calculate_map_position(cell) + Vector2(0, -16)
+	new_plant.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	var plant_sprite := new_plant.get_node_or_null("Sprite2D") as Sprite2D
+	if plant_sprite != null:
+		plant_sprite.centered = true
+		plant_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		plant_sprite.texture = HEALFLOWER_TEXTURE
+		plant_sprite.hframes = 1
+		plant_sprite.vframes = 1
+		plant_sprite.frame_coords = Vector2i.ZERO
+		plant_sprite.scale = Vector2(0.78, 0.78)
+		plant_sprite.modulate = Color(0.82, 1.0, 0.82, 1.0)
 	
 	_battle_plants[cell] = new_plant
 	
@@ -1489,6 +1468,7 @@ func _spawn_battle_plant(cell: Vector2, spawn_index: int = 0) -> void:
 	# 2. Pop up slightly larger than normal (1.3x) with a smooth spring effect
 	tween.tween_property(new_plant, "scale", Vector2(1.3, 1.3), 0.3)\
 		.set_trans(Tween.TRANS_SPRING).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(new_plant, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		
 	# 3. Softly settle back down to normal size (1.0x)
 	tween.tween_property(new_plant, "scale", Vector2(1.0, 1.0), 0.2)\
@@ -1521,8 +1501,6 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	if _demo_battle_active and not _demo_harvest_done:
 		_demo_harvest_done = true
 		demo_healflower_harvested.emit()
-		if DemoDirector:
-			DemoDirector.show_context_prompt("battle_defeat_enemies")
 	return true
 
 func _setup_demo_support_nodes() -> void:
@@ -1609,15 +1587,6 @@ func _run_demo_battle_opening() -> void:
 	_cursor.is_active = false
 	current_phase = TurnPhase.PLAYER
 	_hide_unit_hover_tooltip()
-	_spawn_dormant_focus_sprite()
-
-	await get_tree().create_timer(0.12).timeout
-	var focus_target := _default_camera_focus
-	if _dormant_focus_sprite != null and is_instance_valid(_dormant_focus_sprite):
-		focus_target = _dormant_focus_sprite.global_position
-	await _focus_battle_camera(focus_target, 0.45)
-	await _pulse_dormant_focus_sprite()
-	demo_dormant_plant_discovered.emit()
 
 	await _play_demo_story_dialogue([
 		{"speaker": "Tera", "text": "Wait... do you hear that? Under the ash... it's like a heartbeat."},
@@ -1639,7 +1608,7 @@ func _run_demo_battle_opening() -> void:
 	await _show_phase_banner("PLAYER PHASE", Color(0.1, 0.4, 0.8))
 	if DemoDirector:
 		DemoDirector.set_stage(DemoDirector.DemoStage.BATTLE_TUTORIAL)
-		DemoDirector.show_context_prompt("battle_select_savannah")
+		DemoDirector.refresh_current_prompt()
 	_cursor.is_active = true
 
 func _compute_default_camera_focus() -> Vector2:
@@ -1655,38 +1624,6 @@ func _compute_default_camera_focus() -> Vector2:
 	for point in focus_points:
 		midpoint += point
 	return midpoint / float(focus_points.size())
-
-func _spawn_dormant_focus_sprite() -> void:
-	if _dormant_focus_sprite != null and is_instance_valid(_dormant_focus_sprite):
-		return
-
-	var tera := get_node_or_null("Tera") as Unit
-	if tera == null:
-		return
-
-	_dormant_focus_cell = tera.cell + Vector2(1, -1)
-	if not grid.is_within_bounds(_dormant_focus_cell):
-		_dormant_focus_cell = tera.cell + Vector2(1, 0)
-	if not grid.is_within_bounds(_dormant_focus_cell):
-		_dormant_focus_cell = tera.cell
-
-	_dormant_focus_sprite = Sprite2D.new()
-	_dormant_focus_sprite.texture = DORMANT_SPROUT_TEXTURE
-	_dormant_focus_sprite.hframes = 34
-	_dormant_focus_sprite.vframes = 18
-	_dormant_focus_sprite.frame_coords = Vector2i(13, 8)
-	_dormant_focus_sprite.position = grid.calculate_map_position(_dormant_focus_cell) + Vector2(0.0, -16.0)
-	_dormant_focus_sprite.modulate = Color(0.64, 0.64, 0.64, 0.95)
-	add_child(_dormant_focus_sprite)
-
-func _pulse_dormant_focus_sprite() -> void:
-	if _dormant_focus_sprite == null or not is_instance_valid(_dormant_focus_sprite):
-		return
-
-	var tween := create_tween()
-	tween.tween_property(_dormant_focus_sprite, "scale", Vector2(1.16, 1.16), 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_dormant_focus_sprite, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tween.finished
 
 func _crossfade_scene_music_to_manager(fade_duration: float = 1.25, intro_delay: float = 0.0) -> void:
 	var scene_root := get_parent()
@@ -1755,30 +1692,30 @@ func _complete_demo_first_action() -> void:
 	_demo_first_action_done = true
 	demo_first_action_completed.emit()
 	if DemoDirector:
-		DemoDirector.show_context_prompt("battle_defeat_enemies")
+		DemoDirector.refresh_current_prompt()
 
-func _present_demo_bloom_prompt() -> void:
-	if _demo_bloom_prompt_shown:
+func _maybe_show_unit_tutorial(unit: Unit) -> void:
+	if not _demo_battle_active or DemoDirector == null or unit == null:
 		return
 
-	_demo_bloom_prompt_shown = true
-	if _demo_bloom_used:
-		if DemoDirector and not _demo_harvest_done:
-			DemoDirector.set_stage(DemoDirector.DemoStage.BLOOM_TUTORIAL)
-			DemoDirector.show_context_prompt("battle_harvest_healflower")
-		return
+	match String(unit.name):
+		"Savannah":
+			if not DemoDirector.has_seen_tutorial("battle_savannah"):
+				await DemoDirector.show_tutorial_card("battle_savannah", self)
+			elif not DemoDirector.has_seen_tutorial("battle_harvest") and _has_adjacent_battle_plant(unit):
+				await DemoDirector.show_tutorial_card("battle_harvest", self)
+		"Silas":
+			if not DemoDirector.has_seen_tutorial("battle_silas"):
+				await DemoDirector.show_tutorial_card("battle_silas", self)
+		"Tera":
+			if not DemoDirector.has_seen_tutorial("battle_tera_bloom"):
+				await DemoDirector.show_tutorial_card("battle_tera_bloom", self)
 
-	var savannah := get_node_or_null("Savannah") as Unit
-	if savannah != null and savannah.health < savannah.max_health:
-		await _play_demo_story_dialogue([
-			{"speaker": "Tera", "text": "Savannah, hold on. The roots are still there."},
-			{"speaker": "Tera", "text": "Give me a second and I can pull something living through the ash."}
-		])
-	else:
-		await _play_demo_story_dialogue([
-			{"speaker": "Tera", "text": "The roots are still there. If one of us gets hurt, I can force them through."}
-		])
+func _has_adjacent_battle_plant(unit: Unit) -> bool:
+	if unit == null:
+		return false
 
-	if DemoDirector:
-		DemoDirector.set_stage(DemoDirector.DemoStage.BLOOM_TUTORIAL)
-		DemoDirector.show_context_prompt("battle_choose_bloom")
+	for direction in DIRECTIONS:
+		if _battle_plants.has(unit.cell + direction):
+			return true
+	return false

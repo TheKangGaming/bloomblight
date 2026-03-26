@@ -4,6 +4,7 @@ signal stage_changed(stage: int)
 signal input_mode_changed(mode: int)
 signal story_harvest_ready
 signal meal_eaten(item_type: int)
+signal tutorial_card_requested(config: Dictionary)
 
 enum InputMode {
 	KEYBOARD_MOUSE,
@@ -28,6 +29,7 @@ enum DemoStage {
 
 const TITLE_SCENE := preload("res://scenes/ui/title_screen.tscn")
 const STORY_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
+const TUTORIAL_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
 
 var demo_active := true
 var current_stage: DemoStage = DemoStage.NONE
@@ -37,6 +39,17 @@ var pending_day_two_battle_intro := false
 var _manual_prompt_id := ""
 var _manual_prompt_replacements: Dictionary = {}
 var _story_harvests := {}
+var _seen_tutorial_cards: Dictionary = {}
+
+const TUTORIAL_CARD_ORDER := [
+	"farm_controls",
+	"farm_farming",
+	"meal_buff",
+	"battle_savannah",
+	"battle_silas",
+	"battle_tera_bloom",
+	"battle_harvest",
+]
 
 func is_demo_active() -> bool:
 	return demo_active
@@ -48,6 +61,7 @@ func begin_new_demo() -> void:
 	_manual_prompt_id = ""
 	_manual_prompt_replacements.clear()
 	_story_harvests.clear()
+	_seen_tutorial_cards.clear()
 	Global.reset_demo_state()
 	set_stage(DemoStage.OPENER)
 	clear_prompt()
@@ -88,7 +102,7 @@ func set_stage(stage: DemoStage) -> void:
 	stage_changed.emit(stage)
 
 	match stage:
-		DemoStage.HARVEST_CROPS, DemoStage.LIGHT_CAMPFIRE, DemoStage.COOK_MEAL, DemoStage.EAT_MEAL:
+		DemoStage.INTRO, DemoStage.HARVEST_CROPS, DemoStage.LIGHT_CAMPFIRE, DemoStage.COOK_MEAL, DemoStage.EAT_MEAL, DemoStage.MEAL_REVIEW, DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
 			_manual_prompt_id = ""
 			_manual_prompt_replacements.clear()
 			refresh_current_prompt()
@@ -107,6 +121,105 @@ func show_context_prompt(prompt_id: String, replacements: Dictionary = {}) -> vo
 	_manual_prompt_id = prompt_id
 	_manual_prompt_replacements = replacements.duplicate(true)
 	Global.show_tutorial_text(_resolve_prompt(prompt_id, replacements))
+
+func show_tutorial_card(card_id: String, parent: Node = null, replay_only: bool = false) -> void:
+	if card_id.is_empty():
+		return
+
+	if not replay_only and has_seen_tutorial(card_id):
+		return
+
+	var config := get_tutorial_card_config(card_id)
+	if config.is_empty():
+		return
+
+	mark_tutorial_seen(card_id)
+	config["card_type"] = "tutorial"
+	config["allow_skip"] = false
+	config["confirm_hint"] = "continue"
+	config["skip_hint"] = "dismiss"
+	tutorial_card_requested.emit(config.duplicate(true))
+
+	var host: Node = _resolve_tutorial_host(parent)
+	if host == null or not is_instance_valid(host):
+		return
+
+	var tree := get_tree()
+	var was_paused := tree.paused if tree != null else false
+	if tree != null:
+		tree.paused = true
+
+	var card = TUTORIAL_CARD_SCENE.instantiate()
+	host.add_child(card)
+	await card.configure(config)
+	await card.confirmed
+
+	if tree != null:
+		tree.paused = was_paused
+
+func has_seen_tutorial(card_id: String) -> bool:
+	return bool(_seen_tutorial_cards.get(card_id, false))
+
+func mark_tutorial_seen(card_id: String) -> void:
+	if card_id.is_empty():
+		return
+	_seen_tutorial_cards[card_id] = true
+
+func get_seen_tutorial_cards() -> Array[Dictionary]:
+	var cards: Array[Dictionary] = []
+	for card_id in TUTORIAL_CARD_ORDER:
+		if not has_seen_tutorial(card_id):
+			continue
+		var config := get_tutorial_card_config(card_id)
+		if config.is_empty():
+			continue
+		cards.append({
+			"id": card_id,
+			"title": String(config.get("title", card_id)),
+			"body": String(config.get("body", "")),
+		})
+	return cards
+
+func get_tutorial_card_config(card_id: String) -> Dictionary:
+	var template := ""
+	var title := ""
+	match card_id:
+		"farm_controls":
+			title = "Tutorial: Movement"
+			template = "Move with {move}. Hold {run} to run, and press {confirm} near objects to interact."
+		"farm_farming":
+			title = "Tutorial: Farming"
+			template = "Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}, and plant seeds with {plant}."
+		"meal_buff":
+			title = "Tutorial: Meal Buffs"
+			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nOpen the Status tab to review the meal buff, then close the menu when you're ready to continue."
+		"battle_savannah":
+			title = "Tutorial: Savannah"
+			template = "Select Savannah with the cursor. Move her to a blue tile with {confirm}, then open her action menu.\n\nSavannah is your steady frontliner. She wants to be near the fight, but you can always end her turn instead of attacking."
+		"battle_silas":
+			title = "Tutorial: Silas"
+			template = "Silas fights from range. He can attack enemies from farther away, so he does not need to stand next to them.\n\nKeep him behind Savannah when you can."
+		"battle_tera_bloom":
+			title = "Tutorial: Tera"
+			template = "Tera is a powerful magic user, but she is fragile.\n\nWhen roots are still living under the ash, she can use Bloom to force them up through the ground and create a Healflower."
+		"battle_harvest":
+			title = "Tutorial: Harvest"
+			template = "Move Savannah next to a Healflower, choose Harvest, then press {confirm} to recover HP.\n\nHarvest only helps if the target unit is already hurt."
+		_:
+			return {}
+
+	return {
+		"id": card_id,
+		"title": title,
+		"body": _format_template(template, {
+			"confirm": get_confirm_label(),
+			"move": get_move_label(),
+			"run": get_action_label("run"),
+			"action": get_action_label("action"),
+			"plant": get_action_label("plant"),
+			"tool_cycle": get_tool_cycle_label(),
+		}),
+	}
 
 func refresh_current_prompt() -> void:
 	if not demo_active:
@@ -234,58 +347,38 @@ func show_demo_complete_card(parent: Node) -> void:
 
 func _get_stage_prompt_text(stage: DemoStage) -> String:
 	match stage:
+		DemoStage.INTRO:
+			return "Objective: Find Tera."
 		DemoStage.HARVEST_CROPS:
 			return "Objective: Harvest the carrot and parsnip."
 		DemoStage.LIGHT_CAMPFIRE:
-			return "Objective: Walk to the campfire and press %s to light it." % get_confirm_label()
+			return "Objective: Light the campfire."
 		DemoStage.COOK_MEAL:
 			return "Objective: Cook Glazed Carrots at the campfire."
 		DemoStage.EAT_MEAL:
-			return "Objective: Open inventory (%s) and eat the Glazed Carrots." % get_action_label("menu_toggle")
+			return "Objective: Eat the Glazed Carrots."
 		DemoStage.MEAL_REVIEW:
-			return "Objective: Review your meal buff on the Status tab. Close the menu when you're ready to continue."
+			return "Objective: Review your meal buff in the Status tab."
+		DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
+			return "Objective: Defeat the scouting party."
 		_:
 			return ""
 
 func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String:
 	var template := ""
 	match prompt_id:
-		"battle_select_savannah":
-			template = "Tutorial: Select Savannah with the cursor."
-		"battle_move_savannah":
-			template = "Tutorial: Move the cursor then click/press %s on a blue tile." % get_action_label("confirm")
-		"battle_choose_attack":
-			template = "Tutorial: Choose Attack if you are standing next to an enemy. For now, end your turn."
-		"battle_select_silas":
-			template = "Tutorial: Select Silas with the cursor. Move the cursor then click/press %s on a blue tile. Silas fights from range, so he can attack without standing next to an enemy." % get_action_label("confirm")
-		"battle_move_silas":
-			template = "Tutorial: Move the cursor then click/press %s on a blue tile. Silas fights from range, so he can attack without standing next to an enemy." % get_action_label("confirm")
-		"battle_choose_attack_ranged":
-			template = "Tutorial: Choose Attack when the enemy is in range. Silas does not need to stand next to them."
-		"battle_select_tera":
-			template = "Tutorial: Select Tera with the cursor. She is a strong magic user, but she is fragile, so keep her protected."
-		"battle_choose_bloom":
-			template = "Tutorial: Select Tera, choose Bloom, then press %s to awaken the dormant sprout." % get_action_label("confirm")
-		"battle_harvest_healflower":
-			template = "Tutorial: Move Savannah next to a Healflower, choose Harvest, then press %s to recover HP." % get_action_label("confirm")
 		"battle_defeat_enemies":
 			template = "Objective: Defeat the scouting party."
-		"farm_controls_intro":
-			template = "Tutorial: Move with {move}. Hold {run} to run, and press {confirm} near objects to interact.\nObjective: Find Tera."
 		"farm_find_tera":
 			template = "Objective: Find Tera."
 		"farm_open_chest":
 			template = "Objective: Open the old chest by the ruined field."
 		"farm_search_forest":
 			template = "Objective: Search the forest edge for seeds. Head toward the treeline at the edge of the farm."
-		"farm_farming_controls":
-			template = "Tutorial: Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}, and plant seeds with {plant}.\nObjective: Plant the carrot and parsnip seeds, then water them."
 		"farm_plant_and_water":
 			template = "Objective: Plant the carrot and parsnip seeds, then water them."
 		"farm_water_both":
 			template = "Objective: Water both planted seeds."
-		"food_buff_blurb":
-			template = "Tutorial: Eating cooked food temporarily boosts the party's stats and morale for the day. More on morale later."
 		_:
 			template = ""
 
@@ -305,6 +398,44 @@ func _format_template(template: String, replacements: Dictionary) -> String:
 	for key in replacements.keys():
 		resolved = resolved.replace("{" + String(key) + "}", String(replacements[key]))
 	return resolved
+
+func _resolve_tutorial_host(parent: Node) -> Node:
+	if parent != null and is_instance_valid(parent):
+		if parent is CanvasLayer or parent is Control:
+			return parent
+
+		var direct_host := parent.get_node_or_null("DemoOverlayLayer")
+		if direct_host is CanvasLayer or direct_host is Control:
+			return direct_host
+
+		direct_host = parent.get_node_or_null("CanvasLayer")
+		if direct_host is CanvasLayer or direct_host is Control:
+			return direct_host
+
+		var parent_node := parent.get_parent()
+		if parent_node != null and is_instance_valid(parent_node):
+			if parent_node is CanvasLayer or parent_node is Control:
+				return parent_node
+			direct_host = parent_node.get_node_or_null("DemoOverlayLayer")
+			if direct_host is CanvasLayer or direct_host is Control:
+				return direct_host
+			direct_host = parent_node.get_node_or_null("CanvasLayer")
+			if direct_host is CanvasLayer or direct_host is Control:
+				return direct_host
+
+	var current_scene := get_tree().current_scene
+	if current_scene != null and is_instance_valid(current_scene):
+		if current_scene is CanvasLayer or current_scene is Control:
+			return current_scene
+
+		var scene_host := current_scene.get_node_or_null("DemoOverlayLayer")
+		if scene_host is CanvasLayer or scene_host is Control:
+			return scene_host
+		scene_host = current_scene.get_node_or_null("CanvasLayer")
+		if scene_host is CanvasLayer or scene_host is Control:
+			return scene_host
+
+	return current_scene
 
 func _find_input_event(action_name: StringName, wants_controller: bool) -> InputEvent:
 	if not InputMap.has_action(action_name):
@@ -399,7 +530,7 @@ func _keyboard_fallback_label(action_name: StringName) -> String:
 		&"action":
 			return "Space"
 		&"tool_forward":
-			return "1"
+			return "Mouse Wheel Up"
 		&"tool_backward":
 			return "Mouse Wheel Down"
 		&"confirm", &"interact":
@@ -422,9 +553,9 @@ func _controller_fallback_label(action_name: StringName) -> String:
 		&"plant":
 			return "A"
 		&"tool_forward":
-			return "R1"
+			return "Mouse Wheel Up"
 		&"tool_backward":
-			return "L1"
+			return "Mouse Wheel Down"
 		&"time_skip":
 			return "X"
 		_:

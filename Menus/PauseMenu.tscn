@@ -32,13 +32,11 @@ custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
 text = "Options"
 
-[node name="EmptyButton" type="Button" parent="VBoxContainer" unique_id=371110556]
+[node name="TutorialsButton" type="Button" parent="VBoxContainer" unique_id=371110556]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
-focus_mode = 0
-mouse_filter = 2
-text = " "
+text = "Tutorials"
 
 [node name="EndTurnButton" type="Button" parent="VBoxContainer" unique_id=785154608]
 layout_mode = 2
@@ -54,5 +52,6 @@ text = "Close"
 
 [connection signal="pressed" from="VBoxContainer/UnitsButton" to="." method="_on_units_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/TutorialsButton" to="." method="_on_tutorials_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/EndTurnButton" to="." method="_on_end_turn_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/CloseButton" to="." method="_on_close_button_pressed"]

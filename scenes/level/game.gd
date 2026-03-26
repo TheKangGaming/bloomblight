@@ -42,7 +42,6 @@ enum IntroState {
 @onready var camp_fire = $Objects/CampFire
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
-var _meal_buff_card_scene: PackedScene = preload("res://scenes/ui/demo_story_card.tscn")
 var _combat_scene_path := "res://scenes/level/CombatMap_1.tscn"
 var _warning_music: AudioStream = preload("res://audio/Music_Norest.wav")
 var _warning_rustle_sfx: AudioStream = preload("res://audio/Light steps.wav")
@@ -370,7 +369,8 @@ func _begin_intro_sequence() -> void:
 	player.can_move = true
 	_restore_player_camera()
 	if DemoDirector:
-		DemoDirector.show_context_prompt("farm_controls_intro")
+		DemoDirector.show_context_prompt("farm_find_tera")
+		await DemoDirector.show_tutorial_card("farm_controls", $CanvasLayer)
 
 func _process_intro_progress() -> void:
 	if Global.intro_sequence_complete or _intro_busy:
@@ -496,11 +496,12 @@ func _run_forest_encounter() -> void:
 	await _fade_from_black(0.25)
 
 	_intro_state = IntroState.PLANT_AND_WATER
+	if DemoDirector:
+		DemoDirector.show_context_prompt("farm_plant_and_water")
+		await DemoDirector.show_tutorial_card("farm_farming", $CanvasLayer)
 	_intro_busy = false
 	player.can_move = true
 	_restore_player_camera(false)
-	if DemoDirector:
-		DemoDirector.show_context_prompt("farm_farming_controls")
 
 func _register_intro_plant(seed_type: int, plant: StaticBody2D) -> void:
 	if plant == null:
@@ -688,13 +689,24 @@ func _run_post_meal_warning_sequence() -> void:
 		{"speaker": "Silas", "text": "Don't get used to it. We have compa-"}
 	], [player, tera_actor, silas_actor, camp_fire], CUTSCENE_GROUP_ZOOM)
 
-	await _show_meal_buff_popup()
-	if main_menu and main_menu.has_method("open_status_tab"):
-		main_menu.open_status_tab()
+	if DemoDirector:
+		await DemoDirector.show_tutorial_card("meal_buff", $CanvasLayer)
+	if main_menu and main_menu.has_method("set_status_tab_highlight"):
+		main_menu.set_status_tab_highlight(true)
 	if DemoDirector:
 		DemoDirector.refresh_current_prompt()
+	_intro_busy = false
+	player.can_move = true
+	player.direction = Vector2.ZERO
+	_restore_player_camera()
+	if main_menu and main_menu.has_signal("status_tab_viewed"):
+		await main_menu.status_tab_viewed
 	if main_menu and main_menu.has_signal("menu_closed"):
 		await main_menu.menu_closed
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_setup_story_camp_state()
 
 	if DemoDirector and DemoDirector.current_stage == DemoDirector.DemoStage.MEAL_REVIEW:
 		DemoDirector.set_stage(DemoDirector.DemoStage.WARNING_BEAT)
@@ -720,18 +732,6 @@ func _run_post_meal_warning_sequence() -> void:
 	if MusicManager and MusicManager.has_method("crossfade_to"):
 		MusicManager.crossfade_to(_warning_music, 1.0, -4.0)
 	await _launch_direct_combat_scene(_combat_scene_path)
-
-func _show_meal_buff_popup() -> void:
-	var card = _meal_buff_card_scene.instantiate()
-	card.process_mode = Node.PROCESS_MODE_ALWAYS
-	$CanvasLayer.add_child(card)
-	card.configure({
-		"title": "Meal Boost",
-		"body": "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nOpen the Status tab to review the meal buff, then close the menu when you're ready to continue.",
-		"confirm_hint": "dismiss",
-		"allow_skip": false
-	})
-	await card.confirmed
 
 func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	if not ResourceLoader.exists(combat_scene_path):
