@@ -1548,9 +1548,9 @@ func _run_demo_battle_opening() -> void:
 	demo_dormant_plant_discovered.emit()
 
 	await _play_demo_story_dialogue([
-		{"speaker": "Tera", "text": "Wait... do you feel that? Under the ash... there's a heartbeat."},
-		{"speaker": "Savannah", "text": "Something alive?"}, 
-		{"speaker": "Tera", "text": "Dormant roots. If I can wake them, they might keep us standing."}
+		{"speaker": "Tera", "text": "Wait... do you hear that? Under the ash... it's like a heartbeat."},
+		{"speaker": "Savannah", "text": "A heartbeat? Tera, the ground's been dead for a decade."},
+		{"speaker": "Tera", "text": "Not all of it. There are roots down there, waiting. If I can wake them up, they might keep us in the fight."}
 	])
 
 	await _focus_battle_camera(_default_camera_focus, 0.4)
