@@ -2623,7 +2623,7 @@ y_sort_enabled = true
 
 [node name="Chest" parent="Objects" unique_id=1601134114 instance=ExtResource("5_lw8he")]
 y_sort_enabled = true
-position = Vector2(1335, 629)
+position = Vector2(1585, 497)
 carrot_seed_reward = 0
 parsnip_seed_reward = 0
 grant_glazed_carrots_recipe = false

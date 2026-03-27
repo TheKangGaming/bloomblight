@@ -72,6 +72,7 @@ shape = SubResource("CircleShape2D_yx5m8")
 
 [node name="LootPopup" type="PanelContainer" parent="." unique_id=986611912]
 visible = false
+z_index = 100
 y_sort_enabled = true
 offset_left = -88.0
 offset_top = -126.0
@@ -79,5 +80,6 @@ offset_right = 86.0
 offset_bottom = -88.0
 
 [node name="Label" type="Label" parent="LootPopup" unique_id=1591016470]
+z_index = 100
 layout_mode = 2
 text = "+ Seeds & Tools!"
