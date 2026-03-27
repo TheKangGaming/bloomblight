@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://n825j345khoi"]
 
 [ext_resource type="Texture2D" uid="uid://b4b1c3glc2saq" path="res://scenes/level/Tilesets/Tileset-Terrain-new grass.png" id="1_gh4aj"]
-[ext_resource type="Script" uid="uid://cdk3s3ub3b116" path="res://UnitOverlay/UnitOverlay.gd" id="2"]
+[ext_resource type="Script" uid="uid://cdk3s3ub3b116" path="res://scenes/battle/unit_overlay/UnitOverlay.gd" id="2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_c344j"]
 texture = ExtResource("1_gh4aj")

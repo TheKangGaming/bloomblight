@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dsmh2fn7kpkri"
-path="res://.godot/imported/menu_selection_arrow.png-d92fa929eb837930da5b74423c76dc50.ctex"
+uid="uid://djolfa2r5b6n0"
+path="res://.godot/imported/movement_overlay.png-eb7d627f37ac647ad701ccdcd13ebe58.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://GameBoard/Cursor/menu_selection_arrow.png"
-dest_files=["res://.godot/imported/menu_selection_arrow.png-d92fa929eb837930da5b74423c76dc50.ctex"]
+source_file="res://scenes/battle/unit_overlay/movement_overlay.png"
+dest_files=["res://.godot/imported/movement_overlay.png-eb7d627f37ac647ad701ccdcd13ebe58.ctex"]
 
 [params]
 

@@ -1,7 +1,7 @@
 [gd_resource type="TileSet" format=3 uid="uid://qhhkq3husdda"]
 
-[ext_resource type="Texture2D" uid="uid://b2i0f53b24l0x" path="res://UnitOverlay/0_tileset_unit_overlay.png" id="1_2gbig"]
-[ext_resource type="Texture2D" uid="uid://c7xo1d0pl6p5q" path="res://UnitOverlay/1_tileset_unit_overlay.png" id="2_ksnwb"]
+[ext_resource type="Texture2D" uid="uid://b2i0f53b24l0x" path="res://scenes/battle/unit_overlay/0_tileset_unit_overlay.png" id="1_2gbig"]
+[ext_resource type="Texture2D" uid="uid://c7xo1d0pl6p5q" path="res://scenes/battle/unit_overlay/1_tileset_unit_overlay.png" id="2_ksnwb"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j4cdr"]
 texture = ExtResource("1_2gbig")

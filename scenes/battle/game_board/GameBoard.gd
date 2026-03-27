@@ -4,8 +4,8 @@ extends Node2D
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
 const FOLLOW_UP_SPEED_DIFF := 4
-const PauseMenu = preload("res://Menus/PauseMenu.tscn")
-const ActionMenu = preload("res://Menus/ActionMenu.tscn")
+const PauseMenu = preload("res://scenes/ui/menus/PauseMenu.tscn")
+const ActionMenu = preload("res://scenes/ui/menus/ActionMenu.tscn")
 const STORY_DIALOGUE_SCENE = preload("res://scenes/ui/story_dialogue_box.tscn")
 const OVERLAY_SCENE = preload("res://scenes/ui/overlay.tscn")
 const HEALFLOWER_TEXTURE = preload("res://graphics/interactables/items-flowers1_0.png")

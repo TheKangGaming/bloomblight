@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bv1ul1qynrdwd"]
 
-[ext_resource type="Script" uid="uid://d3wmc22bknk18" path="res://GameBoard/Cursor/Cursor.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://dsmh2fn7kpkri" path="res://GameBoard/Cursor/menu_selection_arrow.png" id="2"]
-[ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://GameBoard/Grid.tres" id="3"]
+[ext_resource type="Script" uid="uid://d3wmc22bknk18" path="res://scenes/battle/game_board/Cursor/Cursor.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://dsmh2fn7kpkri" path="res://scenes/battle/game_board/Cursor/menu_selection_arrow.png" id="2"]
+[ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://scenes/battle/game_board/Grid.tres" id="3"]
 
 [node name="Cursor" type="Node2D" unique_id=858830889]
 script = ExtResource("1")

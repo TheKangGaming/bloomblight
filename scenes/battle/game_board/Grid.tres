@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="Grid" format=3 uid="uid://c35omi6knfjfa"]
 
-[ext_resource type="Script" uid="uid://c7uhnhmyktbe5" path="res://GameBoard/Grid.gd" id="1"]
+[ext_resource type="Script" uid="uid://c7uhnhmyktbe5" path="res://scenes/battle/game_board/Grid.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
