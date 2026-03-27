@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://Units/character_data.gd" id="1_char"]
+[ext_resource type="Resource" path="res://Units/Data/Archer.tres" id="2_class"]
+[ext_resource type="PackedScene" path="res://scenes/battle/bandit_archer_battle_actor.tscn" id="3_actor"]
+[ext_resource type="Resource" path="res://Weapons/TrainingBow.tres" id="4_weapon"]
+
+[resource]
+script = ExtResource("1_char")
+display_name = "Bandit Archer"
+class_data = ExtResource("2_class")
+battle_actor_scene = ExtResource("3_actor")
+equipped_weapon = ExtResource("4_weapon")

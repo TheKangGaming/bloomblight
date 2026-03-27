@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://b4rk1kbyc765j"]
+[gd_scene load_steps=9 format=3]
 
-[ext_resource type="PackedScene" uid="uid://ceqn8w1yyldvk" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="1_pht0b"]
-[ext_resource type="Texture2D" uid="uid://difhwqv85l0ii" path="res://graphics/enemies/bandits/Bandit-Sheet.png" id="2_h1td7"]
+[ext_resource type="PackedScene" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="1_base"]
+[ext_resource type="Texture2D" path="res://graphics/enemies/bandits/Archer-Sheet.png" id="2_tex"]
 
 [sub_resource type="Animation" id="Animation_attack"]
 resource_name = "attack"
-length = 0.54
+length = 0.6
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -13,10 +13,10 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42, 0.48),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42, 0.48, 0.54),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [36, 37, 38, 39, 40, 41, 42, 43, 44]
+"values": [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
 }
 tracks/1/type = "method"
 tracks/1/imported = false
@@ -46,12 +46,12 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [54, 55, 56, 57, 58, 59, 60]
+"values": [77, 78, 79, 80, 81, 82, 83]
 }
 
 [sub_resource type="Animation" id="Animation_hit"]
 resource_name = "hit"
-length = 0.18
+length = 0.16
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -59,15 +59,15 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.09, 0.18),
+"times": PackedFloat32Array(0, 0.08, 0.16),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [45, 46, 46]
+"values": [66, 67, 67]
 }
 
 [sub_resource type="Animation" id="Animation_idle"]
 resource_name = "idle"
-length = 0.64
+length = 0.56
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -84,7 +84,7 @@ tracks/0/keys = {
 
 [sub_resource type="Animation" id="Animation_jump"]
 resource_name = "jump"
-length = 0.42
+length = 0.8
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -92,15 +92,15 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.07, 0.14, 0.21, 0.28, 0.35, 0.42),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.08, 0.16, 0.24, 0.32, 0.4, 0.48, 0.56, 0.64, 0.72, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [27, 28, 29, 30, 31, 32, 33]
+"values": [33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
 }
 
 [sub_resource type="Animation" id="Animation_run"]
 resource_name = "run"
-length = 0.48
+length = 0.56
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -109,15 +109,15 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42),
+"times": PackedFloat32Array(0, 0.08, 0.16, 0.24, 0.32, 0.4, 0.48, 0.56),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [18, 19, 20, 21, 22, 23, 24, 25]
+"values": [22, 23, 24, 25, 26, 27, 28, 29]
 }
 
 [sub_resource type="Animation" id="Animation_run_start"]
 resource_name = "run_start"
-length = 0.18
+length = 0.16
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -125,13 +125,13 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.12),
+"times": PackedFloat32Array(0, 0.08, 0.16),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [18, 19, 20]
+"values": [22, 23, 24]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_bandit"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_archer"]
 _data = {
 &"attack": SubResource("Animation_attack"),
 &"death": SubResource("Animation_death"),
@@ -142,23 +142,23 @@ _data = {
 &"run_start": SubResource("Animation_run_start")
 }
 
-[node name="EnemyBattleActorBase" unique_id=740323681 instance=ExtResource("1_pht0b")]
+[node name="EnemyBattleActorBase" instance=ExtResource("1_base")]
 
-[node name="EffectAnchor" parent="." index="0" unique_id=2022233145]
-position = Vector2(0, -18)
+[node name="EffectAnchor" parent="." index="0"]
+position = Vector2(10, -24)
 
-[node name="DamageAnchor" parent="." index="1" unique_id=726271048]
-position = Vector2(0, -28)
+[node name="DamageAnchor" parent="." index="1"]
+position = Vector2(0, -24)
 
-[node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
+[node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0"]
 position = Vector2(0, 13)
 scale = Vector2(1.4, 1.4)
-texture = ExtResource("2_h1td7")
+texture = ExtResource("2_tex")
 offset = Vector2(0, -26)
-hframes = 9
-vframes = 7
+hframes = 11
+vframes = 8
 region_enabled = false
 
-[node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1" unique_id=414594588]
-libraries/ = SubResource("AnimationLibrary_bandit")
+[node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1"]
+libraries/ = SubResource("AnimationLibrary_archer")
 autoplay = &"idle"

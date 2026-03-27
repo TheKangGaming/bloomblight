@@ -20,9 +20,10 @@
 [ext_resource type="Resource" uid="uid://drbs6r1u01xcf" path="res://Units/Data/Tera/tera_data.tres" id="18_hejk3"]
 [ext_resource type="Resource" uid="uid://b6wnmas847bmy" path="res://Units/Data/Silas/silas_data.tres" id="20_t05iy"]
 [ext_resource type="AudioStream" uid="uid://13xr73xkmabj" path="res://audio/Music_Norest.wav" id="21_mwyqx"]
+[ext_resource type="PackedScene" uid="uid://u3ifj6tmlnsf" path="res://Units/BanditMarauder.tscn" id="22_efnms"]
 [ext_resource type="PackedScene" uid="uid://1am2ra6wao4u" path="res://Units/BanditWarrior.tscn" id="23_hejk3"]
+[ext_resource type="PackedScene" uid="uid://buisa38kpjxjn" path="res://Units/BanditArcher.tscn" id="23_x18w8"]
 [ext_resource type="PackedScene" uid="uid://bxc8jd65qx0h" path="res://Units/tera.tscn" id="24_jk2x1"]
-[ext_resource type="Resource" uid="uid://begkvkpgtfknf" path="res://Units/Data/Enemies/BanditWarrior.tres" id="24_t05iy"]
 [ext_resource type="PackedScene" uid="uid://cav5av4vtw4yn" path="res://Units/Silas.tscn" id="26_kk0qh"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhctg"]
@@ -342,50 +343,6 @@ terrain_set_0/terrain_0/name = "Path"
 terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_gh08p")
 
-[sub_resource type="Resource" id="Resource_t05iy"]
-script = ExtResource("13_d3c05")
-hp = 24
-max_hp = 24
-str = 8
-physical_def = 3
-magic_def = 2
-dex = 4
-int_stat = 1
-mov = 5
-growth_rates = {
-"ATK_RNG": 0,
-"DEF": 15,
-"DEX": 30,
-"HP": 85,
-"INT": 5,
-"MDEF": 10,
-"MOV": 0,
-"SPD": 40,
-"STR": 70
-}
-stat_caps = {
-"ATK_RNG": 1,
-"DEF": 15,
-"DEX": 20,
-"INT": 10,
-"MAX_HP": 80,
-"MDEF": 14,
-"MOV": 5,
-"SPD": 24,
-"STR": 30
-}
-minimum_gain_intervals = {
-"ATK_RNG": 0,
-"DEF": 0,
-"DEX": 0,
-"INT": 0,
-"MAX_HP": 0,
-"MDEF": 0,
-"MOV": 0,
-"SPD": 0,
-"STR": 0
-}
-
 [sub_resource type="Resource" id="Resource_efnms"]
 script = ExtResource("13_d3c05")
 hp = 24
@@ -432,6 +389,50 @@ minimum_gain_intervals = {
 
 [sub_resource type="Resource" id="Resource_x18w8"]
 script = ExtResource("13_d3c05")
+hp = 24
+max_hp = 24
+str = 8
+physical_def = 3
+magic_def = 2
+dex = 4
+int_stat = 1
+mov = 5
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 15,
+"DEX": 30,
+"HP": 85,
+"INT": 5,
+"MDEF": 10,
+"MOV": 0,
+"SPD": 40,
+"STR": 70
+}
+stat_caps = {
+"ATK_RNG": 1,
+"DEF": 15,
+"DEX": 20,
+"INT": 10,
+"MAX_HP": 80,
+"MDEF": 14,
+"MOV": 5,
+"SPD": 24,
+"STR": 30
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
+
+[sub_resource type="Resource" id="Resource_rmf8s"]
+script = ExtResource("13_d3c05")
 str = 6
 physical_def = 5
 magic_def = 5
@@ -472,7 +473,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_rmf8s"]
+[sub_resource type="Resource" id="Resource_vey2m"]
 script = ExtResource("13_d3c05")
 hp = 16
 max_hp = 16
@@ -516,7 +517,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_vey2m"]
+[sub_resource type="Resource" id="Resource_kk0qh"]
 script = ExtResource("13_d3c05")
 hp = 18
 max_hp = 18
@@ -561,8 +562,138 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Resource" id="Resource_kk0qh"]
+[sub_resource type="Resource" id="Resource_0a6tx"]
 script = ExtResource("13_d3c05")
+hp = 24
+max_hp = 24
+str = 8
+physical_def = 3
+magic_def = 2
+dex = 4
+int_stat = 1
+mov = 5
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 15,
+"DEX": 30,
+"HP": 85,
+"INT": 5,
+"MDEF": 10,
+"MOV": 0,
+"SPD": 40,
+"STR": 70
+}
+stat_caps = {
+"ATK_RNG": 1,
+"DEF": 15,
+"DEX": 20,
+"INT": 10,
+"MAX_HP": 80,
+"MDEF": 14,
+"MOV": 5,
+"SPD": 24,
+"STR": 30
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
+
+[sub_resource type="Resource" id="Resource_xaypr"]
+script = ExtResource("13_d3c05")
+hp = 24
+max_hp = 24
+physical_def = 8
+magic_def = 3
+dex = 4
+int_stat = 1
+spd = 2
+mov = 4
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 70,
+"DEX": 30,
+"HP": 80,
+"INT": 5,
+"MDEF": 20,
+"MOV": 0,
+"SPD": 15,
+"STR": 40
+}
+stat_caps = {
+"ATK_RNG": 1,
+"DEF": 30,
+"DEX": 20,
+"INT": 10,
+"MAX_HP": 80,
+"MDEF": 18,
+"MOV": 4,
+"SPD": 15,
+"STR": 20
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
+
+[sub_resource type="Resource" id="Resource_rt72a"]
+script = ExtResource("13_d3c05")
+hp = 18
+max_hp = 18
+physical_def = 3
+magic_def = 3
+dex = 8
+int_stat = 2
+spd = 7
+mov = 5
+atk_rng = 2
+growth_rates = {
+"ATK_RNG": 0,
+"DEF": 20,
+"DEX": 70,
+"HP": 50,
+"INT": 10,
+"MDEF": 20,
+"MOV": 0,
+"SPD": 55,
+"STR": 40
+}
+stat_caps = {
+"ATK_RNG": 2,
+"DEF": 18,
+"DEX": 30,
+"INT": 15,
+"MAX_HP": 50,
+"MDEF": 18,
+"MOV": 5,
+"SPD": 28,
+"STR": 22
+}
+minimum_gain_intervals = {
+"ATK_RNG": 0,
+"DEF": 0,
+"DEX": 0,
+"INT": 0,
+"MAX_HP": 0,
+"MDEF": 0,
+"MOV": 0,
+"SPD": 0,
+"STR": 0
+}
 
 [node name="Node2D" type="Node2D" unique_id=715923779]
 metadata/_edit_vertical_guides_ = [768.0]
@@ -607,40 +738,48 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-position = Vector2(400, 496)
+position = Vector2(272, 240)
 
 [node name="Orc" parent="GameBoard" unique_id=1491504891 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
-position = Vector2(368, 208)
+position = Vector2(368, 48)
+is_enemy = false
 character_data = ExtResource("13_mwyqx")
-current_stats = SubResource("Resource_t05iy")
+current_stats = SubResource("Resource_efnms")
 
 [node name="Orc2" parent="GameBoard" unique_id=376372171 instance=ExtResource("11_qga0l")]
 y_sort_enabled = true
-position = Vector2(432, 208)
+position = Vector2(464, 80)
+is_enemy = false
 character_data = ExtResource("13_mwyqx")
-current_stats = SubResource("Resource_efnms")
+current_stats = SubResource("Resource_x18w8")
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(368, 432)
 character_data = ExtResource("18_0a6tx")
-current_stats = SubResource("Resource_x18w8")
+current_stats = SubResource("Resource_rmf8s")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
 position = Vector2(336, 464)
 character_data = ExtResource("18_hejk3")
-current_stats = SubResource("Resource_rmf8s")
+current_stats = SubResource("Resource_vey2m")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
 position = Vector2(432, 464)
 character_data = ExtResource("20_t05iy")
-current_stats = SubResource("Resource_vey2m")
+current_stats = SubResource("Resource_kk0qh")
 
 [node name="BanditWarrior" parent="GameBoard" unique_id=200120114 instance=ExtResource("23_hejk3")]
-position = Vector2(312, 221)
-is_enemy = true
-character_data = ExtResource("24_t05iy")
-current_stats = SubResource("Resource_kk0qh")
+position = Vector2(432, 208)
+current_stats = SubResource("Resource_0a6tx")
+
+[node name="BanditMarauder" parent="GameBoard" unique_id=1019864192 instance=ExtResource("22_efnms")]
+position = Vector2(368, 208)
+current_stats = SubResource("Resource_xaypr")
+
+[node name="BanditArcher" parent="GameBoard" unique_id=1878164639 instance=ExtResource("23_x18w8")]
+position = Vector2(336, 208)
+current_stats = SubResource("Resource_rt72a")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
 stream = ExtResource("21_mwyqx")

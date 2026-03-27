@@ -4,10 +4,12 @@
 [ext_resource type="PackedScene" uid="uid://b4rk1kbyc765j" path="res://scenes/battle/bandit_warrior_battle_actor.tscn" id="2_5pdit"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="2_ogv80"]
 [ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="3_u3p3n"]
+[ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="4_3x4vt"]
 
 [resource]
 script = ExtResource("2_ogv80")
 display_name = "Bandit Warrior"
 class_data = ExtResource("3_u3p3n")
 battle_actor_scene = ExtResource("2_5pdit")
+equipped_weapon = ExtResource("4_3x4vt")
 metadata/_custom_type_script = "uid://dinfajkodigdx"
