@@ -9,5 +9,19 @@
 script = ExtResource("1_char")
 display_name = "Bandit Marauder"
 class_data = ExtResource("2_class")
+personal_base_bonuses = {
+"defense": -2,
+"dexterity": 1,
+"max_health": -1,
+"speed": 1,
+"strength": 2
+}
+personal_growth_bonuses = {
+"defense": -15,
+"dexterity": 5,
+"max_health": -5,
+"speed": 10,
+"strength": 15
+}
 battle_actor_scene = ExtResource("3_actor")
 equipped_weapon = ExtResource("4_weapon")
