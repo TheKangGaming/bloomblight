@@ -104,11 +104,19 @@ func _fake_reaction_animation(_kind: String) -> void:
 			parent_actor.finish_tracked_action()
 
 func get_effect_anchor_position() -> Vector2:
+	if is_instance_valid(parent_actor):
+		var anchor := parent_actor.get_node_or_null("EffectAnchor") as Marker2D
+		if anchor != null:
+			return anchor.global_position
 	if sprite:
 		return sprite.global_position + Vector2(0.0, -30.0)
 	return global_position + Vector2(0.0, -30.0)
 
 func get_damage_anchor_position() -> Vector2:
+	if is_instance_valid(parent_actor):
+		var anchor := parent_actor.get_node_or_null("DamageAnchor") as Marker2D
+		if anchor != null:
+			return anchor.global_position
 	if sprite:
 		return sprite.global_position + Vector2(0.0, -40.0)
 	return global_position + Vector2(0.0, -40.0)

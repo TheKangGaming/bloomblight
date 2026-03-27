@@ -59,10 +59,10 @@ func _on_start_pressed() -> void:
 	var card = DEMO_STORY_CARD_SCENE.instantiate()
 	add_child(card)
 	card.configure({
-		"title": "A Fragile Escape",
-		"body": "Savannah was part of the very army hunting Tera - until she chose to save her instead.\n\nNow, in the desperate hours following their flight, they have stumbled onto a pocket of quiet on an abandoned farm. The army is behind them, the Blight is all around them, and survival is the only thing that matters.",
-		"confirm_hint": "start the prologue",
-		"skip_hint": "skip the prologue",
+		"title": "A Patch of Dirt",
+		"body": "Savannah was a soldier in the army hunting Tera - until she chose to desert and save her instead.\n\nThey've been running for hours. Deep in the blighted wilds, they've stumbled onto an old farmstead that hasn't turned to ash yet. The search parties are still out there, and the Blight is closing in. For now, they just need to stay alive.",
+		"confirm_hint": "start the demo",
+		"skip_hint": "skip intro",
 		"allow_skip": true
 	})
 	card.confirmed.connect(_begin_demo_scene_transition)

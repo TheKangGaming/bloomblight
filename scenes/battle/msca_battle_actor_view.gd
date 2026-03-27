@@ -10,11 +10,17 @@ extends Node2D
 @onready var one_h_weapon: CanvasItem = $Player/SpriteLayers/farmer_1h_weapon
 @onready var bow_weapon: CanvasItem = $Player/SpriteLayers/farmer_bow
 
+const BOW_IMPACT_FALLBACK_DELAY := 0.16
+const MAGIC_IMPACT_FALLBACK_DELAY := 0.18
+const MELEE_IMPACT_FALLBACK_DELAY := 0.12
+
 var _character_data: CharacterData
 var _weapon_snapshot: WeaponData
 var _facing := Vector2.RIGHT
 var _pending_finish_state := ""
 var _is_dying: bool = false
+var _attack_serial: int = 0
+var _impact_emitted_serial: int = -1
 
 func _ready() -> void:
 	if sprite_layers and sprite_layers.has_signal("animation_state_started"):
@@ -39,6 +45,9 @@ func _on_animation_state_finished(state_name: String, _wait_time: float = 0.0) -
 	_complete_pending_action()
 
 func emit_impact() -> void:
+	if _impact_emitted_serial == _attack_serial:
+		return
+	_impact_emitted_serial = _attack_serial
 	if is_instance_valid(parent_actor) and parent_actor.has_signal("strike_impact"):
 		parent_actor.strike_impact.emit()
 
@@ -99,9 +108,12 @@ func play_attack() -> void:
 		return
 
 	_set_anim_tree_active(true)
+	_attack_serial += 1
+	_impact_emitted_serial = -1
 	_pending_finish_state = _get_attack_animation_name()
 	_apply_weapon_visibility(_get_weapon_visibility_mode())
 	msca_player.travel_to_anim(_pending_finish_state, _facing)
+	_schedule_attack_impact_fallback(_attack_serial, _pending_finish_state, _get_attack_impact_fallback_delay())
 
 func _get_attack_animation_name() -> String:
 	var weapon_type := ""
@@ -117,6 +129,36 @@ func _get_attack_animation_name() -> String:
 			return "CastSpell1"
 		_:
 			return "StrikeForehandOneHandWeapon"
+
+func _get_attack_impact_fallback_delay() -> float:
+	var weapon_type := ""
+	if _weapon_snapshot:
+		weapon_type = _weapon_snapshot.weapon_type
+	elif _character_data and _character_data.equipped_weapon:
+		weapon_type = _character_data.equipped_weapon.weapon_type
+
+	match weapon_type:
+		"Bow":
+			return BOW_IMPACT_FALLBACK_DELAY
+		"Tome", "Staff":
+			return MAGIC_IMPACT_FALLBACK_DELAY
+		_:
+			return MELEE_IMPACT_FALLBACK_DELAY
+
+func _schedule_attack_impact_fallback(serial: int, expected_state: String, delay: float) -> void:
+	if delay <= 0.0:
+		return
+	_schedule_attack_impact_fallback_async(serial, expected_state, delay)
+
+func _schedule_attack_impact_fallback_async(serial: int, expected_state: String, delay: float) -> void:
+	await get_tree().create_timer(delay, true).timeout
+	if serial != _attack_serial:
+		return
+	if _impact_emitted_serial == serial:
+		return
+	if _pending_finish_state != expected_state:
+		return
+	emit_impact()
 
 func play_hit() -> void:
 	_set_anim_tree_active(true)

@@ -7,6 +7,7 @@ signal animation_finished_playing
 
 const DEATH_SINK_DISTANCE := 40.0
 const DEATH_SINK_DURATION := 0.4
+const ACTION_TIMEOUT_SECONDS := 1.5
 
 var _character_data: CharacterData
 var _runtime_stats: UnitStats
@@ -109,4 +110,15 @@ func finish_tracked_action() -> void:
 func wait_for_tracked_action() -> void:
 	if not _waiting_for_action_finish:
 		return
-	await animation_finished_playing
+
+	var tree := get_tree()
+	if tree == null:
+		_waiting_for_action_finish = false
+		return
+
+	var timeout_timer := tree.create_timer(ACTION_TIMEOUT_SECONDS)
+	while _waiting_for_action_finish and timeout_timer.time_left > 0.0:
+		await tree.process_frame
+
+	if _waiting_for_action_finish:
+		finish_tracked_action()

@@ -54,6 +54,7 @@ var _warning_rustle_sfx: AudioStream = preload("res://audio/Light steps.wav")
 var pending_plant_pos: Vector2
 var _day_timer_cycle_seconds := 0.0
 var _grow_timer_cycle_seconds := 0.0
+var _player_camera_default_zoom := Vector2(2, 2)
 var _warning_ui_scene: PackedScene = preload("res://scenes/ui/warning_ui.tscn")
 var _intro_state := IntroState.INACTIVE
 var _intro_busy := false
@@ -73,6 +74,8 @@ func _ready() -> void:
 
 	_day_timer_cycle_seconds = $DayTimer.wait_time
 	_grow_timer_cycle_seconds = $GrowTimer.wait_time
+	if player_camera != null:
+		_player_camera_default_zoom = player_camera.zoom
 
 	if story_chest and story_chest.has_signal("opened"):
 		story_chest.opened.connect(_on_story_chest_opened)
@@ -871,7 +874,7 @@ func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zo
 	tween.parallel().tween_property(cutscene_camera, "zoom", zoom, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
 
-func _restore_player_camera(sync_to_cutscene: bool = true) -> void:
+func _restore_player_camera(sync_to_cutscene: bool = false) -> void:
 	if player and player.has_method("clear_cutscene_animation"):
 		player.clear_cutscene_animation()
 	if player_camera:
@@ -882,6 +885,7 @@ func _restore_player_camera(sync_to_cutscene: bool = true) -> void:
 		else:
 			player_camera.position_smoothing_enabled = false
 			player_camera.global_position = player.global_position
+			player_camera.zoom = _player_camera_default_zoom
 		if player_camera.has_method("reset_smoothing"):
 			player_camera.reset_smoothing()
 		player_camera.make_current()

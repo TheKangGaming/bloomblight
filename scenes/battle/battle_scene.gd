@@ -11,6 +11,8 @@ const ORC_HIT_SFX := preload("res://audio/Monster_Grunt6.mp3")
 const ORC_DEATH_SFX := preload("res://audio/Monster_Grunt4.mp3")
 const ORC_THUD_SFX := preload("res://audio/Monster_Thud.mp3")
 const BOW_ATTACK_SFX_DELAY := 0.06
+const STRIKE_IMPACT_TIMEOUT := 1.2
+const DEBUG_COMBAT_LOGS := true
 
 # --- NODE REFERENCES ---
 @onready var battle_world: Node2D = $BattleWorld
@@ -40,6 +42,7 @@ var _defender_is_melee := false
 var _defender_will_counter := false
 var _attacker_has_advanced := false
 var _defender_has_advanced := false
+var _active_shake_tween: Tween
 var _screen_center := Vector2.ZERO
 var _current_focus := Vector2.ZERO
 var _current_zoom := 1.0
@@ -159,37 +162,52 @@ func _execute_battle_sequence() -> void:
 	
 	var attacker_survived = true
 	var defender_survived = true
+	var strike_index := 0
 	
 	# --- 2. THE MOVIE PLAYER ---
 	for strike in _combat_strikes:
+		strike_index += 1
 		
 		var striker: BattleActor = active_attacker if strike.is_attacker_striking else active_defender
 		var target: BattleActor = active_defender if strike.is_attacker_striking else active_attacker
 		var waits_for_reaction := false
+		_debug_combat("Strike %d start: %s -> %s kind=%s hit=%s target_survived=%s" % [
+			strike_index,
+			_actor_name(striker),
+			_actor_name(target),
+			_attack_kind_name(strike.attack_kind),
+			str(strike.is_hit),
+			str(strike.target_survived)
+		])
 
 		await _focus_on_exchange(striker, target, strike.attack_kind)
 		await _prepare_striker_for_strike(strike)
 		
 		# Initiate the attack animation
+		_debug_combat("Strike %d attack animation: %s" % [strike_index, _actor_name(striker)])
 		striker.play_attack()
 		_play_attack_sfx_for_strike(strike)
 		
-		# Wait for the EXACT frame the weapon connects
-		await striker.strike_impact
+		# Wait for the exact frame the weapon connects, but do not let a missing
+		# impact callback stall the entire battle cut-in.
+		await _await_strike_impact(striker, strike_index)
 		
 		# --- DELIVER THE RANGED/MAGIC PAYLOAD ---
 		if strike.attack_kind == CombatStrike.AttackKind.RANGED:
+			_debug_combat("Strike %d projectile start" % strike_index)
 			await _play_projectile(striker, target, strike.is_hit)
 			if strike.is_hit:
 				_play_impact_sfx_for_strike(strike)
 		elif strike.attack_kind == CombatStrike.AttackKind.MAGIC:
 			# ADDED THE 'striker' VARIABLE HERE!
+			_debug_combat("Strike %d magic vfx start" % strike_index)
 			await _play_magic_vfx(striker, target, strike.is_hit)
 		elif strike.is_hit:
 			_play_impact_sfx_for_strike(strike)
 		# ----------------------------------------
 		
 		if strike.is_hit:
+			_debug_combat("Strike %d hit feedback" % strike_index)
 			await _play_hit_feedback(striker, target, strike)
 		
 		# The Reaction
@@ -219,19 +237,26 @@ func _execute_battle_sequence() -> void:
 				target.play_hit() 
 				
 		# Wait for the attacker to finish their swing follow-through
+		_debug_combat("Strike %d waiting for striker finish: %s" % [strike_index, _actor_name(striker)])
 		await striker.wait_for_tracked_action()
+		_debug_combat("Strike %d striker finished: %s" % [strike_index, _actor_name(striker)])
 		if waits_for_reaction:
+			_debug_combat("Strike %d waiting for target reaction: %s" % [strike_index, _actor_name(target)])
 			await target.wait_for_tracked_action()
+			_debug_combat("Strike %d target reaction finished: %s" % [strike_index, _actor_name(target)])
 		
-		# A tiny buffer between strikes so they don't blend together
-		await get_tree().create_timer(0.1).timeout
+		# Keep a little air between multi-hit strikes, but do not add a dead pause
+		# after the final hit before retreating back to the map.
+		if strike_index < _combat_strikes.size():
+			await get_tree().create_timer(0.06).timeout
 
 	# --- 3. THE RETREAT ---
+	_debug_combat("Retreat start: attacker_survived=%s defender_survived=%s" % [str(attacker_survived), str(defender_survived)])
 	await _play_retreat(attacker_survived, defender_survived)
 	await _tween_world_focus(_get_actor_midpoint(), IDLE_ZOOM, 0.16)
 
 	# The script is over! Let the dust settle, then close the overlay.
-	await get_tree().create_timer(0.28).timeout
+	await get_tree().create_timer(0.16).timeout
 	_return_to_map()
 	
 func _determine_combatants_reach() -> void:
@@ -285,6 +310,24 @@ func _play_impact_sfx_for_strike(strike: CombatStrike) -> void:
 
 	_impact_sfx_player.stream = stream
 	_impact_sfx_player.play()
+
+func _await_strike_impact(striker: BattleActor, strike_index: int = -1) -> void:
+	if not is_instance_valid(striker):
+		return
+
+	var impact_received := [false]
+	var on_impact := func() -> void:
+		impact_received[0] = true
+		_debug_combat("Strike %d impact received: %s" % [strike_index, _actor_name(striker)])
+
+	striker.strike_impact.connect(on_impact, CONNECT_ONE_SHOT)
+
+	var timer := get_tree().create_timer(STRIKE_IMPACT_TIMEOUT)
+	while not impact_received[0] and timer.time_left > 0.0:
+		await get_tree().process_frame
+
+	if not impact_received[0]:
+		_debug_combat("Strike %d impact timeout: %s" % [strike_index, _actor_name(striker)])
 
 func _play_orc_hit_sfx(target: BattleActor) -> void:
 	if not _is_orc_actor(target) or _orc_hit_sfx_player == null:
@@ -459,11 +502,35 @@ func _get_attack_range_for_weapon(weapon: WeaponData, stats: UnitStats) -> int:
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map
+	_debug_combat("Return to map")
 	if TransitionManager and TransitionManager.has_method("close_overlay"):
 		TransitionManager.close_overlay(self, 0.2)
 	else:
 		queue_free()
 		get_tree().paused = false
+
+func _debug_combat(message: String) -> void:
+	if DEBUG_COMBAT_LOGS:
+		print("[BattleScene] %s" % message)
+
+func _actor_name(actor: BattleActor) -> String:
+	if actor == null:
+		return "null"
+	var data: CharacterData = actor._character_data
+	if data != null and data is CharacterData and not String(data.display_name).is_empty():
+		return String(data.display_name)
+	return actor.name
+
+func _attack_kind_name(kind: CombatStrike.AttackKind) -> String:
+	match kind:
+		CombatStrike.AttackKind.MELEE:
+			return "MELEE"
+		CombatStrike.AttackKind.RANGED:
+			return "RANGED"
+		CombatStrike.AttackKind.MAGIC:
+			return "MAGIC"
+		_:
+			return "UNKNOWN"
 
 func begin_overlay_exit() -> void:
 	var tween := create_tween().set_parallel(true)
@@ -536,22 +603,34 @@ func _focus_on_exchange(striker: BattleActor, target: BattleActor, attack_kind: 
 	await _tween_world_focus(midpoint, _get_zoom_for_attack_kind(attack_kind), 0.12)
 
 func _play_hit_feedback(striker: BattleActor, target: BattleActor, strike: CombatStrike) -> void:
-	var shake_tween := _play_world_shake(
-		SHAKE_INTENSITY_CRIT if strike.is_crit else SHAKE_INTENSITY_NORMAL,
-		SHAKE_DURATION_CRIT if strike.is_crit else SHAKE_DURATION_NORMAL
-	)
+	_debug_combat("Hit feedback start: %s -> %s" % [_actor_name(striker), _actor_name(target)])
+	var shake_intensity: float = SHAKE_INTENSITY_CRIT if strike.is_crit else SHAKE_INTENSITY_NORMAL
+	var shake_duration: float = SHAKE_DURATION_CRIT if strike.is_crit else SHAKE_DURATION_NORMAL
+	_play_world_shake(shake_intensity, shake_duration)
 
 	striker.process_mode = Node.PROCESS_MODE_DISABLED
 	target.process_mode = Node.PROCESS_MODE_DISABLED
-	await get_tree().create_timer(HIT_STOP_CRIT if strike.is_crit else HIT_STOP_NORMAL).timeout
+	_debug_combat("Hit feedback hit-stop waiting: %s -> %s" % [_actor_name(striker), _actor_name(target)])
+	await get_tree().create_timer(HIT_STOP_CRIT if strike.is_crit else HIT_STOP_NORMAL, true).timeout
+	_debug_combat("Hit feedback hit-stop done: %s -> %s" % [_actor_name(striker), _actor_name(target)])
 	striker.process_mode = Node.PROCESS_MODE_INHERIT
 	target.process_mode = Node.PROCESS_MODE_INHERIT
-	await shake_tween.finished
+	_debug_combat("Hit feedback waiting on shake settle: %s -> %s" % [_actor_name(striker), _actor_name(target)])
+	await get_tree().create_timer(shake_duration + 0.02, true).timeout
+	_apply_world_focus(_current_focus, _current_zoom)
+	if is_instance_valid(_active_shake_tween):
+		_active_shake_tween.kill()
+		_active_shake_tween = null
+	_debug_combat("Hit feedback done: %s -> %s" % [_actor_name(striker), _actor_name(target)])
 
 func _play_world_shake(intensity: float, duration: float) -> Tween:
 	var base_position := _build_world_position(_current_focus, _current_zoom)
 	var step_time := duration / 4.0
+	if is_instance_valid(_active_shake_tween):
+		_active_shake_tween.kill()
+	_apply_world_focus(_current_focus, _current_zoom)
 	var tween := create_tween()
+	_active_shake_tween = tween
 	tween.tween_property(battle_world, "position", base_position + Vector2(intensity, -intensity * 0.25), step_time)
 	tween.tween_property(battle_world, "position", base_position + Vector2(-intensity * 0.7, intensity * 0.2), step_time)
 	tween.tween_property(battle_world, "position", base_position + Vector2(intensity * 0.45, intensity * 0.12), step_time)
