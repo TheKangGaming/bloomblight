@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bq6u6s7aa6ytt" path="res://scenes/level/chest.gd" id="1_4rr8t"]
 [ext_resource type="Texture2D" uid="uid://celpm0bj8yxbt" path="res://graphics/animations/chest-opening - lock 2.png" id="2_4rr8t"]
+[ext_resource type="AudioStream" path="res://audio/Chest Open 1.wav" id="3_f3fq8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4rr8t"]
 size = Vector2(66, 15)
@@ -62,6 +63,11 @@ shape = SubResource("RectangleShape2D_4rr8t")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1369194094]
 libraries/ = SubResource("AnimationLibrary_6d8py")
+
+[node name="OpenSfx" type="AudioStreamPlayer2D" parent="." unique_id=275130001]
+stream = ExtResource("3_f3fq8")
+volume_db = -4.0
+max_distance = 800.0
 
 [node name="InteractArea" type="Area2D" parent="." unique_id=936450539]
 collision_mask = 2

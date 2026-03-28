@@ -421,13 +421,92 @@ func _show_pause_menu() -> void:
 	if pause_menu.has_method("_reset_menu_focus"):
 		pause_menu.call_deferred("_reset_menu_focus")
 
+func _can_undo_active_unit_movement() -> bool:
+	return _active_unit != null and not _active_unit.main_action_used and not _active_unit.bonus_action_used and _prev_cell != null
+
+func _commit_active_unit_position() -> void:
+	if _active_unit == null:
+		return
+
+	_prev_cell = _active_unit.cell
+	_prev_position = _active_unit.position
+
+func _finalize_unit_turn_state(unit: Unit) -> void:
+	if unit == null:
+		return
+
+	unit.tick_cooldowns()
+	unit.tick_timed_combat_effects()
+
+func _handle_post_action_flow(unit: Unit) -> void:
+	if unit == null or not is_instance_valid(unit):
+		return
+
+	if _unit_has_available_main_action(unit) or _unit_has_available_bonus_action(unit):
+		_show_action_menu()
+	else:
+		finish_unit_turn()
+
+func _get_primary_ability(unit: Unit) -> AbilityData:
+	if unit == null or unit.character_data == null or unit.character_data.abilities.is_empty():
+		return null
+	return unit.character_data.abilities[0]
+
+func _ability_uses_bonus_action(ability: AbilityData) -> bool:
+	return ability != null and ability.uses_bonus_action
+
+func _unit_has_attack_target_from_current_cell(unit: Unit) -> bool:
+	if unit == null:
+		return false
+
+	for cell in _get_attack_cells_from_origin(unit.cell, unit.attack_range).keys():
+		if not is_occupied(cell):
+			continue
+		var target: Unit = _units[cell]
+		if target != null and target.is_enemy != unit.is_enemy and target.health > 0:
+			return true
+	return false
+
+func _unit_has_available_main_action(unit: Unit) -> bool:
+	if unit == null or unit.main_action_used:
+		return false
+
+	if _unit_has_attack_target_from_current_cell(unit):
+		return true
+
+	var ability := _get_primary_ability(unit)
+	if ability == null or _ability_uses_bonus_action(ability) or not unit.is_ability_ready(ability):
+		return false
+
+	match ability.type:
+		AbilityData.AbilityType.BLOOM:
+			return true
+		_:
+			return ability.range == 0
+
+func _unit_has_available_bonus_action(unit: Unit) -> bool:
+	if unit == null or unit.bonus_action_used:
+		return false
+
+	var ability := _get_primary_ability(unit)
+	if ability == null or not _ability_uses_bonus_action(ability) or not unit.is_ability_ready(ability):
+		return false
+
+	match ability.type:
+		AbilityData.AbilityType.HARVEST:
+			return unit.health < unit.max_health and _has_adjacent_battle_plant(unit)
+		AbilityData.AbilityType.BUFF:
+			return not unit.has_combat_effect(&"hunt")
+		_:
+			return ability.range == 0
+
 
 func _reset_unit() -> void:
 	if has_node("ActionMenu"):
 		$ActionMenu.queue_free()
 
 	if _active_unit != null:
-		if _active_unit.cell != _prev_cell:
+		if _can_undo_active_unit_movement() and _active_unit.cell != _prev_cell:
 			_active_unit.position = _prev_position
 			_units.erase(_active_unit.cell)
 			_units[_prev_cell] = _active_unit
@@ -471,7 +550,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		return
 
 	if _target_unit_for_forecast != null:
-		var target = _target_unit_for_forecast
+		var target: Unit = _target_unit_for_forecast
 		_target_unit_for_forecast = null
 		_hide_combat_forecast()
 		
@@ -486,7 +565,11 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		_valid_target_cells.clear()
 		
 		if is_instance_valid(_active_unit) and _active_unit.health > 0:
-			finish_unit_turn()
+			_active_unit.consume_main_action()
+			_commit_active_unit_position()
+			if _battle_ended:
+				return
+			_handle_post_action_flow(_active_unit)
 		else:
 			_deselect_active_unit()
 			_cursor.is_active = true
@@ -503,6 +586,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		
 	if _is_targeting_ability:
 		if cell in _valid_target_cells:
+			var ability_uses_bonus := _ability_uses_bonus_action(_selected_ability)
 			var success = execute_ability(_active_unit, _selected_ability, cell)
 			
 			if success:
@@ -511,7 +595,15 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_valid_target_cells.clear()
 				_unit_overlay.clear()
 				_cursor.is_active = false
-				finish_unit_turn() 
+				if is_instance_valid(_active_unit):
+					if ability_uses_bonus:
+						_active_unit.consume_bonus_action()
+					else:
+						_active_unit.consume_main_action()
+					_commit_active_unit_position()
+					if _battle_ended:
+						return
+					_handle_post_action_flow(_active_unit)
 			else:
 				_is_targeting_ability = false
 				_selected_ability = null
@@ -620,6 +712,7 @@ func finish_unit_turn() -> void:
 		_complete_demo_first_action()
 
 	if _active_unit:
+		_finalize_unit_turn_state(_active_unit)
 		var visuals = _active_unit.get_node_or_null("PathFollow2D/Visuals")
 		if visuals:
 			visuals.modulate = Color(0.5, 0.5, 0.5, 1.0) # Grey out
@@ -725,6 +818,7 @@ func start_enemy_phase() -> void:
 		# Skip if the enemy was somehow killed (future-proofing for counter-attacks)
 		if not is_instance_valid(enemy) or enemy.health <= 0:
 			continue
+		enemy.reset_turn_action_state()
 
 		# Recompute players each enemy turn so we don't hold stale references after kills.
 		var players = []
@@ -742,6 +836,8 @@ func start_enemy_phase() -> void:
 		var decision = _pick_enemy_action(enemy, players, legal_destinations)
 
 		if decision["target"] == null:
+			if is_instance_valid(enemy):
+				_finalize_unit_turn_state(enemy)
 			await get_tree().create_timer(0.2).timeout
 			continue
 
@@ -775,6 +871,9 @@ func start_enemy_phase() -> void:
 				if not combat_completed:
 					return
 				
+		if is_instance_valid(enemy):
+			_finalize_unit_turn_state(enemy)
+
 		# Add a slight delay before the next Orc takes its turn
 		await get_tree().create_timer(0.3).timeout
 
@@ -797,7 +896,7 @@ func start_player_phase() -> void:
 		var unit = _units[cell]
 		if not unit.is_enemy: 
 			unit.is_wait = false
-			unit.tick_cooldowns()
+			unit.reset_turn_action_state()
 			var visuals = unit.get_node_or_null("PathFollow2D/Visuals")
 			if visuals:
 				visuals.modulate = Color.WHITE 
@@ -1382,6 +1481,8 @@ func execute_ability(caster: Unit, ability: AbilityData, target_cell: Vector2) -
 			success = _execute_bloom_wave(caster, target_cell, ability.radius)
 		AbilityData.AbilityType.HARVEST:
 			success = _execute_harvest(caster, target_cell)
+		AbilityData.AbilityType.BUFF:
+			success = _execute_buff_ability(caster, ability, target_cell)
 			
 	if success:
 		caster.start_cooldown(ability)
@@ -1503,6 +1604,19 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 		demo_healflower_harvested.emit()
 	return true
 
+func _execute_buff_ability(caster: Unit, ability: AbilityData, target_cell: Vector2) -> bool:
+	if caster == null or ability == null:
+		return false
+
+	if target_cell != caster.cell:
+		_show_overlay_notice("Choose a valid target")
+		return false
+
+	var effect_id := StringName(String(ability.ability_name).to_lower().replace(" ", "_"))
+	caster.apply_timed_combat_effect(effect_id, ability.stat_modifiers, ability.duration_turns)
+	_show_overlay_notice("%s is focused" % caster.name)
+	return true
+
 func _setup_demo_support_nodes() -> void:
 	if DemoDirector == null or not DemoDirector.is_demo_active():
 		_ensure_selection_sfx_player()
@@ -1596,14 +1710,7 @@ func _run_demo_battle_opening() -> void:
 
 	await _focus_battle_camera(_default_camera_focus, 0.4)
 	_crossfade_scene_music_to_manager(1.15)
-	if _cursor_camera != null:
-		_cursor_camera.position_smoothing_enabled = false
-		_cursor_camera.global_position = _battle_camera.global_position
-		if _cursor_camera.has_method("reset_smoothing"):
-			_cursor_camera.reset_smoothing()
-		_cursor_camera.make_current()
-		_cursor_camera.position_smoothing_enabled = true
-		_cursor_camera.position_smoothing_speed = 8.0
+	_handoff_to_cursor_camera(_default_camera_focus)
 
 	await _show_phase_banner("PLAYER PHASE", Color(0.1, 0.4, 0.8))
 	if DemoDirector:
@@ -1671,6 +1778,22 @@ func _focus_battle_camera(target_position: Vector2, duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(_battle_camera, "global_position", target_position, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+func _handoff_to_cursor_camera(target_position: Vector2) -> void:
+	if _cursor == null or _cursor_camera == null or grid == null:
+		return
+
+	var target_cell: Vector2 = grid.grid_clamp(grid.calculate_grid_coordinates(target_position))
+	var snapped_focus: Vector2 = grid.calculate_map_position(target_cell)
+	_cursor.cell = target_cell
+
+	_cursor_camera.position_smoothing_enabled = false
+	_cursor_camera.global_position = snapped_focus
+	if _cursor_camera.has_method("reset_smoothing"):
+		_cursor_camera.reset_smoothing()
+	_cursor_camera.make_current()
+	_cursor_camera.position_smoothing_enabled = true
+	_cursor_camera.position_smoothing_speed = 8.0
 
 func _ensure_demo_story_dialogue() -> Control:
 	if _demo_story_dialogue != null and is_instance_valid(_demo_story_dialogue):

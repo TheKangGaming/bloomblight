@@ -44,12 +44,6 @@ shape = SubResource("RectangleShape2D_15cmg")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Obstacles" index="1" unique_id=1379618547]
 
-[node name="AbandonedStructuresElements2" type="Sprite2D" parent="Obstacles/StaticBody2D" index="0" unique_id=1439176673]
-z_index = 1
-y_sort_enabled = true
-position = Vector2(1537, 544)
-texture = ExtResource("2_e08np")
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Obstacles/StaticBody2D" index="1" unique_id=1773042123]
 position = Vector2(1478, 598)
 shape = SubResource("RectangleShape2D_e08np")
@@ -57,6 +51,11 @@ shape = SubResource("RectangleShape2D_e08np")
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="Obstacles/StaticBody2D" index="2" unique_id=1172499069]
 position = Vector2(1596, 598)
 shape = SubResource("RectangleShape2D_e08np")
+
+[node name="AbandonedStructuresElements2" type="Sprite2D" parent="Overhead" parent_id_path=PackedInt32Array(814651428) index="0" unique_id=1439176673]
+z_index = 1
+position = Vector2(1537, 544)
+texture = ExtResource("2_e08np")
 
 [node name="AbandonedStructuresElements0" type="Sprite2D" parent="Overhead" parent_id_path=PackedInt32Array(814651428) index="0" unique_id=995622414]
 z_index = 2

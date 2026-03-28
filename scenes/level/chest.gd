@@ -11,6 +11,7 @@ signal opened
 @onready var animation_player = $AnimationPlayer
 @onready var loot_popup: PanelContainer = $LootPopup
 @onready var loot_popup_label: Label = $LootPopup/Label
+@onready var open_sfx: AudioStreamPlayer2D = $OpenSfx
 var _loot_popup_start_position := Vector2.ZERO
 
 var is_open := false
@@ -40,6 +41,8 @@ func _unhandled_input(event):
 
 func open_chest():
 	is_open = true
+	if open_sfx != null:
+		open_sfx.play()
 	animation_player.play('open')
 	give_loot()
 	$InteractArea/CollisionShape2D.set_deferred("disabled", true)

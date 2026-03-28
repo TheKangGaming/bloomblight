@@ -11,6 +11,7 @@ signal walk_finished
 signal died(unit)
 
 var ability_cooldowns: Dictionary = {}
+var active_combat_effects: Dictionary = {}
 
 @export var grid: Grid
 
@@ -21,6 +22,8 @@ var ability_cooldowns: Dictionary = {}
 
 @export var is_player: bool = false
 @export var is_wait := false
+var main_action_used := false
+var bonus_action_used := false
 
 var move_range: int:
 	get:
@@ -70,6 +73,7 @@ var _is_walking := false:
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
 @onready var _visual_anim_player: AnimationPlayer = get_node_or_null("PathFollow2D/Visuals/AnimationPlayer")
+var _status_indicator: Label = null
 
 var health: int:
 	get:
@@ -129,6 +133,7 @@ func _ready() -> void:
 		return
 
 	_setup_hp_bar()
+	_setup_status_indicator()
 	_path_follow.rotates = false
 
 	cell = grid.calculate_grid_coordinates(position)
@@ -208,6 +213,7 @@ func walk_along(path: PackedVector2Array) -> void:
 
 func _initialize_unit_data() -> void:
 	current_stats.apply_class_progression(character_data)
+	current_stats.apply_delta(_build_runtime_equipment_delta())
 	if not is_player and character_data != null and level > 1:
 		current_stats.apply_auto_levels(level - 1)
 
@@ -249,9 +255,8 @@ func get_combat_stats(target: Unit) -> Dictionary:
 		weapon_might = int(equipped_weapon.might)
 		weapon_hit = int(equipped_weapon.hit_rate)
 
-	var attacker_dex_bonus := _get_equipment_bonus_stat("dexterity", equipped_weapon)
-	var hit_chance = clamp(weapon_hit + ((dexterity + attacker_dex_bonus) * 2) - (target.speed * 2), 0, 100)
-	var crit_chance = clamp(dexterity - int(target.speed / 2.0), 0, 100)
+	var hit_chance = clamp(weapon_hit + (dexterity * 2) - (target.speed * 2) + get_combat_modifier("hit"), 0, 100)
+	var crit_chance = clamp(dexterity - int(target.speed / 2.0) + get_combat_modifier("crit"), 0, 100)
 	var is_magic_damage := _uses_magic_damage()
 	var damage_profile := _resolve_damage_stat_profile(is_magic_damage, equipped_weapon)
 	var attack_stat := int(damage_profile.get("attack_stat", 0))
@@ -291,7 +296,7 @@ func get_attack_preview_data(weapon: WeaponData = null) -> Dictionary:
 
 func _resolve_damage_stat_profile(is_magic_damage: bool, weapon_override: WeaponData = null) -> Dictionary:
 	if is_magic_damage:
-		var int_total := int_stat + _get_equipment_bonus_stat("intelligence", weapon_override)
+		var int_total := int_stat
 		return {
 			"attack_stat": int_total,
 			"stat_label": "INT",
@@ -302,8 +307,8 @@ func _resolve_damage_stat_profile(is_magic_damage: bool, weapon_override: Weapon
 	var primary_stat := String(class_data.primary_damage_stat).to_lower() if class_data != null else "strength"
 	var secondary_stat := String(class_data.secondary_stat).to_lower() if class_data != null else ""
 
-	var strength_total := strength + _get_equipment_bonus_stat("strength", weapon_override)
-	var dexterity_total := dexterity + _get_equipment_bonus_stat("dexterity", weapon_override)
+	var strength_total := strength
+	var dexterity_total := dexterity
 
 	if (primary_stat == "strength" or primary_stat == "str") and (secondary_stat == "dexterity" or secondary_stat == "dex"):
 		var weighted_attack := int(floor((strength_total * ARCHER_DAMAGE_STR_WEIGHT) + (dexterity_total * ARCHER_DAMAGE_DEX_WEIGHT)))
@@ -320,21 +325,6 @@ func _resolve_damage_stat_profile(is_magic_damage: bool, weapon_override: Weapon
 		"stat_label": "STR",
 		"formula_text": "STR"
 	}
-
-
-func _get_equipment_bonus_stat(key: String, weapon_override: WeaponData = null) -> int:
-	if character_data == null:
-		return 0
-
-	var total := 0
-	var weapon_item: Resource = weapon_override
-	if weapon_item == null:
-		weapon_item = character_data.equipped_weapon
-	total += _get_stat_bonus_from_item(weapon_item, key)
-	total += _get_stat_bonus_from_item(character_data.equipped_armor, key)
-	total += _get_stat_bonus_from_item(character_data.equipped_accessory, key)
-	return total
-
 
 func _get_stat_bonus_from_item(item: Resource, key: String) -> int:
 	if item == null:
@@ -359,6 +349,110 @@ func _uses_magic_damage() -> bool:
 		return false
 
 	return String(class_info.role).to_lower().contains("mage")
+
+func _build_runtime_equipment_delta() -> Dictionary:
+	var delta := {
+		"HP": 0,
+		"MAX_HP": 0,
+		"STR": 0,
+		"DEF": 0,
+		"MDEF": 0,
+		"DEX": 0,
+		"INT": 0,
+		"SPD": 0,
+		"MOV": 0,
+	}
+	if character_data == null:
+		return delta
+
+	for item in [character_data.equipped_weapon, character_data.equipped_armor, character_data.equipped_accessory]:
+		_accumulate_runtime_item_bonus(delta, item)
+
+	return delta
+
+func _accumulate_runtime_item_bonus(delta: Dictionary, item: Resource) -> void:
+	if item == null:
+		return
+
+	var stat_bonuses = item.get("stat_bonuses")
+	if not (stat_bonuses is Dictionary):
+		return
+
+	var key_map := {
+		"max_health": "MAX_HP",
+		"strength": "STR",
+		"defense": "DEF",
+		"magic_defense": "MDEF",
+		"dexterity": "DEX",
+		"intelligence": "INT",
+		"speed": "SPD",
+		"move_range": "MOV",
+	}
+
+	for source_key in key_map.keys():
+		var target_key := String(key_map[source_key])
+		var value := int(stat_bonuses.get(source_key, 0))
+		if value == 0:
+			continue
+		delta[target_key] = int(delta.get(target_key, 0)) + value
+		if target_key == "MAX_HP":
+			delta["HP"] = int(delta.get("HP", 0)) + value
+
+func get_combat_modifier(stat_name: String) -> int:
+	var total := 0
+	for effect_state in active_combat_effects.values():
+		if not (effect_state is Dictionary):
+			continue
+		var modifiers: Dictionary = effect_state.get("modifiers", {})
+		total += int(modifiers.get(stat_name, 0))
+	return total
+
+func apply_timed_combat_effect(effect_id: StringName, modifiers: Dictionary, turns: int) -> void:
+	if effect_id.is_empty() or turns <= 0:
+		return
+
+	active_combat_effects[effect_id] = {
+		"turns_remaining": turns,
+		"modifiers": modifiers.duplicate(true),
+	}
+	_update_status_indicator()
+
+func has_combat_effect(effect_id: StringName) -> bool:
+	return active_combat_effects.has(effect_id)
+
+func get_combat_effect_turns(effect_id: StringName) -> int:
+	if not has_combat_effect(effect_id):
+		return 0
+	var effect_state: Dictionary = active_combat_effects.get(effect_id, {})
+	return int(effect_state.get("turns_remaining", 0))
+
+func tick_timed_combat_effects() -> void:
+	var effect_ids := active_combat_effects.keys()
+	for effect_id in effect_ids:
+		var effect_state: Dictionary = active_combat_effects.get(effect_id, {})
+		var turns_remaining := int(effect_state.get("turns_remaining", 0)) - 1
+		if turns_remaining <= 0:
+			active_combat_effects.erase(effect_id)
+		else:
+			effect_state["turns_remaining"] = turns_remaining
+			active_combat_effects[effect_id] = effect_state
+	_update_status_indicator()
+
+func reset_turn_action_state() -> void:
+	main_action_used = false
+	bonus_action_used = false
+
+func consume_main_action() -> void:
+	main_action_used = true
+
+func consume_bonus_action() -> void:
+	bonus_action_used = true
+
+func has_remaining_main_action() -> bool:
+	return not main_action_used
+
+func has_remaining_bonus_action() -> bool:
+	return not bonus_action_used
 
 
 func attack(target: Unit) -> void:
@@ -574,6 +668,36 @@ func _setup_hp_bar() -> void:
 	# Set the initial color
 	_update_hp_bar(true)
 
+func _setup_status_indicator() -> void:
+	_status_indicator = Label.new()
+	_status_indicator.visible = false
+	_status_indicator.text = "H"
+	_status_indicator.position = Vector2(-5, -64)
+	_status_indicator.z_index = 55
+	_status_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status_indicator.add_theme_font_size_override("font_size", 18)
+	_status_indicator.add_theme_color_override("font_color", Color(0.96, 0.88, 0.35))
+	_status_indicator.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.12))
+	_status_indicator.add_theme_constant_override("outline_size", 3)
+
+	var visuals_node = get_node_or_null("PathFollow2D/Visuals")
+	if visuals_node:
+		visuals_node.add_child(_status_indicator)
+	else:
+		add_child(_status_indicator)
+
+	_update_status_indicator()
+
+func _update_status_indicator() -> void:
+	if not is_instance_valid(_status_indicator):
+		return
+
+	var hunt_active := has_combat_effect(&"hunt")
+	_status_indicator.visible = hunt_active
+	if hunt_active:
+		var turns_remaining := maxi(get_combat_effect_turns(&"hunt"), 1)
+		_status_indicator.text = "H%d" % turns_remaining
+
 
 ## Animates the health dropping and handles the "Blight" color change
 func _update_hp_bar(instant: bool = false) -> void:
@@ -622,7 +746,9 @@ func is_ability_ready(ability: AbilityData) -> bool:
 ## Puts an ability on cooldown after use
 func start_cooldown(ability: AbilityData) -> void:
 	if ability.cooldown_turns > 0:
-		ability_cooldowns[ability] = ability.cooldown_turns
+		# Cooldowns tick at end of the acting unit's turn, so add one here to
+		# preserve the advertised "next N turns" lockout.
+		ability_cooldowns[ability] = ability.cooldown_turns + 1
 
 ## Ticks down cooldowns. Call this at the start of the unit's turn!
 func tick_cooldowns() -> void:

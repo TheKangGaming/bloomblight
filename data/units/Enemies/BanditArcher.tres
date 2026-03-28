@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="1_char"]
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://data/units/Archer.tres" id="2_class"]
 [ext_resource type="PackedScene" path="res://scenes/battle/bandit_archer_battle_actor.tscn" id="3_actor"]
-[ext_resource type="Resource" uid="uid://bt8r218v5t4mw" path="res://data/items/Weapons/TrainingBow.tres" id="4_weapon"]
+[ext_resource type="Resource" path="res://data/items/Weapons/BanditBow.tres" id="4_weapon"]
 
 [resource]
 script = ExtResource("1_char")

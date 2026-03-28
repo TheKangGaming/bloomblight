@@ -433,12 +433,8 @@ func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, 
 	else:
 		var attack_stat_name := "INT" if uses_magic_damage else "STR"
 		var attack_stat_total := int(permanent_stats.get(attack_stat_name, 0)) + int(temporary_modifiers.get(attack_stat_name, 0))
-		var weapon_bonus_key := "intelligence" if uses_magic_damage else "strength"
-		var weapon_bonus := int(weapon.stat_bonuses.get(weapon_bonus_key, 0)) if weapon != null else 0
-		attack_total = maxi(0, attack_stat_total + weapon_bonus + weapon_might)
+		attack_total = maxi(0, attack_stat_total + weapon_might)
 		stat_component_label = "%s %d" % [attack_stat_name, attack_stat_total]
-		if weapon_bonus != 0:
-			stat_component_label += " (%+d)" % weapon_bonus
 
 	var preview_text := "ATK: %d\n[color=gray]%s + MT %d[/color]" % [attack_total, stat_component_label, weapon_might]
 	if not formula_text.is_empty() and formula_text != "INT" and formula_text != "STR":

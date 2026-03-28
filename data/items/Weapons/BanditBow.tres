@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Texture2D" uid="uid://b3yvxp0g1pnn8" path="res://graphics/weapons/w22.png" id="1_icon"]
+[ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/types/weapon_data.gd" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+weapon_type = "Bow"
+weapon_name = "Bandit Bow"
+description = "A rough bow with shaky aim but enough punch to threaten the unwary."
+icon = ExtResource("1_icon")
+might = 2
+hit_rate = 88
+attack_range = 2
+stat_bonuses = {
+"dexterity": 0,
+"speed": 0
+}

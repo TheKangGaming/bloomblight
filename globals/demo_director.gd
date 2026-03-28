@@ -189,7 +189,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Move with {move}. Hold {run} to run, and press {confirm} near objects to interact."
 		"farm_farming":
 			title = "Tutorial: Farming"
-			template = "Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}, and plant seeds with {plant}."
+			template = "Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}.\n\nTo plant, face a tilled soil tile and press {plant} to open the seed menu, then choose a seed."
 		"meal_buff":
 			title = "Tutorial: Meal Buffs"
 			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nOpen the Status tab to review the meal buff, then close the menu when you're ready to continue."
@@ -501,9 +501,9 @@ func _format_input_event(event: InputEvent) -> String:
 			JOY_BUTTON_Y:
 				return "Y"
 			JOY_BUTTON_LEFT_SHOULDER:
-				return "L1"
+				return "LB"
 			JOY_BUTTON_RIGHT_SHOULDER:
-				return "R1"
+				return "RB"
 			JOY_BUTTON_DPAD_UP:
 				return "D-Pad Up"
 			JOY_BUTTON_DPAD_DOWN:
@@ -545,7 +545,7 @@ func _controller_fallback_label(action_name: StringName) -> String:
 		&"cancel", &"ui_cancel":
 			return "B"
 		&"menu_toggle":
-			return "L1"
+			return "Back"
 		&"run":
 			return "L2"
 		&"action":
@@ -553,9 +553,9 @@ func _controller_fallback_label(action_name: StringName) -> String:
 		&"plant":
 			return "A"
 		&"tool_forward":
-			return "Mouse Wheel Up"
+			return "RB"
 		&"tool_backward":
-			return "Mouse Wheel Down"
+			return "LB"
 		&"time_skip":
 			return "X"
 		_:
