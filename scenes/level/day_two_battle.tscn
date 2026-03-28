@@ -682,33 +682,33 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-position = Vector2(1200, 944)
+position = Vector2(1296, 336)
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
-position = Vector2(1026, 831)
+position = Vector2(1040, 816)
 character_data = ExtResource("18_0a6tx")
 current_stats = SubResource("Resource_2jsv4")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
-position = Vector2(1058, 767)
+position = Vector2(1072, 752)
 character_data = ExtResource("18_hejk3")
 current_stats = SubResource("Resource_uh0gq")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
-position = Vector2(1058, 831)
+position = Vector2(1072, 816)
 character_data = ExtResource("20_t05iy")
 current_stats = SubResource("Resource_c7q0v")
 
 [node name="BanditWarrior" parent="GameBoard" unique_id=200120114 instance=ExtResource("23_hejk3")]
-position = Vector2(1026, 1151)
+position = Vector2(1040, 1136)
 current_stats = SubResource("Resource_m0spk")
 
 [node name="BanditMarauder" parent="GameBoard" unique_id=1019864192 instance=ExtResource("22_efnms")]
-position = Vector2(1058, 1087)
+position = Vector2(1072, 1072)
 current_stats = SubResource("Resource_yyfnn")
 
 [node name="BanditArcher" parent="GameBoard" unique_id=1878164639 instance=ExtResource("23_x18w8")]
-position = Vector2(1058, 1151)
+position = Vector2(1072, 1136)
 current_stats = SubResource("Resource_wqequ")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]

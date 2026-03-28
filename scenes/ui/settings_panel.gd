@@ -70,7 +70,7 @@ func _build_ui() -> void:
 	_title_label = Label.new()
 	_title_label.text = "Settings"
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override("font_size", 34)
+	_title_label.add_theme_font_size_override("font_size", 36)
 	root.add_child(_title_label)
 
 	var scroll := ScrollContainer.new()
@@ -108,7 +108,7 @@ func _build_ui() -> void:
 
 	_preview_label = Label.new()
 	_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_preview_label.add_theme_font_size_override("font_size", 22)
+	_preview_label.add_theme_font_size_override("font_size", 24)
 	preview_content.add_child(_preview_label)
 
 	var preview_actions := HBoxContainer.new()
@@ -119,14 +119,14 @@ func _build_ui() -> void:
 	_confirm_button = Button.new()
 	_confirm_button.text = "Keep Changes"
 	_confirm_button.custom_minimum_size = Vector2(220, 54)
-	_confirm_button.add_theme_font_size_override("font_size", 24)
+	_confirm_button.add_theme_font_size_override("font_size", 26)
 	_confirm_button.pressed.connect(_on_confirm_preview_pressed)
 	preview_actions.add_child(_confirm_button)
 
 	_revert_button = Button.new()
 	_revert_button.text = "Revert"
 	_revert_button.custom_minimum_size = Vector2(180, 54)
-	_revert_button.add_theme_font_size_override("font_size", 24)
+	_revert_button.add_theme_font_size_override("font_size", 26)
 	_revert_button.pressed.connect(_on_revert_preview_pressed)
 	preview_actions.add_child(_revert_button)
 
@@ -154,14 +154,14 @@ func _build_ui() -> void:
 	_restore_button = Button.new()
 	_restore_button.text = "Restore Defaults"
 	_restore_button.custom_minimum_size = Vector2(220, 58)
-	_restore_button.add_theme_font_size_override("font_size", 24)
+	_restore_button.add_theme_font_size_override("font_size", 26)
 	_restore_button.pressed.connect(_on_restore_defaults_pressed)
 	actions.add_child(_restore_button)
 
 	_close_button = Button.new()
 	_close_button.text = "Close"
 	_close_button.custom_minimum_size = Vector2(160, 58)
-	_close_button.add_theme_font_size_override("font_size", 24)
+	_close_button.add_theme_font_size_override("font_size", 26)
 	_close_button.pressed.connect(_on_close_pressed)
 	actions.add_child(_close_button)
 
@@ -170,7 +170,7 @@ func _build_ui() -> void:
 func _build_section_title(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 28)
+	label.add_theme_font_size_override("font_size", 30)
 	return label
 
 func _create_option_row(parent: VBoxContainer, label_text: String, entries: Array, callback: Callable) -> OptionButton:
@@ -182,12 +182,12 @@ func _create_option_row(parent: VBoxContainer, label_text: String, entries: Arra
 	var label := Label.new()
 	label.text = label_text
 	label.custom_minimum_size = Vector2(260, 0)
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", 24)
 	row.add_child(label)
 
 	var option := OptionButton.new()
 	option.custom_minimum_size = Vector2(320, 48)
-	option.add_theme_font_size_override("font_size", 22)
+	option.add_theme_font_size_override("font_size", 24)
 	for entry in entries:
 		option.add_item(String(entry[0]), int(entry[1]))
 	option.item_selected.connect(callback)
@@ -203,12 +203,12 @@ func _create_toggle_row(parent: VBoxContainer, label_text: String, callback: Cal
 	var label := Label.new()
 	label.text = label_text
 	label.custom_minimum_size = Vector2(260, 0)
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", 24)
 	row.add_child(label)
 
 	var toggle := CheckButton.new()
 	toggle.custom_minimum_size = Vector2(260, 48)
-	toggle.add_theme_font_size_override("font_size", 22)
+	toggle.add_theme_font_size_override("font_size", 24)
 	toggle.toggled.connect(callback)
 	row.add_child(toggle)
 	return toggle
@@ -222,7 +222,7 @@ func _create_slider_row(parent: VBoxContainer, label_text: String, callback: Cal
 	var label := Label.new()
 	label.text = label_text
 	label.custom_minimum_size = Vector2(260, 0)
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", 24)
 	row.add_child(label)
 
 	var slider := HSlider.new()
@@ -238,7 +238,7 @@ func _create_slider_row(parent: VBoxContainer, label_text: String, callback: Cal
 	value_label.name = "ValueLabel"
 	value_label.custom_minimum_size = Vector2(74, 0)
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value_label.add_theme_font_size_override("font_size", 22)
+	value_label.add_theme_font_size_override("font_size", 24)
 	row.add_child(value_label)
 
 	return slider

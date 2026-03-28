@@ -82,7 +82,7 @@ func _setup_quest_ui() -> void:
 	quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	quest_label.add_theme_font_override("font", QUEST_FONT)
-	quest_label.add_theme_font_size_override("font_size", 24)
+	quest_label.add_theme_font_size_override("font_size", 26)
 	quest_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
 	quest_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	quest_label.add_theme_constant_override("outline_size", 3)
@@ -133,7 +133,7 @@ func _setup_notice_ui() -> void:
 	notice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	notice_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	notice_label.add_theme_font_override("font", QUEST_FONT)
-	notice_label.add_theme_font_size_override("font_size", 20)
+	notice_label.add_theme_font_size_override("font_size", 22)
 	notice_label.add_theme_color_override("font_color", Color(0.92, 0.96, 1.0))
 	notice_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	notice_label.add_theme_constant_override("outline_size", 2)
@@ -184,7 +184,7 @@ func _setup_targeting_hint_ui() -> void:
 	targeting_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	targeting_hint_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	targeting_hint_label.add_theme_font_override("font", QUEST_FONT)
-	targeting_hint_label.add_theme_font_size_override("font_size", 18)
+	targeting_hint_label.add_theme_font_size_override("font_size", 20)
 	targeting_hint_label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98))
 	targeting_hint_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	targeting_hint_label.add_theme_constant_override("outline_size", 2)

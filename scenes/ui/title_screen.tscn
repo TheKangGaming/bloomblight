@@ -37,7 +37,7 @@ color = Color(0.24699152, 0.07583184, 0.51259595, 0.54901963)
 [sub_resource type="LabelSettings" id="LabelSettings_r23qo"]
 font = ExtResource("4_a4ium")
 font_size = 96
-outline_size = 1
+outline_size = 2
 outline_color = Color(0.52906674, 0.5290667, 0.5290667, 1)
 shadow_color = Color(0, 0, 0, 0.753)
 shadow_offset = Vector2(4, 4)
@@ -135,7 +135,7 @@ size_flags_horizontal = 4
 [node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=475952342]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 34
 theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
 theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
@@ -145,7 +145,7 @@ text = "Start Game"
 [node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=117905331]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 34
 theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
 theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
@@ -155,7 +155,7 @@ text = "Settings"
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=1634308205]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 34
 theme_override_styles/normal = SubResource("StyleBoxEmpty_aqu7r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_jsbfx")
 theme_override_styles/focus = SubResource("StyleBoxFlat_a4ium")
