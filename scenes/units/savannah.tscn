@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bthnr54dgwlh2"]
 
-[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_tivjm"]
-[ext_resource type="PackedScene" path="res://Units/savannah_visuals.tscn" id="2_y51ys"]
+[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://scenes/units/Unit.tscn" id="1_tivjm"]
+[ext_resource type="PackedScene" path="res://scenes/units/savannah_visuals.tscn" id="2_y51ys"]
 
 [node name="Savannah" unique_id=376372171 instance=ExtResource("1_tivjm")]
 is_player = true

@@ -1,43 +1,42 @@
-[gd_scene format=3 uid="uid://u3ifj6tmlnsf"]
+[gd_scene format=3 uid="uid://buisa38kpjxjn"]
 
-[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_unit"]
+[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://scenes/units/Unit.tscn" id="1_unit"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/types/unit_stats.gd" id="2_stats"]
-[ext_resource type="Texture2D" uid="uid://3s2u15x0yari" path="res://graphics/enemies/bandits/Marauder-Sheet.png" id="3_tex"]
-[ext_resource type="Resource" path="res://data/units/Enemies/BanditMarauder.tres" id="4_data"]
+[ext_resource type="Texture2D" uid="uid://c6ev8vi32wkj5" path="res://graphics/enemies/bandits/Archer-Sheet.png" id="3_tex"]
+[ext_resource type="Resource" path="res://data/units/Enemies/BanditArcher.tres" id="4_data"]
 
-[sub_resource type="Resource" id="Resource_obcrt"]
+[sub_resource type="Resource" id="Resource_4txuq"]
 script = ExtResource("2_stats")
-hp = 23
-max_hp = 23
-str = 7
-physical_def = 6
+hp = 18
+max_hp = 18
+physical_def = 3
 magic_def = 3
-dex = 5
-int_stat = 1
-spd = 3
-mov = 4
-atk_rng = 1
+dex = 8
+int_stat = 2
+spd = 7
+mov = 5
+atk_rng = 2
 growth_rates = {
 "ATK_RNG": 0,
-"DEF": 55,
-"DEX": 35,
-"HP": 75,
-"INT": 5,
+"DEF": 20,
+"DEX": 70,
+"HP": 50,
+"INT": 10,
 "MDEF": 20,
 "MOV": 0,
-"SPD": 25,
-"STR": 55
+"SPD": 55,
+"STR": 40
 }
 stat_caps = {
-"ATK_RNG": 1,
-"DEF": 30,
-"DEX": 20,
-"INT": 10,
-"MAX_HP": 80,
+"ATK_RNG": 2,
+"DEF": 18,
+"DEX": 30,
+"INT": 15,
+"MAX_HP": 50,
 "MDEF": 18,
-"MOV": 4,
-"SPD": 15,
-"STR": 20
+"MOV": 5,
+"SPD": 28,
+"STR": 22
 }
 minimum_gain_intervals = {
 "ATK_RNG": 0,
@@ -51,7 +50,7 @@ minimum_gain_intervals = {
 "STR": 0
 }
 
-[sub_resource type="Animation" id="Animation_marauder_idle"]
+[sub_resource type="Animation" id="Animation_archer_idle"]
 resource_name = "idle"
 length = 0.48
 loop_mode = 1
@@ -68,7 +67,7 @@ tracks/0/keys = {
 "values": [0, 1, 2, 3, 4, 5]
 }
 
-[sub_resource type="Animation" id="Animation_marauder_run"]
+[sub_resource type="Animation" id="Animation_archer_run"]
 resource_name = "run"
 length = 0.56
 loop_mode = 1
@@ -85,7 +84,7 @@ tracks/0/keys = {
 "values": [22, 23, 24, 25, 26, 27, 28, 29]
 }
 
-[sub_resource type="Animation" id="Animation_marauder_run_start"]
+[sub_resource type="Animation" id="Animation_archer_run_start"]
 resource_name = "run_start"
 length = 0.16
 tracks/0/type = "value"
@@ -101,29 +100,32 @@ tracks/0/keys = {
 "values": [22, 23, 24]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_marauder"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_archer"]
 _data = {
-&"idle": SubResource("Animation_marauder_idle"),
-&"run": SubResource("Animation_marauder_run"),
-&"run_start": SubResource("Animation_marauder_run_start")
+&"idle": SubResource("Animation_archer_idle"),
+&"run": SubResource("Animation_archer_run"),
+&"run_start": SubResource("Animation_archer_run_start")
 }
 
-[node name="Unit" unique_id=215376989 instance=ExtResource("1_unit")]
+[node name="Unit" unique_id=1751998500 instance=ExtResource("1_unit")]
 position = Vector2(16, 16)
 is_enemy = true
 character_data = ExtResource("4_data")
-current_stats = SubResource("Resource_obcrt")
+current_stats = SubResource("Resource_4txuq")
 
-[node name="Visuals" type="Node2D" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1" unique_id=1759349651]
+[node name="Visuals" type="Node2D" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1" unique_id=1729964293]
 
-[node name="Sprite2D" type="Sprite2D" parent="PathFollow2D/Visuals" index="0" unique_id=2033738199]
+[node name="Sprite2D" type="Sprite2D" parent="PathFollow2D/Visuals" index="0" unique_id=1288592026]
 position = Vector2(0, -23)
 scale = Vector2(1.4, 1.4)
 texture = ExtResource("3_tex")
 hframes = 11
-vframes = 7
+vframes = 8
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="PathFollow2D/Visuals" index="1" unique_id=1662475403]
-libraries/ = SubResource("AnimationLibrary_marauder")
+[node name="AnimationPlayer" type="AnimationPlayer" parent="PathFollow2D/Visuals" index="1" unique_id=644674393]
+libraries/ = SubResource("AnimationLibrary_archer")
 autoplay = &"idle"
+speed_scale = 0.7
+
+[node name="AnimationPlayer" parent="." index="1" unique_id=997710894]
 speed_scale = 0.7

@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://d4mhjq651egt"]
 
-[ext_resource type="Script" uid="uid://caq6yi0c1ssjd" path="res://Units/Unit.gd" id="1"]
+[ext_resource type="Script" uid="uid://caq6yi0c1ssjd" path="res://scenes/units/Unit.gd" id="1"]
 [ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://scenes/battle/game_board/Grid.tres" id="2"]
-[ext_resource type="Texture2D" uid="uid://b5ghlcxjxmmgw" path="res://Units/unit_shadow.svg" id="3"]
+[ext_resource type="Texture2D" uid="uid://b5ghlcxjxmmgw" path="res://scenes/units/unit_shadow.svg" id="3"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/types/unit_stats.gd" id="4"]
 
 [sub_resource type="Resource" id="Resource_d1yal"]

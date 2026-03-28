@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://co6ufvcyoii8r"]
 
-[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/units/character_data.gd" id="1_char"]
+[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="1_char"]
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/types/ability_data.gd" id="1_otwqs"]
 [ext_resource type="Resource" uid="uid://6scyjp1ob4jm" path="res://data/units/Tank.tres" id="2_class"]
 [ext_resource type="PackedScene" path="res://scenes/battle/bandit_marauder_battle_actor.tscn" id="3_actor"]

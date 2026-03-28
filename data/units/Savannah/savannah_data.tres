@@ -7,7 +7,7 @@
 [ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://data/items/Accessories/TravelerCharm.tres" id="4_ssbpe"]
 [ext_resource type="Resource" path="res://data/items/Armor/ScoutBrigandine.tres" id="5_alody"]
 [ext_resource type="Resource" uid="uid://cwbgxc8qsdcpv" path="res://data/items/Weapons/IronShortsword.tres" id="6_mqwgg"]
-[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/units/character_data.gd" id="7_tthfp"]
+[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="7_tthfp"]
 
 [resource]
 script = ExtResource("7_tthfp")

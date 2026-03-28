@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cjkgbivtnlgno"]
 
-[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_4b2u4"]
+[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://scenes/units/Unit.tscn" id="1_4b2u4"]
 [ext_resource type="Texture2D" uid="uid://d1207snsbh1hs" path="res://graphics/enemies/orc/orc melee - all animations with fx.png" id="2_j6h8o"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/types/unit_stats.gd" id="3"]
 

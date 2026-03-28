@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bxc8jd65qx0h"]
 
-[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="1_qv3cy"]
+[ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://scenes/units/Unit.tscn" id="1_qv3cy"]
 [ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/types/unit_stats.gd" id="2_esm45"]
-[ext_resource type="PackedScene" uid="uid://diq7ffmi73i73" path="res://Units/tera_visuals.tscn" id="2_h8dc8"]
+[ext_resource type="PackedScene" uid="uid://diq7ffmi73i73" path="res://scenes/units/tera_visuals.tscn" id="2_h8dc8"]
 
 [sub_resource type="Resource" id="Resource_esm45"]
 script = ExtResource("2_esm45")

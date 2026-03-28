@@ -5,7 +5,7 @@
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://data/units/Archer.tres" id="2_ver7o"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://data/items/Armor/LeatherVest.tres" id="3_5b2ij"]
 [ext_resource type="Resource" uid="uid://bt8r218v5t4mw" path="res://data/items/Weapons/TrainingBow.tres" id="4_qsq73"]
-[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/units/character_data.gd" id="5_a8dig"]
+[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="5_a8dig"]
 
 [resource]
 script = ExtResource("5_a8dig")
