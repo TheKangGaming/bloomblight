@@ -270,26 +270,31 @@ func _ensure_sfx_players() -> void:
 	if _attack_sfx_player == null:
 		_attack_sfx_player = AudioStreamPlayer.new()
 		_attack_sfx_player.name = "AttackSfxPlayer"
+		_attack_sfx_player.bus = "SFX"
 		add_child(_attack_sfx_player)
 
 	if _impact_sfx_player == null:
 		_impact_sfx_player = AudioStreamPlayer.new()
 		_impact_sfx_player.name = "ImpactSfxPlayer"
+		_impact_sfx_player.bus = "SFX"
 		add_child(_impact_sfx_player)
 
 	if _orc_hit_sfx_player == null:
 		_orc_hit_sfx_player = AudioStreamPlayer.new()
 		_orc_hit_sfx_player.name = "OrcHitSfxPlayer"
+		_orc_hit_sfx_player.bus = "SFX"
 		add_child(_orc_hit_sfx_player)
 
 	if _orc_death_sfx_player == null:
 		_orc_death_sfx_player = AudioStreamPlayer.new()
 		_orc_death_sfx_player.name = "OrcDeathSfxPlayer"
+		_orc_death_sfx_player.bus = "SFX"
 		add_child(_orc_death_sfx_player)
 
 	if _orc_thud_sfx_player == null:
 		_orc_thud_sfx_player = AudioStreamPlayer.new()
 		_orc_thud_sfx_player.name = "OrcThudSfxPlayer"
+		_orc_thud_sfx_player.bus = "SFX"
 		add_child(_orc_thud_sfx_player)
 
 func _play_attack_sfx_for_strike(strike: CombatStrike) -> void:
@@ -604,9 +609,13 @@ func _focus_on_exchange(striker: BattleActor, target: BattleActor, attack_kind: 
 
 func _play_hit_feedback(striker: BattleActor, target: BattleActor, strike: CombatStrike) -> void:
 	_debug_combat("Hit feedback start: %s -> %s" % [_actor_name(striker), _actor_name(target)])
+	var screen_shake_enabled := SettingsManager == null or SettingsManager.is_screen_shake_enabled()
 	var shake_intensity: float = SHAKE_INTENSITY_CRIT if strike.is_crit else SHAKE_INTENSITY_NORMAL
 	var shake_duration: float = SHAKE_DURATION_CRIT if strike.is_crit else SHAKE_DURATION_NORMAL
-	_play_world_shake(shake_intensity, shake_duration)
+	if screen_shake_enabled:
+		_play_world_shake(shake_intensity, shake_duration)
+	else:
+		shake_duration = 0.0
 
 	striker.process_mode = Node.PROCESS_MODE_DISABLED
 	target.process_mode = Node.PROCESS_MODE_DISABLED
@@ -624,6 +633,9 @@ func _play_hit_feedback(striker: BattleActor, target: BattleActor, strike: Comba
 	_debug_combat("Hit feedback done: %s -> %s" % [_actor_name(striker), _actor_name(target)])
 
 func _play_world_shake(intensity: float, duration: float) -> Tween:
+	if SettingsManager != null and not SettingsManager.is_screen_shake_enabled():
+		return null
+
 	var base_position := _build_world_position(_current_focus, _current_zoom)
 	var step_time := duration / 4.0
 	if is_instance_valid(_active_shake_tween):

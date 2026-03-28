@@ -56,24 +56,29 @@ position_smoothing_speed = 10.0
 
 [node name="HoeSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=487777762]
 stream = ExtResource("3_gmlin")
+bus = &"SFX"
 max_distance = 5000.0
 
 [node name="AxeSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=221913532]
 stream = ExtResource("4_lvxji")
+bus = &"SFX"
 volume_db = 10.0
 max_distance = 5000.0
 
 [node name="WaterSound" type="AudioStreamPlayer2D" parent="Sounds" unique_id=413213992]
 stream = ExtResource("5_p47bc")
+bus = &"SFX"
 max_distance = 5000.0
 
 [node name="Steps" type="AudioStreamPlayer2D" parent="Sounds" unique_id=1917523902]
 stream = ExtResource("6_dirtwalk")
+bus = &"SFX"
 volume_db = -5.0
 max_distance = 4096.0
 
 [node name="RunSteps" type="AudioStreamPlayer2D" parent="Sounds" unique_id=907111502]
 stream = ExtResource("7_dirtrun")
+bus = &"SFX"
 volume_db = -4.0
 max_distance = 4096.0
 

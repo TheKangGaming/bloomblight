@@ -1336,7 +1336,7 @@ func _show_results_screen(is_victory: bool) -> void:
 		audio.stream = load("res://audio/Music_Victory03.wav")
 	else:
 		audio.stream = load("res://audio/Music_Defeat03.wav")
-		
+	audio.bus = "Music"
 	audio.volume_db = -12.0 # Tweak this negative number to make it quieter! (-15, -20, etc.)
 	_results_canvas.add_child(audio)
 	audio.play()
@@ -1670,6 +1670,7 @@ func _ensure_selection_sfx_player() -> void:
 
 	_selection_sfx_player = AudioStreamPlayer.new()
 	_selection_sfx_player.name = "SelectionSfxPlayer"
+	_selection_sfx_player.bus = "SFX"
 	add_child(_selection_sfx_player)
 
 func _play_unit_select_sfx(unit: Unit) -> void:

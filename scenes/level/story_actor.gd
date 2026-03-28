@@ -103,6 +103,8 @@ func _rebuild_actor() -> void:
 
 func _play_emote_shake(amplitude: Vector2, duration: float, shakes: int) -> void:
 	_stop_emote()
+	if SettingsManager != null and not SettingsManager.is_screen_shake_enabled():
+		return
 	if shakes <= 0 or duration <= 0.0:
 		return
 

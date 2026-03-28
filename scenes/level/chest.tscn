@@ -66,6 +66,7 @@ libraries/ = SubResource("AnimationLibrary_6d8py")
 
 [node name="OpenSfx" type="AudioStreamPlayer2D" parent="." unique_id=275130001]
 stream = ExtResource("3_f3fq8")
+bus = &"SFX"
 volume_db = -4.0
 max_distance = 800.0
 

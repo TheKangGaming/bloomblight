@@ -1,12 +1,16 @@
 extends CanvasLayer
 
+const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
+
 @onready var cursor: Cursor = get_parent()._cursor
 @onready var _units_button: Button = $VBoxContainer/UnitsButton
+@onready var _options_button: Button = $VBoxContainer/OptionsButton
 @onready var _tutorials_button: Button = $VBoxContainer/TutorialsButton
 
 var _units_snapshot: Array = []
 var _units_overlay: CanvasLayer = null
 var _tutorials_overlay: CanvasLayer = null
+var _settings_overlay: Control = null
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -21,6 +25,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
 		if _units_overlay != null:
 			_close_units_overlay()
+		elif _settings_overlay != null:
+			_close_settings_overlay()
 		elif _tutorials_overlay != null:
 			_close_tutorials_overlay()
 		else:
@@ -30,6 +36,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _reset_menu_focus() -> void:
 	if is_instance_valid(_units_button):
 		_units_button.grab_focus()
+	elif is_instance_valid(_options_button):
+		_options_button.grab_focus()
 	elif is_instance_valid(_tutorials_button):
 		_tutorials_button.grab_focus()
 
@@ -238,7 +246,21 @@ func _build_units_summary() -> String:
 
 
 func _on_options_button_pressed() -> void:
-	pass # Replace with function body.
+	if _settings_overlay != null:
+		_close_settings_overlay()
+		return
+
+	_settings_overlay = SETTINGS_MODAL_SCENE.instantiate()
+	_settings_overlay.name = "SettingsOverlay"
+	add_child(_settings_overlay)
+	if _settings_overlay.has_signal("modal_closed"):
+		_settings_overlay.modal_closed.connect(_close_settings_overlay)
+
+func _close_settings_overlay() -> void:
+	if _settings_overlay != null:
+		_settings_overlay.queue_free()
+		_settings_overlay = null
+	_reset_menu_focus()
 
 
 func _on_end_turn_button_pressed() -> void:
@@ -247,6 +269,7 @@ func _on_end_turn_button_pressed() -> void:
 
 func _on_close_button_pressed() -> void:
 	_close_units_overlay()
+	_close_settings_overlay()
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	#cursor.reset_cursor()
 	cursor.show()

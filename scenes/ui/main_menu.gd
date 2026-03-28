@@ -6,6 +6,7 @@ signal status_tab_viewed
 
 @onready var inventory_grid: GridContainer = $CenterContainer/TabContainer/Inventory/Margin/Grid
 @onready var tabs: TabContainer = $CenterContainer/TabContainer
+@onready var settings_tab: Control = $CenterContainer/TabContainer/Settings
 
 
 @onready var lbl_vit: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblVIT
@@ -26,6 +27,7 @@ signal status_tab_viewed
 @onready var lbl_food = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox/LblFoodBuff
 
 const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn")
+const SETTINGS_PANEL_SCENE = preload("res://scenes/ui/settings_panel.tscn")
 const TAB_PREV_ACTIONS: Array[StringName] = [&"tool_backward", &"ui_page_up"]
 const TAB_NEXT_ACTIONS: Array[StringName] = [&"tool_forward", &"ui_page_down"]
 const NAV_LEFT_ACTIONS: Array[StringName] = [&"left", &"ui_left"]
@@ -40,6 +42,7 @@ var _last_nav_time_ms: int = -100000
 var _status_tab_highlight_enabled := false
 var _status_tab_highlight_root: Control = null
 var _status_tab_highlight_tween: Tween = null
+var _settings_panel: Control = null
 
 func _ready() -> void:
 	visible = false
@@ -49,6 +52,7 @@ func _ready() -> void:
 	if tabs and not tabs.tab_changed.is_connected(_on_tab_changed):
 		tabs.tab_changed.connect(_on_tab_changed)
 	_setup_status_tab_highlight()
+	_ensure_settings_panel()
 
 func _shortcut_input(event: InputEvent) -> void:
 	if _handle_menu_toggle_input(event):
@@ -685,3 +689,23 @@ func _on_tab_changed(tab_index: int) -> void:
 		return
 
 	_refresh_status_tab_highlight()
+
+func _ensure_settings_panel() -> void:
+	if settings_tab == null or _settings_panel != null:
+		return
+
+	for child in settings_tab.get_children():
+		child.queue_free()
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	settings_tab.add_child(margin)
+
+	_settings_panel = SETTINGS_PANEL_SCENE.instantiate()
+	if _settings_panel.has_method("configure"):
+		_settings_panel.configure({"embedded": true})
+	margin.add_child(_settings_panel)

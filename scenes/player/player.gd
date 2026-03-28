@@ -224,6 +224,8 @@ func _clear_cutscene_anim_override() -> void:
 
 func _play_cutscene_emote_shake(amplitude: Vector2, duration: float, shakes: int) -> void:
 	_clear_cutscene_emote()
+	if SettingsManager != null and not SettingsManager.is_screen_shake_enabled():
+		return
 	if visuals_root == null or shakes <= 0 or duration <= 0.0:
 		return
 

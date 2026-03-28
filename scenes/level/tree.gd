@@ -27,6 +27,8 @@ func hit():
 		become_stump()
 
 func shake_tree():
+	if SettingsManager != null and not SettingsManager.is_screen_shake_enabled():
+		return
 	# Create a quick code animation (Tween) to wobble the tree
 	var tween = create_tween()
 	var orig_x = sprite.position.x

@@ -1,11 +1,13 @@
 extends Control
 
 @onready var start_button: Button = $MarginContainer/VBoxContainer/Buttons/StartButton
+@onready var settings_button: Button = $MarginContainer/VBoxContainer/Buttons/SettingsButton
 @onready var quit_button: Button = $MarginContainer/VBoxContainer/Buttons/QuitButton
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var atmosphere_particles: GPUParticles2D = $AtmosphereParticles
 
 const DEMO_STORY_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
+const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
 
 @export var title_music: AudioStream 
 @export var game_scene: PackedScene
@@ -18,9 +20,11 @@ func _ready() -> void:
 	_update_particle_layout()
 	fade_rect.modulate.a = 1.0 
 	start_button.disabled = true
+	settings_button.disabled = true
 	quit_button.disabled = true
 	
 	start_button.modulate.a = 0.0
+	settings_button.modulate.a = 0.0
 	quit_button.modulate.a = 0.0
 	
 	if title_music:
@@ -30,20 +34,30 @@ func _ready() -> void:
 	_fade_tween.tween_property(fade_rect, "modulate:a", 0.0, 2.5)
 	
 	_fade_tween.parallel().tween_property(start_button, "modulate:a", 1.0, 2.0).set_delay(1.0)
+	_fade_tween.parallel().tween_property(settings_button, "modulate:a", 1.0, 2.0).set_delay(1.25)
 	_fade_tween.parallel().tween_property(quit_button, "modulate:a", 1.0, 2.0).set_delay(1.5)
 	
 	_fade_tween.tween_callback(_on_fade_in_complete)
 	
 	start_button.pressed.connect(_on_start_pressed)
+	settings_button.pressed.connect(_on_settings_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 
 func _on_fade_in_complete() -> void:
 	_is_transitioning = false
 	start_button.disabled = false
+	settings_button.disabled = false
 	quit_button.disabled = false
 	
 	# Hold focus until the fade is over so controller players do not move around in the dark.
 	start_button.grab_focus()
+
+func _on_settings_pressed() -> void:
+	if _is_transitioning:
+		return
+
+	var modal := SETTINGS_MODAL_SCENE.instantiate()
+	add_child(modal)
 
 func _on_start_pressed() -> void:
 	if _is_transitioning:
@@ -51,6 +65,7 @@ func _on_start_pressed() -> void:
 
 	_is_transitioning = true
 	start_button.disabled = true 
+	settings_button.disabled = true
 	quit_button.disabled = true
 
 	if DemoDirector:

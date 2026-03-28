@@ -718,6 +718,7 @@ func _run_post_meal_warning_sequence() -> void:
 
 	var rustle_player := AudioStreamPlayer.new()
 	rustle_player.stream = _warning_rustle_sfx
+	rustle_player.bus = "SFX"
 	rustle_player.volume_db = -7.0
 	add_child(rustle_player)
 	rustle_player.play()

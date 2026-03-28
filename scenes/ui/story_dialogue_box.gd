@@ -11,6 +11,7 @@ var _line_index := -1
 var _is_revealing := false
 var _reveal_generation := 0
 var _current_body_text := ""
+var _auto_advance_generation := 0
 
 const REVEAL_CHAR_DURATION := 0.018
 const REVEAL_ALPHA_STEPS := 2
@@ -32,6 +33,7 @@ func play(lines: Array[Dictionary]) -> void:
 	_line_index = -1
 	_is_revealing = false
 	_reveal_generation += 1
+	_auto_advance_generation += 1
 	visible = true
 	_advance()
 
@@ -41,6 +43,7 @@ func hide_box() -> void:
 	_line_index = -1
 	_is_revealing = false
 	_reveal_generation += 1
+	_auto_advance_generation += 1
 	_current_body_text = ""
 	if body_label:
 		body_label.clear()
@@ -102,14 +105,17 @@ func _start_body_reveal(text: String) -> void:
 	_current_body_text = text
 	var reveal_generation := _reveal_generation + 1
 	_reveal_generation = reveal_generation
+	_auto_advance_generation += 1
 	body_label.clear()
 	call_deferred("_reveal_body_text", text, reveal_generation)
 
 func _finish_current_reveal() -> void:
 	_is_revealing = false
 	_reveal_generation += 1
+	_auto_advance_generation += 1
 	body_label.clear()
 	body_label.append_text(_escape_bbcode(_current_body_text))
+	_schedule_auto_advance(_line_index, _current_body_text.length())
 
 func _reveal_body_text(text: String, reveal_generation: int) -> void:
 	await get_tree().process_frame
@@ -129,7 +135,7 @@ func _reveal_body_text(text: String, reveal_generation: int) -> void:
 			var alpha := float(alpha_step + 1) / float(REVEAL_ALPHA_STEPS)
 			body_label.clear()
 			body_label.append_text(_build_reveal_markup(text, char_index, alpha))
-			await get_tree().create_timer(REVEAL_STEP_DURATION).timeout
+			await get_tree().create_timer(_get_reveal_step_duration(), true).timeout
 
 	if reveal_generation != _reveal_generation:
 		return
@@ -137,6 +143,7 @@ func _reveal_body_text(text: String, reveal_generation: int) -> void:
 	body_label.clear()
 	body_label.append_text(_escape_bbcode(text))
 	_is_revealing = false
+	_schedule_auto_advance(_line_index, text.length())
 
 func _build_reveal_markup(text: String, reveal_index: int, alpha: float) -> String:
 	var prefix := _escape_bbcode(text.substr(0, reveal_index))
@@ -146,6 +153,29 @@ func _build_reveal_markup(text: String, reveal_index: int, alpha: float) -> Stri
 	var current_char := _escape_bbcode(text.substr(reveal_index, 1))
 	var alpha_code := Color(1.0, 1.0, 1.0, clampf(alpha, 0.0, 1.0)).to_html(true)
 	return "%s[color=%s]%s[/color]" % [prefix, alpha_code, current_char]
+
+func _get_reveal_step_duration() -> float:
+	var speed_multiplier := SettingsManager.get_dialogue_speed_multiplier() if SettingsManager else 1.0
+	return REVEAL_STEP_DURATION / maxf(speed_multiplier, 0.1)
+
+func _schedule_auto_advance(line_index: int, text_length: int) -> void:
+	_auto_advance_generation += 1
+	if not visible or _is_revealing:
+		return
+	if SettingsManager == null or not SettingsManager.is_auto_advance_dialogue_enabled():
+		return
+
+	var auto_generation := _auto_advance_generation
+	var wait_time := clampf(0.9 + (float(text_length) * 0.025), 1.1, 4.0)
+	call_deferred("_run_auto_advance_timer", auto_generation, line_index, wait_time)
+
+func _run_auto_advance_timer(auto_generation: int, line_index: int, wait_time: float) -> void:
+	await get_tree().create_timer(wait_time, true).timeout
+	if auto_generation != _auto_advance_generation:
+		return
+	if _is_revealing or not visible or _line_index != line_index:
+		return
+	_advance()
 
 func _escape_bbcode(text: String) -> String:
 	return text.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")

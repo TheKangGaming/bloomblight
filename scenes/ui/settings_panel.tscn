@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/settings_panel.gd" id="1_settings_panel_script"]
+
+[node name="SettingsPanel" type="PanelContainer"]
+script = ExtResource("1_settings_panel_script")
+texture_filter = 2

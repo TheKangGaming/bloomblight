@@ -109,13 +109,13 @@ func _ensure_ambience_players() -> void:
 	if _day_ambience_player == null:
 		_day_ambience_player = AudioStreamPlayer.new()
 		_day_ambience_player.name = "DayAmbiencePlayer"
-		_day_ambience_player.bus = "Master"
+		_day_ambience_player.bus = "Ambience"
 		add_child(_day_ambience_player)
 
 	if _night_ambience_player == null:
 		_night_ambience_player = AudioStreamPlayer.new()
 		_night_ambience_player.name = "NightAmbiencePlayer"
-		_night_ambience_player.bus = "Master"
+		_night_ambience_player.bus = "Ambience"
 		add_child(_night_ambience_player)
 
 	_assign_ambience_streams()

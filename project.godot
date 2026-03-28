@@ -30,6 +30,7 @@ DemoDirector="*res://globals/demo_director.gd"
 ProgressionService="*res://systems/progression/progression_service.gd"
 CalendarService="*uid://cp8duraorkxir"
 MusicManager="*uid://ds754ws0s2j6e"
+SettingsManager="*res://systems/settings/settings_manager.gd"
 TransitionManager="*uid://74bgy2nyplkn"
 CombatManager="*uid://cspanre0amh0d"
 

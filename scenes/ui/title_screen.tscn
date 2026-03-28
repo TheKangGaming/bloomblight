@@ -142,6 +142,16 @@ theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_cfe2f")
 text = "Start Game"
 
+[node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=117905331]
+texture_filter = 2
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
+theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_cfe2f")
+text = "Settings"
+
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=1634308205]
 texture_filter = 2
 layout_mode = 2
