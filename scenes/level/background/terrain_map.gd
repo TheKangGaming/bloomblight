@@ -1,5 +1,5 @@
 extends TileMapLayer
-class_name Map
+class_name TerrainMap
 
 func _ready() -> void:
 	pass

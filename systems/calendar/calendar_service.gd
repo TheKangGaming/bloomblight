@@ -12,7 +12,7 @@ const THREAT_CALENDAR: Dictionary = {
 	2: {
 		"id": &"orc_scout",
 		"display_name": "Orc Scouting Party",
-		"combat_scene": "res://scenes/level/CombatMap_1.tscn",
+		"combat_scene": "res://scenes/level/day_two_battle.tscn",
 		"difficulty_tier": 1
 	},
 	7: {

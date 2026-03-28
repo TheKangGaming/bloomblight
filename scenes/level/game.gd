@@ -42,7 +42,7 @@ enum IntroState {
 @onready var camp_fire = $Objects/CampFire
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
-var _combat_scene_path := "res://scenes/level/CombatMap_1.tscn"
+var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
 var _warning_music: AudioStream = preload("res://audio/Music_Norest.wav")
 var _warning_rustle_sfx: AudioStream = preload("res://audio/Light steps.wav")
 @export var daytime_gradient: Gradient

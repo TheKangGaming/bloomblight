@@ -3,7 +3,7 @@
 [ext_resource type="TileSet" uid="uid://b8uqxw86b8u65" path="res://Epic_Tileset.tres" id="1_xlj5a"]
 [ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://scenes/battle/game_board/Grid.tres" id="2_gh08p"]
 [ext_resource type="Script" uid="uid://bp5i3aj61nror" path="res://scenes/battle/game_board/GameBoard.gd" id="2_n7604"]
-[ext_resource type="Script" uid="uid://cy35ytutu231u" path="res://scenes/level/background/Map.gd" id="3_d5mw3"]
+[ext_resource type="Script" uid="uid://cy35ytutu231u" path="res://scenes/level/background/terrain_map.gd" id="3_d5mw3"]
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://scenes/battle/game_board/Cursor/Cursor.tscn" id="3_n7604"]
 [ext_resource type="Script" uid="uid://cdk3s3ub3b116" path="res://scenes/battle/unit_overlay/UnitOverlay.gd" id="4_wu1sb"]
 [ext_resource type="Texture2D" uid="uid://djolfa2r5b6n0" path="res://scenes/battle/unit_overlay/movement_overlay.png" id="5_hgyof"]

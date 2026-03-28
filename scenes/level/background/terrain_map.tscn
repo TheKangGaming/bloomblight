@@ -1,7 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://de53ukdqyusan"]
+[gd_scene format=3 uid="uid://de53ukdqyusan"]
 
 [ext_resource type="Texture2D" uid="uid://cocms0prufyqi" path="res://scenes/level/Tilesets/Tileset-Terrain-new grass.png" id="1"]
-[ext_resource type="Script" path="res://scenes/level/background/Map.gd" id="2_d7rle"]
+[ext_resource type="Script" path="res://scenes/level/background/terrain_map.gd" id="2_d7rle"]
 
 [sub_resource type="GDScript" id="GDScript_d1qvb"]
 script/source = "@export var movement_data: Dictionary
