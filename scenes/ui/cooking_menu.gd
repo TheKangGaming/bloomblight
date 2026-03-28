@@ -12,6 +12,7 @@ signal menu_closed
 signal meal_cooked(recipe_item: int)
 
 @onready var recipe_list: VBoxContainer = $Panel/MarginContainer/Layout/RecipeScroll/RecipeList
+@onready var subtitle_label: Label = $Panel/MarginContainer/Layout/Subtitle
 
 var _recipe_rows: Array = []
 
@@ -33,11 +34,15 @@ func _ready() -> void:
 	_build_recipe_rows()
 	Global.inventory_updated.connect(_on_inventory_updated)
 	Global.recipe_knowledge_updated.connect(_on_recipe_knowledge_updated)
+	if DemoDirector and not DemoDirector.input_mode_changed.is_connected(_on_input_mode_changed):
+		DemoDirector.input_mode_changed.connect(_on_input_mode_changed)
+	_refresh_subtitle()
 
 func open_menu() -> void:
 	if not visible:
 		visible = true
 		menu_opened.emit()
+	_refresh_subtitle()
 	_refresh_recipe_rows()
 	_focus_first_available_button()
 
@@ -59,6 +64,9 @@ func _on_inventory_updated() -> void:
 func _on_recipe_knowledge_updated() -> void:
 	if visible:
 		_refresh_recipe_rows()
+
+func _on_input_mode_changed(_mode: int) -> void:
+	_refresh_subtitle()
 
 func _build_recipe_rows() -> void:
 	for child in recipe_list.get_children():
@@ -202,3 +210,15 @@ func _format_item_name(item_type: Global.Items) -> String:
 	for i in key.size():
 		key[i] = String(key[i]).capitalize()
 	return " ".join(key)
+
+func _refresh_subtitle() -> void:
+	if subtitle_label == null:
+		return
+	if DemoDirector == null:
+		subtitle_label.text = "Cook role meals. Use Up/Down to choose a meal, then press E to cook."
+		return
+
+	if DemoDirector.current_input_mode == DemoDirector.InputMode.CONTROLLER:
+		subtitle_label.text = "Cook role meals. Use the Left Stick or D-Pad to choose a meal, then press A to cook."
+	else:
+		subtitle_label.text = "Cook role meals. Use the mouse or Up/Down to choose a meal, then press E to cook."

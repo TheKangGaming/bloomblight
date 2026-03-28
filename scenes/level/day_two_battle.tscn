@@ -682,7 +682,7 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-position = Vector2(1296, 336)
+position = Vector2(1200, 1040)
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(1040, 816)
@@ -700,11 +700,11 @@ character_data = ExtResource("20_t05iy")
 current_stats = SubResource("Resource_c7q0v")
 
 [node name="BanditWarrior" parent="GameBoard" unique_id=200120114 instance=ExtResource("23_hejk3")]
-position = Vector2(1040, 1136)
+position = Vector2(1015, 1135)
 current_stats = SubResource("Resource_m0spk")
 
 [node name="BanditMarauder" parent="GameBoard" unique_id=1019864192 instance=ExtResource("22_efnms")]
-position = Vector2(1072, 1072)
+position = Vector2(1048, 1201)
 current_stats = SubResource("Resource_yyfnn")
 
 [node name="BanditArcher" parent="GameBoard" unique_id=1878164639 instance=ExtResource("23_x18w8")]

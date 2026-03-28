@@ -71,6 +71,7 @@ var _demo_overlay: Control = null
 var _battle_camera: Camera2D = null
 var _default_camera_focus := Vector2.ZERO
 var _selection_sfx_player: AudioStreamPlayer = null
+var _camera_follow_node: Node2D = null
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -90,6 +91,15 @@ func _ready() -> void:
 	
 	_reinitialize()
 	call_deferred("_finish_demo_battle_setup")
+
+func _process(delta: float) -> void:
+	if _battle_camera == null or _camera_follow_node == null:
+		return
+	if not is_instance_valid(_camera_follow_node) or not _battle_camera.is_current():
+		return
+
+	var follow_weight := clampf(delta * 10.0, 0.0, 1.0)
+	_battle_camera.global_position = _battle_camera.global_position.lerp(_camera_follow_node.global_position, follow_weight)
 
 func _finish_demo_battle_setup() -> void:
 	_setup_demo_support_nodes()
@@ -1043,8 +1053,11 @@ func start_enemy_phase() -> void:
 			_units[best_cell] = enemy
 
 			# Physically walk and wait for the animation to finish
+			_begin_enemy_move_camera_follow(enemy)
 			enemy.walk_along(path)
 			await enemy.walk_finished
+			_end_enemy_move_camera_follow()
+			await _focus_battle_camera(_get_unit_camera_focus_position(enemy), 0.12)
 		else:
 			# If they can't move, just add a tiny delay so it feels like they "thought" about it
 			await get_tree().create_timer(0.2).timeout
@@ -1067,6 +1080,7 @@ func start_enemy_phase() -> void:
 
 	# 3. All enemies have acted! Pass the baton back to the player.
 	if not _battle_ended:
+		await _return_camera_to_player_side()
 		start_player_phase()
 
 ## Wakes all player units up and hands control back to the player
@@ -1430,10 +1444,10 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 96)
+	label.add_theme_font_size_override("font_size", 90)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 8)
+	label.add_theme_constant_override("outline_size", 6)
 	band.add_child(label)
 	
 	var tween = create_tween()
@@ -1974,6 +1988,68 @@ func _handoff_to_cursor_camera(target_position: Vector2) -> void:
 	_cursor_camera.make_current()
 	_cursor_camera.position_smoothing_enabled = true
 	_cursor_camera.position_smoothing_speed = 8.0
+
+func _sync_battle_camera_to_current_view() -> void:
+	if _battle_camera == null:
+		return
+	if _cursor_camera != null and _cursor_camera.is_inside_tree() and _cursor_camera.is_current():
+		_battle_camera.global_position = _cursor_camera.get_screen_center_position()
+	elif _battle_camera.is_inside_tree():
+		_battle_camera.global_position = _battle_camera.get_screen_center_position()
+
+func _get_unit_camera_focus_node(unit: Unit) -> Node2D:
+	if unit == null:
+		return null
+
+	var path_follow := unit.get_node_or_null("PathFollow2D") as Node2D
+	if path_follow != null:
+		return path_follow
+
+	return unit
+
+func _get_unit_camera_focus_position(unit: Unit) -> Vector2:
+	var focus_node := _get_unit_camera_focus_node(unit)
+	if focus_node != null:
+		return focus_node.global_position
+	return global_position
+
+func _begin_enemy_move_camera_follow(enemy: Unit) -> void:
+	if enemy == null or _battle_camera == null:
+		return
+
+	_sync_battle_camera_to_current_view()
+	_battle_camera.make_current()
+	_camera_follow_node = _get_unit_camera_focus_node(enemy)
+	if _camera_follow_node != null:
+		_battle_camera.global_position = _get_unit_camera_focus_position(enemy)
+
+func _end_enemy_move_camera_follow() -> void:
+	_camera_follow_node = null
+
+func _get_player_phase_focus_unit() -> Unit:
+	var preferred_names: Array[StringName] = [&"Savannah", &"Tera", &"Silas"]
+	for unit_name in preferred_names:
+		var preferred_unit := get_node_or_null(String(unit_name)) as Unit
+		if preferred_unit != null and is_instance_valid(preferred_unit) and preferred_unit.health > 0 and not preferred_unit.is_enemy:
+			return preferred_unit
+
+	for cell in _units:
+		var unit := _units[cell] as Unit
+		if unit != null and is_instance_valid(unit) and not unit.is_enemy and unit.health > 0:
+			return unit
+
+	return null
+
+func _return_camera_to_player_side() -> void:
+	var focus_unit := _get_player_phase_focus_unit()
+	if focus_unit == null:
+		return
+
+	_end_enemy_move_camera_follow()
+	_sync_battle_camera_to_current_view()
+	_battle_camera.make_current()
+	await _focus_battle_camera(_get_unit_camera_focus_position(focus_unit), 0.32)
+	_handoff_to_cursor_camera(_get_unit_camera_focus_position(focus_unit))
 
 func _ensure_demo_story_dialogue() -> Control:
 	if _demo_story_dialogue != null and is_instance_valid(_demo_story_dialogue):

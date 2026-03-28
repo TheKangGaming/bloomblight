@@ -192,16 +192,16 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}.\n\nTo plant, face a tilled soil tile and press {plant} to open the seed menu, then choose a seed."
 		"meal_buff":
 			title = "Tutorial: Meal Buffs"
-			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nOpen the Status tab to review the meal buff, then close the menu when you're ready to continue."
+			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nPress {inventory} to open the menu, switch to the Status tab, review the meal buff, then close the menu when you're ready to continue."
 		"battle_savannah":
 			title = "Tutorial: Savannah"
-			template = "Select Savannah with the cursor. Move her to a blue tile with {confirm}, then open her action menu.\n\nSavannah is your steady frontliner. She wants to be near the fight, but you can always end her turn instead of attacking."
+			template = "Move the cursor with {battle_cursor}, then {battle_confirm} to select Savannah and confirm her movement. After moving, choose Attack or Wait from her action menu.\n\nSavannah is your steady frontliner. She wants to be near the fight, but you can always end her turn instead of attacking."
 		"battle_silas":
 			title = "Tutorial: Silas"
-			template = "Silas fights from range. He can attack enemies from farther away, so he does not need to stand next to them.\n\nKeep him behind Savannah when you can."
+			template = "Silas fights from range. He does not need to stand next to enemies to attack.\n\nKeep him behind Savannah when you can. Hunt improves his accuracy before he attacks."
 		"battle_tera_bloom":
 			title = "Tutorial: Tera"
-			template = "Tera is a powerful magic user, but she is fragile.\n\nWhen roots are still living under the ash, she can use Bloom to force them up through the ground and create a Healflower."
+			template = "Tera is a powerful magic user, but she is fragile.\n\nWhen roots are still living under the ash, she can use Bloom to force them up through the ground and create Healflowers near the fight."
 		"battle_harvest":
 			title = "Tutorial: Harvest"
 			template = "Move Savannah next to a Healflower, choose Harvest, then press {confirm} to recover HP.\n\nHarvest only helps if the target unit is already hurt."
@@ -218,6 +218,9 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			"action": get_action_label("action"),
 			"plant": get_action_label("plant"),
 			"tool_cycle": get_tool_cycle_label(),
+			"inventory": get_action_label("menu_toggle"),
+			"battle_confirm": get_battle_confirm_label(),
+			"battle_cursor": get_battle_cursor_label(),
 		}),
 	}
 
@@ -326,6 +329,16 @@ func get_tool_cycle_label() -> String:
 		return forward_label
 	return "%s / %s" % [forward_label, backward_label]
 
+func get_battle_confirm_label() -> String:
+	if current_input_mode == InputMode.CONTROLLER:
+		return "press A"
+	return "left click"
+
+func get_battle_cursor_label() -> String:
+	if current_input_mode == InputMode.CONTROLLER:
+		return "the Left Stick or D-Pad"
+	return "the mouse"
+
 func show_demo_complete_card(parent: Node) -> void:
 	if parent == null or not is_instance_valid(parent):
 		return
@@ -352,13 +365,13 @@ func _get_stage_prompt_text(stage: DemoStage) -> String:
 		DemoStage.HARVEST_CROPS:
 			return "Objective: Harvest the carrot and parsnip."
 		DemoStage.LIGHT_CAMPFIRE:
-			return "Objective: Light the campfire."
+			return "Objective: Light the campfire with %s." % get_confirm_label()
 		DemoStage.COOK_MEAL:
 			return "Objective: Cook Glazed Carrots at the campfire."
 		DemoStage.EAT_MEAL:
-			return "Objective: Eat the Glazed Carrots."
+			return "Objective: Eat the Glazed Carrots from the menu. Press %s to open it." % get_action_label("menu_toggle")
 		DemoStage.MEAL_REVIEW:
-			return "Objective: Review your meal buff in the Status tab."
+			return "Objective: Review your meal buff in the Status tab. Press %s to open the menu." % get_action_label("menu_toggle")
 		DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
 			return "Objective: Drive off the bandits."
 		_:

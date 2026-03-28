@@ -961,11 +961,6 @@ func _show_forest_edge_camera_hint() -> void:
 func _run_bandit_intrusion_cutscene() -> void:
 	_clear_intrusion_bandits()
 	_setup_story_camp_state()
-	tera_actor.global_position = _marker_pos(&"CampTera", INTRO_CAMP_TERA_POS)
-	silas_actor.global_position = _marker_pos(&"CampSilas", INTRO_CAMP_SILAS_POS)
-	tera_actor.face_side(false)
-	silas_actor.face_side(false)
-
 	var bandit_entry_leader := _marker_pos(&"BanditEntryLeader", BANDIT_ENTRY_LEADER_POS)
 	var bandit_entry_warrior := _marker_pos(&"BanditEntryWarrior", BANDIT_ENTRY_WARRIOR_POS)
 	var bandit_entry_archer := _marker_pos(&"BanditEntryArcher", BANDIT_ENTRY_ARCHER_POS)
@@ -975,10 +970,19 @@ func _run_bandit_intrusion_cutscene() -> void:
 	var bandit_defense_player := _marker_pos(&"BanditDefensePlayer", BANDIT_DEFENSE_PLAYER_POS)
 	var bandit_defense_tera := _marker_pos(&"BanditDefenseTera", BANDIT_DEFENSE_TERA_POS)
 	var bandit_defense_silas := _marker_pos(&"BanditDefenseSilas", BANDIT_DEFENSE_SILAS_POS)
+	var party_entry_player := bandit_defense_player + Vector2(-10.0, -176.0)
+	var party_entry_tera := bandit_defense_tera + Vector2(0.0, -148.0)
+	var party_entry_silas := bandit_defense_silas + Vector2(10.0, -164.0)
 
-	player.global_position = bandit_defense_player + Vector2(180.0, 44.0)
+	player.global_position = party_entry_player
+	tera_actor.global_position = party_entry_tera
+	silas_actor.global_position = party_entry_silas
 	if player.has_method("play_cutscene_idle"):
-		player.play_cutscene_idle(Vector2.LEFT)
+		player.play_cutscene_idle(Vector2.DOWN)
+	if tera_actor.has_method("face_down"):
+		tera_actor.face_down()
+	if silas_actor.has_method("face_down"):
+		silas_actor.face_down()
 
 	var bandit_leader := _spawn_intrusion_bandit("BanditLeader", _bandit_leader_actor_scene, bandit_entry_leader, true)
 	var bandit_warrior := _spawn_intrusion_bandit("BanditWarrior", _bandit_warrior_actor_scene, bandit_entry_warrior, true)
@@ -1007,6 +1011,16 @@ func _run_bandit_intrusion_cutscene() -> void:
 		[bandit_defense_player, bandit_defense_tera, bandit_defense_silas],
 		0.9
 	)
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.DOWN)
+	if tera_actor.has_method("face_down"):
+		tera_actor.face_down()
+	if tera_actor.has_method("play_idle"):
+		tera_actor.play_idle()
+	if silas_actor.has_method("face_down"):
+		silas_actor.face_down()
+	if silas_actor.has_method("play_idle"):
+		silas_actor.play_idle()
 	if bandit_leader.has_method("play_shocked"):
 		bandit_leader.play_shocked()
 	if bandit_warrior.has_method("play_shocked"):
