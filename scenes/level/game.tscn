@@ -2753,6 +2753,33 @@ position = Vector2(1496, 670)
 [node name="CampSilas" type="Marker2D" parent="StoryMarkers" unique_id=1762447241]
 position = Vector2(1576, 670)
 
+[node name="BanditEntryLeader" type="Marker2D" parent="StoryMarkers" unique_id=117432775]
+position = Vector2(1049, 1375)
+
+[node name="BanditEntryWarrior" type="Marker2D" parent="StoryMarkers" unique_id=1102829210]
+position = Vector2(1017, 1417)
+
+[node name="BanditEntryArcher" type="Marker2D" parent="StoryMarkers" unique_id=785521854]
+position = Vector2(1066, 1418)
+
+[node name="BanditStopLeader" type="Marker2D" parent="StoryMarkers" unique_id=503180159]
+position = Vector2(1038, 1044)
+
+[node name="BanditStopWarrior" type="Marker2D" parent="StoryMarkers" unique_id=1143209083]
+position = Vector2(1014, 1082)
+
+[node name="BanditStopArcher" type="Marker2D" parent="StoryMarkers" unique_id=858221335]
+position = Vector2(1067, 1080)
+
+[node name="BanditDefensePlayer" type="Marker2D" parent="StoryMarkers" unique_id=2061263664]
+position = Vector2(1326, 724)
+
+[node name="BanditDefenseTera" type="Marker2D" parent="StoryMarkers" unique_id=323046289]
+position = Vector2(1426, 754)
+
+[node name="BanditDefenseSilas" type="Marker2D" parent="StoryMarkers" unique_id=2081966568]
+position = Vector2(1514, 692)
+
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
 
 [node name="DayTimeHUD" parent="CanvasLayer" unique_id=1114614844 instance=ExtResource("15_mr15t")]

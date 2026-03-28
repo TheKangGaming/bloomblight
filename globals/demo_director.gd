@@ -336,7 +336,7 @@ func show_demo_complete_card(parent: Node) -> void:
 	parent.add_child(card)
 	card.configure({
 		"title": "Demo Complete",
-		"body": "The scouting party is gone, but the blight is still closing in.\n\nLife can still take root here. This is only the beginning.",
+		"body": "The bandits are gone, but the blight is still closing in.\n\nLife can still take root here. This is only the beginning.",
 		"confirm_hint": "return to title",
 		"allow_skip": false
 	})
@@ -360,7 +360,7 @@ func _get_stage_prompt_text(stage: DemoStage) -> String:
 		DemoStage.MEAL_REVIEW:
 			return "Objective: Review your meal buff in the Status tab."
 		DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
-			return "Objective: Defeat the scouting party."
+			return "Objective: Drive off the bandits."
 		_:
 			return ""
 
@@ -368,7 +368,7 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 	var template := ""
 	match prompt_id:
 		"battle_defeat_enemies":
-			template = "Objective: Defeat the scouting party."
+			template = "Objective: Drive off the bandits."
 		"farm_find_tera":
 			template = "Objective: Find Tera."
 		"farm_open_chest":

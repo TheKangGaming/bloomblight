@@ -32,6 +32,7 @@ var _active_unit: Unit
 var _walkable_cells := []
 var _attackable_cells := []
 var _movement_costs
+var _blocked_cells: Dictionary = {}
 var _prev_cell
 var _prev_position
 var _is_targeting_attack: bool = false
@@ -75,6 +76,7 @@ const MAX_VALUE: int = 99999
 
 func _ready() -> void:
 	_movement_costs = _map.get_movement_costs()
+	_rebuild_collision_blockers()
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
 	_cursor.moved.connect(_on_Cursor_moved)
 	_sync_scene_music_to_manager()
@@ -170,6 +172,76 @@ func is_occupied(cell: Vector2) -> bool:
 	return _units.has(cell)
 
 
+func _is_cell_blocked(cell: Vector2) -> bool:
+	return bool(_blocked_cells.get(cell, false))
+
+
+func _rebuild_collision_blockers() -> void:
+	_blocked_cells.clear()
+
+	var scene_root := get_parent()
+	if scene_root == null:
+		return
+
+	for node in scene_root.find_children("*", "CollisionShape2D", true, false):
+		var collision_shape := node as CollisionShape2D
+		if collision_shape == null or not is_instance_valid(collision_shape):
+			continue
+		if collision_shape.shape == null or collision_shape.disabled:
+			continue
+		if self.is_ancestor_of(collision_shape):
+			continue
+
+		var owner := _find_static_body_owner(collision_shape)
+		if owner == null:
+			continue
+
+		_mark_shape_cells_blocked(collision_shape)
+
+
+func _find_static_body_owner(node: Node) -> StaticBody2D:
+	var current := node.get_parent()
+	while current != null:
+		if current == self:
+			return null
+		if current is CollisionObject2D:
+			return current as StaticBody2D if current is StaticBody2D else null
+		current = current.get_parent()
+	return null
+
+
+func _mark_shape_cells_blocked(collision_shape: CollisionShape2D) -> void:
+	var shape := collision_shape.shape
+	var bounds := Rect2()
+	var center := collision_shape.global_position
+	var scale := collision_shape.global_scale.abs()
+
+	if shape is RectangleShape2D:
+		var rectangle := shape as RectangleShape2D
+		var size := Vector2(rectangle.size.x * scale.x, rectangle.size.y * scale.y)
+		bounds = Rect2(center - (size / 2.0), size)
+	elif shape is CapsuleShape2D:
+		var capsule := shape as CapsuleShape2D
+		var width := capsule.radius * 2.0 * scale.x
+		var height := capsule.height * scale.y
+		bounds = Rect2(center - Vector2(width * 0.5, height * 0.5), Vector2(width, height))
+	elif shape is CircleShape2D:
+		var circle := shape as CircleShape2D
+		var radius := circle.radius * maxf(scale.x, scale.y)
+		bounds = Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+	else:
+		return
+
+	var min_cell := grid.grid_clamp(grid.calculate_grid_coordinates(bounds.position))
+	var max_cell := grid.grid_clamp(grid.calculate_grid_coordinates(bounds.position + bounds.size))
+
+	for x in range(int(min_cell.x), int(max_cell.x) + 1):
+		for y in range(int(min_cell.y), int(max_cell.y) + 1):
+			var cell := Vector2(x, y)
+			if grid.is_within_bounds(cell):
+				_blocked_cells[cell] = true
+
+
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit, unit.move_range, false)
 	
@@ -237,7 +309,7 @@ func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 			var coordinates: Vector2 = current + direction
 			
 			var coord_v2i = Vector2i(int(coordinates.x), int(coordinates.y))
-			if _map.get_cell_source_id(coord_v2i) == OBSTACLE_ATLAS_ID:
+			if _map.get_cell_source_id(coord_v2i) == OBSTACLE_ATLAS_ID or _is_cell_blocked(coordinates):
 				wall_array.append(coordinates)
 			
 			if coordinates in full_array:
@@ -270,6 +342,8 @@ func _dijkstra(unit: Unit, max_distance: int, _attackable_check: bool) -> Array:
 			var neighbor = current_cell + direction 
 			
 			if not grid.is_within_bounds(neighbor):
+				continue
+			if _is_cell_blocked(neighbor):
 				continue
 				
 			# Opposing units block movement. Allies can be moved through.
@@ -1497,7 +1571,7 @@ func _execute_bloom_wave(_caster: Unit, center_cell: Vector2, radius: int) -> bo
 			if abs(x) + abs(y) <= radius:
 				var check_cell = center_cell + Vector2(x, y)
 				if grid.is_within_bounds(check_cell):
-					if not _units.has(check_cell) and not is_occupied(check_cell):
+					if not _units.has(check_cell) and not is_occupied(check_cell) and not _is_cell_blocked(check_cell):
 						empty_cells.append(check_cell)
 	
 	if empty_cells.is_empty():
@@ -1702,15 +1776,7 @@ func _run_demo_battle_opening() -> void:
 	_cursor.is_active = false
 	current_phase = TurnPhase.PLAYER
 	_hide_unit_hover_tooltip()
-
-	await _play_demo_story_dialogue([
-		{"speaker": "Tera", "text": "Wait... do you hear that? Under the ash... it's like a heartbeat."},
-		{"speaker": "Savannah", "text": "A heartbeat? Tera, the ground's been dead for a decade."},
-		{"speaker": "Tera", "text": "Not all of it. There are roots down there, waiting. If I can wake them up, they might keep us in the fight."}
-	])
-
-	await _focus_battle_camera(_default_camera_focus, 0.4)
-	_crossfade_scene_music_to_manager(1.15)
+	await _focus_battle_camera(_default_camera_focus, 0.25)
 	_handoff_to_cursor_camera(_default_camera_focus)
 
 	await _show_phase_banner("PLAYER PHASE", Color(0.1, 0.4, 0.8))

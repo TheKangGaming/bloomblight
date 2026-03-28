@@ -16,6 +16,15 @@ const INTRO_MORNING_TERA_POS := Vector2(1508, 734)
 const INTRO_MORNING_SILAS_POS := Vector2(1320, 730)
 const INTRO_CAMP_TERA_POS := Vector2(1496, 670)
 const INTRO_CAMP_SILAS_POS := Vector2(1576, 670)
+const BANDIT_ENTRY_LEADER_POS := Vector2(1488, 1718)
+const BANDIT_ENTRY_WARRIOR_POS := Vector2(1416, 1762)
+const BANDIT_ENTRY_ARCHER_POS := Vector2(1562, 1786)
+const BANDIT_STOP_LEADER_POS := Vector2(1482, 1104)
+const BANDIT_STOP_WARRIOR_POS := Vector2(1412, 1170)
+const BANDIT_STOP_ARCHER_POS := Vector2(1552, 1136)
+const BANDIT_DEFENSE_PLAYER_POS := Vector2(1326, 724)
+const BANDIT_DEFENSE_TERA_POS := Vector2(1426, 754)
+const BANDIT_DEFENSE_SILAS_POS := Vector2(1514, 692)
 const CUTSCENE_GROUP_ZOOM := Vector2(1.7, 1.7)
 const CUTSCENE_CLOSE_ZOOM := Vector2(1.9, 1.9)
 
@@ -43,8 +52,12 @@ enum IntroState {
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
-var _warning_music: AudioStream = preload("res://audio/Music_Norest.wav")
-var _warning_rustle_sfx: AudioStream = preload("res://audio/Light steps.wav")
+var _bandit_tension_music_path := "res://audio/Music_Anxiety.wav"
+var _bandit_tension_music: AudioStream = null
+var _story_actor_scene: PackedScene = preload("res://scenes/level/story_actor.tscn")
+var _bandit_leader_actor_scene: PackedScene = preload("res://scenes/battle/bandit_marauder_battle_actor.tscn")
+var _bandit_warrior_actor_scene: PackedScene = preload("res://scenes/battle/bandit_warrior_battle_actor.tscn")
+var _bandit_archer_actor_scene: PackedScene = preload("res://scenes/battle/bandit_archer_battle_actor.tscn")
 @export var daytime_gradient: Gradient
 
 @onready var tillable_layer = $World/Tillable
@@ -64,9 +77,11 @@ var _story_seed_types_planted: Array[int] = []
 var _recipe_scene_started := false
 var _warning_sequence_started := false
 var _suppress_battle_music_sync := true
+var _intrusion_bandits: Array[Node2D] = []
 
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
+	_bandit_tension_music = load(_bandit_tension_music_path) as AudioStream
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
 	if seed_menu != null:
 		seed_menu.seed_chosen.connect(_on_seed_chosen_from_menu)
@@ -716,25 +731,7 @@ func _run_post_meal_warning_sequence() -> void:
 	else:
 		DemoDirector.clear_prompt()
 
-	var rustle_player := AudioStreamPlayer.new()
-	rustle_player.stream = _warning_rustle_sfx
-	rustle_player.bus = "SFX"
-	rustle_player.volume_db = -7.0
-	add_child(rustle_player)
-	rustle_player.play()
-
-	await _focus_cutscene_on_positions([
-		_marker_pos(&"ForestReturn", INTRO_FOREST_RETURN_POS),
-		_marker_pos(&"ForestSilas", INTRO_FOREST_SILAS_POS)
-	], 0.55, CUTSCENE_CLOSE_ZOOM)
-	await get_tree().create_timer(0.3).timeout
-
-	if is_instance_valid(rustle_player):
-		rustle_player.queue_free()
-
-	await _fade_to_black(0.7)
-	if MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(_warning_music, 1.0, -4.0)
+	await _run_bandit_intrusion_cutscene()
 	await _launch_direct_combat_scene(_combat_scene_path)
 
 func _launch_direct_combat_scene(combat_scene_path: String) -> void:
@@ -775,6 +772,9 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 
 	await scene_tree.process_frame
 
+	if is_instance_valid(combat_music) and combat_music.stream != null and MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(combat_music.stream, 0.2, combat_music.volume_db)
+
 	var savannah: Node = combat_scene.get_node_or_null("GameBoard/Savannah")
 	var cursor: Node = combat_scene.get_node_or_null("GameBoard/Cursor")
 	if savannah != null and cursor != null and "cell" in savannah and "cell" in cursor:
@@ -793,6 +793,7 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 		transition_layer.queue_free()
 
 func resume_after_combat() -> void:
+	_clear_intrusion_bandits()
 	_intro_busy = false
 	player.can_move = true
 	player.direction = Vector2.ZERO
@@ -956,3 +957,132 @@ func _show_forest_edge_camera_hint() -> void:
 	await _focus_cutscene_on_nodes([player], 0.9, CUTSCENE_GROUP_ZOOM)
 	_restore_player_camera(false)
 	player.can_move = true
+
+func _run_bandit_intrusion_cutscene() -> void:
+	_clear_intrusion_bandits()
+	_setup_story_camp_state()
+	tera_actor.global_position = _marker_pos(&"CampTera", INTRO_CAMP_TERA_POS)
+	silas_actor.global_position = _marker_pos(&"CampSilas", INTRO_CAMP_SILAS_POS)
+	tera_actor.face_side(false)
+	silas_actor.face_side(false)
+
+	var bandit_entry_leader := _marker_pos(&"BanditEntryLeader", BANDIT_ENTRY_LEADER_POS)
+	var bandit_entry_warrior := _marker_pos(&"BanditEntryWarrior", BANDIT_ENTRY_WARRIOR_POS)
+	var bandit_entry_archer := _marker_pos(&"BanditEntryArcher", BANDIT_ENTRY_ARCHER_POS)
+	var bandit_stop_leader := _marker_pos(&"BanditStopLeader", BANDIT_STOP_LEADER_POS)
+	var bandit_stop_warrior := _marker_pos(&"BanditStopWarrior", BANDIT_STOP_WARRIOR_POS)
+	var bandit_stop_archer := _marker_pos(&"BanditStopArcher", BANDIT_STOP_ARCHER_POS)
+	var bandit_defense_player := _marker_pos(&"BanditDefensePlayer", BANDIT_DEFENSE_PLAYER_POS)
+	var bandit_defense_tera := _marker_pos(&"BanditDefenseTera", BANDIT_DEFENSE_TERA_POS)
+	var bandit_defense_silas := _marker_pos(&"BanditDefenseSilas", BANDIT_DEFENSE_SILAS_POS)
+
+	player.global_position = bandit_defense_player + Vector2(180.0, 44.0)
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.LEFT)
+
+	var bandit_leader := _spawn_intrusion_bandit("BanditLeader", _bandit_leader_actor_scene, bandit_entry_leader, true)
+	var bandit_warrior := _spawn_intrusion_bandit("BanditWarrior", _bandit_warrior_actor_scene, bandit_entry_warrior, true)
+	var bandit_archer := _spawn_intrusion_bandit("BanditArcher", _bandit_archer_actor_scene, bandit_entry_archer, true)
+
+	if _bandit_tension_music != null and MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(_bandit_tension_music, 0.75, -8.0)
+
+	await _focus_cutscene_on_positions([
+		bandit_entry_leader,
+		bandit_entry_warrior,
+		bandit_entry_archer
+	], 0.55, Vector2(1.8, 1.8))
+	await _move_story_group(
+		[bandit_leader, bandit_warrior, bandit_archer],
+		[bandit_stop_leader, bandit_stop_warrior, bandit_stop_archer],
+		0.95
+	)
+
+	await _play_story_dialogue([
+		{"speaker": "Bandit Leader", "text": "Quiet little place. Almost missed the smoke."}
+	], [bandit_leader, bandit_warrior, bandit_archer], Vector2(1.78, 1.78))
+
+	await _move_story_group(
+		[player, tera_actor, silas_actor],
+		[bandit_defense_player, bandit_defense_tera, bandit_defense_silas],
+		0.9
+	)
+	if bandit_leader.has_method("play_shocked"):
+		bandit_leader.play_shocked()
+	if bandit_warrior.has_method("play_shocked"):
+		bandit_warrior.play_shocked()
+	if bandit_archer.has_method("play_shocked"):
+		bandit_archer.play_shocked()
+	await get_tree().create_timer(0.2).timeout
+
+	await _play_story_dialogue([
+		{"speaker": "Bandit Leader", "text": "Well. The forest rat. Didn't know you had company."},
+		{"speaker": "Silas", "text": "Didn't know you were stupid enough to come this close."},
+		{"speaker": "Bandit Leader", "text": "We saw green in the ash and figured somebody here had more than they needed."},
+		{"speaker": "Silas", "text": "Ladies, look alive. I know these men. They don't talk unless they're counting what they can steal."},
+		{"speaker": "Silas", "text": "Savannah, I hope that sword's sharp."},
+		{"speaker": "Savannah", "text": "It is."},
+		{"speaker": "Tera", "text": "They're not touching this place."}
+	], [player, tera_actor, silas_actor, bandit_leader, bandit_warrior, bandit_archer], Vector2(1.72, 1.72))
+
+	await _play_story_dialogue([
+		{"speaker": "Bandit Leader", "text": "Then stop us."}
+	], [player, tera_actor, silas_actor, bandit_leader, bandit_warrior, bandit_archer], Vector2(1.72, 1.72))
+
+	if MusicManager and MusicManager.has_method("fade_to_silence"):
+		MusicManager.fade_to_silence(0.55)
+
+	await _play_story_dialogue([
+		{"speaker": "Bandit Leader", "text": "Get 'em, boys."}
+	], [player, tera_actor, silas_actor, bandit_leader, bandit_warrior, bandit_archer], Vector2(1.72, 1.72))
+
+	await _fade_to_black(0.55)
+	_clear_intrusion_bandits()
+
+func _spawn_intrusion_bandit(actor_name: String, actor_scene: PackedScene, start_pos: Vector2, face_right: bool) -> Node2D:
+	var actor := _story_actor_scene.instantiate() as Node2D
+	actor.name = actor_name
+	actor.set("actor_scene", actor_scene)
+	actor.set("actor_scale", Vector2(1.35, 1.35))
+	actor.set("visual_offset", Vector2(0.0, -22.0))
+	$Objects.add_child(actor)
+	actor.global_position = start_pos
+	if actor.has_method("face_side"):
+		actor.face_side(face_right)
+	if actor.has_method("play_idle"):
+		actor.play_idle()
+	_intrusion_bandits.append(actor)
+	return actor
+
+func _move_story_group(actors: Array[Node2D], destinations: Array[Vector2], duration: float) -> void:
+	if actors.size() != destinations.size() or actors.is_empty():
+		return
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	var travel_directions: Array[Vector2] = []
+	for index in range(actors.size()):
+		var actor := actors[index]
+		var destination := destinations[index]
+		travel_directions.append(Vector2.ZERO)
+		if actor == null or not is_instance_valid(actor):
+			continue
+
+		var travel := destination - actor.global_position
+		travel_directions[index] = travel
+		_play_cutscene_move(actor, travel)
+		tween.tween_property(actor, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	await tween.finished
+
+	for index in range(actors.size()):
+		var actor := actors[index]
+		if actor == null or not is_instance_valid(actor):
+			continue
+		_play_cutscene_idle(actor, travel_directions[index])
+
+func _clear_intrusion_bandits() -> void:
+	for actor in _intrusion_bandits:
+		if actor != null and is_instance_valid(actor):
+			actor.queue_free()
+	_intrusion_bandits.clear()
