@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://btp0fm5m4wl8c"]
 
-[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_20oxd"]
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/types/ability_data.gd" id="1_20oxd"]
 [ext_resource type="PackedScene" uid="uid://b1kv632btcd6n" path="res://scenes/battle/orc_battle_actor.tscn" id="2_20oxd"]
 [ext_resource type="Resource" path="res://data/units/Warrior.tres" id="3_wp4wc"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/units/character_data.gd" id="4_m6rwx"]

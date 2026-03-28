@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://djolfa2r5b6n0" path="res://scenes/battle/unit_overlay/movement_overlay.png" id="5_hgyof"]
 [ext_resource type="Texture2D" uid="uid://c7ywv0feplun" path="res://scenes/battle/unit_overlay/arrows.svg" id="7_d5mw3"]
 [ext_resource type="Script" uid="uid://p08jxebj5jal" path="res://scenes/battle/game_board/UnitPath.gd" id="8_wkw2y"]
-[ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/stats/unit_stats.gd" id="13_d3c05"]
+[ext_resource type="Script" uid="uid://284cjjvxq0a7" path="res://data/types/unit_stats.gd" id="13_d3c05"]
 [ext_resource type="Script" uid="uid://drvu56wd8e480" path="res://scenes/level/map_director.gd" id="13_sfjbq"]
 [ext_resource type="Texture2D" uid="uid://b45wannp1vu75" path="res://graphics/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="14_2qf2x"]
 [ext_resource type="PackedScene" uid="uid://bthnr54dgwlh2" path="res://Units/savannah.tscn" id="14_d3c05"]

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://cwbgxc8qsdcpv"]
 
 [ext_resource type="Texture2D" uid="uid://b3yvxp0g1pnn8" path="res://graphics/weapons/w22.png" id="1_icon"]
-[ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/weapon_data.gd" id="2_script"]
+[ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/types/weapon_data.gd" id="2_script"]
 
 [resource]
 script = ExtResource("2_script")

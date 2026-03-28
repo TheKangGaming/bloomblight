@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://cjn48pfrllmt8"]
 
-[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_lgm27"]
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/types/ability_data.gd" id="1_lgm27"]
 [ext_resource type="Resource" uid="uid://bud6nrturapsp" path="res://data/Harvest.tres" id="2_ebqqr"]
 [ext_resource type="Resource" uid="uid://bhqkfu4w4hexx" path="res://data/units/Deserter.tres" id="3_7a0sv"]
 [ext_resource type="PackedScene" uid="uid://coc1fm6lpfkmr" path="res://scenes/battle/savannah_battle_actor.tscn" id="3_ebqqr"]

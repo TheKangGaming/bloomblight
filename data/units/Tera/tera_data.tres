@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://drbs6r1u01xcf"]
 
-[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_2vpsb"]
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/types/ability_data.gd" id="1_2vpsb"]
 [ext_resource type="Resource" uid="uid://bxi5bnn8ay4xn" path="res://data/Bloom.tres" id="2_cu05k"]
 [ext_resource type="PackedScene" uid="uid://cyqtsfss5xi2d" path="res://scenes/battle/tera_battle_actor.tscn" id="3_cu05k"]
 [ext_resource type="Resource" uid="uid://bxgjtc3xon7ar" path="res://data/units/Purifier.tres" id="3_mjny1"]
