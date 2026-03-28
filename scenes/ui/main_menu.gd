@@ -104,7 +104,10 @@ func _handle_menu_toggle_input(event: InputEvent) -> bool:
 	return false
 
 func toggle_menu():
-	visible = not visible
+	var opening := not visible
+	if not opening and SettingsManager and SettingsManager.has_pending_display_preview():
+		SettingsManager.revert_display_preview()
+	visible = opening
 	get_tree().paused = visible
 	update_status_page()
 	

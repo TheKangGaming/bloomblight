@@ -682,7 +682,7 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-position = Vector2(1200, 1040)
+position = Vector2(1296, 1520)
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(1040, 816)

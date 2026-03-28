@@ -32,6 +32,7 @@ var _confirm_button: Button
 var _revert_button: Button
 var _restore_button: Button
 var _close_button: Button
+var _scroll_container: ScrollContainer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -40,6 +41,8 @@ func _ready() -> void:
 	_connect_manager_signals()
 	_refresh_from_settings()
 	_hide_preview_box()
+	if not _embedded_mode:
+		call_deferred("focus_default_control")
 
 func _exit_tree() -> void:
 	_disconnect_manager_signals()
@@ -73,14 +76,15 @@ func _build_ui() -> void:
 	_title_label.add_theme_font_size_override("font_size", 36)
 	root.add_child(_title_label)
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(scroll)
+	_scroll_container = ScrollContainer.new()
+	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll_container.follow_focus = true
+	root.add_child(_scroll_container)
 
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 18)
-	scroll.add_child(content)
+	_scroll_container.add_child(content)
 
 	content.add_child(_build_section_title("Display"))
 	_mode_option = _create_option_row(content, "Window Mode", [
@@ -121,6 +125,7 @@ func _build_ui() -> void:
 	_confirm_button.custom_minimum_size = Vector2(220, 54)
 	_confirm_button.add_theme_font_size_override("font_size", 26)
 	_confirm_button.pressed.connect(_on_confirm_preview_pressed)
+	_confirm_button.focus_entered.connect(_on_focusable_control_entered.bind(_confirm_button))
 	preview_actions.add_child(_confirm_button)
 
 	_revert_button = Button.new()
@@ -128,6 +133,7 @@ func _build_ui() -> void:
 	_revert_button.custom_minimum_size = Vector2(180, 54)
 	_revert_button.add_theme_font_size_override("font_size", 26)
 	_revert_button.pressed.connect(_on_revert_preview_pressed)
+	_revert_button.focus_entered.connect(_on_focusable_control_entered.bind(_revert_button))
 	preview_actions.add_child(_revert_button)
 
 	content.add_child(_build_section_title("Audio"))
@@ -156,6 +162,7 @@ func _build_ui() -> void:
 	_restore_button.custom_minimum_size = Vector2(220, 58)
 	_restore_button.add_theme_font_size_override("font_size", 26)
 	_restore_button.pressed.connect(_on_restore_defaults_pressed)
+	_restore_button.focus_entered.connect(_on_focusable_control_entered.bind(_restore_button))
 	actions.add_child(_restore_button)
 
 	_close_button = Button.new()
@@ -163,6 +170,7 @@ func _build_ui() -> void:
 	_close_button.custom_minimum_size = Vector2(160, 58)
 	_close_button.add_theme_font_size_override("font_size", 26)
 	_close_button.pressed.connect(_on_close_pressed)
+	_close_button.focus_entered.connect(_on_focusable_control_entered.bind(_close_button))
 	actions.add_child(_close_button)
 
 	_apply_embedded_mode()
@@ -191,6 +199,7 @@ func _create_option_row(parent: VBoxContainer, label_text: String, entries: Arra
 	for entry in entries:
 		option.add_item(String(entry[0]), int(entry[1]))
 	option.item_selected.connect(callback)
+	option.focus_entered.connect(_on_focusable_control_entered.bind(option))
 	row.add_child(option)
 	return option
 
@@ -210,6 +219,7 @@ func _create_toggle_row(parent: VBoxContainer, label_text: String, callback: Cal
 	toggle.custom_minimum_size = Vector2(260, 48)
 	toggle.add_theme_font_size_override("font_size", 24)
 	toggle.toggled.connect(callback)
+	toggle.focus_entered.connect(_on_focusable_control_entered.bind(toggle))
 	row.add_child(toggle)
 	return toggle
 
@@ -232,6 +242,7 @@ func _create_slider_row(parent: VBoxContainer, label_text: String, callback: Cal
 	slider.custom_minimum_size = Vector2(320, 48)
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.value_changed.connect(callback)
+	slider.focus_entered.connect(_on_focusable_control_entered.bind(slider))
 	row.add_child(slider)
 
 	var value_label := Label.new()
@@ -279,6 +290,51 @@ func _apply_embedded_mode() -> void:
 		_title_label.visible = not _embedded_mode
 	if _close_button != null:
 		_close_button.visible = not _embedded_mode
+
+func focus_default_control() -> void:
+	if not is_visible_in_tree():
+		return
+
+	if _preview_box != null and _preview_box.visible and _confirm_button != null and _confirm_button.visible:
+		_confirm_button.grab_focus()
+		return
+
+	var focus_candidates: Array[Control] = [
+		_mode_option,
+		_resolution_option,
+		_vsync_toggle,
+		_master_slider,
+		_music_slider,
+		_sfx_slider,
+		_ambience_slider,
+		_ui_slider,
+		_dialogue_speed_option,
+		_screen_shake_toggle,
+		_auto_advance_toggle,
+		_restore_button,
+		_close_button,
+	]
+
+	for candidate in focus_candidates:
+		if _is_focus_candidate_interactable(candidate):
+			candidate.grab_focus()
+			return
+
+func _is_focus_candidate_interactable(candidate: Control) -> bool:
+	if candidate == null or not candidate.visible:
+		return false
+	if candidate.get_focus_mode_with_override() != Control.FOCUS_ALL:
+		return false
+	if candidate is BaseButton and (candidate as BaseButton).disabled:
+		return false
+	return true
+
+func _on_focusable_control_entered(control: Control) -> void:
+	if _scroll_container == null or control == null:
+		return
+	if not _scroll_container.is_ancestor_of(control):
+		return
+	_scroll_container.ensure_control_visible(control)
 
 func _refresh_from_settings() -> void:
 	if SettingsManager == null:
@@ -379,6 +435,8 @@ func _preview_current_display_settings() -> void:
 func _show_preview_box(seconds_left: int) -> void:
 	_preview_box.visible = true
 	_preview_label.text = "Keep these display settings? They will revert automatically in %d seconds." % seconds_left
+	if _confirm_button != null and _confirm_button.visible:
+		_confirm_button.grab_focus()
 
 func _hide_preview_box() -> void:
 	if _preview_box != null:
@@ -467,3 +525,4 @@ func _on_display_preview_updated(seconds_left: int) -> void:
 func _on_display_preview_finished(_confirmed: bool) -> void:
 	_hide_preview_box()
 	_refresh_from_settings()
+	call_deferred("focus_default_control")

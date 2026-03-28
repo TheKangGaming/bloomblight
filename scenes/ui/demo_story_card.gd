@@ -79,12 +79,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		_dismiss(false)
 		get_viewport().set_input_as_handled()
 
+func _gui_input(event: InputEvent) -> void:
+	if _is_dismissing:
+		return
+
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			_dismiss(true)
+			accept_event()
+
 func _on_input_mode_changed(_mode: int) -> void:
 	_refresh_prompts()
 
 func _refresh_prompts() -> void:
 	var continue_label := DemoDirector.get_confirm_label() if DemoDirector else "E"
-	confirm_label.text = "Press %s to %s." % [continue_label, _confirm_hint]
+	if continue_label == "Left Click":
+		confirm_label.text = "Click to %s." % _confirm_hint
+	else:
+		confirm_label.text = "Press %s to %s." % [continue_label, _confirm_hint]
 	if _allow_skip:
 		var skip_input := DemoDirector.get_action_label("cancel") if DemoDirector else "Esc"
 		skip_label.text = "Press %s to %s." % [skip_input, _skip_hint]
