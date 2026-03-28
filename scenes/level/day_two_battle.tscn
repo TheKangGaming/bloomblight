@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://dx3gy0hon43dj"]
+[gd_scene format=3 uid="uid://dx3gy0hon43dj"]
 
 [ext_resource type="TileSet" uid="uid://b8uqxw86b8u65" path="res://Epic_Tileset.tres" id="1_xlj5a"]
 [ext_resource type="Resource" uid="uid://c35omi6knfjfa" path="res://scenes/battle/game_board/Grid.tres" id="2_gh08p"]
@@ -631,11 +631,11 @@ tile_set = SubResource("TileSet_vtv1r")
 
 [node name="FarmBackdrop" parent="." unique_id=1737119001 instance=ExtResource("27_3adft")]
 z_index = -20
-position = Vector2(-1008, -384)
 
 [node name="FarmSetDress" type="Node2D" parent="." unique_id=713470234]
 z_index = -15
 y_sort_enabled = true
+position = Vector2(1008, 384)
 
 [node name="CarrotCrop" type="Sprite2D" parent="FarmSetDress" unique_id=645510314]
 position = Vector2(270, 322)
@@ -665,7 +665,6 @@ metadata/_custom_type_script = "uid://bp5i3aj61nror"
 [node name="Map" type="TileMapLayer" parent="GameBoard" unique_id=281735625]
 visible = false
 use_parent_material = true
-tile_map_data = PackedByteArray()
 tile_set = ExtResource("1_xlj5a")
 script = ExtResource("3_d5mw3")
 
@@ -683,33 +682,33 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-position = Vector2(752, 16)
+position = Vector2(1200, 944)
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
-position = Vector2(432, 368)
+position = Vector2(1026, 831)
 character_data = ExtResource("18_0a6tx")
 current_stats = SubResource("Resource_2jsv4")
 
 [node name="Tera" parent="GameBoard" unique_id=2040355394 instance=ExtResource("24_jk2x1")]
-position = Vector2(496, 400)
+position = Vector2(1058, 767)
 character_data = ExtResource("18_hejk3")
 current_stats = SubResource("Resource_uh0gq")
 
 [node name="Silas" parent="GameBoard" unique_id=1485962306 instance=ExtResource("26_kk0qh")]
-position = Vector2(560, 336)
+position = Vector2(1058, 831)
 character_data = ExtResource("20_t05iy")
 current_stats = SubResource("Resource_c7q0v")
 
 [node name="BanditWarrior" parent="GameBoard" unique_id=200120114 instance=ExtResource("23_hejk3")]
-position = Vector2(272, 176)
+position = Vector2(1026, 1151)
 current_stats = SubResource("Resource_m0spk")
 
 [node name="BanditMarauder" parent="GameBoard" unique_id=1019864192 instance=ExtResource("22_efnms")]
-position = Vector2(176, 144)
+position = Vector2(1058, 1087)
 current_stats = SubResource("Resource_yyfnn")
 
 [node name="BanditArcher" parent="GameBoard" unique_id=1878164639 instance=ExtResource("23_x18w8")]
-position = Vector2(144, 112)
+position = Vector2(1058, 1151)
 current_stats = SubResource("Resource_wqequ")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=907970081]
@@ -775,5 +774,3 @@ enemy_stat_scale_by_class = {
 "STR": 95
 }
 }
-
-

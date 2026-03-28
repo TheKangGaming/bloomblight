@@ -1,6 +1,12 @@
 class_name GameBoard
 extends Node2D
 
+# Farm battle setup rules:
+# - Keep this scene root aligned to (0, 0) with the farm backdrop.
+# - Stage the overworld intrusion with `StoryMarkers` in `game.tscn`.
+# - Move units and props here; avoid shifting the whole board to line things up.
+# - Cursor, camera, and collision math all assume board-local coordinates.
+# - If the playable farm area changes, update the grid and cursor limits together.
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
 const FOLLOW_UP_SPEED_DIFF := 4
@@ -75,6 +81,7 @@ var _selection_sfx_player: AudioStreamPlayer = null
 const MAX_VALUE: int = 99999
 
 func _ready() -> void:
+	_configure_board_bounds()
 	_movement_costs = _map.get_movement_costs()
 	_rebuild_collision_blockers()
 	_cursor.accept_pressed.connect(_on_Cursor_accept_pressed)
@@ -183,6 +190,8 @@ func _rebuild_collision_blockers() -> void:
 	if scene_root == null:
 		return
 
+	_mark_tilemap_cells_blocked(scene_root)
+
 	for node in scene_root.find_children("*", "CollisionShape2D", true, false):
 		var collision_shape := node as CollisionShape2D
 		if collision_shape == null or not is_instance_valid(collision_shape):
@@ -199,6 +208,104 @@ func _rebuild_collision_blockers() -> void:
 		_mark_shape_cells_blocked(collision_shape)
 
 
+func _configure_board_bounds() -> void:
+	if grid == null:
+		return
+
+	var scene_root := get_parent()
+	if scene_root == null:
+		return
+
+	var max_position := Vector2.ZERO
+
+	for node in scene_root.find_children("*", "TileMapLayer", true, false):
+		var tile_map := node as TileMapLayer
+		if tile_map == null:
+			continue
+		if self.is_ancestor_of(tile_map):
+			continue
+
+		var used_rect: Rect2i = tile_map.get_used_rect()
+		if used_rect.size == Vector2i.ZERO:
+			continue
+
+		var last_cell: Vector2i = used_rect.position + used_rect.size - Vector2i.ONE
+		var bottom_right: Vector2 = to_local(tile_map.to_global(tile_map.map_to_local(last_cell)))
+		max_position.x = maxf(max_position.x, bottom_right.x)
+		max_position.y = maxf(max_position.y, bottom_right.y)
+
+	for node in scene_root.find_children("*", "CollisionShape2D", true, false):
+		var collision_shape := node as CollisionShape2D
+		if collision_shape == null or not is_instance_valid(collision_shape):
+			continue
+		if collision_shape.shape == null or collision_shape.disabled:
+			continue
+		if self.is_ancestor_of(collision_shape):
+			continue
+
+		var bounds := _get_collision_shape_bounds(collision_shape)
+		if bounds.size == Vector2.ZERO:
+			continue
+
+		max_position.x = maxf(max_position.x, bounds.position.x + bounds.size.x)
+		max_position.y = maxf(max_position.y, bounds.position.y + bounds.size.y)
+
+	if max_position == Vector2.ZERO:
+		return
+
+	var max_cell: Vector2 = grid.calculate_grid_coordinates(max_position)
+	grid.size = Vector2(
+		maxf(grid.size.x, max_cell.x + 1.0),
+		maxf(grid.size.y, max_cell.y + 1.0)
+	)
+	_apply_cursor_camera_limits()
+
+
+func _apply_cursor_camera_limits() -> void:
+	if _cursor_camera == null or grid == null:
+		return
+
+	_cursor_camera.limit_left = 0
+	_cursor_camera.limit_top = 0
+	_cursor_camera.limit_right = int(grid.size.x * grid.cell_size.x)
+	_cursor_camera.limit_bottom = int(grid.size.y * grid.cell_size.y)
+
+	if _battle_camera != null:
+		_battle_camera.limit_left = _cursor_camera.limit_left
+		_battle_camera.limit_top = _cursor_camera.limit_top
+		_battle_camera.limit_right = _cursor_camera.limit_right
+		_battle_camera.limit_bottom = _cursor_camera.limit_bottom
+
+
+func _mark_tilemap_cells_blocked(scene_root: Node) -> void:
+	var blocking_layer_names := {
+		"Obstacles": true,
+		"Clifs": true,
+		"Cliffs": true,
+		"Overhead": true,
+		"Overhead2": true
+	}
+
+	for node in scene_root.find_children("*", "TileMapLayer", true, false):
+		var tile_map := node as TileMapLayer
+		if tile_map == null:
+			continue
+		if self.is_ancestor_of(tile_map):
+			continue
+		if not blocking_layer_names.has(tile_map.name):
+			continue
+
+		for used_cell_variant in tile_map.get_used_cells():
+			var used_cell: Vector2i = used_cell_variant
+			if tile_map.get_cell_source_id(used_cell) == -1:
+				continue
+
+			var local_position: Vector2 = to_local(tile_map.to_global(tile_map.map_to_local(used_cell)))
+			var blocked_cell: Vector2 = grid.grid_clamp(grid.calculate_grid_coordinates(local_position))
+			if grid.is_within_bounds(blocked_cell):
+				_blocked_cells[blocked_cell] = true
+
+
 func _find_static_body_owner(node: Node) -> StaticBody2D:
 	var current := node.get_parent()
 	while current != null:
@@ -211,35 +318,42 @@ func _find_static_body_owner(node: Node) -> StaticBody2D:
 
 
 func _mark_shape_cells_blocked(collision_shape: CollisionShape2D) -> void:
-	var shape := collision_shape.shape
-	var bounds := Rect2()
-	var center := collision_shape.global_position
-	var scale := collision_shape.global_scale.abs()
-
-	if shape is RectangleShape2D:
-		var rectangle := shape as RectangleShape2D
-		var size := Vector2(rectangle.size.x * scale.x, rectangle.size.y * scale.y)
-		bounds = Rect2(center - (size / 2.0), size)
-	elif shape is CapsuleShape2D:
-		var capsule := shape as CapsuleShape2D
-		var width := capsule.radius * 2.0 * scale.x
-		var height := capsule.height * scale.y
-		bounds = Rect2(center - Vector2(width * 0.5, height * 0.5), Vector2(width, height))
-	elif shape is CircleShape2D:
-		var circle := shape as CircleShape2D
-		var radius := circle.radius * maxf(scale.x, scale.y)
-		bounds = Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
-	else:
+	var bounds := _get_collision_shape_bounds(collision_shape)
+	if bounds.size == Vector2.ZERO:
 		return
 
-	var min_cell := grid.grid_clamp(grid.calculate_grid_coordinates(bounds.position))
-	var max_cell := grid.grid_clamp(grid.calculate_grid_coordinates(bounds.position + bounds.size))
+	var min_cell: Vector2 = grid.grid_clamp(grid.calculate_grid_coordinates(bounds.position))
+	var max_cell: Vector2 = grid.grid_clamp(grid.calculate_grid_coordinates(bounds.position + bounds.size))
 
 	for x in range(int(min_cell.x), int(max_cell.x) + 1):
 		for y in range(int(min_cell.y), int(max_cell.y) + 1):
 			var cell := Vector2(x, y)
 			if grid.is_within_bounds(cell):
 				_blocked_cells[cell] = true
+
+
+func _get_collision_shape_bounds(collision_shape: CollisionShape2D) -> Rect2:
+	var shape := collision_shape.shape
+	var center := to_local(collision_shape.global_position)
+	var scale := collision_shape.global_scale.abs()
+
+	if shape is RectangleShape2D:
+		var rectangle := shape as RectangleShape2D
+		var size := Vector2(rectangle.size.x * scale.x, rectangle.size.y * scale.y)
+		return Rect2(center - (size / 2.0), size)
+
+	if shape is CapsuleShape2D:
+		var capsule := shape as CapsuleShape2D
+		var width := capsule.radius * 2.0 * scale.x
+		var height := capsule.height * scale.y
+		return Rect2(center - Vector2(width * 0.5, height * 0.5), Vector2(width, height))
+
+	if shape is CircleShape2D:
+		var circle := shape as CircleShape2D
+		var radius := circle.radius * maxf(scale.x, scale.y)
+		return Rect2(center - Vector2.ONE * radius, Vector2.ONE * radius * 2.0)
+
+	return Rect2()
 
 
 func get_walkable_cells(unit: Unit) -> Array:
@@ -1850,12 +1964,11 @@ func _handoff_to_cursor_camera(target_position: Vector2) -> void:
 	if _cursor == null or _cursor_camera == null or grid == null:
 		return
 
-	var target_cell: Vector2 = grid.grid_clamp(grid.calculate_grid_coordinates(target_position))
-	var snapped_focus: Vector2 = grid.calculate_map_position(target_cell)
+	var local_target_position: Vector2 = to_local(target_position)
+	var target_cell: Vector2 = grid.grid_clamp(grid.calculate_grid_coordinates(local_target_position))
 	_cursor.cell = target_cell
 
 	_cursor_camera.position_smoothing_enabled = false
-	_cursor_camera.global_position = snapped_focus
 	if _cursor_camera.has_method("reset_smoothing"):
 		_cursor_camera.reset_smoothing()
 	_cursor_camera.make_current()

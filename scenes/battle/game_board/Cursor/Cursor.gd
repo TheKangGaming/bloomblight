@@ -62,7 +62,11 @@ func _process(_delta: float) -> void:
 	var mouse_velocity := Input.get_last_mouse_velocity()
 	if is_mouse or mouse_velocity.length_squared() > 0.0:
 		is_mouse = true
-		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
+		var board := get_parent() as Node2D
+		if board == null:
+			return
+		var board_local_mouse: Vector2 = board.to_local(get_global_mouse_position())
+		var grid_coords = grid.calculate_grid_coordinates(board_local_mouse)
 		if cell != grid_coords:
 			cell = grid_coords
 

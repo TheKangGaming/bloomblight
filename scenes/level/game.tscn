@@ -2683,11 +2683,11 @@ position = Vector2(1207, 548)
 position = Vector2(1188, 424)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
-position = Vector2(1040, 1192)
+position = Vector2(961, 1183)
 sign_text = "The southern road is gone. Blight swallowed it whole."
 
 [node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
-position = Vector2(1040, 908)
+position = Vector2(957, 874)
 sign_text = "Abandoned fields ahead. Shelter, if the roof still holds."
 
 [node name="RegularSign" type="StaticBody2D" parent="Objects" unique_id=1859774796]
@@ -2772,13 +2772,13 @@ position = Vector2(1014, 1082)
 position = Vector2(1067, 1080)
 
 [node name="BanditDefensePlayer" type="Marker2D" parent="StoryMarkers" unique_id=2061263664]
-position = Vector2(1326, 724)
+position = Vector2(1016, 835)
 
 [node name="BanditDefenseTera" type="Marker2D" parent="StoryMarkers" unique_id=323046289]
-position = Vector2(1426, 754)
+position = Vector2(1042, 785)
 
 [node name="BanditDefenseSilas" type="Marker2D" parent="StoryMarkers" unique_id=2081966568]
-position = Vector2(1514, 692)
+position = Vector2(1070, 836)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436653720]
 

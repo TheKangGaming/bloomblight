@@ -4,5 +4,5 @@
 
 [resource]
 script = ExtResource("1")
-size = Vector2(24, 16)
+size = Vector2(80, 60)
 cell_size = Vector2(32, 32)
