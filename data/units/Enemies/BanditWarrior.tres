@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_u6smw"]
 [ext_resource type="PackedScene" uid="uid://b4rk1kbyc765j" path="res://scenes/battle/bandit_warrior_battle_actor.tscn" id="2_5pdit"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="2_ogv80"]
-[ext_resource type="Resource" path="res://Units/Data/Warrior.tres" id="3_u3p3n"]
-[ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://Weapons/WoodenSword.tres" id="4_3x4vt"]
+[ext_resource type="Resource" path="res://data/units/Warrior.tres" id="3_u3p3n"]
+[ext_resource type="Resource" uid="uid://dfpldlo66m0de" path="res://data/items/Weapons/WoodenSword.tres" id="4_3x4vt"]
 
 [resource]
 script = ExtResource("2_ogv80")

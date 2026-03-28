@@ -10,7 +10,7 @@ func _ready() -> void:
 	
 	# Load Savannah's data resource immediately when the game boots.
 	# (Make sure this path perfectly matches your actual file structure!)	
-	var savannah_data = load("res://Units/Data/Savannah/savannah_data.tres") as CharacterData
+	var savannah_data = load("res://data/units/Savannah/savannah_data.tres") as CharacterData
 	
 	if savannah_data:
 		party_roster.append(savannah_data)

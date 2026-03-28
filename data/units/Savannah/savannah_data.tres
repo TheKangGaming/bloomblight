@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/ability_data.gd" id="1_lgm27"]
 [ext_resource type="Resource" uid="uid://bud6nrturapsp" path="res://data/Harvest.tres" id="2_ebqqr"]
-[ext_resource type="Resource" uid="uid://bhqkfu4w4hexx" path="res://Units/Data/Deserter.tres" id="3_7a0sv"]
+[ext_resource type="Resource" uid="uid://bhqkfu4w4hexx" path="res://data/units/Deserter.tres" id="3_7a0sv"]
 [ext_resource type="PackedScene" uid="uid://coc1fm6lpfkmr" path="res://scenes/battle/savannah_battle_actor.tscn" id="3_ebqqr"]
-[ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://Accessories/TravelerCharm.tres" id="4_ssbpe"]
-[ext_resource type="Resource" path="res://Armor/ScoutBrigandine.tres" id="5_alody"]
-[ext_resource type="Resource" uid="uid://cwbgxc8qsdcpv" path="res://Weapons/IronShortsword.tres" id="6_mqwgg"]
+[ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://data/items/Accessories/TravelerCharm.tres" id="4_ssbpe"]
+[ext_resource type="Resource" path="res://data/items/Armor/ScoutBrigandine.tres" id="5_alody"]
+[ext_resource type="Resource" uid="uid://cwbgxc8qsdcpv" path="res://data/items/Weapons/IronShortsword.tres" id="6_mqwgg"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://Units/character_data.gd" id="7_tthfp"]
 
 [resource]
