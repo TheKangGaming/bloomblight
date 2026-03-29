@@ -685,6 +685,11 @@ func _hide_status_tab_highlight() -> void:
 		_status_tab_highlight_root.modulate.a = 0.0
 
 func _on_tab_changed(tab_index: int) -> void:
+	if SettingsManager and SettingsManager.has_pending_display_preview():
+		var current_tab := tabs.get_tab_control(tab_index) if tabs != null else null
+		if current_tab != settings_tab:
+			SettingsManager.revert_display_preview()
+
 	if _status_tab_highlight_enabled and tab_index == 0:
 		_status_tab_highlight_enabled = false
 		_hide_status_tab_highlight()

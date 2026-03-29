@@ -12,7 +12,7 @@ const ORC_DEATH_SFX := preload("res://audio/Monster_Grunt4.mp3")
 const ORC_THUD_SFX := preload("res://audio/Monster_Thud.mp3")
 const BOW_ATTACK_SFX_DELAY := 0.06
 const STRIKE_IMPACT_TIMEOUT := 1.2
-const DEBUG_COMBAT_LOGS := true
+const DEBUG_COMBAT_LOGS := false
 
 # --- NODE REFERENCES ---
 @onready var battle_world: Node2D = $BattleWorld

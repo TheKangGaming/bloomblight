@@ -1618,8 +1618,8 @@ func _on_return_button_pressed(btn: Button) -> void:
 			# ==========================================
 			# --- THE VICTORY PATH (Late Afternoon) ---
 			# ==========================================
-			if Global.current_day == 3 and Global.learn_recipe(Global.Items.MORNING_COFFEE):
-				print("Unlocked Morning Coffee recipe from combat!")
+			if Global.current_day == 3:
+				Global.learn_recipe(Global.Items.MORNING_COFFEE)
 
 			if color_rect:
 				var tween = farm.create_tween()
@@ -1800,7 +1800,6 @@ func _execute_harvest(caster: Unit, target_cell: Vector2) -> bool:
 	tween.tween_property(plant, "scale", Vector2.ZERO, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_callback(plant.queue_free) # Delete the node
 	
-	print(caster.name, " harvested a plant and healed for ", actual_healed, " HP!")
 	if _demo_battle_active and not _demo_harvest_done:
 		_demo_harvest_done = true
 		demo_healflower_harvested.emit()

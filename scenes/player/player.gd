@@ -248,7 +248,6 @@ func _clear_cutscene_emote() -> void:
 	_cutscene_emote_active = false
 
 func _on_animation_tree_animation_finished(_anim_name: StringName) -> void:
-	print("Player was successfully unlocked!")
 	can_move = true
 
 func axe_use():

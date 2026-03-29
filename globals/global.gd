@@ -450,7 +450,6 @@ func add_item(item_type: Items, amount: int = 1):
 		
 	# Emit the signal so the UI knows to refresh!
 	inventory_updated.emit()
-	print("Added ", amount, " of ", Items.keys()[item_type], ". Total: ", inventory[item_type])
 
 func reset_demo_state() -> void:
 	for item_type in inventory.keys():

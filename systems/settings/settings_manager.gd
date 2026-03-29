@@ -153,14 +153,30 @@ func revert_display_preview() -> void:
 
 func restore_defaults() -> void:
 	var defaults := get_default_settings()
-	set_audio_volume("master_volume", float(defaults["master_volume"]))
-	set_audio_volume("music_volume", float(defaults["music_volume"]))
-	set_audio_volume("sfx_volume", float(defaults["sfx_volume"]))
-	set_audio_volume("ambience_volume", float(defaults["ambience_volume"]))
-	set_audio_volume("ui_volume", float(defaults["ui_volume"]))
-	set_dialogue_speed(float(defaults["dialogue_speed"]))
-	set_screen_shake_enabled(bool(defaults["screen_shake_enabled"]))
-	set_auto_advance_dialogue(bool(defaults["auto_advance_dialogue"]))
+	var non_display_keys := [
+		"master_volume",
+		"music_volume",
+		"sfx_volume",
+		"ambience_volume",
+		"ui_volume",
+		"dialogue_speed",
+		"screen_shake_enabled",
+		"auto_advance_dialogue",
+	]
+	var changed := false
+	for key in non_display_keys:
+		var default_value = defaults[key]
+		if _settings.get(key) == default_value:
+			continue
+		_settings[key] = default_value
+		setting_changed.emit(String(key), default_value)
+		changed = true
+
+	if changed:
+		_apply_audio_settings()
+		_save_settings()
+		_emit_settings_changed()
+
 	preview_display_settings(
 		String(defaults["display_mode"]),
 		Vector2i(int(defaults["window_width"]), int(defaults["window_height"])),

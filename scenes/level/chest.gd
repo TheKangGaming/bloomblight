@@ -49,8 +49,6 @@ func open_chest():
 	opened.emit()
 
 func give_loot():
-	print("Chest opened! Loot distributed.")
-
 	if carrot_seed_reward > 0:
 		Global.inventory[Global.Items.CARROT_SEED] += carrot_seed_reward
 	if parsnip_seed_reward > 0:
@@ -61,8 +59,8 @@ func give_loot():
 		Global.unlocked_tools.append(Global.Tools.WATER)
 		Global.unlocked_tools.append(Global.Tools.AXE)
 
-	if grant_glazed_carrots_recipe and Global.learn_recipe(Global.Items.GLAZED_CARROTS):
-		print("You found the Glazed Carrots recipe!")
+	if grant_glazed_carrots_recipe:
+		Global.learn_recipe(Global.Items.GLAZED_CARROTS)
 
 	Global.inventory_updated.emit()
 

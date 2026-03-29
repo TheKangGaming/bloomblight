@@ -252,5 +252,3 @@ func eat_food():
 	Global.stats_updated.emit()
 	if DemoDirector:
 		DemoDirector.notify_food_eaten(stored_item_enum)
-	
-	print("Ate a delicious ", Global.Items.keys()[stored_item_enum], "!")

@@ -512,14 +512,10 @@ func attack(target: Unit) -> void:
 		var is_crit = (crit_roll < stats["crit"]) # Replaced 'crit_chance'
 		if is_crit:
 			actual_damage *= 3
-			print(name + " LANDS A CRITICAL HIT! " + str(actual_damage) + " damage!")
-		else:
-			print(name + " strikes " + target.name + " for " + str(actual_damage) + " damage.")
 
 		await target.take_damage(actual_damage, is_crit)
 	else:
 		# MISS!
-		print(name + " MISSED!")
 		target.show_miss_text()
 		await get_tree().create_timer(0.2).timeout
 
@@ -576,7 +572,6 @@ func die() -> void:
 	died.emit(self)
 	if is_player:
 		Global.set_player_unbuffed_hp(0)
-	print(name + " has fallen in battle!")
 	# (We can play a fancy death animation or sound effect here later!)
 	queue_free()
 
