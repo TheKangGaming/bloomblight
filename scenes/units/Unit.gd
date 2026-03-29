@@ -294,7 +294,7 @@ func get_attack_preview_data(weapon: WeaponData = null) -> Dictionary:
 	}
 
 
-func _resolve_damage_stat_profile(is_magic_damage: bool, weapon_override: WeaponData = null) -> Dictionary:
+func _resolve_damage_stat_profile(is_magic_damage: bool, _weapon_override: WeaponData = null) -> Dictionary:
 	if is_magic_damage:
 		var int_total := int_stat
 		return {

@@ -64,9 +64,9 @@ func _build_map_boundaries(tile_size: Vector2i) -> void:
 		Vector2(map_pixel_size.x + (thickness * 0.5), map_pixel_size.y * 0.5)
 	)
 
-func _create_static_body(name: String) -> StaticBody2D:
+func _create_static_body(body_name: String) -> StaticBody2D:
 	var body := StaticBody2D.new()
-	body.name = name
+	body.name = body_name
 	body.collision_layer = TERRAIN_COLLISION_LAYER
 	body.collision_mask = 0
 	return body

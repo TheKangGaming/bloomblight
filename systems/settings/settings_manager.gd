@@ -262,7 +262,10 @@ func _apply_display_settings(display_settings: Dictionary) -> void:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 			DisplayServer.window_set_size(resolution)
 			var screen_size := DisplayServer.screen_get_size()
-			var window_pos := (screen_size - resolution) / 2
+			var window_pos := Vector2i(
+				roundi((screen_size.x - resolution.x) * 0.5),
+				roundi((screen_size.y - resolution.y) * 0.5)
+			)
 			DisplayServer.window_set_position(window_pos)
 		"exclusive_fullscreen":
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
