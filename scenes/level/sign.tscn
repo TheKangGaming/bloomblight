@@ -30,6 +30,7 @@ shape = SubResource("CircleShape2D_puj2q")
 
 [node name="Popup" type="PanelContainer" parent="." unique_id=2071618677]
 visible = false
+z_index = 100
 y_sort_enabled = true
 offset_left = -157.0
 offset_top = -149.0

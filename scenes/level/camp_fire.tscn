@@ -126,6 +126,7 @@ libraries/ = SubResource("AnimationLibrary_py2rd")
 
 [node name="FeedbackPopup" type="PanelContainer" parent="." unique_id=1903156712]
 visible = false
+z_index = 100
 offset_left = -116.0
 offset_top = -126.0
 offset_right = 116.0

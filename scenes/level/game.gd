@@ -52,7 +52,7 @@ enum IntroState {
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
-var _bandit_tension_music_path := "res://audio/Music_Anxiety.wav"
+var _bandit_tension_music_path := "res://audio/music/Music_Anxiety.wav"
 var _bandit_tension_music: AudioStream = null
 var _story_actor_scene: PackedScene = preload("res://scenes/level/story_actor.tscn")
 var _bandit_leader_actor_scene: PackedScene = preload("res://scenes/battle/bandit_marauder_battle_actor.tscn")

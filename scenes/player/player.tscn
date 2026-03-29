@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://di74e05su6s0" path="res://scenes/player/player.gd" id="1_dovo2"]
 [ext_resource type="PackedScene" uid="uid://cna6pebvulm7w" path="res://scenes/player/visuals.tscn" id="2_75vfm"]
-[ext_resource type="AudioStream" uid="uid://bejbtqlsfdjp0" path="res://audio/hoe.wav" id="3_gmlin"]
-[ext_resource type="AudioStream" uid="uid://s8wrm4u8enno" path="res://audio/axe.wav" id="4_lvxji"]
-[ext_resource type="AudioStream" uid="uid://cyid2tqdwhjd" path="res://audio/water.ogg" id="5_p47bc"]
-[ext_resource type="AudioStream" path="res://audio/Dirt Walk 2.wav" id="6_dirtwalk"]
-[ext_resource type="AudioStream" path="res://audio/Dirt Run 2.wav" id="7_dirtrun"]
+[ext_resource type="AudioStream" uid="uid://bejbtqlsfdjp0" path="res://audio/sfx/hoe.wav" id="3_gmlin"]
+[ext_resource type="AudioStream" uid="uid://s8wrm4u8enno" path="res://audio/sfx/axe.wav" id="4_lvxji"]
+[ext_resource type="AudioStream" uid="uid://cyid2tqdwhjd" path="res://audio/sfx/water.ogg" id="5_p47bc"]
+[ext_resource type="AudioStream" uid="uid://b7h4n3t7r327s" path="res://audio/sfx/Dirt Walk 2.wav" id="6_dirtwalk"]
+[ext_resource type="AudioStream" uid="uid://cs5ijahao5pr1" path="res://audio/sfx/Dirt Run 2.wav" id="7_dirtrun"]
 
 [sub_resource type="Gradient" id="Gradient_5gtgg"]
 colors = PackedColorArray(0, 0, 0, 0.5882353, 0, 0, 0, 0)

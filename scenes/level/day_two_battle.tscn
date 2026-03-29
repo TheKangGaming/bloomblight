@@ -17,7 +17,7 @@
 [ext_resource type="Resource" uid="uid://cjn48pfrllmt8" path="res://data/units/Savannah/savannah_data.tres" id="18_0a6tx"]
 [ext_resource type="Resource" uid="uid://drbs6r1u01xcf" path="res://data/units/Tera/tera_data.tres" id="18_hejk3"]
 [ext_resource type="Resource" uid="uid://b6wnmas847bmy" path="res://data/units/Silas/silas_data.tres" id="20_t05iy"]
-[ext_resource type="AudioStream" uid="uid://13xr73xkmabj" path="res://audio/Music_Norest.wav" id="21_mwyqx"]
+[ext_resource type="AudioStream" uid="uid://13xr73xkmabj" path="res://audio/music/Music_Norest.wav" id="21_mwyqx"]
 [ext_resource type="PackedScene" uid="uid://u3ifj6tmlnsf" path="res://scenes/units/BanditMarauder.tscn" id="22_efnms"]
 [ext_resource type="PackedScene" uid="uid://1am2ra6wao4u" path="res://scenes/units/BanditWarrior.tscn" id="23_hejk3"]
 [ext_resource type="PackedScene" uid="uid://buisa38kpjxjn" path="res://scenes/units/BanditArcher.tscn" id="23_x18w8"]
@@ -700,11 +700,11 @@ character_data = ExtResource("20_t05iy")
 current_stats = SubResource("Resource_c7q0v")
 
 [node name="BanditWarrior" parent="GameBoard" unique_id=200120114 instance=ExtResource("23_hejk3")]
-position = Vector2(1015, 1135)
+position = Vector2(1008, 1136)
 current_stats = SubResource("Resource_m0spk")
 
 [node name="BanditMarauder" parent="GameBoard" unique_id=1019864192 instance=ExtResource("22_efnms")]
-position = Vector2(1048, 1201)
+position = Vector2(1040, 1200)
 current_stats = SubResource("Resource_yyfnn")
 
 [node name="BanditArcher" parent="GameBoard" unique_id=1878164639 instance=ExtResource("23_x18w8")]

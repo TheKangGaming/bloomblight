@@ -15,8 +15,8 @@ const ActionMenu = preload("res://scenes/ui/menus/ActionMenu.tscn")
 const STORY_DIALOGUE_SCENE = preload("res://scenes/ui/story_dialogue_box.tscn")
 const OVERLAY_SCENE = preload("res://scenes/ui/overlay.tscn")
 const HEALFLOWER_TEXTURE = preload("res://graphics/interactables/items-flowers1_0.png")
-const BOW_SELECT_SFX = preload("res://audio/Bow Take Out 1.wav")
-const SWORD_SELECT_SFX = preload("res://audio/Sword Unsheath 1.wav")
+const BOW_SELECT_SFX = preload("res://audio/sfx/Bow Take Out 1.wav")
+const SWORD_SELECT_SFX = preload("res://audio/sfx/Sword Unsheath 1.wav")
 @export var grid: Resource
 
 const DEFAULT_BATTLE_SCENE = preload("res://scenes/battle/battle_scene.tscn")
@@ -1535,9 +1535,9 @@ func _show_results_screen(is_victory: bool) -> void:
 	# 4. Volume Control for the Fanfare!
 	var audio = AudioStreamPlayer.new()
 	if is_victory:
-		audio.stream = load("res://audio/Music_Victory03.wav")
+		audio.stream = load("res://audio/music/Music_Victory03.wav")
 	else:
-		audio.stream = load("res://audio/Music_Defeat03.wav")
+		audio.stream = load("res://audio/music/Music_Defeat03.wav")
 	audio.bus = "Music"
 	audio.volume_db = -12.0 # Tweak this negative number to make it quieter! (-15, -20, etc.)
 	_results_canvas.add_child(audio)

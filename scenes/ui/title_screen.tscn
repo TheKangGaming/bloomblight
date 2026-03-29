@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://wdgjtlnwjk0c"]
 
 [ext_resource type="Script" uid="uid://glj0a3o7b0b7" path="res://scenes/ui/title_screen.gd" id="1_eb34j"]
-[ext_resource type="AudioStream" uid="uid://ceemgel5gw566" path="res://audio/Sea of stars.wav" id="2_aqpy5"]
+[ext_resource type="AudioStream" uid="uid://ceemgel5gw566" path="res://audio/music/Sea of stars.wav" id="2_aqpy5"]
 [ext_resource type="PackedScene" uid="uid://bf0yuue48pk6v" path="res://scenes/level/game.tscn" id="3_w8uqo"]
 [ext_resource type="FontFile" uid="uid://dpwruyc8g7s5n" path="res://assets/fonts/Cinzel-VariableFont_wght.ttf" id="4_a4ium"]
 
