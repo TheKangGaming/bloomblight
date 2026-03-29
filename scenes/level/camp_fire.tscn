@@ -132,12 +132,8 @@ offset_right = 116.0
 offset_bottom = -80.0
 
 [node name="Label" type="Label" parent="FeedbackPopup" unique_id=775988561]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+z_index = 100
+layout_mode = 2
 text = "Campfire is lit"
 
 [node name="FeedbackTimer" type="Timer" parent="." unique_id=205417133]

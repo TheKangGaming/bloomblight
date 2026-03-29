@@ -211,8 +211,8 @@ func _rebuild_collision_blockers() -> void:
 		if self.is_ancestor_of(collision_shape):
 			continue
 
-		var owner := _find_static_body_owner(collision_shape)
-		if owner == null:
+		var static_body_owner := _find_static_body_owner(collision_shape)
+		if static_body_owner == null:
 			continue
 
 		_mark_shape_cells_blocked(collision_shape)
@@ -345,11 +345,11 @@ func _mark_shape_cells_blocked(collision_shape: CollisionShape2D) -> void:
 func _get_collision_shape_bounds(collision_shape: CollisionShape2D) -> Rect2:
 	var shape := collision_shape.shape
 	var center := to_local(collision_shape.global_position)
-	var scale := collision_shape.global_scale.abs()
+	var shape_scale := collision_shape.global_scale.abs()
 
 	if shape is RectangleShape2D:
 		var rectangle := shape as RectangleShape2D
-		var size := Vector2(rectangle.size.x * scale.x, rectangle.size.y * scale.y)
+		var size := Vector2(rectangle.size.x * shape_scale.x, rectangle.size.y * shape_scale.y)
 		return Rect2(center - (size / 2.0), size)
 
 	if shape is CapsuleShape2D:
