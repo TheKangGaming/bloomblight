@@ -770,7 +770,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			_handle_post_action_flow(_active_unit)
 		else:
 			_deselect_active_unit()
-			_cursor.is_active = true
+			_resume_player_phase_after_active_unit_loss()
 		return
 
 	if _is_targeting_attack:
@@ -802,6 +802,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 					if _battle_ended:
 						return
 					_handle_post_action_flow(_active_unit)
+				else:
+					_resume_player_phase_after_active_unit_loss()
 			else:
 				_is_targeting_ability = false
 				_selected_ability = null
@@ -879,6 +881,7 @@ func _on_unit_died(unit: Unit) -> void:
 	
 	if _active_unit == unit:
 		_deselect_active_unit()
+		_resume_player_phase_after_active_unit_loss()
 		
 	if unit.is_enemy:
 		_enemies_defeated += 1
@@ -899,6 +902,15 @@ func _show_action_menu() -> void:
 	
 	_cursor.is_active = false
 	_hide_targeting_hint()
+
+func _resume_player_phase_after_active_unit_loss() -> void:
+	if _battle_ended or current_phase != TurnPhase.PLAYER:
+		return
+
+	if _are_all_player_units_waiting():
+		end_player_phase()
+	else:
+		_cursor.is_active = true
 
 
 ## To be called by the Action Menu when the player chooses "Wait"

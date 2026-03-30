@@ -3,12 +3,23 @@ extends CanvasLayer
 @onready var cursor: Cursor = get_parent()._cursor
 @onready var _attack_button: Button = $VBoxContainer/AttackButton
 @onready var _ability_button: Button = $VBoxContainer/AbilityButton
+@onready var _items_button: Button = $VBoxContainer/ItemsButton
+@onready var _trade_button: Button = $VBoxContainer/TradeButton
 @onready var _wait_button: Button = $VBoxContainer/WaitButton
 @onready var _cancel_button: Button = $VBoxContainer/CancelButton
+
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
 
 func _ready() -> void:
 	$VBoxContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	$VBoxContainer.move_child(_wait_button, $VBoxContainer.get_child_count() - 1)
+	_wire_browse_sound(_attack_button)
+	_wire_browse_sound(_ability_button)
+	_wire_browse_sound(_items_button)
+	_wire_browse_sound(_trade_button)
+	_wire_browse_sound(_wait_button)
+	_wire_browse_sound(_cancel_button)
 	var unit = get_parent()._active_unit
 	var board = get_parent()
 
@@ -49,6 +60,9 @@ func _ready() -> void:
 	else:
 		_ability_button.hide()
 
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.suppress_browse_once()
 	_reset_menu_focus()
 	
 	cursor.hide()
@@ -68,6 +82,17 @@ func _reset_menu_focus() -> void:
 		_wait_button.grab_focus()
 	elif is_instance_valid(_cancel_button):
 		_cancel_button.grab_focus()
+
+func _wire_browse_sound(button: Button) -> void:
+	if button == null:
+		return
+	button.focus_entered.connect(_on_menu_button_highlighted.bind(button))
+	button.mouse_entered.connect(_on_menu_button_highlighted.bind(button))
+
+func _on_menu_button_highlighted(button: Button) -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_browse_battle(button)
 
 func _on_visibility_changed() -> void:
 	if visible:

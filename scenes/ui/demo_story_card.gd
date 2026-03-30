@@ -18,6 +18,9 @@ var _fade_tween: Tween
 var _is_dismissing := false
 var _card_type := "story"
 
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -119,6 +122,9 @@ func _play_ken_burns() -> void:
 func _play_intro_fade() -> void:
 	if _is_dismissing:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_popup()
 	_kill_fade_tween()
 	_fade_tween = create_tween()
 	_fade_tween.set_trans(Tween.TRANS_SINE)

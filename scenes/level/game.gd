@@ -616,7 +616,7 @@ func _advance_intro_day() -> void:
 		hud._update_view(true)
 
 	if hud and "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(hud.day_music, 0.55)
+		MusicManager.crossfade_to(hud.day_music, 0.55, -4.0)
 
 	await get_tree().create_timer(0.35).timeout
 
@@ -989,7 +989,7 @@ func _run_bandit_intrusion_cutscene() -> void:
 	var bandit_archer := _spawn_intrusion_bandit("BanditArcher", _bandit_archer_actor_scene, bandit_entry_archer, true)
 
 	if _bandit_tension_music != null and MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(_bandit_tension_music, 0.75, -8.0)
+		MusicManager.crossfade_to(_bandit_tension_music, 0.75, -4.0)
 
 	await _focus_cutscene_on_positions([
 		bandit_entry_leader,

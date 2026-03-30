@@ -43,6 +43,10 @@ var _status_tab_highlight_enabled := false
 var _status_tab_highlight_root: Control = null
 var _status_tab_highlight_tween: Tween = null
 var _settings_panel: Control = null
+var _suppress_tab_switch_sound := false
+
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
 
 func _ready() -> void:
 	visible = false
@@ -105,18 +109,24 @@ func _handle_menu_toggle_input(event: InputEvent) -> bool:
 
 func toggle_menu():
 	var opening := not visible
+	var ui_sounds := _ui_sound_manager()
 	if not opening and SettingsManager and SettingsManager.has_pending_display_preview():
 		SettingsManager.revert_display_preview()
 	visible = opening
 	get_tree().paused = visible
 	update_status_page()
+	if ui_sounds:
+		ui_sounds.play_inventory_toggle()
 	
 	if visible:
+		_suppress_tab_switch_sound = true
 		if tabs:
 			tabs.current_tab = 1
 		menu_opened.emit()
 		update_inventory()
 		_refresh_status_tab_highlight()
+		if ui_sounds:
+			ui_sounds.suppress_browse_once()
 		_focus_first_interactable_deferred()
 	else:
 		_hide_status_tab_highlight()
@@ -124,32 +134,44 @@ func toggle_menu():
 
 func open_status_tab() -> void:
 	var was_visible := visible
+	var ui_sounds := _ui_sound_manager()
 	visible = true
 	get_tree().paused = true
 	update_status_page()
 	update_inventory()
+	_suppress_tab_switch_sound = true
 	if tabs:
 		tabs.current_tab = 0
 
 	if not was_visible:
+		if ui_sounds:
+			ui_sounds.play_inventory_toggle()
 		menu_opened.emit()
 
 	_refresh_status_tab_highlight()
+	if ui_sounds:
+		ui_sounds.suppress_browse_once()
 	_focus_first_interactable_deferred()
 
 func open_menu_to_tab(tab_index: int) -> void:
 	var was_visible := visible
+	var ui_sounds := _ui_sound_manager()
 	visible = true
 	get_tree().paused = true
 	update_status_page()
 	update_inventory()
+	_suppress_tab_switch_sound = true
 	if tabs:
 		tabs.current_tab = clampi(tab_index, 0, max(tabs.get_tab_count() - 1, 0))
 
 	if not was_visible:
+		if ui_sounds:
+			ui_sounds.play_inventory_toggle()
 		menu_opened.emit()
 
 	_refresh_status_tab_highlight()
+	if ui_sounds:
+		ui_sounds.suppress_browse_once()
 	_focus_first_interactable_deferred()
 
 func set_status_tab_highlight(enabled: bool) -> void:
@@ -685,6 +707,13 @@ func _hide_status_tab_highlight() -> void:
 		_status_tab_highlight_root.modulate.a = 0.0
 
 func _on_tab_changed(tab_index: int) -> void:
+	if _suppress_tab_switch_sound:
+		_suppress_tab_switch_sound = false
+	elif visible:
+		var ui_sounds := _ui_sound_manager()
+		if ui_sounds:
+			ui_sounds.play_tab_switch()
+
 	if SettingsManager and SettingsManager.has_pending_display_preview():
 		var current_tab := tabs.get_tab_control(tab_index) if tabs != null else null
 		if current_tab != settings_tab:

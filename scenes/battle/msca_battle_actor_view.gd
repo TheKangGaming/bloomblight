@@ -11,7 +11,7 @@ extends Node2D
 @onready var bow_weapon: CanvasItem = $Player/SpriteLayers/farmer_bow
 
 const BOW_IMPACT_FALLBACK_DELAY := 0.16
-const MAGIC_IMPACT_FALLBACK_DELAY := 0.18
+const MAGIC_IMPACT_FALLBACK_DELAY := 0.32
 const MELEE_IMPACT_FALLBACK_DELAY := 0.12
 
 var _character_data: CharacterData

@@ -12,9 +12,18 @@ var _units_overlay: CanvasLayer = null
 var _tutorials_overlay: CanvasLayer = null
 var _settings_overlay: Control = null
 
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	$VBoxContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_wire_browse_sound(_units_button)
+	_wire_browse_sound(_options_button)
+	_wire_browse_sound(_tutorials_button)
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.suppress_browse_once()
 	_reset_menu_focus()
 	
 	##disable the cursor
@@ -43,7 +52,21 @@ func _reset_menu_focus() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
+		var ui_sounds := _ui_sound_manager()
+		if ui_sounds:
+			ui_sounds.suppress_browse_once()
 		call_deferred("_reset_menu_focus")
+
+func _wire_browse_sound(button: Button) -> void:
+	if button == null:
+		return
+	button.focus_entered.connect(_on_button_highlighted.bind(button))
+	button.mouse_entered.connect(_on_button_highlighted.bind(button))
+
+func _on_button_highlighted(button: Button) -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_browse_battle(button)
 
 
 func _set_units(units: Array) -> void:
@@ -105,6 +128,7 @@ func _on_units_button_pressed() -> void:
 	close_btn.text = "Close"
 	close_btn.custom_minimum_size = Vector2(0, 64)
 	close_btn.add_theme_font_size_override("font_size", 28)
+	_wire_browse_sound(close_btn)
 	close_btn.pressed.connect(_close_units_overlay)
 	content.add_child(close_btn)
 	close_btn.grab_focus()
@@ -179,6 +203,7 @@ func _on_tutorials_button_pressed() -> void:
 			button.add_theme_font_size_override("font_size", 24)
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			button.set_meta("tutorial_card_id", String(card.get("id", "")))
+			_wire_browse_sound(button)
 			button.pressed.connect(_on_tutorial_replay_button_pressed.bind(button))
 			list.add_child(button)
 
@@ -186,6 +211,7 @@ func _on_tutorials_button_pressed() -> void:
 	close_btn.text = "Close"
 	close_btn.custom_minimum_size = Vector2(0, 64)
 	close_btn.add_theme_font_size_override("font_size", 28)
+	_wire_browse_sound(close_btn)
 	close_btn.pressed.connect(_close_tutorials_overlay)
 	content.add_child(close_btn)
 	close_btn.grab_focus()

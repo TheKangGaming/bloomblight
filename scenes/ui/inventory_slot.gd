@@ -23,6 +23,9 @@ const DEFAULT_BORDER_COLOR := Color(0.23, 0.23, 0.23, 0.95)
 const FOCUS_BG_COLOR := Color(0.24, 0.22, 0.13, 0.95)
 const DEFAULT_BG_COLOR := Color(0.12, 0.12, 0.12, 0.86)
 
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
+
 func _ready():
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	focus_mode = Control.FOCUS_ALL
@@ -123,6 +126,9 @@ func _exit_tree() -> void:
 	_hide_focus_tooltip(true)
 
 func _on_focus_entered() -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_browse_general(self)
 	_apply_focus_visual(true)
 	_show_focus_tooltip(_is_hovered)
 
@@ -135,6 +141,9 @@ func _on_focus_exited() -> void:
 
 func _on_mouse_entered() -> void:
 	_is_hovered = true
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_browse_general(self)
 	_apply_focus_visual(true)
 	_show_focus_tooltip(true)
 

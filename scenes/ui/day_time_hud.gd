@@ -99,7 +99,7 @@ func _check_music_transition(clock_hour_24: int) -> void:
 	_active_music_phase = target_phase
 
 	if target_phase == "day" and day_music:
-		MusicManager.crossfade_to(day_music, 0.35)
+		MusicManager.crossfade_to(day_music, 0.35, -4.0)
 	elif target_phase == "night" and night_music:
 		MusicManager.crossfade_to(night_music, 0.35)
 

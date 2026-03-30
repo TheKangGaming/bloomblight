@@ -16,6 +16,9 @@ signal meal_cooked(recipe_item: int)
 
 var _recipe_rows: Array = []
 
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
+
 func _ready() -> void:
 	visible = false
 	$Panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -44,6 +47,9 @@ func open_menu() -> void:
 		menu_opened.emit()
 	_refresh_subtitle()
 	_refresh_recipe_rows()
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.suppress_browse_once()
 	_focus_first_available_button()
 
 func close_menu() -> void:
@@ -192,6 +198,9 @@ func _craft_item(recipe_output: Global.Items) -> void:
 
 	Global.inventory[recipe_output] = int(Global.inventory.get(recipe_output, 0)) + 1
 	Global.inventory_updated.emit()
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_accept()
 	meal_cooked.emit(recipe_output)
 	if DemoDirector:
 		DemoDirector.notify_meal_cooked(recipe_output)

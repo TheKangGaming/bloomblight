@@ -15,6 +15,9 @@ const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
 var _is_transitioning: bool = true
 var _fade_tween: Tween
 
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
+
 func _ready() -> void:
 	get_tree().root.size_changed.connect(_update_particle_layout)
 	_update_particle_layout()
@@ -64,6 +67,9 @@ func _on_start_pressed() -> void:
 		return
 
 	_is_transitioning = true
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_start_game()
 	start_button.disabled = true 
 	settings_button.disabled = true
 	quit_button.disabled = true

@@ -34,6 +34,9 @@ var _restore_button: Button
 var _close_button: Button
 var _scroll_container: ScrollContainer
 
+func _ui_sound_manager() -> Node:
+	return get_node_or_null("/root/UISoundManager")
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_resolution_values = SettingsManager.get_available_resolutions() if SettingsManager else []
@@ -346,10 +349,10 @@ func _refresh_from_settings() -> void:
 	_resolution_option.select(_resolution_index_from_value(Vector2i(int(settings.get("window_width", 2560)), int(settings.get("window_height", 1440)))))
 	_vsync_toggle.button_pressed = bool(settings.get("vsync_enabled", true))
 	_master_slider.value = float(settings.get("master_volume", 100.0))
-	_music_slider.value = float(settings.get("music_volume", 55.0))
-	_sfx_slider.value = float(settings.get("sfx_volume", 82.0))
-	_ambience_slider.value = float(settings.get("ambience_volume", 58.0))
-	_ui_slider.value = float(settings.get("ui_volume", 80.0))
+	_music_slider.value = float(settings.get("music_volume", 50.0))
+	_sfx_slider.value = float(settings.get("sfx_volume", 80.0))
+	_ambience_slider.value = float(settings.get("ambience_volume", 70.0))
+	_ui_slider.value = float(settings.get("ui_volume", 60.0))
 	_dialogue_speed_option.select(_dialogue_speed_index_from_value(float(settings.get("dialogue_speed", 1.0))))
 	_screen_shake_toggle.button_pressed = bool(settings.get("screen_shake_enabled", true))
 	_auto_advance_toggle.button_pressed = bool(settings.get("auto_advance_dialogue", false))
@@ -443,74 +446,125 @@ func _hide_preview_box() -> void:
 		_preview_box.visible = false
 
 func _on_display_mode_changed(_index: int) -> void:
+	if _is_refreshing or SettingsManager == null:
+		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_update_resolution_interactivity()
 	_preview_current_display_settings()
 
 func _on_resolution_changed(_index: int) -> void:
+	if _is_refreshing or SettingsManager == null:
+		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_preview_current_display_settings()
 
 func _on_vsync_toggled(_pressed: bool) -> void:
+	if _is_refreshing or SettingsManager == null:
+		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_preview_current_display_settings()
 
 func _on_master_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_set_slider_value_label(_master_slider)
 	SettingsManager.set_audio_volume("master_volume", value)
 
 func _on_music_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_set_slider_value_label(_music_slider)
 	SettingsManager.set_audio_volume("music_volume", value)
 
 func _on_sfx_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_set_slider_value_label(_sfx_slider)
 	SettingsManager.set_audio_volume("sfx_volume", value)
 
 func _on_ambience_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_set_slider_value_label(_ambience_slider)
 	SettingsManager.set_audio_volume("ambience_volume", value)
 
 func _on_ui_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	_set_slider_value_label(_ui_slider)
 	SettingsManager.set_audio_volume("ui_volume", value)
 
 func _on_dialogue_speed_changed(index: int) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	SettingsManager.set_dialogue_speed(_dialogue_speed_value_from_index(index))
 
 func _on_screen_shake_toggled(enabled: bool) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	SettingsManager.set_screen_shake_enabled(enabled)
 
 func _on_auto_advance_toggled(enabled: bool) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	SettingsManager.set_auto_advance_dialogue(enabled)
 
 func _on_confirm_preview_pressed() -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	if SettingsManager:
 		SettingsManager.confirm_display_preview()
 
 func _on_revert_preview_pressed() -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	if SettingsManager:
 		SettingsManager.revert_display_preview()
 
 func _on_restore_defaults_pressed() -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	if SettingsManager:
 		SettingsManager.restore_defaults()
 		_refresh_from_settings()
 
 func _on_close_pressed() -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
 	close_requested.emit()
 
 func _on_settings_changed(_settings: Dictionary) -> void:
