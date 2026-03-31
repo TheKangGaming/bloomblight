@@ -682,12 +682,13 @@ func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool) -
 		# Tween part 1: Fly to the target's face (takes 0.15s)
 		tween.tween_property(arrow, "global_position", target_pos, 0.15).set_trans(Tween.TRANS_LINEAR)
 
-		# Wait ONLY for the exact moment the arrow reaches the target...
-		await get_tree().create_timer(0.15).timeout
-
-		# Tween part 2: Continue flying into the void in the background!
+		# Queue the overshoot before the tween starts so Godot does not reject
+		# appending a new step after the first segment has already begun.
 		tween.tween_property(arrow, "global_position", overshoot_pos, 0.15).set_trans(Tween.TRANS_LINEAR)
 		tween.tween_callback(arrow.queue_free)
+
+		# Wait ONLY for the exact moment the arrow reaches the target...
+		await get_tree().create_timer(0.15).timeout
 
 		# Return control to the main loop IMMEDIATELY so play_evade() triggers!
 		return

@@ -1551,7 +1551,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	else:
 		audio.stream = load("res://audio/music/Music_Defeat03.wav")
 	audio.bus = "Music"
-	audio.volume_db = -12.0 # Tweak this negative number to make it quieter! (-15, -20, etc.)
+	audio.volume_db = -8.0
 	_results_canvas.add_child(audio)
 	audio.play()
 	
