@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://cguxj7vi852u7" path="res://scenes/level/chest.tscn" id="5_lw8he"]
 [ext_resource type="PackedScene" uid="uid://doi42nnng73e" path="res://scenes/level/tree.tscn" id="5_qrcxb"]
 [ext_resource type="PackedScene" uid="uid://ct6ev3fanumw7" path="res://scenes/level/camp_fire.tscn" id="8_g280g"]
-[ext_resource type="PackedScene" uid="uid://cl3empix6v4ne" path="res://scenes/ui/main_menu.tscn" id="9_0o7gw"]
+[ext_resource type="PackedScene" path="res://scenes/ui/main_menu.tscn" id="9_0o7gw"]
 [ext_resource type="Texture2D" uid="uid://vjgqm8ob04a5" path="res://graphics/interactables/sign 5.png" id="9_g35fm"]
 [ext_resource type="PackedScene" uid="uid://dintbdgcfxu3b" path="res://scenes/ui/overlay.tscn" id="9_pn0ym"]
 [ext_resource type="PackedScene" uid="uid://tqhmm4hkqce0" path="res://scenes/ui/seed_menu.tscn" id="10_0o7gw"]

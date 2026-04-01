@@ -116,6 +116,9 @@ func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 
+	if _is_mouse_wheel_event(event):
+		return
+
 	if _is_action_pressed(event, TAB_PREV_ACTIONS):
 		_cycle_current_subview(-1)
 		get_viewport().set_input_as_handled()
@@ -160,6 +163,14 @@ func _handle_menu_toggle_input(event: InputEvent) -> bool:
 		return true
 
 	return false
+
+func _is_mouse_wheel_event(event: InputEvent) -> bool:
+	if event is not InputEventMouseButton:
+		return false
+	var mouse_button := event as InputEventMouseButton
+	if not mouse_button.pressed:
+		return false
+	return mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP or mouse_button.button_index == MOUSE_BUTTON_WHEEL_DOWN
 
 func _is_system_menu_blocking() -> bool:
 	var system_menu := get_parent().get_node_or_null("OverworldSystemMenu") if get_parent() != null else null

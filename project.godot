@@ -15,25 +15,25 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Blight & Bloom"
-run/main_scene="uid://wdgjtlnwjk0c"
+run/main_scene="res://scenes/ui/title_screen.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [audio]
 
-buses/default_bus_layout="uid://b0ncci1a8pr65"
+buses/default_bus_layout="res://default_bus_layout.tres"
 
 [autoload]
 
-Global="*uid://bcq8tavlkaxyr"
+Global="*res://globals/global.gd"
 DemoDirector="*res://globals/demo_director.gd"
 ProgressionService="*res://systems/progression/progression_service.gd"
-CalendarService="*uid://cp8duraorkxir"
-MusicManager="*uid://ds754ws0s2j6e"
+CalendarService="*res://systems/calendar/calendar_service.gd"
+MusicManager="*res://systems/audio/music_manager.gd"
 UISoundManager="*res://systems/audio/ui_sound_manager.gd"
 SettingsManager="*res://systems/settings/settings_manager.gd"
-TransitionManager="*uid://74bgy2nyplkn"
-CombatManager="*uid://cspanre0amh0d"
+TransitionManager="*res://scenes/ui/transition_manager.tscn"
+CombatManager="*res://systems/combat_manager/combat_manager.gd"
 
 [display]
 
@@ -48,7 +48,7 @@ enabled=PackedStringArray("res://addons/YATI/plugin.cfg", "res://addons/msca/plu
 
 [gui]
 
-theme/custom="uid://cd5gqhd6wqs3y"
+theme/custom="res://assets/fonts/main_theme.tres"
 
 [input]
 
