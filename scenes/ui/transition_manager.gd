@@ -4,6 +4,7 @@ signal overlay_closed
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var flash_rect: ColorRect = $FlashRect
 var _is_transitioning: bool = false
+var _pending_scene_path: String = ""
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -16,21 +17,21 @@ func _reset_transition_visuals() -> void:
 func change_scene(scene: PackedScene, fade_duration: float = 1.5) -> void:
 	if _is_transitioning or scene == null:
 		return
-		
+	change_scene_path(scene.resource_path, fade_duration)
+
+func change_scene_path(scene_path: String, fade_duration: float = 1.5) -> void:
+	if _is_transitioning or scene_path.strip_edges().is_empty():
+		return
+
 	_is_transitioning = true
+	_pending_scene_path = scene_path.strip_edges()
 	
 	# 1. Fade to black
 	var tween = create_tween()
 	tween.tween_property(fade_rect, "modulate:a", 1.0, fade_duration)
 	
 	# 2. Swap the scene invisibly while the screen is black, then fade back in
-	tween.tween_callback(func():
-		get_tree().change_scene_to_packed(scene)
-		
-		var in_tween = create_tween()
-		in_tween.tween_property(fade_rect, "modulate:a", 0.0, fade_duration)
-		in_tween.tween_callback(func(): _is_transitioning = false)
-)
+	tween.tween_callback(_change_scene_after_fade.bind(fade_duration))
 
 func open_overlay(scene: PackedScene, fade_duration: float = 0.5) -> void:
 	if _is_transitioning or scene == null:
@@ -78,3 +79,20 @@ func close_overlay(overlay_node: Node, fade_duration: float = 0.5) -> void:
 		_is_transitioning = false
 		overlay_closed.emit()
 	)
+
+func _finish_scene_transition() -> void:
+	_is_transitioning = false
+
+func _change_scene_after_fade(fade_duration: float) -> void:
+	var next_scene_path := _pending_scene_path
+	_pending_scene_path = ""
+	if next_scene_path.is_empty():
+		_is_transitioning = false
+		_reset_transition_visuals()
+		return
+
+	get_tree().change_scene_to_file(next_scene_path)
+
+	var in_tween = create_tween()
+	in_tween.tween_property(fade_rect, "modulate:a", 0.0, fade_duration)
+	in_tween.tween_callback(_finish_scene_transition)

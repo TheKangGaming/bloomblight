@@ -27,7 +27,7 @@ enum DemoStage {
 	DEMO_COMPLETE
 }
 
-const TITLE_SCENE := preload("res://scenes/ui/title_screen.tscn")
+const TITLE_SCENE_PATH := "res://scenes/ui/title_screen.tscn"
 const STORY_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
 const TUTORIAL_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
 
@@ -63,6 +63,8 @@ func begin_new_demo() -> void:
 	_story_harvests.clear()
 	_seen_tutorial_cards.clear()
 	Global.reset_demo_state()
+	if ProgressionService != null and ProgressionService.has_method("reset_demo_roster"):
+		ProgressionService.reset_demo_roster()
 	set_stage(DemoStage.OPENER)
 	clear_prompt()
 
@@ -353,10 +355,11 @@ func show_demo_complete_card(parent: Node) -> void:
 		"confirm_hint": "return to title",
 		"allow_skip": false
 	})
-	card.confirmed.connect(func() -> void:
-		if TransitionManager:
-			TransitionManager.change_scene(TITLE_SCENE, 1.0)
-	)
+	card.confirmed.connect(_return_to_title_from_demo_complete)
+
+func _return_to_title_from_demo_complete() -> void:
+	if TransitionManager:
+		TransitionManager.change_scene_path(TITLE_SCENE_PATH, 1.0)
 
 func _get_stage_prompt_text(stage: DemoStage) -> String:
 	match stage:

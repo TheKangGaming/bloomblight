@@ -51,6 +51,7 @@ enum IntroState {
 @onready var camp_fire = $Objects/CampFire
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
+var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
 var _bandit_tension_music_path := "res://audio/music/Music_Anxiety.wav"
 var _bandit_tension_music: AudioStream = null
@@ -78,6 +79,7 @@ var _recipe_scene_started := false
 var _warning_sequence_started := false
 var _suppress_battle_music_sync := true
 var _intrusion_bandits: Array[Node2D] = []
+var _overworld_system_menu: Control = null
 
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
@@ -100,6 +102,8 @@ func _ready() -> void:
 		if not DemoDirector.meal_eaten.is_connected(_on_demo_meal_eaten):
 			DemoDirector.meal_eaten.connect(_on_demo_meal_eaten)
 		DemoDirector.set_stage(DemoDirector.DemoStage.INTRO)
+
+	_spawn_overworld_system_menu()
 
 	if Global.intro_sequence_complete:
 		_setup_story_camp_state()
@@ -641,6 +645,8 @@ func _complete_intro() -> void:
 	Global.tutorial_enabled = false
 	_intro_state = IntroState.COMPLETE
 	_intro_busy = false
+	if ProgressionService != null and ProgressionService.has_method("ensure_party_member"):
+		ProgressionService.ensure_party_member("Silas")
 	player.can_move = true
 	player.direction = Vector2.ZERO
 	_setup_story_camp_state()
@@ -719,7 +725,7 @@ func _run_post_meal_warning_sequence() -> void:
 	_restore_player_camera()
 	if main_menu and main_menu.has_signal("status_tab_viewed"):
 		await main_menu.status_tab_viewed
-	if main_menu and main_menu.has_signal("menu_closed"):
+	if main_menu and main_menu.visible and main_menu.has_signal("menu_closed"):
 		await main_menu.menu_closed
 	_intro_busy = true
 	player.can_move = false
@@ -761,6 +767,8 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 
 	var combat_scene = load(combat_scene_path).instantiate()
 	combat_scene.set_meta("skip_scene_music_sync", _suppress_battle_music_sync)
+	if ProgressionService != null and ProgressionService.has_method("sync_runtime_party_to_scene"):
+		ProgressionService.sync_runtime_party_to_scene(combat_scene)
 	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
 	if is_instance_valid(combat_music):
 		combat_music.autoplay = false
@@ -821,6 +829,17 @@ func _show_player_notice(text: String, duration := 1.4) -> void:
 	var overlay := get_node_or_null("CanvasLayer/Overlay")
 	if overlay != null and overlay.has_method("show_notice"):
 		overlay.show_notice(text, duration)
+
+func _spawn_overworld_system_menu() -> void:
+	if _overworld_system_menu != null and is_instance_valid(_overworld_system_menu):
+		return
+	var canvas_layer := get_node_or_null("CanvasLayer")
+	if canvas_layer == null:
+		return
+	_overworld_system_menu = _overworld_system_menu_scene.instantiate()
+	canvas_layer.add_child(_overworld_system_menu)
+	if _overworld_system_menu.has_method("setup"):
+		_overworld_system_menu.call("setup", main_menu)
 
 func _play_story_dialogue(lines: Array[Dictionary], focus_nodes: Array[Node2D] = [], zoom: Vector2 = CUTSCENE_GROUP_ZOOM) -> void:
 	if not focus_nodes.is_empty():

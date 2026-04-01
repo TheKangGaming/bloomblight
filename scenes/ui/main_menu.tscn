@@ -1,27 +1,44 @@
-[gd_scene format=3 uid="uid://cl3empix6v4ne"]
+[gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://bmgvxhavos3cp" path="res://scenes/ui/main_menu.gd" id="1_sl1te"]
-[ext_resource type="Texture2D" uid="uid://dy71joucadqo" path="res://graphics/characters/Savannah.png" id="2_fe2o3"]
-[ext_resource type="Script" path="res://scenes/ui/tooltipped_texture_rect.gd" id="3_x1a8u"]
+[ext_resource type="Script" path="res://scenes/ui/main_menu.gd" id="1"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sl1te"]
-bg_color = Color(0, 0, 0, 0.78431374)
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0, 0, 0, 0.78)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_1g8jr"]
-atlas = ExtResource("2_fe2o3")
-region = Rect2(22, 13, 20, 31)
+[sub_resource type="StyleBoxFlat" id="2"]
+bg_color = Color(0.08, 0.08, 0.08, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.34, 0.29, 0.18, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
-[node name="MainMenu" type="Control" unique_id=1252988493]
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(0.10, 0.09, 0.06, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.46, 0.36, 0.18, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="MainMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_sl1te")
+script = ExtResource("1")
 
-[node name="Background" type="Panel" parent="." unique_id=1378720369]
-self_modulate = Color(1, 1, 1, 0.6862745)
+[node name="Background" type="Panel" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,9 +46,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_sl1te")
+theme_override_styles/panel = SubResource("1")
 
-[node name="CenterContainer" type="CenterContainer" parent="." unique_id=447684283]
+[node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,247 +56,521 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TabContainer" type="TabContainer" parent="CenterContainer" unique_id=856739926]
-texture_filter = 2
-custom_minimum_size = Vector2(1080, 700)
+[node name="MenuPanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(1180, 760)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
-current_tab = 1
-all_tabs_in_front = true
+theme_override_styles/panel = SubResource("2")
 
-[node name="Status" type="Panel" parent="CenterContainer/TabContainer" unique_id=1792060860]
-visible = false
-texture_filter = 2
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/MenuPanel"]
 layout_mode = 2
-metadata/_tab_index = 0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 18
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/TabContainer/Status" unique_id=1065024206]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
-
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer" unique_id=1488452487]
+[node name="RootRow" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 24
-alignment = 1
+theme_override_constants/separation = 20
 
-[node name="CharacterColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1699871786]
+[node name="NavColumn" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="MenuLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Menu"
+
+[node name="HintLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Tab: management  |  Esc: system"
+autowrap_mode = 3
+
+[node name="NavButtons" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn"]
 layout_mode = 2
 theme_override_constants/separation = 10
-alignment = 1
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=652478579]
-texture_filter = 2
+[node name="PartyButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Party"
+
+[node name="InventoryButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Inventory"
+
+[node name="CalendarButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Calendar"
+
+[node name="VSeparator" type="VSeparator" parent="CenterContainer/MenuPanel/MarginContainer/RootRow"]
+layout_mode = 2
+
+[node name="ContentColumn" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="SectionTitle" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Inventory"
+
+[node name="SectionSubnav" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ContentStack" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn"]
+custom_minimum_size = Vector2(0, 620)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PartySection" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+
+[node name="RosterColumn" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 1
+theme_override_constants/separation = 10
+
+[node name="RosterLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/RosterColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Party Members"
+
+[node name="RosterScroll" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/RosterColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+
+[node name="RosterList" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/RosterColumn/RosterScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="PartySeparator" type="VSeparator" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer"]
+layout_mode = 2
+
+[node name="DetailColumn" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="CharacterHeader" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="HeaderTopRow" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="PortraitFrame" type="PanelContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow"]
+custom_minimum_size = Vector2(132, 176)
+layout_mode = 2
+
+[node name="Portrait" type="TextureRect" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/PortraitFrame"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HeaderInfo" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CharacterName" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Savannah"
-horizontal_alignment = 1
 
-[node name="CharIamge" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/CharacterColumn" unique_id=282487790]
-texture_filter = 1
-custom_minimum_size = Vector2(128, 196)
-layout_mode = 2
-texture = SubResource("AtlasTexture_1g8jr")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="StatsColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1981587412]
-texture_filter = 2
+[node name="CharacterRole" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+theme_override_font_sizes/font_size = 22
+text = "Role"
+autowrap_mode = 3
 
-[node name="LblClass" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=111228304]
-layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "Class: Unknown"
-
-[node name="LblLevel" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=503268440]
-layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "Level: 1"
-
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=928234126]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "- STATS -"
-horizontal_alignment = 1
-
-[node name="LblVIT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=902142575]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "VIT: 10"
-fit_content = true
-
-[node name="LblSTR" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1105434709]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "STR: 5"
-fit_content = true
-
-[node name="LblDEX" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1989397476]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "DEX: 5"
-fit_content = true
-
-[node name="LblINT" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1871792445]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "INT: 5"
-fit_content = true
-
-[node name="LblSPD" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=729639059]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "SPD: 5"
-fit_content = true
-
-[node name="LblMOV" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=1053189907]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "MOV: 4"
-fit_content = true
-
-[node name="LblHP" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=890779902]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "HP: 20/20"
-fit_content = true
-
-[node name="LblDMG" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=141434984]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "DMG: 7"
-fit_content = true
-
-[node name="LblDEF" type="RichTextLabel" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn" unique_id=2067629847]
-layout_mode = 2
-theme_override_font_sizes/normal_font_size = 24
-bbcode_enabled = true
-text = "DEF: 2"
-fit_content = true
-
-[node name="EquipMealColumn" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer" unique_id=1787477166]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 14
-
-[node name="EquipmentSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=1922241565]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label2" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=1278387377]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "- EQUIPMENT -"
-horizontal_alignment = 1
-
-[node name="EquipmentSlots" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection" unique_id=809947470]
-layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="SlotWeapon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1796073536]
-texture_filter = 1
-custom_minimum_size = Vector2(64, 64)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("3_x1a8u")
-
-[node name="SlotArmor" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=350771874]
-texture_filter = 1
-custom_minimum_size = Vector2(64, 64)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("3_x1a8u")
-
-[node name="SlotAccessory" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots" unique_id=1711539566]
-texture_filter = 1
-custom_minimum_size = Vector2(64, 64)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("3_x1a8u")
-
-[node name="MealSection" type="VBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn" unique_id=2087827878]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label3" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=422969036]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "- ACTIVE MEAL -"
-horizontal_alignment = 1
-
-[node name="MealBox" type="HBoxContainer" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection" unique_id=418323979]
-layout_mode = 2
-alignment = 1
-
-[node name="ActiveFoodIcon" type="TextureRect" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=1475998150]
-texture_filter = 1
-custom_minimum_size = Vector2(56, 56)
-layout_mode = 2
-
-[node name="LblFoodBuff" type="Label" parent="CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox" unique_id=545425876]
+[node name="CharacterLevel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "No meal."
+text = "Level 1"
 
-[node name="Inventory" type="Control" parent="CenterContainer/TabContainer" unique_id=261012711]
+[node name="MealStatus" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader"]
 layout_mode = 2
-metadata/_tab_index = 1
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "No meal active."
+autowrap_mode = 3
 
-[node name="Margin" type="MarginContainer" parent="CenterContainer/TabContainer/Inventory" unique_id=382857089]
+[node name="PartySubtabs" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StatusSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Status"
+
+[node name="EquipmentSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Equipment"
+
+[node name="SkillsSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Skills"
+
+[node name="PartyDetailStack" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="StatusView" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
 
-[node name="Grid" type="GridContainer" parent="CenterContainer/TabContainer/Inventory/Margin" unique_id=581831426]
+[node name="StatusText" type="RichTextLabel" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/StatusView"]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = false
+scroll_active = true
+focus_mode = 2
+theme_override_font_sizes/normal_font_size = 22
+
+[node name="EquipmentView" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+follow_focus = true
+
+[node name="EquipmentContent" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="EquipmentBody" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="EquipmentSlots" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="WeaponSlotButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+theme_override_constants/icon_max_width = 40
+theme_override_font_sizes/font_size = 22
+text = "Weapon\nEmpty"
+alignment = 0
+icon_alignment = 0
+
+[node name="ArmorSlotButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+theme_override_constants/icon_max_width = 40
+theme_override_font_sizes/font_size = 22
+text = "Armor\nEmpty"
+alignment = 0
+icon_alignment = 0
+
+[node name="AccessorySlotButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+theme_override_constants/icon_max_width = 40
+theme_override_font_sizes/font_size = 22
+text = "Accessory\nEmpty"
+alignment = 0
+icon_alignment = 0
+
+[node name="EquipmentPicker" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="EquipmentSlotHeading" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Weapon Slot"
+
+[node name="EquippedNowLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Currently equipped: None"
+autowrap_mode = 3
+
+[node name="EquipmentChoiceList" type="ItemList" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker"]
+custom_minimum_size = Vector2(0, 240)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+fixed_icon_size = Vector2i(40, 40)
+theme_override_font_sizes/font_size = 20
+select_mode = 0
+
+[node name="EquipmentDetailLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "Select a slot to review what your party is carrying."
+autowrap_mode = 3
+
+[node name="SkillsView" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="SkillsText" type="RichTextLabel" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/SkillsView"]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = false
+scroll_active = true
+theme_override_font_sizes/normal_font_size = 22
+
+[node name="InventorySection" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="InventorySubtabs" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ItemsSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Items"
+
+[node name="EquipmentInventorySubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Equipment"
+
+[node name="InventoryDetailStack" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ItemsView" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+follow_focus = true
+
+[node name="ItemsMargin" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Grid" type="GridContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView/ItemsMargin"]
 layout_mode = 2
 columns = 8
 
-[node name="Villagers" type="Control" parent="CenterContainer/TabContainer" unique_id=512211702]
+[node name="EquipmentCatalogView" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack"]
 visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+follow_focus = true
+
+[node name="EquipmentCatalogList" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/EquipmentCatalogView"]
 layout_mode = 2
-metadata/_tab_index = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Villagers" unique_id=812801653]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_font_sizes/font_size = 30
-text = "Villagers Coming Soon"
-
-[node name="Settings" type="Control" parent="CenterContainer/TabContainer" unique_id=704047247]
+[node name="CalendarSection" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack"]
 visible = false
-layout_mode = 2
-metadata/_tab_index = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
-[node name="Label" type="Label" parent="CenterContainer/TabContainer/Settings" unique_id=1400984968]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_font_sizes/font_size = 30
-text = "Settings Coming Soon"
+[node name="CalendarContent" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="CalendarPage" type="PanelContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("3")
+
+[node name="CalendarMargin" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="CalendarLayout" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="CalendarHeader" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CalendarKickerLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Season Almanac"
+uppercase = true
+
+[node name="CalendarSeasonLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Spring"
+
+[node name="CalendarDaySummaryLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Day 1 of 28"
+autowrap_mode = 3
+
+[node name="CalendarDivider" type="HSeparator" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout"]
+layout_mode = 2
+
+[node name="CalendarGrid" type="GridContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 7
+
+[node name="CalendarFooter" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CalendarNoteLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "No public notices are marked this season."
+autowrap_mode = 3
+
+[node name="CalendarFlavorLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "This page covers days 1-28 of the year."
+autowrap_mode = 3
+
+[node name="CalendarLegendPanel" type="PanelContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter"]
+layout_mode = 2
+focus_mode = 2
+theme_override_styles/panel = SubResource("2")
+
+[node name="CalendarLegendMargin" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="CalendarLegendRow" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="PastLegendLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.88, 0.72, 1)
+text = "Past days"
+
+[node name="TodayLegendLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.97, 0.88, 1)
+text = "Today"
+
+[node name="UpcomingLegendLabel" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.85, 0.8, 0.68, 1)
+text = "Upcoming"

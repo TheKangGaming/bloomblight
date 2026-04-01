@@ -4,30 +4,7 @@ signal menu_opened
 signal menu_closed
 signal status_tab_viewed
 
-@onready var inventory_grid: GridContainer = $CenterContainer/TabContainer/Inventory/Margin/Grid
-@onready var tabs: TabContainer = $CenterContainer/TabContainer
-@onready var settings_tab: Control = $CenterContainer/TabContainer/Settings
-
-
-@onready var lbl_vit: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblVIT
-@onready var lbl_str: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSTR
-@onready var lbl_dex: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDEX
-@onready var lbl_int: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblINT
-@onready var lbl_spd: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblSPD
-@onready var lbl_mov: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblMOV
-@onready var lbl_hp: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblHP
-@onready var lbl_dmg: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDMG
-@onready var lbl_def: RichTextLabel = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblDEF
-@onready var lbl_class: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblClass
-@onready var lbl_level: Label = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/StatsColumn/LblLevel
-
-@onready var slot_weapon: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotWeapon
-@onready var slot_armor: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotArmor
-@onready var slot_accessory: TextureRect = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/EquipmentSection/EquipmentSlots/SlotAccessory
-@onready var lbl_food = $CenterContainer/TabContainer/Status/MarginContainer/HBoxContainer/EquipMealColumn/MealSection/MealBox/LblFoodBuff
-
-const SLOT_SCENE = preload("res://scenes/ui/inventory_slot.tscn")
-const SETTINGS_PANEL_SCENE = preload("res://scenes/ui/settings_panel.tscn")
+const SLOT_SCENE := preload("res://scenes/ui/inventory_slot.tscn")
 const TAB_PREV_ACTIONS: Array[StringName] = [&"tool_backward", &"ui_page_up"]
 const TAB_NEXT_ACTIONS: Array[StringName] = [&"tool_forward", &"ui_page_down"]
 const NAV_LEFT_ACTIONS: Array[StringName] = [&"left", &"ui_left"]
@@ -36,14 +13,76 @@ const NAV_UP_ACTIONS: Array[StringName] = [&"up", &"ui_up"]
 const NAV_DOWN_ACTIONS: Array[StringName] = [&"down", &"ui_down"]
 const NAV_REPEAT_INITIAL_DELAY_MS := 460
 const NAV_REPEAT_INTERVAL_MS := 320
+const CALENDAR_GRID_COLUMNS := 7
+const CALENDAR_GRID_DAYS := 28
 
+enum MenuSection { PARTY, INVENTORY, CALENDAR }
+enum PartySubview { STATUS, EQUIPMENT, SKILLS }
+enum InventorySubview { ITEMS, EQUIPMENT }
+
+@onready var section_title: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/SectionTitle
+@onready var party_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons/PartyButton
+@onready var inventory_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons/InventoryButton
+@onready var calendar_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons/CalendarButton
+
+@onready var party_section: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection
+@onready var inventory_section: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection
+@onready var calendar_section: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection
+
+@onready var roster_list: VBoxContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/RosterColumn/RosterScroll/RosterList
+@onready var portrait_rect: TextureRect = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/PortraitFrame/Portrait
+@onready var character_name_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo/CharacterName
+@onready var character_role_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo/CharacterRole
+@onready var character_level_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo/CharacterLevel
+@onready var meal_status_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/MealStatus
+@onready var status_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs/StatusSubtabButton
+@onready var equipment_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs/EquipmentSubtabButton
+@onready var skills_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs/SkillsSubtabButton
+@onready var status_view: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/StatusView
+@onready var status_text: RichTextLabel = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/StatusView/StatusText
+@onready var equipment_view: ScrollContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView
+@onready var skills_view: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/SkillsView
+@onready var skills_text: RichTextLabel = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/SkillsView/SkillsText
+@onready var weapon_slot_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots/WeaponSlotButton
+@onready var armor_slot_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots/ArmorSlotButton
+@onready var accessory_slot_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots/AccessorySlotButton
+@onready var equipment_slot_heading_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker/EquipmentSlotHeading
+@onready var equipped_now_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker/EquippedNowLabel
+@onready var equipment_choice_list: ItemList = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker/EquipmentChoiceList
+@onready var equipment_detail_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker/EquipmentDetailLabel
+
+@onready var items_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs/ItemsSubtabButton
+@onready var equipment_inventory_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs/EquipmentInventorySubtabButton
+@onready var items_view: ScrollContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView
+@onready var inventory_grid: GridContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView/ItemsMargin/Grid
+@onready var equipment_catalog_view: ScrollContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/EquipmentCatalogView
+@onready var equipment_catalog_list: VBoxContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/EquipmentCatalogView/EquipmentCatalogList
+
+@onready var calendar_kicker_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader/CalendarKickerLabel
+@onready var calendar_season_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader/CalendarSeasonLabel
+@onready var calendar_day_summary_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader/CalendarDaySummaryLabel
+@onready var calendar_grid: GridContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarGrid
+@onready var calendar_note_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarNoteLabel
+@onready var calendar_flavor_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarFlavorLabel
+@onready var calendar_legend_panel: PanelContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel
+
+var _current_section := MenuSection.INVENTORY
+var _current_party_subview := PartySubview.STATUS
+var _current_inventory_subview := InventorySubview.ITEMS
+var _selected_party_index := 0
 var _last_nav_action: StringName = StringName()
 var _last_nav_time_ms: int = -100000
 var _status_tab_highlight_enabled := false
-var _status_tab_highlight_root: Control = null
 var _status_tab_highlight_tween: Tween = null
-var _settings_panel: Control = null
-var _suppress_tab_switch_sound := false
+var _equipment_refresh_in_progress := false
+var _active_equipment_slot := "Weapon"
+var _equipment_choices_by_slot := {
+	"Weapon": [],
+	"Armor": [],
+	"Accessory": [],
+}
+var _calendar_day_panels: Array[PanelContainer] = []
+var _calendar_day_labels: Array[Label] = []
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
@@ -52,11 +91,20 @@ func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Global.inventory_updated.connect(update_inventory)
-	Global.stats_updated.connect(update_status_page)
-	if tabs and not tabs.tab_changed.is_connected(_on_tab_changed):
-		tabs.tab_changed.connect(_on_tab_changed)
-	_setup_status_tab_highlight()
-	_ensure_settings_panel()
+	Global.stats_updated.connect(_refresh_all_views)
+	if ProgressionService != null:
+		if not ProgressionService.party_roster_changed.is_connected(_refresh_all_views):
+			ProgressionService.party_roster_changed.connect(_refresh_all_views)
+		if not ProgressionService.equipment_catalog_changed.is_connected(_refresh_all_views):
+			ProgressionService.equipment_catalog_changed.connect(_refresh_all_views)
+
+	_wire_navigation_buttons()
+	_wire_party_controls()
+	_wire_inventory_controls()
+	_wire_calendar_controls()
+	_build_calendar_grid()
+	_update_section_visibility()
+	_refresh_all_views()
 
 func _shortcut_input(event: InputEvent) -> void:
 	if _handle_menu_toggle_input(event):
@@ -69,10 +117,10 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if _is_action_pressed(event, TAB_PREV_ACTIONS):
-		_switch_tab(-1)
+		_cycle_current_subview(-1)
 		get_viewport().set_input_as_handled()
 	elif _is_action_pressed(event, TAB_NEXT_ACTIONS):
-		_switch_tab(1)
+		_cycle_current_subview(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
 		_activate_focused_control()
@@ -90,6 +138,9 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _handle_menu_toggle_input(event: InputEvent) -> bool:
+	if _is_system_menu_blocking():
+		return false
+
 	if event.is_action_pressed("menu_toggle"):
 		toggle_menu()
 		get_viewport().set_input_as_handled()
@@ -101,98 +152,803 @@ func _handle_menu_toggle_input(event: InputEvent) -> bool:
 		return true
 
 	if visible and event.is_action_pressed("ui_cancel"):
+		if _try_close_equipment_picker():
+			get_viewport().set_input_as_handled()
+			return true
 		toggle_menu()
 		get_viewport().set_input_as_handled()
 		return true
 
 	return false
 
-func toggle_menu():
+func _is_system_menu_blocking() -> bool:
+	var system_menu := get_parent().get_node_or_null("OverworldSystemMenu") if get_parent() != null else null
+	return system_menu != null and system_menu.visible
+
+func toggle_menu() -> void:
 	var opening := not visible
 	var ui_sounds := _ui_sound_manager()
-	if not opening and SettingsManager and SettingsManager.has_pending_display_preview():
-		SettingsManager.revert_display_preview()
 	visible = opening
 	get_tree().paused = visible
-	update_status_page()
+	_refresh_all_views()
 	if ui_sounds:
 		ui_sounds.play_inventory_toggle()
-	
+
 	if visible:
-		_suppress_tab_switch_sound = true
-		if tabs:
-			tabs.current_tab = 1
+		open_menu_to_tab(MenuSection.INVENTORY)
 		menu_opened.emit()
-		update_inventory()
-		_refresh_status_tab_highlight()
 		if ui_sounds:
 			ui_sounds.suppress_browse_once()
-		_focus_first_interactable_deferred()
 	else:
-		_hide_status_tab_highlight()
+		_complete_status_review_if_needed(true)
+		_stop_status_highlight()
 		menu_closed.emit()
 
 func open_status_tab() -> void:
 	var was_visible := visible
-	var ui_sounds := _ui_sound_manager()
 	visible = true
 	get_tree().paused = true
-	update_status_page()
-	update_inventory()
-	_suppress_tab_switch_sound = true
-	if tabs:
-		tabs.current_tab = 0
-
+	_current_section = MenuSection.PARTY
+	_current_party_subview = PartySubview.STATUS
+	_update_section_visibility()
+	_refresh_all_views()
 	if not was_visible:
+		var ui_sounds := _ui_sound_manager()
 		if ui_sounds:
 			ui_sounds.play_inventory_toggle()
+			ui_sounds.suppress_browse_once()
 		menu_opened.emit()
-
-	_refresh_status_tab_highlight()
-	if ui_sounds:
-		ui_sounds.suppress_browse_once()
-	_focus_first_interactable_deferred()
+	_focus_default_for_current_view_deferred()
 
 func open_menu_to_tab(tab_index: int) -> void:
 	var was_visible := visible
-	var ui_sounds := _ui_sound_manager()
 	visible = true
 	get_tree().paused = true
-	update_status_page()
-	update_inventory()
-	_suppress_tab_switch_sound = true
-	if tabs:
-		tabs.current_tab = clampi(tab_index, 0, max(tabs.get_tab_count() - 1, 0))
-
+	_current_section = clampi(tab_index, 0, 2) as MenuSection
+	_update_section_visibility()
+	_refresh_all_views()
 	if not was_visible:
+		var ui_sounds := _ui_sound_manager()
 		if ui_sounds:
 			ui_sounds.play_inventory_toggle()
+			ui_sounds.suppress_browse_once()
 		menu_opened.emit()
-
-	_refresh_status_tab_highlight()
-	if ui_sounds:
-		ui_sounds.suppress_browse_once()
-	_focus_first_interactable_deferred()
+	_focus_default_for_current_view_deferred()
 
 func set_status_tab_highlight(enabled: bool) -> void:
 	_status_tab_highlight_enabled = enabled
-	_refresh_status_tab_highlight()
+	_refresh_status_highlight()
 
+func update_inventory() -> void:
+	if inventory_grid == null:
+		return
+
+	for child in inventory_grid.get_children():
+		child.queue_free()
+
+	for item_enum in Global.inventory:
+		var count := int(Global.inventory[item_enum])
+		if count <= 0:
+			continue
+		var slot = SLOT_SCENE.instantiate()
+		inventory_grid.add_child(slot)
+		slot.setup(item_enum, count)
+
+func _refresh_all_views() -> void:
+	_refresh_roster_buttons()
+	_refresh_party_view()
+	update_inventory()
+	_refresh_inventory_equipment_view()
+	_refresh_calendar_view()
+	_refresh_status_highlight()
+
+func _wire_navigation_buttons() -> void:
+	_wire_browse_sound(party_button, false)
+	_wire_browse_sound(inventory_button, false)
+	_wire_browse_sound(calendar_button, false)
+	party_button.pressed.connect(func() -> void: _set_section(MenuSection.PARTY))
+	inventory_button.pressed.connect(func() -> void: _set_section(MenuSection.INVENTORY))
+	calendar_button.pressed.connect(func() -> void: _set_section(MenuSection.CALENDAR))
+
+func _wire_party_controls() -> void:
+	_wire_browse_sound(status_subtab_button, false)
+	_wire_browse_sound(equipment_subtab_button, false)
+	_wire_browse_sound(skills_subtab_button, false)
+	_wire_browse_sound(status_text, false)
+	status_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.STATUS))
+	equipment_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
+	skills_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
+	if not status_text.focus_entered.is_connected(_on_status_text_focus_entered):
+		status_text.focus_entered.connect(_on_status_text_focus_entered)
+
+	for slot_name in ["Weapon", "Armor", "Accessory"]:
+		var slot_button := _get_equipment_slot_button(slot_name)
+		_wire_browse_sound(slot_button, false)
+		slot_button.focus_entered.connect(_on_equipment_slot_focus_entered.bind(slot_name))
+		slot_button.mouse_entered.connect(_on_equipment_slot_mouse_entered.bind(slot_name))
+		slot_button.pressed.connect(_on_equipment_slot_pressed.bind(slot_name))
+
+	_wire_browse_sound(equipment_choice_list, false)
+	equipment_choice_list.focus_mode = Control.FOCUS_ALL
+	equipment_choice_list.item_selected.connect(_on_equipment_choice_selected)
+	equipment_choice_list.item_activated.connect(_on_equipment_choice_activated)
+
+func _wire_inventory_controls() -> void:
+	_wire_browse_sound(items_subtab_button, false)
+	_wire_browse_sound(equipment_inventory_subtab_button, false)
+	items_subtab_button.pressed.connect(func() -> void: _set_inventory_subview(InventorySubview.ITEMS))
+	equipment_inventory_subtab_button.pressed.connect(func() -> void: _set_inventory_subview(InventorySubview.EQUIPMENT))
+
+func _wire_calendar_controls() -> void:
+	_wire_browse_sound(calendar_legend_panel, false)
+
+func _set_section(section: int) -> void:
+	if _current_section == section:
+		return
+	_current_section = section as MenuSection
+	var ui_sounds := _ui_sound_manager()
+	if visible and ui_sounds:
+		ui_sounds.play_tab_switch()
+	_update_section_visibility()
+	_refresh_all_views()
+	_focus_default_for_current_view_deferred()
+
+func _set_party_subview(subview: int) -> void:
+	if _current_party_subview == subview:
+		return
+	_current_party_subview = subview as PartySubview
+	var ui_sounds := _ui_sound_manager()
+	if visible and ui_sounds:
+		ui_sounds.play_tab_switch()
+	_update_section_visibility()
+	_refresh_all_views()
+	_focus_default_for_current_view_deferred()
+
+func _set_inventory_subview(subview: int) -> void:
+	if _current_inventory_subview == subview:
+		return
+	_current_inventory_subview = subview as InventorySubview
+	var ui_sounds := _ui_sound_manager()
+	if visible and ui_sounds:
+		ui_sounds.play_tab_switch()
+	_update_section_visibility()
+	_refresh_all_views()
+	_focus_default_for_current_view_deferred()
+
+func _cycle_current_subview(delta: int) -> void:
+	match _current_section:
+		MenuSection.PARTY:
+			_set_party_subview(wrapi(_current_party_subview + delta, 0, 3))
+		MenuSection.INVENTORY:
+			_set_inventory_subview(wrapi(_current_inventory_subview + delta, 0, 2))
+		MenuSection.CALENDAR:
+			pass
+
+func _update_section_visibility() -> void:
+	party_section.visible = _current_section == MenuSection.PARTY
+	inventory_section.visible = _current_section == MenuSection.INVENTORY
+	calendar_section.visible = _current_section == MenuSection.CALENDAR
+
+	status_view.visible = _current_party_subview == PartySubview.STATUS
+	equipment_view.visible = _current_party_subview == PartySubview.EQUIPMENT
+	skills_view.visible = _current_party_subview == PartySubview.SKILLS
+
+	items_view.visible = _current_inventory_subview == InventorySubview.ITEMS
+	equipment_catalog_view.visible = _current_inventory_subview == InventorySubview.EQUIPMENT
+
+	section_title.text = ["Party", "Inventory", "Calendar"][_current_section]
+	_update_button_state(party_button, _current_section == MenuSection.PARTY)
+	_update_button_state(inventory_button, _current_section == MenuSection.INVENTORY)
+	_update_button_state(calendar_button, _current_section == MenuSection.CALENDAR)
+	_update_button_state(status_subtab_button, _current_party_subview == PartySubview.STATUS)
+	_update_button_state(equipment_subtab_button, _current_party_subview == PartySubview.EQUIPMENT)
+	_update_button_state(skills_subtab_button, _current_party_subview == PartySubview.SKILLS)
+	_update_button_state(items_subtab_button, _current_inventory_subview == InventorySubview.ITEMS)
+	_update_button_state(equipment_inventory_subtab_button, _current_inventory_subview == InventorySubview.EQUIPMENT)
+
+func _update_button_state(button: BaseButton, is_active: bool) -> void:
+	if button == null:
+		return
+	button.modulate = Color(1.0, 0.95, 0.76, 1.0) if is_active else Color(1, 1, 1, 1)
+
+func _refresh_roster_buttons() -> void:
+	if roster_list == null:
+		return
+
+	for child in roster_list.get_children():
+		child.queue_free()
+
+	var roster := _get_party_roster()
+	if roster.is_empty():
+		return
+
+	_selected_party_index = clampi(_selected_party_index, 0, roster.size() - 1)
+	for index in range(roster.size()):
+		var member: CharacterData = roster[index]
+		var button := Button.new()
+		button.text = String(member.display_name)
+		button.custom_minimum_size = Vector2(0, 54)
+		button.add_theme_font_size_override("font_size", 22)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_wire_browse_sound(button, false)
+		button.pressed.connect(_on_roster_button_pressed.bind(index))
+		roster_list.add_child(button)
+		_update_button_state(button, index == _selected_party_index)
+
+func _on_roster_button_pressed(index: int) -> void:
+	_selected_party_index = index
+	var ui_sounds := _ui_sound_manager()
+	if visible and ui_sounds:
+		ui_sounds.play_browse_general(self)
+	_refresh_party_view()
+	_focus_default_for_current_view_deferred()
+
+func _refresh_party_view() -> void:
+	var character := _get_selected_party_member()
+	if character == null:
+		return
+
+	character_name_label.text = String(character.display_name)
+	character_role_label.text = _build_character_role_text(character)
+	character_level_label.text = "Level %d" % _resolve_character_level(character)
+	portrait_rect.texture = character.portrait
+	meal_status_label.text = _build_meal_status_text(character)
+	status_text.bbcode_text = _build_party_status_text(character)
+	skills_text.bbcode_text = _build_party_skills_text(character)
+	_refresh_equipment_panel(character)
+
+func _refresh_equipment_panel(character: CharacterData) -> void:
+	_equipment_refresh_in_progress = true
+	for slot_name in ["Weapon", "Armor", "Accessory"]:
+		var slot_button := _get_equipment_slot_button(slot_name)
+		var equipped_item := _get_equipped_item_for_slot(character, slot_name)
+		_equipment_choices_by_slot[slot_name] = _build_equipment_choices(slot_name)
+		_refresh_equipment_slot_button(slot_button, slot_name, equipped_item)
+
+	_refresh_equipment_picker(character)
+	_equipment_refresh_in_progress = false
+
+func _build_equipment_choices(slot_name: String) -> Array:
+	var choices: Array = [null]
+	var owned_equipment: Array = ProgressionService.get_owned_equipment(slot_name) if ProgressionService != null else []
+	for item in owned_equipment:
+		choices.append(item)
+	return choices
+
+func _refresh_equipment_slot_button(button: Button, slot_name: String, equipped_item: Resource) -> void:
+	if button == null:
+		return
+	button.icon = _get_equipment_icon(equipped_item)
+	button.expand_icon = true
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var equipped_label := _get_equipment_display_name(equipped_item, "") if equipped_item != null else "Empty"
+	button.text = "%s\n%s" % [slot_name, equipped_label]
+	_update_button_state(button, _active_equipment_slot == slot_name)
+
+func _refresh_equipment_picker(character: CharacterData) -> void:
+	if character == null:
+		return
+	var slot_name := _normalize_equipment_slot_name(_active_equipment_slot)
+	var choices: Array = _equipment_choices_by_slot.get(slot_name, [null])
+	equipment_slot_heading_label.text = "%s Slot" % slot_name
+	equipped_now_label.text = "Currently equipped: %s" % _get_equipment_display_name(_get_equipped_item_for_slot(character, slot_name), "None")
+
+	equipment_choice_list.clear()
+	for item in choices:
+		var entry_text := "Unequip"
+		var entry_icon: Texture2D = null
+		if item != null:
+			entry_text = "%s%s" % [_get_equipment_display_name(item, slot_name), _build_equipment_owner_suffix(item, slot_name)]
+			entry_icon = _get_equipment_icon(item)
+		equipment_choice_list.add_item(entry_text, entry_icon, true)
+
+	var selected_index := _resolve_equipment_choice_index(character, slot_name, choices)
+	if selected_index >= 0 and selected_index < equipment_choice_list.item_count:
+		equipment_choice_list.select(selected_index)
+		_update_equipment_detail_from_index(slot_name, selected_index)
+	else:
+		equipment_detail_label.text = "Select a %s to review its bonuses and who is currently using it." % slot_name.to_lower()
+
+func _resolve_equipment_choice_index(character: CharacterData, slot_name: String, choices: Array) -> int:
+	var equipped_item := _get_equipped_item_for_slot(character, slot_name)
+	if equipped_item == null:
+		return 0
+	var found_index := choices.find(equipped_item)
+	return found_index if found_index != -1 else 0
+
+func _on_equipment_slot_focus_entered(slot_name: String) -> void:
+	_preview_equipment_slot(slot_name)
+
+func _on_equipment_slot_mouse_entered(slot_name: String) -> void:
+	_preview_equipment_slot(slot_name)
+
+func _preview_equipment_slot(slot_name: String) -> void:
+	var normalized_slot := _normalize_equipment_slot_name(slot_name)
+	if normalized_slot.is_empty():
+		return
+	_active_equipment_slot = normalized_slot
+	var character := _get_selected_party_member()
+	if character == null:
+		return
+	for slot_label in ["Weapon", "Armor", "Accessory"]:
+		_update_button_state(_get_equipment_slot_button(slot_label), slot_label == _active_equipment_slot)
+	_refresh_equipment_picker(character)
+
+func _on_equipment_slot_pressed(slot_name: String) -> void:
+	_preview_equipment_slot(slot_name)
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
+	call_deferred("_focus_equipment_choice_list")
+
+func _focus_equipment_choice_list() -> void:
+	if equipment_choice_list == null or equipment_choice_list.item_count <= 0:
+		return
+	equipment_choice_list.grab_focus()
+
+func _on_equipment_choice_selected(index: int) -> void:
+	_update_equipment_detail_from_index(_active_equipment_slot, index)
+	if _equipment_refresh_in_progress:
+		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_browse_general(equipment_choice_list)
+
+func _on_equipment_choice_activated(index: int) -> void:
+	_apply_equipment_choice(_active_equipment_slot, index)
+
+func _update_equipment_detail_from_index(slot_name: String, index: int) -> void:
+	var choices: Array = _equipment_choices_by_slot.get(_normalize_equipment_slot_name(slot_name), [])
+	if index < 0 or index >= choices.size():
+		return
+	var item: Resource = choices[index]
+	if item == null:
+		equipment_detail_label.text = "Unequip the current %s and leave this slot empty." % slot_name.to_lower()
+		return
+	equipment_detail_label.text = _build_equipment_description(item, "No %s equipped." % slot_name.to_lower())
+
+func _apply_equipment_choice(slot_name: String, index: int) -> void:
+	var normalized_slot := _normalize_equipment_slot_name(slot_name)
+	var choices: Array = _equipment_choices_by_slot.get(normalized_slot, [])
+	var character := _get_selected_party_member()
+	if character == null or index < 0 or index >= choices.size():
+		return
+	var item: Resource = choices[index]
+	if ProgressionService != null:
+		ProgressionService.equip_character_item(character, normalized_slot, item)
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
+	_refresh_all_views()
+
+func _refresh_inventory_equipment_view() -> void:
+	for child in equipment_catalog_list.get_children():
+		child.queue_free()
+
+	for slot_name in ["Weapon", "Armor", "Accessory"]:
+		var heading := Label.new()
+		heading.text = slot_name
+		heading.add_theme_font_size_override("font_size", 24)
+		equipment_catalog_list.add_child(heading)
+
+		var owned_equipment: Array = ProgressionService.get_owned_equipment(slot_name) if ProgressionService != null else []
+		if owned_equipment.is_empty():
+			var empty_label := Label.new()
+			empty_label.text = "No %s stored." % slot_name.to_lower()
+			empty_label.add_theme_font_size_override("font_size", 20)
+			equipment_catalog_list.add_child(empty_label)
+			continue
+
+		for item in owned_equipment:
+			equipment_catalog_list.add_child(_build_equipment_catalog_entry(slot_name, item))
+
+func _build_equipment_catalog_entry(slot_name: String, item: Resource) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+
+	var icon_rect := TextureRect.new()
+	icon_rect.custom_minimum_size = Vector2(40, 40)
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon_rect.texture = _get_equipment_icon(item)
+	row.add_child(icon_rect)
+
+	var label := Label.new()
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.text = "%s%s" % [_get_equipment_display_name(item, slot_name), _build_equipment_owner_suffix(item, slot_name)]
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 20)
+	row.add_child(label)
+
+	return row
+
+func _build_calendar_grid() -> void:
+	if calendar_grid == null:
+		return
+
+	_calendar_day_panels.clear()
+	_calendar_day_labels.clear()
+	for child in calendar_grid.get_children():
+		calendar_grid.remove_child(child)
+		child.queue_free()
+
+	calendar_grid.columns = CALENDAR_GRID_COLUMNS
+	for day in range(1, CALENDAR_GRID_DAYS + 1):
+		var day_panel := PanelContainer.new()
+		day_panel.custom_minimum_size = Vector2(0, 76)
+		day_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		day_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+		var day_label := Label.new()
+		day_label.text = str(day)
+		day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		day_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		day_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		day_label.add_theme_font_size_override("font_size", 26)
+		day_panel.add_child(day_label)
+
+		calendar_grid.add_child(day_panel)
+		_calendar_day_panels.append(day_panel)
+		_calendar_day_labels.append(day_label)
+
+func _make_calendar_cell_style(background_color: Color, border_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background_color
+	style.border_color = border_color
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_right = 10
+	style.corner_radius_bottom_left = 10
+	return style
+
+func _apply_calendar_cell_state(day_panel: PanelContainer, day_label: Label, state: String) -> void:
+	if day_panel == null or day_label == null:
+		return
+
+	var background := Color(0.13, 0.11, 0.08, 0.92)
+	var border := Color(0.30, 0.24, 0.14, 1.0)
+	var font_color := Color(0.85, 0.80, 0.68, 1.0)
+	var font_size := 26
+
+	match state:
+		"past":
+			background = Color(0.19, 0.15, 0.10, 0.96)
+			border = Color(0.46, 0.34, 0.20, 1.0)
+			font_color = Color(0.95, 0.88, 0.72, 1.0)
+		"current":
+			background = Color(0.55, 0.31, 0.12, 0.98)
+			border = Color(1.0, 0.83, 0.48, 1.0)
+			font_color = Color(1.0, 0.97, 0.88, 1.0)
+			font_size = 30
+
+	day_panel.add_theme_stylebox_override("panel", _make_calendar_cell_style(background, border))
+	day_label.add_theme_color_override("font_color", font_color)
+	day_label.add_theme_font_size_override("font_size", font_size)
+
+func _refresh_calendar_view() -> void:
+	var current_day: int = int(Global.current_day)
+	if current_day <= 0:
+		current_day = 1
+
+	var season_name: String = "Spring"
+	var days_per_season: int = CALENDAR_GRID_DAYS
+	var season_day: int = ((current_day - 1) % days_per_season) + 1
+	var season_start: int = current_day - season_day + 1
+	var season_end: int = season_start + days_per_season - 1
+
+	if CalendarService != null:
+		season_name = String(CalendarService.get_current_season()).capitalize()
+		days_per_season = int(CalendarService.DAYS_PER_SEASON)
+		season_day = int(CalendarService.get_day_in_season(current_day))
+		season_start = int(CalendarService.get_season_start_day(current_day))
+		season_end = int(CalendarService.get_season_end_day(current_day))
+
+	calendar_kicker_label.text = "Season Almanac"
+	calendar_season_label.text = season_name
+	calendar_day_summary_label.text = "Day %d of %d" % [season_day, days_per_season]
+
+	var public_entry_count: int = 0
+	if CalendarService != null and CalendarService.has_method("get_public_calendar_entries_for_day"):
+		for day in range(season_start, season_end + 1):
+			public_entry_count += CalendarService.get_public_calendar_entries_for_day(day).size()
+
+	calendar_note_label.text = "No public notices are marked this season." if public_entry_count == 0 else "Known notices are recorded in the almanac."
+	calendar_flavor_label.text = "This page covers days %d-%d of the year." % [season_start, season_end]
+
+	for index in range(_calendar_day_panels.size()):
+		var displayed_day := index + 1
+		var state := "future"
+		if displayed_day < season_day:
+			state = "past"
+		elif displayed_day == season_day:
+			state = "current"
+		_apply_calendar_cell_state(_calendar_day_panels[index], _calendar_day_labels[index], state)
+
+func _build_party_status_text(character: CharacterData) -> String:
+	var stats := _build_character_unit_stats(character)
+	var atk_label := _build_attack_label(character, stats)
+	var lines: PackedStringArray = []
+	lines.append("[b]Core Stats[/b]")
+	lines.append("HP: %d/%d" % [stats.hp, stats.max_hp])
+	lines.append("STR: %d    DEF: %d    MDEF: %d" % [stats.str, stats.physical_def, stats.magic_def])
+	lines.append("DEX: %d    INT: %d    SPD: %d" % [stats.dex, stats.int_stat, stats.spd])
+	lines.append("MOV: %d    RNG: %d" % [stats.mov, stats.atk_rng])
+	lines.append("")
+	lines.append("[b]Combat Read[/b]")
+	lines.append(atk_label)
+	lines.append("")
+	lines.append("[b]Equipment[/b]")
+	lines.append("Weapon: %s" % _get_equipment_display_name(character.equipped_weapon, "Weapon"))
+	lines.append("Armor: %s" % _get_equipment_display_name(character.equipped_armor, "Armor"))
+	lines.append("Accessory: %s" % _get_equipment_display_name(character.equipped_accessory, "Accessory"))
+	return "\n".join(lines)
+
+func _build_party_skills_text(character: CharacterData) -> String:
+	if character.abilities.is_empty():
+		return "[b]Skills[/b]\nNo abilities learned yet."
+
+	var lines: PackedStringArray = ["[b]Skills[/b]"]
+	for ability in character.abilities:
+		if ability == null:
+			continue
+		lines.append(String(ability.ability_name))
+		lines.append("Range %d | Radius %d | Cooldown %d" % [int(ability.range), int(ability.radius), int(ability.cooldown_turns)])
+		lines.append(String(ability.description))
+		lines.append("")
+	return "\n".join(lines).strip_edges()
+
+func _build_attack_label(character: CharacterData, stats: UnitStats) -> String:
+	var weapon := character.equipped_weapon
+	var weapon_might := int(weapon.might) if weapon != null else 0
+	var uses_magic := _class_uses_magic_damage(character.class_data)
+	var attack_stat := stats.int_stat if uses_magic else stats.str
+	var attack_total: int = max(0, attack_stat + weapon_might)
+	var stat_label := "INT" if uses_magic else "STR"
+	return "ATK: %d (%s %d + MT %d)" % [attack_total, stat_label, attack_stat, weapon_might]
+
+func _build_character_unit_stats(character: CharacterData) -> UnitStats:
+	var stats := UnitStats.new()
+	if character == null:
+		return stats
+
+	stats.apply_class_progression(character)
+	stats.apply_delta(_extract_equipment_delta(character.equipped_weapon))
+	stats.apply_delta(_extract_equipment_delta(character.equipped_armor))
+	stats.apply_delta(_extract_equipment_delta(character.equipped_accessory))
+	if _is_player_character(character):
+		var permanent := Global.get_player_permanent_totals()
+		var temporary := Global.get_player_temporary_modifiers()
+		stats.apply_player_snapshot(permanent, temporary)
+	return stats
+
+func _extract_equipment_delta(item: Resource) -> Dictionary:
+	var delta := {}
+	if item == null:
+		return delta
+	var bonuses = item.get("stat_bonuses")
+	if bonuses is Dictionary:
+		delta = {
+			"STR": int((bonuses as Dictionary).get("strength", 0)),
+			"DEF": int((bonuses as Dictionary).get("defense", 0)),
+			"MDEF": int((bonuses as Dictionary).get("magic_defense", 0)),
+			"DEX": int((bonuses as Dictionary).get("dexterity", 0)),
+			"INT": int((bonuses as Dictionary).get("intelligence", 0)),
+			"SPD": int((bonuses as Dictionary).get("speed", 0)),
+			"MOV": int((bonuses as Dictionary).get("move_range", 0)),
+			"ATK_RNG": int((bonuses as Dictionary).get("attack_range", 0)),
+			"MAX_HP": int((bonuses as Dictionary).get("max_health", 0)),
+		}
+	return delta
+
+func _build_character_role_text(character: CharacterData) -> String:
+	if character == null or character.class_data == null:
+		return "Unknown"
+	var class_label := String(character.class_data.metadata_name)
+	var role_name := String(character.class_data.role).capitalize()
+	if role_name.is_empty():
+		return class_label
+	return "%s | %s" % [class_label, role_name]
+
+func _resolve_character_level(character: CharacterData) -> int:
+	return Global.get_player_level() if _is_player_character(character) else 1
+
+func _build_meal_status_text(character: CharacterData) -> String:
+	if character == null:
+		return "No meal active."
+	if not _is_player_character(character):
+		return "Meal buffs are currently tracked on Savannah's lead slot."
+	if Global.active_food_buff.item == null:
+		return "No meal active."
+	var meal_item: Global.Items = Global.active_food_buff.item
+	var meal_name := String(Global.Items.keys()[meal_item]).replace("_", " ").capitalize()
+	var stat_parts: PackedStringArray = []
+	for stat_name in ["VIT", "STR", "DEF", "DEX", "INT", "SPD", "MOV"]:
+		var stat_value := int(Global.active_food_buff.stats.get(stat_name, 0))
+		if stat_value != 0:
+			stat_parts.append("+%d %s" % [stat_value, stat_name])
+	return "Meal: %s%s" % [meal_name, " (%s)" % ", ".join(stat_parts) if not stat_parts.is_empty() else ""]
+
+func _build_equipment_description(item: Resource, empty_text: String) -> String:
+	if item == null:
+		return empty_text
+	var display_name := _get_equipment_display_name(item, "")
+	var description := String(item.get("description")).strip_edges()
+	var bonus_parts: PackedStringArray = []
+	var bonuses = item.get("stat_bonuses")
+	if bonuses is Dictionary:
+		var label_map := {
+			"strength": "STR",
+			"defense": "DEF",
+			"magic_defense": "MDEF",
+			"dexterity": "DEX",
+			"intelligence": "INT",
+			"speed": "SPD",
+		}
+		for key in ["strength", "defense", "magic_defense", "dexterity", "intelligence", "speed"]:
+			var value := int((bonuses as Dictionary).get(key, 0))
+			if value != 0:
+				bonus_parts.append("%s %+d" % [String(label_map[key]), value])
+	return "%s%s%s" % [
+		display_name,
+		"\n" + ", ".join(bonus_parts) if not bonus_parts.is_empty() else "",
+		"\n" + description if not description.is_empty() else ""
+	]
+
+func _build_equipment_owner_suffix(item: Resource, slot_name: String) -> String:
+	if item == null or ProgressionService == null:
+		return ""
+	for member in _get_party_roster():
+		match slot_name:
+			"Weapon":
+				if member.equipped_weapon == item:
+					return "  [Equipped by %s]" % String(member.display_name)
+			"Armor":
+				if member.equipped_armor == item:
+					return "  [Equipped by %s]" % String(member.display_name)
+			"Accessory":
+				if member.equipped_accessory == item:
+					return "  [Equipped by %s]" % String(member.display_name)
+	return "  [Unequipped]"
+
+func _get_equipment_display_name(item: Resource, fallback_slot: String) -> String:
+	if item == null:
+		return "None"
+	if item is WeaponData:
+		return String((item as WeaponData).weapon_name)
+	if item is ArmorData:
+		return String((item as ArmorData).armor_name)
+	if item is AccessoryData:
+		return String((item as AccessoryData).accessory_name)
+	return fallback_slot if not fallback_slot.is_empty() else String(item.resource_name)
+
+func _get_equipment_icon(item: Resource) -> Texture2D:
+	if item == null:
+		return null
+	return item.get("icon") as Texture2D
+
+func _get_equipped_item_for_slot(character: CharacterData, slot_name: String) -> Resource:
+	if character == null:
+		return null
+	match _normalize_equipment_slot_name(slot_name):
+		"Weapon":
+			return character.equipped_weapon
+		"Armor":
+			return character.equipped_armor
+		"Accessory":
+			return character.equipped_accessory
+		_:
+			return null
+
+func _get_equipment_slot_button(slot_name: String) -> Button:
+	match _normalize_equipment_slot_name(slot_name):
+		"Weapon":
+			return weapon_slot_button
+		"Armor":
+			return armor_slot_button
+		"Accessory":
+			return accessory_slot_button
+		_:
+			return null
+
+func _normalize_equipment_slot_name(slot_name: String) -> String:
+	match slot_name.strip_edges().to_lower():
+		"weapon":
+			return "Weapon"
+		"armor":
+			return "Armor"
+		"accessory":
+			return "Accessory"
+		_:
+			return ""
+
+func _class_uses_magic_damage(class_data: ClassData) -> bool:
+	if class_data == null:
+		return false
+	var damage_stat := String(class_data.primary_damage_stat).to_lower()
+	if damage_stat == "intelligence" or damage_stat == "int":
+		return true
+	if damage_stat == "strength" or damage_stat == "str":
+		return false
+	return String(class_data.role).to_lower().contains("mage")
+
+func _get_party_roster() -> Array[CharacterData]:
+	return ProgressionService.get_party_roster() if ProgressionService != null else []
+
+func _get_selected_party_member() -> CharacterData:
+	var roster := _get_party_roster()
+	if roster.is_empty():
+		return null
+	_selected_party_index = clampi(_selected_party_index, 0, roster.size() - 1)
+	return roster[_selected_party_index]
+
+func _is_player_character(character: CharacterData) -> bool:
+	var player_data := ProgressionService.get_player_character_data() if ProgressionService != null else null
+	return character != null and character == player_data
+
+func _get_party_names() -> Array[String]:
+	var labels: Array[String] = []
+	for member in _get_party_roster():
+		labels.append(String(member.display_name))
+	return labels
+
+func _wire_browse_sound(control: Control, battle_menu_sound: bool) -> void:
+	if control == null:
+		return
+	if not control.focus_entered.is_connected(_on_control_focus_entered.bind(control, battle_menu_sound)):
+		control.focus_entered.connect(_on_control_focus_entered.bind(control, battle_menu_sound))
+	if not control.mouse_entered.is_connected(_on_control_mouse_entered.bind(control, battle_menu_sound)):
+		control.mouse_entered.connect(_on_control_mouse_entered.bind(control, battle_menu_sound))
+
+func _on_control_focus_entered(control: Control, battle_menu_sound: bool) -> void:
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds == null:
+		return
+	if battle_menu_sound:
+		ui_sounds.play_browse_battle(control)
+	else:
+		ui_sounds.play_browse_general(control)
+
+func _on_control_mouse_entered(control: Control, battle_menu_sound: bool) -> void:
+	_on_control_focus_entered(control, battle_menu_sound)
 
 func _activate_focused_control() -> void:
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
-	if focus_owner == null or not _is_in_current_tab(focus_owner):
-		_focus_first_interactable_deferred()
+	if focus_owner == null or not _is_in_active_content(focus_owner):
+		_focus_default_for_current_view_deferred()
 		return
 
 	if focus_owner is BaseButton:
 		(focus_owner as BaseButton).pressed.emit()
 		get_viewport().set_input_as_handled()
 		return
-
+	if focus_owner is OptionButton:
+		(focus_owner as OptionButton).show_popup()
+		get_viewport().set_input_as_handled()
+		return
+	if focus_owner == equipment_choice_list:
+		_activate_selected_equipment_choice()
+		get_viewport().set_input_as_handled()
+		return
 	if focus_owner.has_method("_try_interact"):
 		focus_owner.call("_try_interact")
 		get_viewport().set_input_as_handled()
+
+func _activate_selected_equipment_choice() -> void:
+	if equipment_choice_list == null:
+		return
+	var selected := equipment_choice_list.get_selected_items()
+	if selected.is_empty():
+		if equipment_choice_list.item_count > 0:
+			equipment_choice_list.select(0)
+			_update_equipment_detail_from_index(_active_equipment_slot, 0)
+		return
+	_apply_equipment_choice(_active_equipment_slot, int(selected[0]))
 
 func _is_action_pressed(event: InputEvent, actions: Array[StringName]) -> bool:
 	for action in actions:
@@ -203,7 +959,6 @@ func _is_action_pressed(event: InputEvent, actions: Array[StringName]) -> bool:
 func _can_trigger_navigation(event: InputEvent, actions: Array[StringName], nav_key: StringName) -> bool:
 	if not _is_action_pressed(event, actions):
 		return false
-
 	for action in actions:
 		if InputMap.has_action(action) and Input.is_action_just_pressed(action):
 			_last_nav_action = nav_key
@@ -217,37 +972,18 @@ func _can_trigger_navigation(event: InputEvent, actions: Array[StringName], nav_
 			_last_nav_action = nav_key
 			_last_nav_time_ms = now
 			return true
-
 	return false
-
-func _switch_tab(delta: int) -> void:
-	if tabs == null:
-		return
-
-	var count: int = tabs.get_tab_count()
-	if count <= 0:
-		return
-
-	tabs.current_tab = wrapi(tabs.current_tab + delta, 0, count)
-	_focus_first_interactable_deferred()
-	_refresh_status_tab_highlight()
-
-func _focus_first_interactable() -> void:
-	for candidate in _get_tab_focusable_controls():
-		if candidate.get_focus_mode_with_override() == Control.FOCUS_ALL:
-			candidate.grab_focus()
-			return
-
-func _focus_first_interactable_deferred() -> void:
-	call_deferred("_focus_first_interactable")
 
 func _move_focus(direction: Vector2) -> void:
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
-	if focus_owner == null or not visible or not _is_in_current_tab(focus_owner):
+	if focus_owner == null or not _is_in_active_content(focus_owner):
 		_focus_first_interactable()
 		return
 
-	var controls := _get_tab_focusable_controls()
+	if focus_owner == equipment_choice_list and _move_equipment_choice_focus(direction):
+		return
+
+	var controls := _get_active_focusable_controls()
 	if controls.is_empty():
 		return
 
@@ -257,7 +993,6 @@ func _move_focus(direction: Vector2) -> void:
 	var current_center := _control_center(focus_owner)
 	var best: Control = null
 	var best_score := INF
-
 	for candidate in controls:
 		if candidate == focus_owner:
 			continue
@@ -266,30 +1001,26 @@ func _move_focus(direction: Vector2) -> void:
 			continue
 		if direction.dot(offset.normalized()) <= 0.25:
 			continue
-
 		var score := offset.length_squared()
 		if score < best_score:
 			best_score = score
 			best = candidate
 
-	if best:
+	if best != null:
 		best.grab_focus()
 		return
 
 	_move_focus_linear(focus_owner, controls, direction)
 
-
 func _move_grid_focus_if_possible(focus_owner: Control, controls: Array[Control], direction: Vector2) -> bool:
-	if tabs == null or tabs.current_tab != 1 or inventory_grid == null:
+	if _current_section != MenuSection.INVENTORY or _current_inventory_subview != InventorySubview.ITEMS or inventory_grid == null:
 		return false
-
 	var current_index := controls.find(focus_owner)
 	if current_index == -1:
 		return false
 
 	var columns: int = maxi(inventory_grid.columns, 1)
 	var target_index := current_index
-
 	if direction == Vector2.LEFT:
 		target_index = max(current_index - 1, 0)
 	elif direction == Vector2.RIGHT:
@@ -301,448 +1032,181 @@ func _move_grid_focus_if_possible(focus_owner: Control, controls: Array[Control]
 
 	if target_index == current_index:
 		return false
-
 	controls[target_index].grab_focus()
 	return true
 
 func _move_focus_linear(focus_owner: Control, controls: Array[Control], direction: Vector2) -> void:
 	var current_index := controls.find(focus_owner)
 	if current_index == -1:
-		_focus_first_interactable()
+		_focus_default_for_current_view()
 		return
-
-	var step := 0
-	if direction == Vector2.LEFT or direction == Vector2.UP:
-		step = -1
-	elif direction == Vector2.RIGHT or direction == Vector2.DOWN:
-		step = 1
-
-	if step == 0:
-		return
-
+	var step := -1 if direction == Vector2.LEFT or direction == Vector2.UP else 1
 	var target_index := wrapi(current_index + step, 0, controls.size())
 	controls[target_index].grab_focus()
 
-func _get_tab_focusable_controls() -> Array[Control]:
+func _move_equipment_choice_focus(direction: Vector2) -> bool:
+	if equipment_choice_list == null or equipment_choice_list.item_count <= 0:
+		return false
+	if direction == Vector2.LEFT:
+		var slot_button := _get_equipment_slot_button(_active_equipment_slot)
+		if slot_button != null:
+			slot_button.grab_focus()
+			return true
+		return false
+	if direction != Vector2.UP and direction != Vector2.DOWN:
+		return false
+
+	var selected := equipment_choice_list.get_selected_items()
+	var current_index := int(selected[0]) if not selected.is_empty() else 0
+	var next_index := clampi(current_index + (-1 if direction == Vector2.UP else 1), 0, equipment_choice_list.item_count - 1)
+	if next_index == current_index and not selected.is_empty():
+		return true
+	equipment_choice_list.select(next_index)
+	equipment_choice_list.ensure_current_is_visible()
+	_on_equipment_choice_selected(next_index)
+	return true
+
+func _focus_default_for_current_view() -> void:
+	var target := _get_default_focus_target()
+	if target != null and target.visible and target.get_focus_mode_with_override() == Control.FOCUS_ALL:
+		target.grab_focus()
+		return
+	_focus_first_interactable()
+
+func _focus_default_for_current_view_deferred() -> void:
+	call_deferred("_focus_default_for_current_view")
+
+func _get_default_focus_target() -> Control:
+	match _current_section:
+		MenuSection.PARTY:
+			match _current_party_subview:
+				PartySubview.STATUS, PartySubview.SKILLS:
+					var roster_button := _get_selected_roster_button()
+					if roster_button != null:
+						return roster_button
+					return status_subtab_button if _current_party_subview == PartySubview.STATUS else skills_subtab_button
+				PartySubview.EQUIPMENT:
+					var slot_button := _get_equipment_slot_button(_active_equipment_slot)
+					if slot_button != null:
+						return slot_button
+					return equipment_subtab_button
+		MenuSection.INVENTORY:
+			if _current_inventory_subview == InventorySubview.ITEMS:
+				var inventory_slot := _get_first_inventory_slot()
+				if inventory_slot != null:
+					return inventory_slot
+				return items_subtab_button
+			return equipment_inventory_subtab_button
+		MenuSection.CALENDAR:
+			return calendar_legend_panel
+	return null
+
+func _focus_first_interactable() -> void:
+	for candidate in _get_active_focusable_controls():
+		if candidate.visible and candidate.get_focus_mode_with_override() == Control.FOCUS_ALL:
+			candidate.grab_focus()
+			return
+
+func _focus_first_interactable_deferred() -> void:
+	call_deferred("_focus_first_interactable")
+
+func _get_selected_roster_button() -> Button:
+	if roster_list == null:
+		return null
+	if _selected_party_index < 0 or _selected_party_index >= roster_list.get_child_count():
+		return null
+	return roster_list.get_child(_selected_party_index) as Button
+
+func _get_first_inventory_slot() -> Control:
+	if inventory_grid == null:
+		return null
+	for child in inventory_grid.get_children():
+		if child is Control and child.visible:
+			return child as Control
+	return null
+
+func _get_active_focusable_controls() -> Array[Control]:
 	var result: Array[Control] = []
-	if tabs == null:
-		return result
-
-	var tab_content: Control = tabs.get_current_tab_control()
-	if tab_content == null:
-		return result
-
-	_collect_focusable_controls(tab_content, result)
+	_collect_focusable_controls(self, result)
 	return result
 
 func _collect_focusable_controls(node: Node, result: Array[Control]) -> void:
 	if node is Control:
 		var control := node as Control
-		if control.visible and control.get_focus_mode_with_override() == Control.FOCUS_ALL:
+		if control.visible and control.get_focus_mode_with_override() == Control.FOCUS_ALL and _is_in_active_content(control):
 			result.append(control)
-
 	for child in node.get_children():
 		_collect_focusable_controls(child, result)
 
-func _is_in_current_tab(control: Control) -> bool:
-	if tabs == null:
+func _is_in_active_content(control: Control) -> bool:
+	if control == null or not visible:
 		return false
+	if control == party_button or control == inventory_button or control == calendar_button:
+		return true
 
-	var tab_content: Control = tabs.get_current_tab_control()
-	if tab_content == null:
-		return false
-
-	return tab_content == control or tab_content.is_ancestor_of(control)
+	match _current_section:
+		MenuSection.PARTY:
+			if party_section == control or party_section.is_ancestor_of(control):
+				return true
+		MenuSection.INVENTORY:
+			if inventory_section == control or inventory_section.is_ancestor_of(control):
+				return true
+		MenuSection.CALENDAR:
+			if calendar_section == control or calendar_section.is_ancestor_of(control):
+				return true
+	return false
 
 func _control_center(control: Control) -> Vector2:
 	return control.get_global_rect().get_center()
-		
 
-func update_inventory():
-	if not inventory_grid: return
-
-	for child in inventory_grid.get_children():
-		child.queue_free()
-	
-	for item_enum in Global.inventory:
-		var count = Global.inventory[item_enum]
-		if count > 0:
-			var slot = SLOT_SCENE.instantiate()
-			inventory_grid.add_child(slot)
-			
-			slot.setup(item_enum, count)
-
-	if visible and tabs and tabs.current_tab == 1:
-		_focus_first_interactable_deferred()
-			
-func update_status_page():
-	Global.ensure_player_stat_formats()
-	var permanent_stats: Dictionary = Global.get_player_permanent_totals()
-	var temporary_modifiers: Dictionary = Global.get_player_temporary_modifiers()
-	var player_unit := _find_player_unit()
-	var class_data := _resolve_player_class_data(player_unit)
-	var weapon := _resolve_player_weapon_from_roster(player_unit)
-	var uses_magic_damage := _class_uses_magic_damage(class_data)
-	var attack_preview_data: Dictionary = {}
-	if player_unit != null:
-		attack_preview_data = player_unit.get_attack_preview_data(weapon)
-
-	var format_stat = func(stat_name: String, base_val: int, buff_val: int) -> String:
-			
-		if buff_val > 0:
-			return "%s: %d [color=green](+%d)[/color]" % [stat_name, base_val, buff_val]
-		elif buff_val < 0:
-			return "%s: %d [color=red](%d)[/color]" % [stat_name, base_val, buff_val]
-		else:
-			return "%s: %d" % [stat_name, base_val]
-
-	lbl_vit.bbcode_text = format_stat.call("VIT", int(permanent_stats.get("VIT", 0)), int(temporary_modifiers.get("VIT", 0)))
-	lbl_str.bbcode_text = format_stat.call("STR", int(permanent_stats.get("STR", 0)), int(temporary_modifiers.get("STR", 0)))
-	lbl_dex.bbcode_text = format_stat.call("DEX", int(permanent_stats.get("DEX", 0)), int(temporary_modifiers.get("DEX", 0)))
-	lbl_int.bbcode_text = format_stat.call("INT", int(permanent_stats.get("INT", 0)), int(temporary_modifiers.get("INT", 0)))
-	lbl_spd.bbcode_text = format_stat.call("SPD", int(permanent_stats.get("SPD", 0)), int(temporary_modifiers.get("SPD", 0)))
-	lbl_mov.bbcode_text = format_stat.call("MOV", int(permanent_stats.get("MOV", 0)), int(temporary_modifiers.get("MOV", 0)))
-
-	var max_hp_value := int(permanent_stats.get("MAX_HP", permanent_stats.get("HP", 0))) + int(temporary_modifiers.get("MAX_HP", 0)) + (int(temporary_modifiers.get("VIT", 0)) * 2)
-	lbl_hp.bbcode_text = "HP: %d/%d" % [int(permanent_stats.get("HP", 0)), max_hp_value]
-	lbl_def.bbcode_text = format_stat.call("DEF", int(permanent_stats.get("DEF", 0)), int(temporary_modifiers.get("DEF", 0)))
-	lbl_dmg.bbcode_text = _build_attack_preview_text(player_unit, permanent_stats, temporary_modifiers, weapon, uses_magic_damage, attack_preview_data)
-
-	lbl_level.text = "Level: %d" % Global.get_player_level()
-	lbl_class.text = "Class: %s" % _resolve_player_class_name()
-	_update_equipment_visuals(player_unit, weapon)
-	
-	if Global.active_food_buff.item != null:
-		var meal_item: Global.Items = Global.active_food_buff.item
-		var meal_name: String = String(Global.Items.keys()[meal_item]).replace("_", " ").capitalize()
-		var stat_parts: Array[String] = []
-		for stat_name in ["VIT", "STR", "DEF", "DEX", "INT", "SPD", "MOV"]:
-			var stat_value := int(Global.active_food_buff.stats.get(stat_name, 0))
-			if stat_value != 0:
-				stat_parts.append("+%d %s" % [stat_value, stat_name])
-
-		var meal_summary: String = ", ".join(stat_parts) if not stat_parts.is_empty() else "No bonuses"
-		lbl_food.text = "%s (%s)" % [meal_name, meal_summary]
-	else:
-		lbl_food.text = "No meal."
-
-func _find_player_unit() -> Unit:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return null
-
-	for node in scene_root.find_children("*", "Unit", true, false):
-		var unit := node as Unit
-		if unit != null and unit.is_player:
-			return unit
-
-	return null
-
-func _build_attack_preview_text(player_unit: Unit, permanent_stats: Dictionary, temporary_modifiers: Dictionary, weapon: WeaponData, uses_magic_damage: bool, attack_preview_data: Dictionary = {}) -> String:
-	var preview_data := attack_preview_data
-	if preview_data.is_empty() and player_unit != null:
-		preview_data = player_unit.get_attack_preview_data(weapon)
-
-	var weapon_might := 2
-	if weapon != null:
-		weapon_might = int(weapon.might)
-
-	var attack_total := maxi(0, weapon_might)
-	var stat_component_label := ""
-	var formula_text := ""
-
-	if not preview_data.is_empty():
-		attack_total = int(preview_data.get("attack_total", weapon_might))
-		weapon_might = int(preview_data.get("weapon_might", weapon_might))
-		var profile: Dictionary = preview_data.get("profile", {})
-		var stat_label := String(profile.get("stat_label", "INT" if uses_magic_damage else "STR"))
-		var attack_stat := int(preview_data.get("attack_stat", profile.get("attack_stat", 0)))
-		stat_component_label = "%s %d" % [stat_label, attack_stat]
-		formula_text = String(profile.get("formula_text", ""))
-	else:
-		var attack_stat_name := "INT" if uses_magic_damage else "STR"
-		var attack_stat_total := int(permanent_stats.get(attack_stat_name, 0)) + int(temporary_modifiers.get(attack_stat_name, 0))
-		attack_total = maxi(0, attack_stat_total + weapon_might)
-		stat_component_label = "%s %d" % [attack_stat_name, attack_stat_total]
-
-	var preview_text := "ATK: %d\n[color=gray]%s + MT %d[/color]" % [attack_total, stat_component_label, weapon_might]
-	if not formula_text.is_empty() and formula_text != "INT" and formula_text != "STR":
-		preview_text += "\n[color=gray]%s[/color]" % formula_text
-	return preview_text
-
-
-# Prefer the live unit when we are in battle, then fall back to saved progression data.
-func _resolve_player_character_data(player_unit: Unit = null) -> CharacterData:
-	if player_unit != null and player_unit.character_data != null:
-		return player_unit.character_data
-
-	if ProgressionService != null and ProgressionService.has_method("get_player_character_data"):
-		return ProgressionService.get_player_character_data()
-
-	return null
-
-func _resolve_player_weapon_from_roster(player_unit: Unit = null) -> WeaponData:
-	var data := _resolve_player_character_data(player_unit)
-	return data.equipped_weapon if data != null else null
-
-func _resolve_player_armor_from_roster(player_unit: Unit = null) -> ArmorData:
-	var data := _resolve_player_character_data(player_unit)
-	return data.equipped_armor if data != null else null
-
-func _resolve_player_accessory_from_roster(player_unit: Unit = null) -> AccessoryData:
-	var data := _resolve_player_character_data(player_unit)
-	return data.equipped_accessory if data != null else null
-
-func _resolve_player_class_data(player_unit: Unit = null) -> ClassData:
-	var data := _resolve_player_character_data(player_unit)
-	return data.class_data if data != null else null
-
-
-func _class_uses_magic_damage(class_data: ClassData) -> bool:
-	if class_data == null:
-		return false
-
-	var damage_stat := String(class_data.primary_damage_stat).to_lower()
-	if damage_stat == "intelligence" or damage_stat == "int":
-		return true
-	if damage_stat == "strength" or damage_stat == "str":
-		return false
-
-	return String(class_data.role).to_lower().contains("mage")
-
-
-func _resolve_equipment_icon(slot_name: String, player_unit: Unit) -> Texture2D:
-	var equipped_entry = Global.equipment.get(slot_name, null)
-	if player_unit != null and player_unit.character_data != null:
-		if slot_name == "Weapon" and player_unit.character_data.equipped_weapon != null:
-			equipped_entry = player_unit.character_data.equipped_weapon
-		elif slot_name == "Armor" and player_unit.character_data.equipped_armor != null:
-			equipped_entry = player_unit.character_data.equipped_armor
-		elif slot_name == "Accessory" and player_unit.character_data.equipped_accessory != null:
-			equipped_entry = player_unit.character_data.equipped_accessory
-
-	if equipped_entry is WeaponData:
-		return equipped_entry.icon
-
-	if equipped_entry is Resource and equipped_entry.get("icon") != null:
-		return equipped_entry.get("icon")
-
-	if equipped_entry is Dictionary and equipped_entry.has("icon"):
-		var icon_entry = equipped_entry["icon"]
-		if icon_entry is Texture2D:
-			return icon_entry
-		if icon_entry is String and not String(icon_entry).is_empty():
-			return load(String(icon_entry))
-
-	return null
-
-func _resolve_player_class_name(player_unit: Unit = null) -> String:
-	var class_data := _resolve_player_class_data(player_unit)
-	
-	if class_data != null:
-		var final_name: String = String(class_data.metadata_name).strip_edges() 
-		
-		if not final_name.is_empty():
-			Global.set_player_class_name(final_name)
-			return final_name
-
-	return String(Global.get_player_class_name())
-
-
-func _build_weapon_tooltip_text(weapon: WeaponData) -> String:
-	if weapon == null:
-		return "Weapon"
-
-	var lines: PackedStringArray = ["Weapon: %s" % String(weapon.weapon_name)]
-	lines.append("MT %d | HIT %d | RNG %d" % [int(weapon.might), int(weapon.hit_rate), int(weapon.attack_range)])
-
-	var bonus_labels := {
-		"strength": "STR",
-		"intelligence": "INT",
-		"dexterity": "DEX",
-		"speed": "SPD",
-		"defense": "DEF",
-		"magic_defense": "MDEF"
-	}
-
-	var bonus_parts: PackedStringArray = []
-	for bonus_key in ["strength", "intelligence", "dexterity", "speed", "defense", "magic_defense"]:
-		var bonus_value := int(weapon.stat_bonuses.get(bonus_key, 0))
-		if bonus_value != 0:
-			bonus_parts.append("%s %+d" % [String(bonus_labels.get(bonus_key, bonus_key.to_upper())), bonus_value])
-
-	if not bonus_parts.is_empty():
-		lines.append("Bonuses: " + ", ".join(bonus_parts))
-
-	if not String(weapon.description).strip_edges().is_empty():
-		lines.append(String(weapon.description))
-
-	return "\n".join(lines)
-
-
-func _build_generic_equipment_tooltip(item: Resource, fallback_label: String) -> String:
-	if item == null:
-		return fallback_label
-
-	var stat_bonuses = item.get("stat_bonuses")
-	var bonus_labels := {
-		"strength": "STR",
-		"intelligence": "INT",
-		"dexterity": "DEX",
-		"speed": "SPD",
-		"defense": "DEF",
-		"magic_defense": "MDEF"
-	}
-
-	var title := fallback_label
-	if item is ArmorData:
-		title = "Armor: %s" % String((item as ArmorData).armor_name)
-	elif item is AccessoryData:
-		title = "Accessory: %s" % String((item as AccessoryData).accessory_name)
-
-	var lines: PackedStringArray = [title]
-	if stat_bonuses is Dictionary:
-		var bonus_parts: PackedStringArray = []
-		for bonus_key in ["strength", "intelligence", "dexterity", "speed", "defense", "magic_defense"]:
-			var bonus_value := int((stat_bonuses as Dictionary).get(bonus_key, 0))
-			if bonus_value != 0:
-				bonus_parts.append("%s %+d" % [String(bonus_labels.get(bonus_key, bonus_key.to_upper())), bonus_value])
-
-		if not bonus_parts.is_empty():
-			lines.append("Bonuses: " + ", ".join(bonus_parts))
-
-	var description := String(item.get("description")).strip_edges()
-	if not description.is_empty():
-		lines.append(description)
-
-	return "\n".join(lines)
-
-func _update_equipment_visuals(player_unit: Unit, resolved_weapon: WeaponData = null) -> void:
-	var weapon_icon := _resolve_equipment_icon("Weapon", player_unit)
-	if weapon_icon == null and resolved_weapon != null:
-		weapon_icon = resolved_weapon.icon
-	var armor_icon := _resolve_equipment_icon("Armor", player_unit)
-	var accessory_icon := _resolve_equipment_icon("Accessory", player_unit)
-
-	var equipped_armor: Resource = Global.equipment.get("Armor", null)
-	var equipped_accessory: Resource = Global.equipment.get("Accessory", null)
-	if player_unit != null and player_unit.character_data != null:
-		if player_unit.character_data.equipped_armor != null:
-			equipped_armor = player_unit.character_data.equipped_armor
-		if player_unit.character_data.equipped_accessory != null:
-			equipped_accessory = player_unit.character_data.equipped_accessory
-	else:
-		if equipped_armor == null:
-			equipped_armor = _resolve_player_armor_from_roster()
-		if equipped_accessory == null:
-			equipped_accessory = _resolve_player_accessory_from_roster()
-	
-	if armor_icon == null and equipped_armor != null and equipped_armor.get("icon") != null:
-		armor_icon = equipped_armor.get("icon")
-	if accessory_icon == null and equipped_accessory != null and equipped_accessory.get("icon") != null:
-		accessory_icon = equipped_accessory.get("icon")
-	
-	slot_weapon.texture = weapon_icon
-	slot_armor.texture = armor_icon
-	slot_accessory.texture = accessory_icon
-
-	slot_weapon.tooltip_text = _build_weapon_tooltip_text(resolved_weapon)
-	slot_armor.tooltip_text = _build_generic_equipment_tooltip(equipped_armor, "Armor")
-	slot_accessory.tooltip_text = _build_generic_equipment_tooltip(equipped_accessory, "Accessory")
-
-func _setup_status_tab_highlight() -> void:
-	if tabs == null or _status_tab_highlight_root != null:
+func _refresh_status_highlight() -> void:
+	if not _status_tab_highlight_enabled:
+		_stop_status_highlight()
 		return
-
-	_status_tab_highlight_root = ColorRect.new()
-	_status_tab_highlight_root.name = "StatusTabHighlight"
-	_status_tab_highlight_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_status_tab_highlight_root.visible = false
-	_status_tab_highlight_root.color = Color(0.65, 0.86, 1.0, 0.28)
-	_status_tab_highlight_root.z_index = 20
-	add_child(_status_tab_highlight_root)
-
-func _refresh_status_tab_highlight() -> void:
-	if _status_tab_highlight_root == null or tabs == null:
+	if _current_section == MenuSection.PARTY and _current_party_subview == PartySubview.STATUS:
+		_stop_status_highlight()
 		return
-
-	if _status_tab_highlight_tween:
+	if _status_tab_highlight_tween != null:
 		_status_tab_highlight_tween.kill()
-		_status_tab_highlight_tween = null
-
-	if not visible or not _status_tab_highlight_enabled:
-		_hide_status_tab_highlight()
-		return
-
-	var tab_bar: Control = tabs.get_tab_bar() if tabs.has_method("get_tab_bar") else null
-	if tab_bar == null or not tab_bar.has_method("get_tab_rect"):
-		_hide_status_tab_highlight()
-		return
-
-	var tab_rect: Rect2 = tab_bar.get_tab_rect(0)
-	var pad := Vector2(6.0, 4.0)
-	var tab_bar_rect: Rect2 = tab_bar.get_global_rect()
-	_status_tab_highlight_root.global_position = tab_bar_rect.position + tab_rect.position - pad
-	_status_tab_highlight_root.size = tab_rect.size + (pad * 2.0)
-	_status_tab_highlight_root.visible = true
-	_status_tab_highlight_root.modulate.a = 0.35
-
-	if tabs.current_tab == 0:
-		_status_tab_highlight_enabled = false
-		_status_tab_highlight_root.visible = false
-		status_tab_viewed.emit()
-		return
-
 	_status_tab_highlight_tween = create_tween()
 	_status_tab_highlight_tween.set_loops()
-	_status_tab_highlight_tween.tween_property(_status_tab_highlight_root, "modulate:a", 0.8, 0.55)
-	_status_tab_highlight_tween.tween_property(_status_tab_highlight_root, "modulate:a", 0.25, 0.55)
+	_status_tab_highlight_tween.tween_property(party_button, "modulate", Color(0.82, 0.94, 1.0, 1.0), 0.45)
+	_status_tab_highlight_tween.tween_property(party_button, "modulate", Color(1.0, 0.95, 0.76, 1.0), 0.45)
 
-func _hide_status_tab_highlight() -> void:
-	if _status_tab_highlight_tween:
+func _stop_status_highlight() -> void:
+	if _status_tab_highlight_tween != null:
 		_status_tab_highlight_tween.kill()
 		_status_tab_highlight_tween = null
-	if _status_tab_highlight_root != null:
-		_status_tab_highlight_root.visible = false
-		_status_tab_highlight_root.modulate.a = 0.0
+	_update_button_state(party_button, _current_section == MenuSection.PARTY)
 
-func _on_tab_changed(tab_index: int) -> void:
-	if _suppress_tab_switch_sound:
-		_suppress_tab_switch_sound = false
-	elif visible:
-		var ui_sounds := _ui_sound_manager()
-		if ui_sounds:
-			ui_sounds.play_tab_switch()
+func _on_status_text_focus_entered() -> void:
+	_complete_status_review_if_needed()
 
-	if SettingsManager and SettingsManager.has_pending_display_preview():
-		var current_tab := tabs.get_tab_control(tab_index) if tabs != null else null
-		if current_tab != settings_tab:
-			SettingsManager.revert_display_preview()
-
-	if _status_tab_highlight_enabled and tab_index == 0:
-		_status_tab_highlight_enabled = false
-		_hide_status_tab_highlight()
-		status_tab_viewed.emit()
+func _complete_status_review_if_needed(from_close: bool = false) -> void:
+	if not _status_tab_highlight_enabled:
 		return
-
-	_refresh_status_tab_highlight()
-
-func _ensure_settings_panel() -> void:
-	if settings_tab == null or _settings_panel != null:
+	if not visible and not from_close:
 		return
+	if _current_section != MenuSection.PARTY or _current_party_subview != PartySubview.STATUS:
+		return
+	if not from_close:
+		var focus_owner := get_viewport().gui_get_focus_owner() as Control
+		if focus_owner != status_text:
+			return
+	_status_tab_highlight_enabled = false
+	_stop_status_highlight()
+	status_tab_viewed.emit()
 
-	for child in settings_tab.get_children():
-		child.queue_free()
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_bottom", 18)
-	settings_tab.add_child(margin)
-
-	_settings_panel = SETTINGS_PANEL_SCENE.instantiate()
-	if _settings_panel.has_method("configure"):
-		_settings_panel.configure({"embedded": true})
-	margin.add_child(_settings_panel)
+func _try_close_equipment_picker() -> bool:
+	if not visible:
+		return false
+	if _current_section != MenuSection.PARTY or _current_party_subview != PartySubview.EQUIPMENT:
+		return false
+	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
+	if focus_owner != equipment_choice_list:
+		return false
+	var slot_button := _get_equipment_slot_button(_active_equipment_slot)
+	if slot_button != null:
+		slot_button.grab_focus()
+		return true
+	return false

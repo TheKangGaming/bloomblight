@@ -8,9 +8,9 @@ extends Control
 
 const DEMO_STORY_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
 const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
+const GAME_SCENE_PATH := "res://scenes/level/game.tscn"
 
 @export var title_music: AudioStream 
-@export var game_scene: PackedScene
 
 var _is_transitioning: bool = true
 var _fade_tween: Tween
@@ -90,7 +90,7 @@ func _on_start_pressed() -> void:
 	card.skipped.connect(_begin_demo_scene_transition)
 
 func _begin_demo_scene_transition() -> void:
-	TransitionManager.change_scene(game_scene)
+	TransitionManager.change_scene_path(GAME_SCENE_PATH)
 
 func _on_quit_pressed() -> void:
 	if _is_transitioning:

@@ -9,6 +9,7 @@ const SETTINGS_PANEL_SCENE := preload("res://scenes/ui/settings_panel.tscn")
 
 var _panel: Control = null
 var _previous_focus: Control = null
+var _is_closing := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -24,10 +25,16 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
-		_on_close_requested()
+		request_close()
 		get_viewport().set_input_as_handled()
 
 func _on_close_requested() -> void:
+	request_close()
+
+func request_close() -> void:
+	if _is_closing:
+		return
+	_is_closing = true
 	if SettingsManager and SettingsManager.has_pending_display_preview():
 		SettingsManager.revert_display_preview()
 	if is_instance_valid(_previous_focus):
