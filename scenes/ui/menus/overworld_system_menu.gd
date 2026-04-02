@@ -63,7 +63,7 @@ func _handle_toggle_input(event: InputEvent) -> bool:
 			_open_menu()
 		return true
 
-	if event is InputEventJoypadButton and event.pressed and not event.echo and event.button_index == START_BUTTON_INDEX:
+	if event is InputEventJoypadButton and event.pressed and event.button_index == START_BUTTON_INDEX:
 		if visible:
 			if _request_settings_close():
 				return true
