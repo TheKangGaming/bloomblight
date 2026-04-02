@@ -1,9 +1,13 @@
 extends StaticBody2D
 
+const WOOD_POP_MIN_ANGLE := deg_to_rad(35.0)
+const WOOD_POP_MAX_ANGLE := deg_to_rad(145.0)
+
 var health = 4
 var is_stump = false
 
 @onready var sprite = $Sprite2D
+@onready var interaction_anchor: Marker2D = $InteractionAnchor
 var stump_texture = preload("res://graphics/plants/trunk 1.png")
 
 
@@ -40,6 +44,9 @@ func shake_tree():
 
 var pickup_scene = preload("res://scenes/level/pickup.tscn")
 
+func get_interaction_anchor_global_position() -> Vector2:
+	return interaction_anchor.global_position if interaction_anchor != null else global_position
+
 func become_stump():
 	is_stump = true
 	sprite.texture = stump_texture
@@ -55,6 +62,6 @@ func become_stump():
 		# Add the wood to the main level (the parent of the tree) so it Y-sorts properly
 		get_parent().add_child(wood)
 		
-		# Start the wood slightly up the trunk so it doesn't spawn inside the dirt
-		wood.global_position = global_position + Vector2(0, -70)
-		wood.pop_out()
+		# Start the wood from the stump area and keep the burst on the lower ground.
+		wood.global_position = get_interaction_anchor_global_position()
+		wood.pop_out(WOOD_POP_MIN_ANGLE, WOOD_POP_MAX_ANGLE)

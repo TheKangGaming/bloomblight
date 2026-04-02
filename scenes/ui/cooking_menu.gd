@@ -228,6 +228,6 @@ func _refresh_subtitle() -> void:
 		return
 
 	if DemoDirector.current_input_mode == DemoDirector.InputMode.CONTROLLER:
-		subtitle_label.text = "Cook role meals. Use the Left Stick or D-Pad to choose a meal, then press A to cook."
+		subtitle_label.text = "Cook role meals. Use the Left Stick or D-Pad to choose a meal, then press %s to cook." % DemoDirector.get_confirm_label()
 	else:
 		subtitle_label.text = "Cook role meals. Use the mouse or Up/Down to choose a meal, then press E to cook."

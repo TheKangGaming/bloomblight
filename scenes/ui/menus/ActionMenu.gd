@@ -126,7 +126,7 @@ func _on_wait_button_pressed() -> void:
 
 
 func _on_cancel_button_pressed() -> void:
-	get_parent()._reset_unit()
+	get_parent().cancel_action_menu()
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	cursor.show()
 	queue_free()

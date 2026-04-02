@@ -11,6 +11,11 @@ enum InputMode {
 	CONTROLLER
 }
 
+enum ControllerFamily {
+	GENERIC,
+	PLAYSTATION
+}
+
 enum DemoStage {
 	NONE,
 	OPENER,
@@ -35,6 +40,8 @@ var demo_active := true
 var current_stage: DemoStage = DemoStage.NONE
 var current_input_mode: InputMode = InputMode.KEYBOARD_MOUSE
 var pending_day_two_battle_intro := false
+var _active_controller_device := -1
+var _controller_family: ControllerFamily = ControllerFamily.GENERIC
 
 var _manual_prompt_id := ""
 var _manual_prompt_replacements: Dictionary = {}
@@ -58,6 +65,8 @@ func begin_new_demo() -> void:
 	demo_active = true
 	current_input_mode = InputMode.KEYBOARD_MOUSE
 	pending_day_two_battle_intro = false
+	_active_controller_device = -1
+	_controller_family = ControllerFamily.GENERIC
 	_manual_prompt_id = ""
 	_manual_prompt_replacements.clear()
 	_story_harvests.clear()
@@ -73,13 +82,13 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventJoypadButton:
-		_set_input_mode(InputMode.CONTROLLER)
+		_handle_controller_activity(event.device)
 		return
 
 	if event is InputEventJoypadMotion:
 		var joy_event := event as InputEventJoypadMotion
 		if absf(joy_event.axis_value) >= 0.35:
-			_set_input_mode(InputMode.CONTROLLER)
+			_handle_controller_activity(joy_event.device)
 		return
 
 	if event is InputEventKey:
@@ -98,6 +107,14 @@ func _set_input_mode(mode: InputMode) -> void:
 	current_input_mode = mode
 	input_mode_changed.emit(mode)
 	refresh_current_prompt()
+
+func _handle_controller_activity(device: int) -> void:
+	var family_changed := _update_controller_family(device)
+	if current_input_mode != InputMode.CONTROLLER:
+		_set_input_mode(InputMode.CONTROLLER)
+	elif family_changed:
+		input_mode_changed.emit(current_input_mode)
+		refresh_current_prompt()
 
 func set_stage(stage: DemoStage) -> void:
 	current_stage = stage
@@ -294,7 +311,7 @@ func get_skip_prompt_text() -> String:
 
 func get_confirm_label() -> String:
 	if current_input_mode == InputMode.CONTROLLER:
-		return "A"
+		return get_action_label("interact")
 	return get_action_label("interact")
 
 func get_action_label(action_name: StringName) -> String:
@@ -311,7 +328,7 @@ func get_action_label(action_name: StringName) -> String:
 
 func get_move_label() -> String:
 	if current_input_mode == InputMode.CONTROLLER:
-		return "Left Stick"
+		return _get_left_stick_label()
 
 	var labels := []
 	for action_name in [&"up", &"left", &"down", &"right"]:
@@ -333,12 +350,12 @@ func get_tool_cycle_label() -> String:
 
 func get_battle_confirm_label() -> String:
 	if current_input_mode == InputMode.CONTROLLER:
-		return "press A"
+		return "press %s" % get_confirm_label()
 	return "left click"
 
 func get_battle_cursor_label() -> String:
 	if current_input_mode == InputMode.CONTROLLER:
-		return "the Left Stick or D-Pad"
+		return "the %s or D-Pad" % _get_left_stick_label()
 	return "the mouse"
 
 func show_demo_complete_card(parent: Node) -> void:
@@ -493,47 +510,11 @@ func _format_input_event(event: InputEvent) -> String:
 
 	if event is InputEventJoypadMotion:
 		var motion_event := event as InputEventJoypadMotion
-		match motion_event.axis:
-			JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y:
-				return "Left Stick"
-			JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y:
-				return "Right Stick"
-			JOY_AXIS_TRIGGER_LEFT:
-				return "L2"
-			JOY_AXIS_TRIGGER_RIGHT:
-				return "R2"
-			_:
-				return "Stick"
+		return _get_controller_axis_label(motion_event.axis)
 
 	if event is InputEventJoypadButton:
 		var button_event := event as InputEventJoypadButton
-		match button_event.button_index:
-			JOY_BUTTON_A:
-				return "A"
-			JOY_BUTTON_B:
-				return "B"
-			JOY_BUTTON_X:
-				return "X"
-			JOY_BUTTON_Y:
-				return "Y"
-			JOY_BUTTON_LEFT_SHOULDER:
-				return "LB"
-			JOY_BUTTON_RIGHT_SHOULDER:
-				return "RB"
-			JOY_BUTTON_DPAD_UP:
-				return "D-Pad Up"
-			JOY_BUTTON_DPAD_DOWN:
-				return "D-Pad Down"
-			JOY_BUTTON_DPAD_LEFT:
-				return "D-Pad Left"
-			JOY_BUTTON_DPAD_RIGHT:
-				return "D-Pad Right"
-			JOY_BUTTON_BACK:
-				return "Back"
-			JOY_BUTTON_START:
-				return "Start"
-			_:
-				return "Pad %d" % button_event.button_index
+		return _get_controller_button_label(button_event.button_index)
 
 	return "Input"
 
@@ -557,22 +538,120 @@ func _keyboard_fallback_label(action_name: StringName) -> String:
 func _controller_fallback_label(action_name: StringName) -> String:
 	match action_name:
 		&"confirm", &"interact", &"ui_accept":
-			return "A"
+			return _get_controller_button_label(JOY_BUTTON_A)
 		&"cancel", &"ui_cancel":
-			return "B"
+			return _get_controller_button_label(JOY_BUTTON_B)
 		&"menu_toggle":
-			return "Back"
+			return _get_controller_button_label(JOY_BUTTON_BACK)
 		&"run":
-			return "L2"
+			return _get_controller_axis_label(JOY_AXIS_TRIGGER_LEFT)
 		&"action":
-			return "R2"
+			return _get_controller_axis_label(JOY_AXIS_TRIGGER_RIGHT)
 		&"plant":
-			return "A"
+			return _get_controller_button_label(JOY_BUTTON_A)
 		&"tool_forward":
-			return "RB"
+			return _get_controller_button_label(JOY_BUTTON_RIGHT_SHOULDER)
 		&"tool_backward":
-			return "LB"
+			return _get_controller_button_label(JOY_BUTTON_LEFT_SHOULDER)
 		&"time_skip":
-			return "X"
+			return _get_controller_button_label(JOY_BUTTON_X)
 		_:
 			return String(action_name).capitalize()
+
+func _update_controller_family(device: int) -> bool:
+	var resolved_device := _resolve_controller_device(device)
+	var next_family := _detect_controller_family(resolved_device)
+	var did_change := resolved_device != _active_controller_device or next_family != _controller_family
+	_active_controller_device = resolved_device
+	_controller_family = next_family
+	return did_change
+
+func _resolve_controller_device(device: int) -> int:
+	if device >= 0:
+		return device
+
+	var connected := Input.get_connected_joypads()
+	if not connected.is_empty():
+		return int(connected[0])
+	return -1
+
+func _detect_controller_family(device: int) -> ControllerFamily:
+	if device < 0:
+		return ControllerFamily.GENERIC
+
+	var joy_name := Input.get_joy_name(device).to_lower()
+	if joy_name.contains("playstation") or joy_name.contains("dualsense") or joy_name.contains("dualshock") or joy_name.contains("ps5") or joy_name.contains("ps4") or joy_name.contains("wireless controller") or joy_name.contains("sony"):
+		return ControllerFamily.PLAYSTATION
+	return ControllerFamily.GENERIC
+
+func _get_left_stick_label() -> String:
+	return "Left Stick"
+
+func _get_right_stick_label() -> String:
+	return "Right Stick"
+
+func _get_controller_axis_label(axis: int) -> String:
+	match axis:
+		JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y:
+			return _get_left_stick_label()
+		JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y:
+			return _get_right_stick_label()
+		JOY_AXIS_TRIGGER_LEFT:
+			return "L2"
+		JOY_AXIS_TRIGGER_RIGHT:
+			return "R2"
+		_:
+			return "Stick"
+
+func _get_controller_button_label(button_index: int) -> String:
+	if _controller_family == ControllerFamily.PLAYSTATION:
+		match button_index:
+			JOY_BUTTON_A:
+				return "Cross"
+			JOY_BUTTON_B:
+				return "Circle"
+			JOY_BUTTON_X:
+				return "Square"
+			JOY_BUTTON_Y:
+				return "Triangle"
+			JOY_BUTTON_LEFT_SHOULDER:
+				return "L1"
+			JOY_BUTTON_RIGHT_SHOULDER:
+				return "R1"
+			JOY_BUTTON_BACK:
+				return "Create"
+			JOY_BUTTON_START:
+				return "Options"
+			_:
+				return _get_generic_controller_button_label(button_index)
+
+	return _get_generic_controller_button_label(button_index)
+
+func _get_generic_controller_button_label(button_index: int) -> String:
+	match button_index:
+		JOY_BUTTON_A:
+			return "A"
+		JOY_BUTTON_B:
+			return "B"
+		JOY_BUTTON_X:
+			return "X"
+		JOY_BUTTON_Y:
+			return "Y"
+		JOY_BUTTON_LEFT_SHOULDER:
+			return "LB"
+		JOY_BUTTON_RIGHT_SHOULDER:
+			return "RB"
+		JOY_BUTTON_DPAD_UP:
+			return "D-Pad Up"
+		JOY_BUTTON_DPAD_DOWN:
+			return "D-Pad Down"
+		JOY_BUTTON_DPAD_LEFT:
+			return "D-Pad Left"
+		JOY_BUTTON_DPAD_RIGHT:
+			return "D-Pad Right"
+		JOY_BUTTON_BACK:
+			return "Back"
+		JOY_BUTTON_START:
+			return "Start"
+		_:
+			return "Pad %d" % button_index

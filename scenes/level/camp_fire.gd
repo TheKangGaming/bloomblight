@@ -1,17 +1,21 @@
 extends StaticBody2D
 
+const AUTO_OPEN_DELAY_SECONDS := 0.7
+const AUTO_OPEN_INPUT_BUFFER_SECONDS := 0.9
+
 var player_in_range := false
 var is_lit := false
 var _player_body: CharacterBody2D = null
 var _cooking_menu = null
 var _interaction_block_until_msec := 0
+var _feedback_layer: CanvasLayer = null
+var _feedback_popup: PanelContainer = null
+var _feedback_label: Label = null
+var _feedback_tween: Tween = null
 
 @onready var fire_sprite = $Fire
 @onready var smoke_sprite = $Smoke
 @onready var anim_player = $AnimationPlayer
-@onready var feedback_popup: PanelContainer = $FeedbackPopup
-@onready var feedback_label: Label = $FeedbackPopup/Label
-@onready var feedback_timer = $FeedbackTimer
 
 func get_cooking_menu():
 	if is_instance_valid(_cooking_menu):
@@ -23,8 +27,7 @@ func get_cooking_menu():
 func _ready():
 	$InteractArea.body_entered.connect(_on_interact_area_body_entered)
 	$InteractArea.body_exited.connect(_on_interact_area_body_exited)
-	feedback_timer.timeout.connect(_on_feedback_timer_timeout)
-	WorldPopupStyle.apply(feedback_popup, feedback_label, 18)
+	_ensure_feedback_ui()
 	var cooking_menu = get_cooking_menu()
 	if cooking_menu:
 		if not cooking_menu.menu_opened.is_connected(_on_cooking_menu_opened):
@@ -35,7 +38,11 @@ func _ready():
 	# Turn fire off at the start of the game
 	toggle_fire(false)
 
-func _unhandled_input(event):
+func _exit_tree() -> void:
+	if _feedback_layer != null and is_instance_valid(_feedback_layer):
+		_feedback_layer.queue_free()
+
+func _unhandled_input(event) -> void:
 	if not player_in_range:
 		return
 	if _player_body != null and is_instance_valid(_player_body) and not _player_body.can_move:
@@ -55,11 +62,14 @@ func _unhandled_input(event):
 				DemoDirector.notify_campfire_lit()
 			if should_advance_tutorial:
 				Global.advance_tutorial()
-			if cooking_menu:
+			show_feedback("Campfire lit")
+			block_interaction_for(AUTO_OPEN_INPUT_BUFFER_SECONDS)
+			_set_player_movement_locked(true)
+			await get_tree().create_timer(AUTO_OPEN_DELAY_SECONDS, true).timeout
+			if cooking_menu and player_in_range and is_lit and not cooking_menu.visible:
 				cooking_menu.open_menu()
-				show_feedback("Campfire lit. Cooking menu opened")
 			else:
-				show_feedback("Campfire is lit")
+				_set_player_movement_locked(false)
 			return
 
 		if cooking_menu and not cooking_menu.visible:
@@ -119,11 +129,61 @@ func _set_player_movement_locked(locked: bool) -> void:
 func block_interaction_for(seconds: float) -> void:
 	_interaction_block_until_msec = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
 
-func show_feedback(message: String):
-	feedback_label.text = message
-	feedback_popup.visible = true
-	feedback_popup.modulate.a = 1.0
-	feedback_timer.start()
+func show_feedback(message: String) -> void:
+	_ensure_feedback_ui()
+	if _feedback_popup == null or _feedback_label == null:
+		return
 
-func _on_feedback_timer_timeout():
-	feedback_popup.visible = false
+	_feedback_label.text = message
+	_feedback_popup.visible = true
+	_feedback_popup.modulate.a = 0.0
+	if _feedback_tween != null and is_instance_valid(_feedback_tween):
+		_feedback_tween.kill()
+	_feedback_tween = create_tween()
+	_feedback_tween.tween_property(_feedback_popup, "modulate:a", 1.0, 0.12)
+	_feedback_tween.tween_interval(0.95)
+	_feedback_tween.tween_property(_feedback_popup, "modulate:a", 0.0, 0.18)
+	_feedback_tween.tween_callback(_hide_feedback_popup)
+
+func _ensure_feedback_ui() -> void:
+	if _feedback_layer != null and is_instance_valid(_feedback_layer):
+		return
+
+	_feedback_layer = CanvasLayer.new()
+	_feedback_layer.name = "CampfireFeedbackLayer"
+	_feedback_layer.layer = 25
+	var root := get_tree().root if get_tree() != null else null
+	if root != null:
+		root.add_child(_feedback_layer)
+	else:
+		add_child(_feedback_layer)
+
+	var popup := PanelContainer.new()
+	popup.name = "FeedbackPopup"
+	popup.visible = false
+	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	popup.anchor_left = 0.5
+	popup.anchor_right = 0.5
+	popup.anchor_top = 0.0
+	popup.anchor_bottom = 0.0
+	popup.offset_left = -170.0
+	popup.offset_top = 76.0
+	popup.offset_right = 170.0
+	popup.offset_bottom = 128.0
+
+	var label := Label.new()
+	label.name = "Label"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	popup.add_child(label)
+	_feedback_layer.add_child(popup)
+	WorldPopupStyle.apply(popup, label, 18)
+	_feedback_popup = popup
+	_feedback_label = label
+
+func _hide_feedback_popup() -> void:
+	if _feedback_popup != null and is_instance_valid(_feedback_popup):
+		_feedback_popup.visible = false

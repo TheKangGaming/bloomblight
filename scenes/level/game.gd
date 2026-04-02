@@ -219,9 +219,16 @@ func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 				_check_intro_water_state()
 
 	if tool == Global.Tools.AXE:
+		var player_ground_y: float = global_pos.y
+		if player != null:
+			player_ground_y = player.global_position.y
 		for tree in get_tree().get_nodes_in_group("Trees"):
-			var trunk_pos = tree.global_position + Vector2(0, -77)
-			if trunk_pos.distance_squared_to(global_pos) < 2025:
+			if not tree.has_method("get_interaction_anchor_global_position"):
+				continue
+			if absf(tree.global_position.y - player_ground_y) > 48.0:
+				continue
+			var interaction_anchor: Vector2 = tree.get_interaction_anchor_global_position()
+			if interaction_anchor.distance_squared_to(global_pos) < 2025.0:
 				tree.hit()
 				break
 
@@ -420,8 +427,22 @@ func _on_player_found_tera() -> void:
 	_intro_busy = false
 	player.can_move = true
 	_restore_player_camera()
-	if DemoDirector:
+	if story_chest != null and is_instance_valid(story_chest) and bool(story_chest.get("is_open")):
+		call_deferred("_run_post_chest_sequence")
+	elif DemoDirector:
 		DemoDirector.show_context_prompt("farm_open_chest")
+
+func can_open_chest(chest: Node) -> bool:
+	if chest != story_chest:
+		return true
+	if Global.intro_sequence_complete:
+		return true
+	return _intro_state == IntroState.OPEN_CHEST
+
+func get_chest_locked_message(chest: Node) -> String:
+	if chest == story_chest and not Global.intro_sequence_complete and _intro_state != IntroState.OPEN_CHEST:
+		return "Tera wanted to check the house together first."
+	return ""
 
 func _on_story_chest_opened() -> void:
 	if _intro_busy or _intro_state != IntroState.OPEN_CHEST:

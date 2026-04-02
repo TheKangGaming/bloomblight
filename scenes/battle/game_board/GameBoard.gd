@@ -520,6 +520,9 @@ func _move_active_unit(new_cell: Vector2, show_action_menu: bool = true) -> void
 		_cursor.is_active = true
 	
 
+func _unit_can_freely_move(unit: Unit) -> bool:
+	return unit != null and not unit.main_action_used and not unit.bonus_action_used
+
 
 func _select_unit(cell: Vector2) -> void:
 	if not _units.has(cell):
@@ -530,7 +533,10 @@ func _select_unit(cell: Vector2) -> void:
 	_prev_position = _active_unit.position
 	_active_unit.is_selected = true
 	_play_unit_select_sfx(_active_unit)
-	_walkable_cells = get_walkable_cells(_active_unit)
+	if _unit_can_freely_move(_active_unit):
+		_walkable_cells = get_walkable_cells(_active_unit)
+	else:
+		_walkable_cells = [_active_unit.cell]
 	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range, _active_unit)
 	
 	_unit_overlay.draw_attackable_cells(_attackable_cells)
@@ -699,12 +705,12 @@ func _unit_has_available_bonus_action(unit: Unit) -> bool:
 			return ability.range == 0
 
 
-func _reset_unit() -> void:
+func _clear_active_unit_selection(rewind_movement: bool) -> void:
 	if has_node("ActionMenu"):
 		$ActionMenu.queue_free()
 
 	if _active_unit != null:
-		if _can_undo_active_unit_movement() and _active_unit.cell != _prev_cell:
+		if rewind_movement and _can_undo_active_unit_movement() and _active_unit.cell != _prev_cell:
 			_active_unit.position = _prev_position
 			_units.erase(_active_unit.cell)
 			_units[_prev_cell] = _active_unit
@@ -719,6 +725,14 @@ func _reset_unit() -> void:
 	_cursor.show()
 	_cursor.is_active = true
 	_hide_targeting_hint()
+
+
+func _reset_unit() -> void:
+	_clear_active_unit_selection(true)
+
+
+func cancel_action_menu() -> void:
+	_clear_active_unit_selection(_can_undo_active_unit_movement())
 
 
 func _is_distance_in_attack_range(distance: int, attack_range: int) -> bool:

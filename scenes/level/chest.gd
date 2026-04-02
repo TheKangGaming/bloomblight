@@ -34,12 +34,19 @@ func _is_interact_press(event: InputEvent) -> bool:
 	return true
 
 func _unhandled_input(event):
-	if _is_interact_press(event) and player_in_range and not is_open:
-		open_chest()
-		if Global.tutorial_step == 2:
-			Global.advance_tutorial()
+	if not _is_interact_press(event) or not player_in_range or is_open:
+		return
 
-func open_chest():
+	if not _can_open_now():
+		_show_locked_notice()
+		return
+
+	if open_chest() and Global.tutorial_step == 2:
+		Global.advance_tutorial()
+
+func open_chest() -> bool:
+	if is_open:
+		return false
 	is_open = true
 	if open_sfx != null:
 		open_sfx.play()
@@ -47,6 +54,27 @@ func open_chest():
 	give_loot()
 	$InteractArea/CollisionShape2D.set_deferred("disabled", true)
 	opened.emit()
+	return true
+
+func _can_open_now() -> bool:
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("can_open_chest"):
+		return bool(current_scene.call("can_open_chest", self))
+	return true
+
+func _show_locked_notice() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene == null:
+		return
+
+	if current_scene.has_method("get_chest_locked_message"):
+		var message := String(current_scene.call("get_chest_locked_message", self))
+		if not message.is_empty() and current_scene.has_method("_show_player_notice"):
+			current_scene.call("_show_player_notice", message)
+			return
+
+	if current_scene.has_method("_show_player_notice"):
+		current_scene.call("_show_player_notice", "Let's talk to Tera first.")
 
 func give_loot():
 	if carrot_seed_reward > 0:

@@ -7,10 +7,10 @@ func _ready():
 	# Connect the signal so it detects the player
 	body_entered.connect(_on_body_entered)
 
-func pop_out():
-	# 1. Pick a completely random direction (0 to 360 degrees) and distance
-	var random_angle = randf_range(0, TAU) 
-	var random_dist = randf_range(25, 45)
+func pop_out(min_angle: float = 0.0, max_angle: float = TAU, min_distance: float = 25.0, max_distance: float = 45.0):
+	# 1. Pick a random direction and distance inside the requested arc.
+	var random_angle = randf_range(min_angle, max_angle)
+	var random_dist = randf_range(min_distance, max_distance)
 	
 	# 2. Calculate exactly where it should land
 	var target_pos = global_position + Vector2(cos(random_angle), sin(random_angle)) * random_dist
