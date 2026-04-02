@@ -407,7 +407,7 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 		"farm_open_chest":
 			template = "Objective: Open the old chest by the ruined field."
 		"farm_search_forest":
-			template = "Objective: Search the forest edge for seeds. Head toward the treeline at the edge of the farm."
+			template = "Objective: Search the forest for seeds. Head through the trees and look deeper inside."
 		"farm_plant_and_water":
 			template = "Objective: Plant the carrot and parsnip seeds, then water them."
 		"farm_water_both":

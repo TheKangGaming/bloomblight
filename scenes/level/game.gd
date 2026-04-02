@@ -53,6 +53,7 @@ enum IntroState {
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
+var _forest_scene_path := "res://scenes/level/forest.tscn"
 var _bandit_tension_music_path := "res://audio/music/Music_Anxiety.wav"
 var _bandit_tension_music: AudioStream = null
 var _story_actor_scene: PackedScene = preload("res://scenes/level/story_actor.tscn")
@@ -93,6 +94,7 @@ func _ready() -> void:
 	_grow_timer_cycle_seconds = $GrowTimer.wait_time
 	if player_camera != null:
 		_player_camera_default_zoom = player_camera.zoom
+	_restore_intro_forest_day_time()
 
 	if story_chest and story_chest.has_signal("opened"):
 		story_chest.opened.connect(_on_story_chest_opened)
@@ -107,8 +109,24 @@ func _ready() -> void:
 
 	if Global.intro_sequence_complete:
 		_setup_story_camp_state()
+	elif Global.pending_intro_forest_return:
+		Global.pending_intro_forest_return = false
+		call_deferred("_resume_intro_after_forest_return")
 	else:
 		call_deferred("_begin_intro_sequence")
+
+func _restore_intro_forest_day_time() -> void:
+	if Global.intro_forest_day_time_left <= 0.0:
+		return
+
+	var restored_time_left := clampf(Global.intro_forest_day_time_left, 1.0, _day_timer_cycle_seconds)
+	$DayTimer.start(restored_time_left)
+	$DayTimer.wait_time = _day_timer_cycle_seconds
+	Global.intro_forest_day_time_left = 0.0
+
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud and hud.has_method("_update_view"):
+		hud._update_view(true)
 
 func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer
@@ -459,7 +477,7 @@ func _run_post_chest_sequence() -> void:
 		{"speaker": "Tera", "text": "Chest is rusted shut."},
 		{"speaker": "Savannah", "text": "Got it. Spades... shears... The wood is pretty much rot, but the iron's still good. I can make these work."},
 		{"speaker": "Tera", "text": "Good. Now we just need seeds."},
-		{"speaker": "Savannah", "text": "And we need 'em fast. Sun's going down. Let's check the edge of the woods."}
+		{"speaker": "Savannah", "text": "And we need 'em fast. Sun's going down. Let's head into the forest before it gets too dark."}
 	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
 	_intro_state = IntroState.SEARCH_FOREST
@@ -475,69 +493,31 @@ func _on_forest_exit_trigger_body_entered(body: Node) -> void:
 		return
 
 	_forest_encounter_started = true
-	call_deferred("_run_forest_encounter")
+	call_deferred("_enter_intro_forest")
 
-func _run_forest_encounter() -> void:
+func _enter_intro_forest() -> void:
 	_intro_busy = true
 	player.can_move = false
 	player.direction = Vector2.ZERO
+	Global.pending_intro_forest_visit = true
+	Global.intro_forest_day_time_left = $DayTimer.time_left
+	TransitionManager.change_scene_path(_forest_scene_path, 0.45)
 
-	await _fade_to_black(0.25)
-	player.global_position = _marker_pos(&"ForestReturn", INTRO_FOREST_RETURN_POS)
-	tera_actor.visible = true
-	tera_actor.global_position = _marker_pos(&"ForestTera", INTRO_FOREST_TERA_POS)
-	tera_actor.face_side(true)
-	silas_actor.visible = true
-	silas_actor.global_position = _marker_pos(&"ForestSilas", INTRO_FOREST_SILAS_POS)
-	silas_actor.face_side(false)
-	await _fade_from_black(0.25)
-	if player.has_method("play_cutscene_shock"):
-		player.play_cutscene_shock(Vector2.RIGHT)
-	if tera_actor.has_method("play_shocked"):
-		tera_actor.play_shocked()
-	if silas_actor.has_method("play_bow_aim"):
-		silas_actor.play_bow_aim()
-	elif silas_actor.has_method("play_attack"):
-		silas_actor.play_attack()
-	await get_tree().create_timer(0.2).timeout
-
-	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "Don't move. I'm not a fan of company."},
-		{"speaker": "Savannah", "text": "Easy. We aren't looking for a fight. Lower the bow."},
-		{"speaker": "Tera", "text": "We found the old farmstead. We're just looking for seeds."},
-	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
-
-	if silas_actor.has_method("play_idle"):
-		silas_actor.play_idle()
-	if player.has_method("play_cutscene_idle"):
-		player.play_cutscene_idle(Vector2.RIGHT)
-	if tera_actor.has_method("play_idle"):
-		tera_actor.play_idle()
-
-	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "The farm? You're either crazy or you've got a death wish. That soil's been dead for years."},
-		{"speaker": "Tera", "text": "We're hungry. We'll take our chances."},
-		{"speaker": "Silas", "text": "I've been through these woods every day this month. There's nothing left to grow."},
-		{"speaker": "Savannah", "text": "Then you missed a spot."}
-	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
-
-	if silas_actor.has_method("play_impatient"):
-		silas_actor.play_impatient()
-
-	await _play_story_dialogue([
-		{"speaker": "Silas", "text": "Fine. Take 'em. Ripped those off a dead caravan, they're likely too dry to sprout, anyway. Bury 'em, eat 'em, I don't care. Just get out of my woods."}
-	], [player, tera_actor, silas_actor], Vector2(1.62, 1.62))
-
-	Global.add_item(Global.Items.CARROT_SEED, 1)
-	Global.add_item(Global.Items.PARSNIP_SEED, 1)
-
-	await _fade_to_black(0.25)
+func _resume_intro_after_forest_return() -> void:
+	_intro_busy = true
+	Global.tutorial_enabled = false
+	Global.show_tutorial_text("")
+	player.can_move = false
+	player.direction = Vector2.ZERO
 	player.global_position = _marker_pos(&"ChestApproach", INTRO_CHEST_APPROACH_POS)
+	tera_actor.visible = true
 	tera_actor.global_position = _marker_pos(&"TeraField", INTRO_TERA_FIELD_POS)
 	tera_actor.face_down()
+	tera_actor.play_idle()
 	silas_actor.visible = false
-	await _fade_from_black(0.25)
+	await _begin_plant_and_water_intro_step()
 
+func _begin_plant_and_water_intro_step() -> void:
 	_intro_state = IntroState.PLANT_AND_WATER
 	if DemoDirector:
 		DemoDirector.show_context_prompt("farm_plant_and_water")

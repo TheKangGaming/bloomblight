@@ -39,6 +39,9 @@ var saved_farm_scene: Node = null
 
 
 var returning_from_combat: bool = false
+var pending_intro_forest_visit := false
+var pending_intro_forest_return := false
+var intro_forest_day_time_left := 0.0
 var player_level: int
 var player_class_name: String = "Deserter"
 var last_battle_result := {
@@ -462,6 +465,9 @@ func reset_demo_state() -> void:
 	combat_transition.started_at_unix = 0.0
 	saved_farm_scene = null
 	returning_from_combat = false
+	pending_intro_forest_visit = false
+	pending_intro_forest_return = false
+	intro_forest_day_time_left = 0.0
 	current_day = 1
 	intro_sequence_complete = false
 	tutorial_enabled = false
