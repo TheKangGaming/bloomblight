@@ -1,64 +1,65 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c0qlld6bm14nr"]
 
-[ext_resource type="Script" path="res://scenes/level/forest.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b2ytwudyr14pw" path="res://scenes/level/forest.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/level/forest_world.tscn" id="2_world"]
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://ca106qafnt25o" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/level/story_actor.tscn" id="4_story_actor"]
-[ext_resource type="PackedScene" path="res://scenes/ui/day_time_hud.tscn" id="5_day_hud"]
-[ext_resource type="PackedScene" path="res://scenes/ui/overlay.tscn" id="6_overlay"]
+[ext_resource type="PackedScene" uid="uid://vf2y3h4ibrd" path="res://scenes/ui/day_time_hud.tscn" id="5_day_hud"]
+[ext_resource type="PackedScene" uid="uid://dintbdgcfxu3b" path="res://scenes/ui/overlay.tscn" id="6_overlay"]
 [ext_resource type="PackedScene" path="res://scenes/ui/main_menu.tscn" id="7_main_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/story_dialogue_box.tscn" id="8_dialogue"]
-[ext_resource type="PackedScene" path="res://scenes/battle/tera_battle_actor.tscn" id="9_tera_actor"]
-[ext_resource type="PackedScene" path="res://scenes/battle/silas_battle_actor.tscn" id="10_silas_actor"]
+[ext_resource type="PackedScene" uid="uid://cyqtsfss5xi2d" path="res://scenes/battle/tera_battle_actor.tscn" id="9_tera_actor"]
+[ext_resource type="PackedScene" uid="uid://344jqu6h5ryl" path="res://scenes/battle/silas_battle_actor.tscn" id="10_silas_actor"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_silas_trigger"]
 size = Vector2(192, 96)
 
-[node name="Forest" type="Node2D"]
+[node name="Forest" type="Node2D" unique_id=742456539]
 script = ExtResource("1_script")
 
-[node name="World" parent="." instance=ExtResource("2_world")]
+[node name="World" parent="." unique_id=1203168548 instance=ExtResource("2_world")]
 
-[node name="Objects" type="Node2D" parent="."]
+[node name="Objects" type="Node2D" parent="." unique_id=2130470664]
 y_sort_enabled = true
 
-[node name="Player" parent="Objects" instance=ExtResource("3_player")]
+[node name="Player" parent="Objects" unique_id=1903407859 instance=ExtResource("3_player")]
 position = Vector2(2099, 86)
+scale = Vector2(1.5, 1.5)
 
-[node name="TeraActor" parent="Objects" instance=ExtResource("4_story_actor")]
+[node name="TeraActor" parent="Objects" unique_id=1981084190 instance=ExtResource("4_story_actor")]
 visible = false
 position = Vector2(2159, 100)
 actor_scene = ExtResource("9_tera_actor")
 visual_offset = Vector2(0, -12)
 
-[node name="SilasActor" parent="Objects" instance=ExtResource("4_story_actor")]
+[node name="SilasActor" parent="Objects" unique_id=297759829 instance=ExtResource("4_story_actor")]
 visible = false
 position = Vector2(2246, 224)
 actor_scene = ExtResource("10_silas_actor")
 visual_offset = Vector2(0, -12)
 
-[node name="StoryMarkers" type="Node2D" parent="."]
+[node name="StoryMarkers" type="Node2D" parent="." unique_id=378168523]
 
-[node name="IntroEntryPlayer" type="Marker2D" parent="StoryMarkers"]
+[node name="IntroEntryPlayer" type="Marker2D" parent="StoryMarkers" unique_id=1365626369]
 position = Vector2(2099, 86)
 
-[node name="IntroEntryTera" type="Marker2D" parent="StoryMarkers"]
+[node name="IntroEntryTera" type="Marker2D" parent="StoryMarkers" unique_id=1075082721]
 position = Vector2(2159, 100)
 
-[node name="SilasEncounterPlayer" type="Marker2D" parent="StoryMarkers"]
+[node name="SilasEncounterPlayer" type="Marker2D" parent="StoryMarkers" unique_id=67872965]
 position = Vector2(2094, 252)
 
-[node name="SilasEncounterTera" type="Marker2D" parent="StoryMarkers"]
+[node name="SilasEncounterTera" type="Marker2D" parent="StoryMarkers" unique_id=923159030]
 position = Vector2(2148, 236)
 
-[node name="SilasEncounterSilas" type="Marker2D" parent="StoryMarkers"]
+[node name="SilasEncounterSilas" type="Marker2D" parent="StoryMarkers" unique_id=1346892228]
 position = Vector2(2246, 224)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1310358346]
 
-[node name="DayTimeHUD" parent="CanvasLayer" instance=ExtResource("5_day_hud")]
+[node name="DayTimeHUD" parent="CanvasLayer" unique_id=1772720387 instance=ExtResource("5_day_hud")]
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=1368820043]
 modulate = Color(1, 1, 1, 0)
 anchors_preset = 15
 anchor_right = 1.0
@@ -67,13 +68,13 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Overlay" parent="CanvasLayer" instance=ExtResource("6_overlay")]
+[node name="Overlay" parent="CanvasLayer" unique_id=854031888 instance=ExtResource("6_overlay")]
 
-[node name="MainMenu" parent="CanvasLayer" instance=ExtResource("7_main_menu")]
+[node name="MainMenu" parent="CanvasLayer" unique_id=630427430 instance=ExtResource("7_main_menu")]
 
-[node name="StoryDialogueBox" parent="CanvasLayer" instance=ExtResource("8_dialogue")]
+[node name="StoryDialogueBox" parent="CanvasLayer" unique_id=1913143907 instance=ExtResource("8_dialogue")]
 
-[node name="CutsceneCamera" type="Camera2D" parent="."]
+[node name="CutsceneCamera" type="Camera2D" parent="." unique_id=51288763]
 zoom = Vector2(1.7, 1.7)
 process_callback = 0
 limit_left = 0
@@ -83,17 +84,17 @@ limit_bottom = 3200
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 
-[node name="CanvasModulate" type="CanvasModulate" parent="."]
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=77033370]
 color = Color(0.99607843, 0.9098039, 0.7176471, 1)
 
-[node name="SilasEncounterTrigger" type="Area2D" parent="."]
-position = Vector2(2108, 272)
+[node name="SilasEncounterTrigger" type="Area2D" parent="." unique_id=1002151113]
+position = Vector2(2101, 175)
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SilasEncounterTrigger"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SilasEncounterTrigger" unique_id=1475157220]
 shape = SubResource("RectangleShape2D_silas_trigger")
 
-[node name="DayTimer" type="Timer" parent="."]
+[node name="DayTimer" type="Timer" parent="." unique_id=1251964621]
 wait_time = 600.0
 one_shot = true
 autostart = true
