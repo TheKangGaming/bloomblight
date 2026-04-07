@@ -9,8 +9,6 @@ const REST_TEXTURE := preload("res://graphics/npcs/merchant/NPC Merchant-interac
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
-var _frames_cache: Dictionary = {}
-
 func _ready() -> void:
 	_build_animation(&"idle", IDLE_TEXTURE, 8, true, 8.0)
 	_build_animation(&"entry", ENTRY_TEXTURE, 8, false, 10.0)
@@ -36,7 +34,7 @@ func play_rest() -> void:
 func play_talk_loop() -> void:
 	animated_sprite.play(&"loop")
 
-func _build_animation(name: StringName, texture: Texture2D, frame_count: int, loops: bool, fps: float) -> void:
+func _build_animation(anim_name: StringName, texture: Texture2D, frame_count: int, loops: bool, fps: float) -> void:
 	if texture == null or animated_sprite == null:
 		return
 
@@ -45,14 +43,14 @@ func _build_animation(name: StringName, texture: Texture2D, frame_count: int, lo
 		frames = SpriteFrames.new()
 		animated_sprite.sprite_frames = frames
 
-	if frames.has_animation(name):
-		frames.remove_animation(name)
-	frames.add_animation(name)
-	frames.set_animation_loop(name, loops)
-	frames.set_animation_speed(name, fps)
+	if frames.has_animation(anim_name):
+		frames.remove_animation(anim_name)
+	frames.add_animation(anim_name)
+	frames.set_animation_loop(anim_name, loops)
+	frames.set_animation_speed(anim_name, fps)
 
 	for frame_index in range(frame_count):
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
 		atlas.region = Rect2(frame_index * FRAME_SIZE.x, 0, FRAME_SIZE.x, FRAME_SIZE.y)
-		frames.add_frame(name, atlas)
+		frames.add_frame(anim_name, atlas)

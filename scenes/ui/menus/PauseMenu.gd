@@ -72,7 +72,7 @@ func _on_button_highlighted(button: Button) -> void:
 func _set_units(units: Array) -> void:
 	_units_snapshot = []
 	for unit in units:
-		if unit is Unit:
+		if is_instance_valid(unit) and unit is Unit:
 			_units_snapshot.append(unit)
 
 
