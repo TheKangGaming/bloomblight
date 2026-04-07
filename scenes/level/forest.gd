@@ -5,9 +5,27 @@ const FOREST_ENTRY_TERA_POS := Vector2(2159, 100)
 const FOREST_SILAS_PLAYER_POS := Vector2(2094, 252)
 const FOREST_SILAS_TERA_POS := Vector2(2148, 236)
 const FOREST_SILAS_POS := Vector2(2246, 224)
+const MATERIAL_TERA_POS := Vector2(2168, 110)
+const MATERIAL_SILAS_POS := Vector2(2256, 96)
+const MATERIAL_EXIT_TRIGGER_POS := Vector2(2106, 20)
+const MATERIAL_EXIT_TRIGGER_SIZE := Vector2(192, 108)
+const MATERIAL_TREE_POSITIONS := [
+	Vector2(2118, 428),
+	Vector2(2260, 516),
+	Vector2(2418, 472),
+	Vector2(2202, 652),
+	Vector2(2384, 662),
+]
+const MATERIAL_STONE_POSITIONS := [
+	Vector2(2274, 408),
+	Vector2(2448, 420),
+	Vector2(2178, 588),
+	Vector2(2360, 742),
+]
 const CUTSCENE_GROUP_ZOOM := Vector2(1.62, 1.62)
 
 @onready var player = $Objects/Player
+@onready var objects_root: Node2D = $Objects
 @onready var player_camera: Camera2D = $Objects/Player/Camera2D
 @onready var cutscene_camera: Camera2D = $CutsceneCamera
 @onready var story_markers: Node = $StoryMarkers
@@ -18,26 +36,41 @@ const CUTSCENE_GROUP_ZOOM := Vector2(1.62, 1.62)
 
 var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
 var _farm_scene_path := "res://scenes/level/game.tscn"
+var _tree_scene: PackedScene = preload("res://scenes/level/tree.tscn")
+var _rock_scene: PackedScene = preload("res://scenes/level/rock_deposit.tscn")
 var _overworld_system_menu: Control = null
 var _forest_intro_active := false
 var _silas_encounter_started := false
+var _materials_visit_active := false
+var _materials_goal_complete := false
 var _day_timer_cycle_seconds := 0.0
 var _player_camera_default_zoom := Vector2(2, 2)
+var _materials_return_trigger: Area2D = null
+var _resource_nodes: Array[Node2D] = []
 
 func _ready() -> void:
 	_day_timer_cycle_seconds = $DayTimer.wait_time
 	if player_camera != null:
 		_player_camera_default_zoom = player_camera.zoom
 
+	player.tool_use.connect(_on_player_tool_use)
 	_spawn_overworld_system_menu()
 	_restore_intro_forest_day_time()
+	_ensure_material_return_trigger()
 
-	if Global.pending_intro_forest_visit:
+	if Global.pending_materials_forest_visit:
+		Global.pending_materials_forest_visit = false
+		call_deferred("_begin_materials_forest_visit")
+	elif Global.pending_intro_forest_visit:
 		Global.pending_intro_forest_visit = false
 		call_deferred("_begin_intro_forest_visit")
 	else:
 		tera_actor.visible = false
 		silas_actor.visible = false
+
+func _exit_tree() -> void:
+	if Global.inventory_updated.is_connected(_on_inventory_updated):
+		Global.inventory_updated.disconnect(_on_inventory_updated)
 
 func _restore_intro_forest_day_time() -> void:
 	if Global.intro_forest_day_time_left <= 0.0:
@@ -69,6 +102,78 @@ func _begin_intro_forest_visit() -> void:
 
 	await get_tree().process_frame
 	player.can_move = true
+
+func _begin_materials_forest_visit() -> void:
+	_materials_visit_active = true
+	_materials_goal_complete = false
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	player.global_position = _marker_pos(&"IntroEntryPlayer", FOREST_ENTRY_PLAYER_POS)
+	tera_actor.visible = true
+	tera_actor.global_position = MATERIAL_TERA_POS
+	tera_actor.face_side(true)
+	tera_actor.play_idle()
+	silas_actor.visible = true
+	silas_actor.global_position = MATERIAL_SILAS_POS
+	silas_actor.face_side(false)
+	silas_actor.play_idle()
+	_spawn_material_resources()
+	_restore_player_camera(false)
+
+	if not Global.inventory_updated.is_connected(_on_inventory_updated):
+		Global.inventory_updated.connect(_on_inventory_updated)
+
+	await _play_story_dialogue([
+		{"speaker": "Silas", "text": "Trees down the slope. Stone's tucked into the ridge. Take what you need and don't wander."},
+		{"speaker": "Savannah", "text": "Ten loads of wood. Ten of stone. Enough to brace the whole shell."},
+		{"speaker": "Tera", "text": "We'll be quick. The sooner we get back, the sooner this place feels like ours."}
+	], [player, tera_actor, silas_actor], CUTSCENE_GROUP_ZOOM)
+
+	if DemoDirector:
+		DemoDirector.set_stage(DemoDirector.DemoStage.GATHER_MATERIALS)
+		DemoDirector.show_context_prompt("farm_gather_materials")
+	_restore_player_camera(false)
+	player.can_move = true
+	_check_material_progress()
+
+func _spawn_material_resources() -> void:
+	_clear_material_resources()
+	for position_value in MATERIAL_TREE_POSITIONS:
+		var tree = _tree_scene.instantiate() as Node2D
+		objects_root.add_child(tree)
+		tree.global_position = position_value
+		_resource_nodes.append(tree)
+
+	for position_value in MATERIAL_STONE_POSITIONS:
+		var rock = _rock_scene.instantiate() as Node2D
+		objects_root.add_child(rock)
+		rock.global_position = position_value
+		_resource_nodes.append(rock)
+
+func _clear_material_resources() -> void:
+	for node in _resource_nodes:
+		if node != null and is_instance_valid(node):
+			node.queue_free()
+	_resource_nodes.clear()
+
+func _ensure_material_return_trigger() -> void:
+	if _materials_return_trigger != null and is_instance_valid(_materials_return_trigger):
+		return
+
+	var trigger := Area2D.new()
+	trigger.name = "MaterialsReturnTrigger"
+	trigger.collision_layer = 0
+	trigger.collision_mask = 2
+	trigger.position = MATERIAL_EXIT_TRIGGER_POS
+	add_child(trigger)
+
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = MATERIAL_EXIT_TRIGGER_SIZE
+	shape.shape = rectangle
+	trigger.add_child(shape)
+	trigger.body_entered.connect(_on_material_return_trigger_body_entered)
+	_materials_return_trigger = trigger
 
 func _on_silas_encounter_trigger_body_entered(body: Node) -> void:
 	if body != player:
@@ -132,6 +237,70 @@ func _run_silas_intro_encounter() -> void:
 	Global.pending_intro_forest_return = true
 	Global.intro_forest_day_time_left = $DayTimer.time_left
 	TransitionManager.change_scene_path(_farm_scene_path, 0.45)
+
+func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
+	if tool != Global.Tools.AXE:
+		return
+	var player_ground_y: float = player.global_position.y if player != null else global_pos.y
+	for tree in get_tree().get_nodes_in_group("Trees"):
+		if not tree.has_method("get_interaction_anchor_global_position"):
+			continue
+		if absf(tree.global_position.y - player_ground_y) > 48.0:
+			continue
+		var interaction_anchor: Vector2 = tree.get_interaction_anchor_global_position()
+		if interaction_anchor.distance_squared_to(global_pos) < 2025.0:
+			tree.hit()
+			break
+
+func _on_inventory_updated() -> void:
+	_check_material_progress()
+
+func _check_material_progress() -> void:
+	if not _materials_visit_active:
+		return
+	if _has_enough_materials():
+		if _materials_goal_complete:
+			return
+		_materials_goal_complete = true
+		if DemoDirector:
+			DemoDirector.set_stage(DemoDirector.DemoStage.RETURN_TO_FARM)
+			DemoDirector.show_context_prompt("farm_return_with_materials")
+		_show_player_notice("That should be enough. Head back to the farm.")
+		return
+
+	_materials_goal_complete = false
+	if DemoDirector and DemoDirector.current_stage != DemoDirector.DemoStage.GATHER_MATERIALS:
+		DemoDirector.set_stage(DemoDirector.DemoStage.GATHER_MATERIALS)
+		DemoDirector.show_context_prompt("farm_gather_materials")
+
+func _has_enough_materials() -> bool:
+	return _current_wood_count() >= Global.DEMO_CABIN_WOOD_REQUIRED and _current_stone_count() >= Global.DEMO_CABIN_STONE_REQUIRED
+
+func _current_wood_count() -> int:
+	return int(Global.inventory.get(Global.Items.WOOD, 0))
+
+func _current_stone_count() -> int:
+	return int(Global.inventory.get(Global.Items.STONE, 0))
+
+func _on_material_return_trigger_body_entered(body: Node2D) -> void:
+	if body != player or not _materials_visit_active:
+		return
+	if not _materials_goal_complete:
+		var missing_wood := maxi(Global.DEMO_CABIN_WOOD_REQUIRED - _current_wood_count(), 0)
+		var missing_stone := maxi(Global.DEMO_CABIN_STONE_REQUIRED - _current_stone_count(), 0)
+		_show_player_notice("Still need %d Wood and %d Stone." % [missing_wood, missing_stone])
+		return
+
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	Global.pending_materials_forest_return = true
+	Global.intro_forest_day_time_left = $DayTimer.time_left
+	TransitionManager.change_scene_path(_farm_scene_path, 0.45)
+
+func _show_player_notice(text: String, duration: float = 1.5) -> void:
+	var overlay := get_node_or_null("CanvasLayer/Overlay")
+	if overlay != null and overlay.has_method("show_notice"):
+		overlay.show_notice(text, duration)
 
 func _spawn_overworld_system_menu() -> void:
 	if _overworld_system_menu != null and is_instance_valid(_overworld_system_menu):

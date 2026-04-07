@@ -42,6 +42,10 @@ var returning_from_combat: bool = false
 var pending_intro_forest_visit := false
 var pending_intro_forest_return := false
 var intro_forest_day_time_left := 0.0
+var pending_materials_forest_visit := false
+var pending_materials_forest_return := false
+var demo_cabin_built := false
+var demo_merchant_intro_seen := false
 var player_level: int
 var player_class_name: String = "Deserter"
 var last_battle_result := {
@@ -63,6 +67,8 @@ var tutorial_step: int = 0
 const MAX_TUTORIAL_STEP := 15
 var tutorial_enabled := true
 var intro_sequence_complete := false
+const DEMO_CABIN_WOOD_REQUIRED := 10
+const DEMO_CABIN_STONE_REQUIRED := 10
 
 func advance_tutorial() -> void:
 	if not tutorial_enabled:
@@ -468,6 +474,10 @@ func reset_demo_state() -> void:
 	pending_intro_forest_visit = false
 	pending_intro_forest_return = false
 	intro_forest_day_time_left = 0.0
+	pending_materials_forest_visit = false
+	pending_materials_forest_return = false
+	demo_cabin_built = false
+	demo_merchant_intro_seen = false
 	current_day = 1
 	intro_sequence_complete = false
 	tutorial_enabled = false

@@ -64,4 +64,6 @@ func become_stump():
 		
 		# Start the wood from the stump area and keep the burst on the lower ground.
 		wood.global_position = get_interaction_anchor_global_position()
+		if wood.has_method("configure_item"):
+			wood.configure_item(Global.Items.WOOD)
 		wood.pop_out(WOOD_POP_MIN_ANGLE, WOOD_POP_MAX_ANGLE)

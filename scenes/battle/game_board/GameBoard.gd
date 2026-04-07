@@ -1627,6 +1627,7 @@ func _on_return_button_pressed(btn: Button) -> void:
 	if Global.saved_farm_scene:
 		var elapsed_seconds = Global.consume_combat_elapsed_seconds()
 		var farm = Global.saved_farm_scene
+		var handled_demo_followup := false
 
 		# 1. Plug the farm back in
 		get_tree().root.add_child(farm)
@@ -1653,6 +1654,8 @@ func _on_return_button_pressed(btn: Button) -> void:
 				
 			if farm.has_method("apply_combat_time_passage"):
 				farm.apply_combat_time_passage(elapsed_seconds)
+			if _demo_battle_active and farm.has_method("handle_demo_battle_victory"):
+				handled_demo_followup = bool(await farm.handle_demo_battle_victory())
 				
 		else:
 			# ==========================================
@@ -1678,7 +1681,7 @@ func _on_return_button_pressed(btn: Button) -> void:
 
 		Global.saved_farm_scene = null
 
-		if is_victory and DemoDirector and _demo_battle_active:
+		if is_victory and DemoDirector and _demo_battle_active and not handled_demo_followup:
 			await get_tree().process_frame
 			var card_parent: Node = farm.get_node_or_null("CanvasLayer")
 			if card_parent == null:

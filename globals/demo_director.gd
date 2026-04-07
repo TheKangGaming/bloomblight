@@ -29,6 +29,9 @@ enum DemoStage {
 	BATTLE_INTRO,
 	BATTLE_TUTORIAL,
 	BLOOM_TUTORIAL,
+	GATHER_MATERIALS,
+	RETURN_TO_FARM,
+	CABIN_COMPLETE,
 	DEMO_COMPLETE
 }
 
@@ -121,7 +124,7 @@ func set_stage(stage: DemoStage) -> void:
 	stage_changed.emit(stage)
 
 	match stage:
-		DemoStage.INTRO, DemoStage.HARVEST_CROPS, DemoStage.LIGHT_CAMPFIRE, DemoStage.COOK_MEAL, DemoStage.EAT_MEAL, DemoStage.MEAL_REVIEW, DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
+		DemoStage.INTRO, DemoStage.HARVEST_CROPS, DemoStage.LIGHT_CAMPFIRE, DemoStage.COOK_MEAL, DemoStage.EAT_MEAL, DemoStage.MEAL_REVIEW, DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL, DemoStage.GATHER_MATERIALS, DemoStage.RETURN_TO_FARM, DemoStage.CABIN_COMPLETE:
 			_manual_prompt_id = ""
 			_manual_prompt_replacements.clear()
 			refresh_current_prompt()
@@ -368,7 +371,7 @@ func show_demo_complete_card(parent: Node) -> void:
 	parent.add_child(card)
 	card.configure({
 		"title": "Demo Complete",
-		"body": "The bandits are gone, but the blight is still closing in.\n\nLife can still take root here. This is only the beginning.",
+		"body": "The cabin stands, the road is stirring again, and word of the farm is beginning to spread.\n\nLife can still take root here. This is only the beginning.",
 		"confirm_hint": "return to title",
 		"allow_skip": false
 	})
@@ -394,6 +397,12 @@ func _get_stage_prompt_text(stage: DemoStage) -> String:
 			return "Objective: Review your meal buff in the Status tab. Press %s to open the menu." % get_action_label("menu_toggle")
 		DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
 			return "Objective: Drive off the bandits."
+		DemoStage.GATHER_MATERIALS:
+			return "Objective: Gather %d Wood and %d Stone in the forest." % [Global.DEMO_CABIN_WOOD_REQUIRED, Global.DEMO_CABIN_STONE_REQUIRED]
+		DemoStage.RETURN_TO_FARM:
+			return "Objective: Return to the farm with the materials."
+		DemoStage.CABIN_COMPLETE:
+			return "Objective: Try the cabin door, then press %s to settle in for the night." % get_action_label("time_skip")
 		_:
 			return ""
 
@@ -408,6 +417,12 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 			template = "Objective: Open the old chest by the ruined field."
 		"farm_search_forest":
 			template = "Objective: Search the forest for seeds. Head through the trees and look deeper inside."
+		"farm_gather_materials":
+			template = "Objective: Gather %d Wood and %d Stone in the forest." % [Global.DEMO_CABIN_WOOD_REQUIRED, Global.DEMO_CABIN_STONE_REQUIRED]
+		"farm_return_with_materials":
+			template = "Objective: Return to the farm with the gathered materials."
+		"farm_sleep_in_cabin":
+			template = "Objective: Try the cabin door, then press {time_skip} to settle in for the night."
 		"farm_plant_and_water":
 			template = "Objective: Plant the carrot and parsnip seeds, then water them."
 		"farm_water_both":
@@ -424,6 +439,7 @@ func _resolve_prompt(prompt_id: String, replacements: Dictionary = {}) -> String
 	merged["tool_cycle"] = get_tool_cycle_label()
 	merged["inventory"] = get_action_label("menu_toggle")
 	merged["cancel"] = get_action_label("cancel")
+	merged["time_skip"] = get_action_label("time_skip")
 	return _format_template(template, merged)
 
 func _format_template(template: String, replacements: Dictionary) -> String:

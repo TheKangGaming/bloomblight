@@ -25,6 +25,17 @@ const BANDIT_STOP_ARCHER_POS := Vector2(1552, 1136)
 const BANDIT_DEFENSE_PLAYER_POS := Vector2(1326, 724)
 const BANDIT_DEFENSE_TERA_POS := Vector2(1426, 754)
 const BANDIT_DEFENSE_SILAS_POS := Vector2(1514, 692)
+const CABIN_HOME_POS := Vector2(1488, 544)
+const CABIN_REBUILD_PLAYER_POS := Vector2(1392, 716)
+const CABIN_REBUILD_TERA_POS := Vector2(1460, 706)
+const CABIN_REBUILD_SILAS_POS := Vector2(1560, 696)
+const CABIN_SLEEP_PLAYER_POS := Vector2(1478, 626)
+const CABIN_SLEEP_TERA_POS := Vector2(1412, 666)
+const CABIN_SLEEP_SILAS_POS := Vector2(1588, 654)
+const MERCHANT_PLAYER_POS := Vector2(1422, 720)
+const MERCHANT_TERA_POS := Vector2(1492, 710)
+const MERCHANT_SILAS_POS := Vector2(1592, 700)
+const MERCHANT_POS := Vector2(1236, 684)
 const CUTSCENE_GROUP_ZOOM := Vector2(1.7, 1.7)
 const CUTSCENE_CLOSE_ZOOM := Vector2(1.9, 1.9)
 
@@ -49,13 +60,25 @@ enum IntroState {
 @onready var main_menu = $CanvasLayer/MainMenu
 @onready var story_chest = $Objects/Chest
 @onready var camp_fire = $Objects/CampFire
+@onready var objects_root: Node2D = $Objects
+@onready var world_root: Node2D = $World
+@onready var ruin_body_top: StaticBody2D = $World/Obstacles/StaticBody2D2
+@onready var ruin_body_bottom: StaticBody2D = $World/Obstacles/StaticBody2D
+@onready var ruin_sprite_elements_1: Sprite2D = $World/Obstacles/StaticBody2D2/AbandonedStructuresElements1
+@onready var ruin_sprite_elements_2: Sprite2D = $World/Overhead/AbandonedStructuresElements2
+@onready var ruin_sprite_elements_0: Sprite2D = $World/Overhead/AbandonedStructuresElements0
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
+var _cabin_home_scene: PackedScene = preload("res://scenes/level/cabin_home.tscn")
+var _merchant_actor_scene: PackedScene = preload("res://scenes/level/merchant_actor.tscn")
+var _overworld_burst_scene: PackedScene = preload("res://scenes/level/overworld_burst_vfx.tscn")
 var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
 var _forest_scene_path := "res://scenes/level/forest.tscn"
 var _bandit_tension_music_path := "res://audio/music/Music_Anxiety.wav"
 var _bandit_tension_music: AudioStream = null
+var _rebuild_hit_a: AudioStream = preload("res://audio/sfx/axe.wav")
+var _rebuild_hit_b: AudioStream = preload("res://audio/sfx/hoe.wav")
 var _story_actor_scene: PackedScene = preload("res://scenes/level/story_actor.tscn")
 var _bandit_leader_actor_scene: PackedScene = preload("res://scenes/battle/bandit_marauder_battle_actor.tscn")
 var _bandit_warrior_actor_scene: PackedScene = preload("res://scenes/battle/bandit_warrior_battle_actor.tscn")
@@ -81,6 +104,12 @@ var _warning_sequence_started := false
 var _suppress_battle_music_sync := true
 var _intrusion_bandits: Array[Node2D] = []
 var _overworld_system_menu: Control = null
+var _cabin_home = null
+var _merchant_actor = null
+var _camera_fx = null
+var _post_battle_aftermath_started := false
+var _materials_run_started := false
+var _merchant_sequence_started := false
 
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
@@ -103,11 +132,17 @@ func _ready() -> void:
 			DemoDirector.story_harvest_ready.connect(_on_story_harvest_ready)
 		if not DemoDirector.meal_eaten.is_connected(_on_demo_meal_eaten):
 			DemoDirector.meal_eaten.connect(_on_demo_meal_eaten)
-		DemoDirector.set_stage(DemoDirector.DemoStage.INTRO)
+		if not Global.intro_sequence_complete and not Global.pending_intro_forest_return and not Global.pending_materials_forest_return:
+			DemoDirector.set_stage(DemoDirector.DemoStage.INTRO)
 
 	_spawn_overworld_system_menu()
+	_ensure_story_setpieces()
+	_sync_shelter_state()
 
-	if Global.intro_sequence_complete:
+	if Global.pending_materials_forest_return:
+		Global.pending_materials_forest_return = false
+		call_deferred("_resume_after_materials_forest_return")
+	elif Global.intro_sequence_complete:
 		_setup_story_camp_state()
 	elif Global.pending_intro_forest_return:
 		Global.pending_intro_forest_return = false
@@ -127,6 +162,79 @@ func _restore_intro_forest_day_time() -> void:
 	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
 	if hud and hud.has_method("_update_view"):
 		hud._update_view(true)
+
+func _ensure_story_setpieces() -> void:
+	if _camera_fx == null or not is_instance_valid(_camera_fx):
+		_camera_fx = OverworldCameraFx.new()
+		_camera_fx.name = "OverworldCameraFx"
+		add_child(_camera_fx)
+
+	if (_cabin_home == null or not is_instance_valid(_cabin_home)) and _cabin_home_scene != null:
+		_cabin_home = _cabin_home_scene.instantiate() as Node2D
+		_cabin_home.name = "CabinHome"
+		objects_root.add_child(_cabin_home)
+		_cabin_home.global_position = CABIN_HOME_POS
+
+	if (_merchant_actor == null or not is_instance_valid(_merchant_actor)) and _merchant_actor_scene != null:
+		_merchant_actor = _merchant_actor_scene.instantiate() as Node2D
+		_merchant_actor.name = "MerchantActor"
+		_merchant_actor.visible = false
+		objects_root.add_child(_merchant_actor)
+
+func _sync_shelter_state() -> void:
+	var ruin_visible := not Global.demo_cabin_built
+	if ruin_body_top != null:
+		ruin_body_top.visible = ruin_visible
+		for child in ruin_body_top.get_children():
+			if child is CollisionShape2D:
+				(child as CollisionShape2D).disabled = not ruin_visible
+	if ruin_body_bottom != null:
+		ruin_body_bottom.visible = ruin_visible
+		for child in ruin_body_bottom.get_children():
+			if child is CollisionShape2D:
+				(child as CollisionShape2D).disabled = not ruin_visible
+	if ruin_sprite_elements_1 != null:
+		ruin_sprite_elements_1.visible = ruin_visible
+	if ruin_sprite_elements_2 != null:
+		ruin_sprite_elements_2.visible = ruin_visible
+	if ruin_sprite_elements_0 != null:
+		ruin_sprite_elements_0.visible = ruin_visible
+	if _cabin_home != null and is_instance_valid(_cabin_home) and _cabin_home.has_method("set_built"):
+		_cabin_home.set_built(Global.demo_cabin_built)
+
+func spawn_overworld_burst(
+	global_position_value: Vector2,
+	texture: Texture2D,
+	frame_size: Vector2i,
+	frame_count: int,
+	fps: float = 16.0,
+	scale_value: Vector2 = Vector2.ONE
+) -> void:
+	if _overworld_burst_scene == null:
+		return
+	var burst = _overworld_burst_scene.instantiate()
+	objects_root.add_child(burst)
+	burst.global_position = global_position_value
+	if burst.has_method("configure"):
+		burst.configure(texture, frame_size, frame_count, fps, scale_value)
+	if burst.has_method("play_now"):
+		burst.play_now()
+
+func play_overworld_camera_shake(intensity: float = 4.0, duration: float = 0.16) -> void:
+	if _camera_fx == null or not is_instance_valid(_camera_fx):
+		return
+	var active_camera: Camera2D = player_camera if player_camera != null and player_camera.is_current() else cutscene_camera
+	_camera_fx.play_shake(active_camera, intensity, duration)
+
+func _play_one_shot_world_sfx(stream: AudioStream, at_position: Vector2) -> void:
+	if stream == null:
+		return
+	var player_sfx := AudioStreamPlayer2D.new()
+	player_sfx.stream = stream
+	player_sfx.global_position = at_position
+	add_child(player_sfx)
+	player_sfx.finished.connect(player_sfx.queue_free)
+	player_sfx.play()
 
 func apply_combat_time_passage(elapsed_seconds: float) -> void:
 	var day_timer = $DayTimer
@@ -208,8 +316,11 @@ func _process(_delta: float) -> void:
 		request_end_day()
 
 func _can_skip_day() -> bool:
-	if DemoDirector and DemoDirector.is_demo_active() and DemoDirector.current_stage != DemoDirector.DemoStage.DEMO_COMPLETE:
-		return false
+	if DemoDirector and DemoDirector.is_demo_active():
+		if DemoDirector.current_stage == DemoDirector.DemoStage.CABIN_COMPLETE:
+			return true
+		if DemoDirector.current_stage != DemoDirector.DemoStage.DEMO_COMPLETE:
+			return false
 	return true
 
 func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
@@ -320,6 +431,9 @@ func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
 
 func request_end_day() -> void:
 	if Global.pending_day_transition:
+		return
+	if DemoDirector and DemoDirector.current_stage == DemoDirector.DemoStage.CABIN_COMPLETE:
+		call_deferred("_run_cabin_sleep_sequence")
 		return
 	Global.pending_day_transition = true
 
@@ -437,7 +551,7 @@ func _on_player_found_tera() -> void:
 
 	await _play_story_dialogue([
 		{"speaker": "Tera", "text": "A farm. Or what's left of one."},
-		{"speaker": "Savannah", "text": "The roof looks solid enough. And the soil... it isn't just ash. We might actually be able to work with this."},
+		{"speaker": "Savannah", "text": "The roof is mostly holes and the walls are rot, but it'll keep the wind off us for one night. That's more than we've had."},
 		{"speaker": "Tera", "text": "If they left in a hurry, they might've left gear behind. Let's check the house."}
 	], [player, tera_actor, story_chest], CUTSCENE_GROUP_ZOOM)
 
@@ -489,11 +603,25 @@ func _run_post_chest_sequence() -> void:
 func _on_forest_exit_trigger_body_entered(body: Node) -> void:
 	if body != player:
 		return
-	if _forest_encounter_started or _intro_busy or _intro_state != IntroState.SEARCH_FOREST:
+	if _intro_busy:
 		return
+	if _intro_state == IntroState.SEARCH_FOREST:
+		if _forest_encounter_started:
+			return
+		_forest_encounter_started = true
+		call_deferred("_enter_intro_forest")
+		return
+	if DemoDirector and DemoDirector.current_stage == DemoDirector.DemoStage.GATHER_MATERIALS and not _materials_run_started:
+		_materials_run_started = true
+		call_deferred("_enter_materials_forest")
 
-	_forest_encounter_started = true
-	call_deferred("_enter_intro_forest")
+func _enter_materials_forest() -> void:
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	Global.pending_materials_forest_visit = true
+	Global.intro_forest_day_time_left = $DayTimer.time_left
+	TransitionManager.change_scene_path(_forest_scene_path, 0.45)
 
 func _enter_intro_forest() -> void:
 	_intro_busy = true
@@ -576,8 +704,7 @@ func _run_magic_reveal() -> void:
 
 	for plant in _story_plants:
 		if is_instance_valid(plant) and plant.has_method("force_mature"):
-			plant.force_mature()
-			await get_tree().create_timer(0.12).timeout
+			await plant.force_mature()
 
 	await _fade_from_black(0.85)
 
@@ -808,6 +935,14 @@ func resume_after_combat() -> void:
 	player.direction = Vector2.ZERO
 	_restore_player_camera()
 
+func handle_demo_battle_victory() -> bool:
+	if not Global.intro_sequence_complete or Global.demo_cabin_built:
+		return false
+	if _post_battle_aftermath_started:
+		return true
+	await _run_post_battle_aftermath_sequence()
+	return true
+
 func _release_overworld_control(delay_frames: int = 1) -> void:
 	for _i in range(maxi(delay_frames, 0)):
 		await get_tree().process_frame
@@ -977,6 +1112,156 @@ func _show_forest_edge_camera_hint() -> void:
 	await _focus_cutscene_on_nodes([player], 0.9, CUTSCENE_GROUP_ZOOM)
 	_restore_player_camera(false)
 	player.can_move = true
+
+func _run_post_battle_aftermath_sequence() -> void:
+	_post_battle_aftermath_started = true
+	_materials_run_started = false
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_setup_story_camp_state()
+	player.global_position = _marker_pos(&"BanditDefensePlayer", BANDIT_DEFENSE_PLAYER_POS)
+	tera_actor.global_position = _marker_pos(&"BanditDefenseTera", BANDIT_DEFENSE_TERA_POS)
+	silas_actor.global_position = _marker_pos(&"BanditDefenseSilas", BANDIT_DEFENSE_SILAS_POS)
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.DOWN)
+	tera_actor.face_down()
+	tera_actor.play_idle()
+	silas_actor.face_down()
+	silas_actor.play_idle()
+
+	await _run_bandit_retreat_cutscene()
+	await _play_story_dialogue([
+		{"speaker": "Silas", "text": "They're gone. For now. But once word gets out that someone is actually growing food in the ash, they'll be back with more men."},
+		{"speaker": "Savannah", "text": "He's right. This ruin won't hold if they come back in force. The roof is rot and the walls are paper."},
+		{"speaker": "Tera", "text": "The forest still has stone and timber. If we move fast, we can turn this place into a real shelter."},
+		{"speaker": "Savannah", "text": "I know how to brace a perimeter. I just need solid wood and enough stone to keep it standing."},
+		{"speaker": "Silas", "text": "I know a spot. Follow the treeline back in and keep your eyes open."}
+	], [player, tera_actor, silas_actor], CUTSCENE_GROUP_ZOOM)
+
+	if DemoDirector:
+		DemoDirector.set_stage(DemoDirector.DemoStage.GATHER_MATERIALS)
+		DemoDirector.show_context_prompt("farm_gather_materials")
+	await _release_overworld_control()
+
+func _run_bandit_retreat_cutscene() -> void:
+	_clear_intrusion_bandits()
+	var bandit_leader := _spawn_intrusion_bandit("BanditLeaderRetreat", _bandit_leader_actor_scene, _marker_pos(&"BanditStopLeader", BANDIT_STOP_LEADER_POS), false)
+	var bandit_warrior := _spawn_intrusion_bandit("BanditWarriorRetreat", _bandit_warrior_actor_scene, _marker_pos(&"BanditStopWarrior", BANDIT_STOP_WARRIOR_POS), false)
+	var bandit_archer := _spawn_intrusion_bandit("BanditArcherRetreat", _bandit_archer_actor_scene, _marker_pos(&"BanditStopArcher", BANDIT_STOP_ARCHER_POS), false)
+	for actor in [bandit_leader, bandit_warrior, bandit_archer]:
+		if actor != null and actor.has_method("face_down"):
+			actor.face_down()
+
+	await _play_story_dialogue([
+		{"speaker": "Bandit Leader", "text": "Fall back!"}
+	], [bandit_leader, bandit_warrior, bandit_archer], Vector2(1.75, 1.75))
+
+	await _move_story_group(
+		[bandit_leader, bandit_warrior, bandit_archer],
+		[
+			_marker_pos(&"BanditEntryLeader", BANDIT_ENTRY_LEADER_POS),
+			_marker_pos(&"BanditEntryWarrior", BANDIT_ENTRY_WARRIOR_POS),
+			_marker_pos(&"BanditEntryArcher", BANDIT_ENTRY_ARCHER_POS),
+		],
+		1.0
+	)
+	_clear_intrusion_bandits()
+
+func _resume_after_materials_forest_return() -> void:
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_setup_story_camp_state()
+	player.global_position = CABIN_REBUILD_PLAYER_POS
+	tera_actor.global_position = CABIN_REBUILD_TERA_POS
+	silas_actor.global_position = CABIN_REBUILD_SILAS_POS
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.DOWN)
+	tera_actor.face_side(true)
+	tera_actor.play_idle()
+	silas_actor.face_side(false)
+	silas_actor.play_idle()
+	await _run_cabin_rebuild_sequence()
+
+func _run_cabin_rebuild_sequence() -> void:
+	Global.remove_item(Global.Items.WOOD, Global.DEMO_CABIN_WOOD_REQUIRED)
+	Global.remove_item(Global.Items.STONE, Global.DEMO_CABIN_STONE_REQUIRED)
+	await _focus_cutscene_on_positions([CABIN_HOME_POS], 0.35, Vector2(1.58, 1.58))
+	await _fade_to_black(0.8)
+	_play_one_shot_world_sfx(_rebuild_hit_a, CABIN_HOME_POS + Vector2(-16, 12))
+	await get_tree().create_timer(0.16, true).timeout
+	_play_one_shot_world_sfx(_rebuild_hit_b, CABIN_HOME_POS + Vector2(18, -6))
+	await get_tree().create_timer(0.2, true).timeout
+	_play_one_shot_world_sfx(_rebuild_hit_a, CABIN_HOME_POS + Vector2(4, 10))
+	Global.demo_cabin_built = true
+	_sync_shelter_state()
+	await _fade_from_black(0.95)
+	await _play_story_dialogue([
+		{"speaker": "Savannah", "text": "It's not a palace, but the beams are braced and the door actually shuts. It'll hold."},
+		{"speaker": "Tera", "text": "It feels... like a home."},
+		{"speaker": "Silas", "text": "It feels like a place worth defending. Try the door. Then get some sleep."}
+	], [player, tera_actor, silas_actor, _cabin_home], CUTSCENE_GROUP_ZOOM)
+	if DemoDirector:
+		DemoDirector.set_stage(DemoDirector.DemoStage.CABIN_COMPLETE)
+		DemoDirector.show_context_prompt("farm_sleep_in_cabin")
+	await _release_overworld_control()
+
+func _run_cabin_sleep_sequence() -> void:
+	if _merchant_sequence_started:
+		return
+	_merchant_sequence_started = true
+	_intro_busy = true
+	Global.pending_day_transition = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_setup_story_camp_state()
+	player.global_position = CABIN_SLEEP_PLAYER_POS
+	tera_actor.global_position = CABIN_SLEEP_TERA_POS
+	silas_actor.global_position = CABIN_SLEEP_SILAS_POS
+	if _cabin_home != null and _cabin_home.has_method("open_for_entry"):
+		await _cabin_home.open_for_entry()
+	await _fade_to_black(0.8)
+	Global.current_day += 1
+	level_reset()
+	if _cabin_home != null and _cabin_home.has_method("close_for_exit") and _cabin_home.has_method("is_open") and bool(_cabin_home.call("is_open")):
+		await _cabin_home.close_for_exit()
+	Global.pending_day_transition = false
+	player.global_position = MERCHANT_PLAYER_POS
+	tera_actor.global_position = MERCHANT_TERA_POS
+	silas_actor.global_position = MERCHANT_SILAS_POS
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.LEFT)
+	tera_actor.face_side(false)
+	tera_actor.play_idle()
+	silas_actor.face_side(false)
+	silas_actor.play_idle()
+	if _merchant_actor != null:
+		_merchant_actor.visible = true
+		_merchant_actor.global_position = MERCHANT_POS
+		if _merchant_actor.has_method("face_side"):
+			_merchant_actor.face_side(true)
+		if _merchant_actor.has_method("play_entry"):
+			_merchant_actor.play_entry()
+	await _focus_cutscene_on_positions([MERCHANT_PLAYER_POS, MERCHANT_POS], 0.2, Vector2(1.62, 1.62))
+	await _fade_from_black(1.0)
+	await get_tree().create_timer(0.2, true).timeout
+	if _merchant_actor != null and _merchant_actor.has_method("play_talk_loop"):
+		_merchant_actor.play_talk_loop()
+	await _play_story_dialogue([
+		{"speaker": "Merchant", "text": "Easy there. I'm just a traveler with a heavy pack and a nose for news."},
+		{"speaker": "Savannah", "text": "We aren't looking for trouble."},
+		{"speaker": "Merchant", "text": "Good thing. I heard the bandits on the north road were dealt with. Safer roads mean bolder feet."},
+		{"speaker": "Merchant", "text": "Name's Oryn. I move seeds, iron, recipes, and gossip. Keep this farm breathing, and we'll do business soon."}
+	], [player, tera_actor, silas_actor, _merchant_actor], CUTSCENE_GROUP_ZOOM)
+	Global.demo_merchant_intro_seen = true
+	if _merchant_actor != null and _merchant_actor.has_method("play_rest"):
+		_merchant_actor.play_rest()
+	await get_tree().process_frame
+	var card_parent: Node = get_node_or_null("CanvasLayer")
+	if card_parent == null:
+		card_parent = self
+	DemoDirector.show_demo_complete_card(card_parent)
 
 func _run_bandit_intrusion_cutscene() -> void:
 	_clear_intrusion_bandits()

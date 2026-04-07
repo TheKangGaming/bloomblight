@@ -1,0 +1,80 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/level/cabin_home.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_left"]
+size = Vector2(112, 86)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_right"]
+size = Vector2(112, 86)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
+size = Vector2(196, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(96, 88)
+
+[node name="CabinHome" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_script")
+
+[node name="Grass" type="Sprite2D" parent="."]
+position = Vector2(0, 66)
+
+[node name="ShadowBotLeft" type="Sprite2D" parent="."]
+position = Vector2(-172, 84)
+
+[node name="ShadowBotRight" type="Sprite2D" parent="."]
+position = Vector2(172, 84)
+
+[node name="ShadowTopLeft" type="Sprite2D" parent="."]
+position = Vector2(-152, -146)
+
+[node name="ShadowTopRight" type="Sprite2D" parent="."]
+position = Vector2(152, -146)
+
+[node name="Base" type="Sprite2D" parent="."]
+position = Vector2(0, 0)
+
+[node name="InteriorFront" type="Sprite2D" parent="."]
+visible = false
+z_index = 6
+position = Vector2(0, -14)
+
+[node name="Top" type="AnimatedSprite2D" parent="."]
+z_index = 5
+position = Vector2(0, -128)
+
+[node name="Door" type="AnimatedSprite2D" parent="."]
+z_index = 6
+position = Vector2(0, -41)
+
+[node name="WallBody" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBody"]
+position = Vector2(-122, -8)
+shape = SubResource("RectangleShape2D_left")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="WallBody"]
+position = Vector2(122, -8)
+shape = SubResource("RectangleShape2D_right")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="WallBody"]
+position = Vector2(0, -76)
+shape = SubResource("RectangleShape2D_top")
+
+[node name="DoorArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea"]
+position = Vector2(0, 18)
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorSfx" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, 0)
+
+[connection signal="body_entered" from="DoorArea" to="." method="_on_door_area_body_entered"]
+[connection signal="body_exited" from="DoorArea" to="." method="_on_door_area_body_exited"]
