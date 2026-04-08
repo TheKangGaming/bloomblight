@@ -35,10 +35,16 @@ signal inventory_updated
 signal recipe_knowledge_updated
 @warning_ignore('unused_signal')
 signal stats_updated
+signal loop_state_changed
 var saved_farm_scene: Node = null
 
 
 var returning_from_combat: bool = false
+var loop_hub_mode_active := false
+var loop_gold := 0
+var loop_bloom_points := 0
+var loop_unlocked_plots: Dictionary = {}
+var loop_built_structures: Dictionary = {}
 var pending_intro_forest_visit := false
 var pending_intro_forest_return := false
 var intro_forest_day_time_left := 0.0
@@ -69,6 +75,11 @@ var tutorial_enabled := true
 var intro_sequence_complete := false
 const DEMO_CABIN_WOOD_REQUIRED := 10
 const DEMO_CABIN_STONE_REQUIRED := 10
+const LOOP_PLOT_STARTING_FARM := &"starting_farm"
+const LOOP_PLOT_MERCHANT := &"merchant"
+const LOOP_PLOT_FOREST := &"forest"
+const LOOP_PLOT_CABIN := &"cabin"
+const LOOP_STRUCTURE_MERCHANT_WAGON := &"merchant_wagon"
 
 func advance_tutorial() -> void:
 	if not tutorial_enabled:
@@ -471,6 +482,11 @@ func reset_demo_state() -> void:
 	combat_transition.started_at_unix = 0.0
 	saved_farm_scene = null
 	returning_from_combat = false
+	loop_hub_mode_active = false
+	loop_gold = 0
+	loop_bloom_points = 0
+	loop_unlocked_plots.clear()
+	loop_built_structures.clear()
 	pending_intro_forest_visit = false
 	pending_intro_forest_return = false
 	intro_forest_day_time_left = 0.0
@@ -497,6 +513,44 @@ func reset_demo_state() -> void:
 	recipe_knowledge_updated.emit()
 	stats_updated.emit()
 	tutorial_updated.emit("")
+	loop_state_changed.emit()
+
+func begin_loop_hub_run() -> void:
+	reset_demo_state()
+	loop_hub_mode_active = true
+	loop_gold = 0
+	loop_bloom_points = 15
+	loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
+	inventory[Items.WOOD] = 10
+	inventory[Items.STONE] = 0
+	inventory[Items.CARROT_SEED] = 4
+	inventory[Items.PARSNIP_SEED] = 4
+	inventory[Items.POTATO_SEED] = 4
+	inventory[Items.GARLIC_SEED] = 4
+	unlocked_tools = [Tools.AXE]
+	learn_recipe(Items.GARLIC_MASHED_POTATOES, false)
+	learn_recipe(Items.GLAZED_CARROTS, false)
+	learn_recipe(Items.ROASTED_ROOT_MEDLEY, false)
+	if ProgressionService and ProgressionService.has_method("reset_demo_roster"):
+		ProgressionService.reset_demo_roster()
+	inventory_updated.emit()
+	recipe_knowledge_updated.emit()
+	stats_updated.emit()
+	loop_state_changed.emit()
+
+func has_loop_plot(plot_id: StringName) -> bool:
+	return bool(loop_unlocked_plots.get(String(plot_id), false))
+
+func unlock_loop_plot(plot_id: StringName) -> void:
+	loop_unlocked_plots[String(plot_id)] = true
+	loop_state_changed.emit()
+
+func is_loop_structure_built(structure_id: StringName) -> bool:
+	return bool(loop_built_structures.get(String(structure_id), false))
+
+func build_loop_structure(structure_id: StringName) -> void:
+	loop_built_structures[String(structure_id)] = true
+	loop_state_changed.emit()
 
 func remove_item(item_type: Items, amount: int = 1) -> bool:
 	if inventory.get(item_type, 0) >= amount:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dypkgiuemagk7"
-path="res://.godot/imported/NPC Merchant-idle.png-3c4fd5024bbdac4e15348e2e0dcfeb5a.ctex"
+uid="uid://cr213h6miccqi"
+path="res://.godot/imported/vendor structure - naked.png-fb45d1e3d0020389bfbf52d15d41fc2b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://graphics/npcs/merchant/NPC Merchant-idle.png"
-dest_files=["res://.godot/imported/NPC Merchant-idle.png-3c4fd5024bbdac4e15348e2e0dcfeb5a.ctex"]
+source_file="res://graphics/npcs/merchant/vendor structure - naked.png"
+dest_files=["res://.godot/imported/vendor structure - naked.png-fb45d1e3d0020389bfbf52d15d41fc2b.ctex"]
 
 [params]
 

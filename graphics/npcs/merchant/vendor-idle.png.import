@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://y5ygk3ds5ko5"
-path="res://.godot/imported/NPC Merchant-interaction-loop.png-7aa9555db57b68096236c62180e51d2e.ctex"
+uid="uid://7j7q1xpbbswh"
+path="res://.godot/imported/vendor-idle.png-2fa1a61c71a5fb9c258a8a4e7e770f69.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://graphics/npcs/merchant/NPC Merchant-interaction-loop.png"
-dest_files=["res://.godot/imported/NPC Merchant-interaction-loop.png-7aa9555db57b68096236c62180e51d2e.ctex"]
+source_file="res://graphics/npcs/merchant/vendor-idle.png"
+dest_files=["res://.godot/imported/vendor-idle.png-2fa1a61c71a5fb9c258a8a4e7e770f69.ctex"]
 
 [params]
 

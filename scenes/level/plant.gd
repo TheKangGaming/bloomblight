@@ -156,16 +156,18 @@ func setup(seed_enum: Global.Items, grid_position: Vector2i):
 
 func grow(watered: bool):
 		if watered:
-			age = min(age + grow_speed, max_age)
-			var origin = plant_data[plant_type]['origin']
-			var current_x = origin.x + int(age)
-		
-			crop_sprite.frame_coords = Vector2i(current_x, origin.y)
+			advance_growth()
 			
 		if age >= max_age:
 			if not sparkle_fx.visible:
 				sparkle_fx.visible = true
 				sparkle_fx.play("sparkle")
+
+func advance_growth() -> void:
+	age = min(age + grow_speed, max_age)
+	var origin = plant_data[plant_type]['origin']
+	var current_x = origin.x + int(age)
+	crop_sprite.frame_coords = Vector2i(current_x, origin.y)
 
 func force_mature() -> void:
 	await _play_bloom_feedback()

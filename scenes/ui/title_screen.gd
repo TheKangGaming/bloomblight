@@ -6,7 +6,6 @@ extends Control
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var atmosphere_particles: GPUParticles2D = $AtmosphereParticles
 
-const DEMO_STORY_CARD_SCENE := preload("res://scenes/ui/demo_story_card.tscn")
 const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
 const GAME_SCENE_PATH := "res://scenes/level/game.tscn"
 
@@ -74,20 +73,8 @@ func _on_start_pressed() -> void:
 	settings_button.disabled = true
 	quit_button.disabled = true
 
-	if DemoDirector:
-		DemoDirector.begin_new_demo()
-
-	var card = DEMO_STORY_CARD_SCENE.instantiate()
-	add_child(card)
-	card.configure({
-		"title": "A Patch of Dirt",
-		"body": "Savannah was a soldier in the army hunting Tera - until she chose to desert and save her instead.\n\nThey've been running for hours. Deep in the blighted wilds, they've stumbled onto an old farmstead that hasn't turned to ash yet. The search parties are still out there, and the Blight is closing in. For now, they just need to stay alive.",
-		"confirm_hint": "start the demo",
-		"skip_hint": "skip intro",
-		"allow_skip": true
-	})
-	card.confirmed.connect(_begin_demo_scene_transition)
-	card.skipped.connect(_begin_demo_scene_transition)
+	Global.begin_loop_hub_run()
+	_begin_demo_scene_transition()
 
 func _begin_demo_scene_transition() -> void:
 	TransitionManager.change_scene_path(GAME_SCENE_PATH)

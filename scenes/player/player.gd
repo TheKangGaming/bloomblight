@@ -92,7 +92,7 @@ func get_input():
 		current_speed = walk_speed
 
 	if Input.is_action_just_pressed('action'):
-		if Global.unlocked_tools.has(Global.Tools.HOE):
+		if not Global.unlocked_tools.is_empty():
 			var player_center = global_position + Vector2(0, -chest_offset)
 			var target_pos = player_center + (last_direction * tool_direction_offset)
 			tool_state_machine.travel(tool_connection[current_tool])

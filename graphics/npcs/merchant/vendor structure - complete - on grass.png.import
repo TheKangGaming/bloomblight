@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c42b2aq1m7r0g"
-path="res://.godot/imported/NPC Merchant-interaction-entry.png-90d4d2c7bf60672ef4725959fda63ddb.ctex"
+uid="uid://duiuqiwtk6uyf"
+path="res://.godot/imported/vendor structure - complete - on grass.png-dd5e7560f0315d0bde319950ca23e20b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://graphics/npcs/merchant/NPC Merchant-interaction-entry.png"
-dest_files=["res://.godot/imported/NPC Merchant-interaction-entry.png-90d4d2c7bf60672ef4725959fda63ddb.ctex"]
+source_file="res://graphics/npcs/merchant/vendor structure - complete - on grass.png"
+dest_files=["res://.godot/imported/vendor structure - complete - on grass.png-dd5e7560f0315d0bde319950ca23e20b.ctex"]
 
 [params]
 

@@ -1,19 +1,19 @@
 extends Node2D
 
-const FRAME_SIZE := Vector2i(110, 110)
+const FRAME_SIZE := Vector2i(128, 128)
 
-const IDLE_TEXTURE := preload("res://graphics/npcs/merchant/NPC Merchant-idle.png")
-const ENTRY_TEXTURE := preload("res://graphics/npcs/merchant/NPC Merchant-interaction-entry.png")
-const LOOP_TEXTURE := preload("res://graphics/npcs/merchant/NPC Merchant-interaction-loop.png")
-const REST_TEXTURE := preload("res://graphics/npcs/merchant/NPC Merchant-interaction-rest.png")
+const IDLE_TEXTURE := preload("res://graphics/npcs/merchant/vendor-idle.png")
+const ENTRY_TEXTURE := IDLE_TEXTURE
+const LOOP_TEXTURE := IDLE_TEXTURE
+const REST_TEXTURE := IDLE_TEXTURE
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 func _ready() -> void:
 	_build_animation(&"idle", IDLE_TEXTURE, 8, true, 8.0)
-	_build_animation(&"entry", ENTRY_TEXTURE, 8, false, 10.0)
-	_build_animation(&"loop", LOOP_TEXTURE, 32, true, 12.0)
-	_build_animation(&"rest", REST_TEXTURE, 4, false, 8.0)
+	_build_animation(&"entry", ENTRY_TEXTURE, 8, false, 8.0)
+	_build_animation(&"loop", LOOP_TEXTURE, 8, true, 8.0)
+	_build_animation(&"rest", REST_TEXTURE, 8, false, 8.0)
 	play_idle()
 
 func face_side(face_right: bool) -> void:

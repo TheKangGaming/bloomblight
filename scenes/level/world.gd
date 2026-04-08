@@ -2,7 +2,7 @@ extends Node2D
 
 const TERRAIN_COLLISION_LAYER := 1
 const DEFAULT_MAP_TILE_SIZE := Vector2i(32, 32)
-const DEFAULT_MAP_DIMENSIONS := Vector2i(80, 60)
+const DEFAULT_MAP_DIMENSIONS := Vector2i(60, 54)
 const PROP_Y_SORT_LAYERS := ["Decoration", "Obstacles"]
 
 @export var map_dimensions_tiles := DEFAULT_MAP_DIMENSIONS
