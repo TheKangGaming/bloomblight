@@ -237,13 +237,13 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nPress {inventory} to open the menu, switch to the Status tab, review the meal buff, then close the menu when you're ready to continue."
 		"battle_savannah":
 			title = "Tutorial: Savannah"
-			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to act."
+			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to act.\n\nKeep her between the enemy and the rest of the party."
 		"battle_silas":
 			title = "Tutorial: Silas"
-			template = "Silas attacks from range.\n\nKeep him behind Savannah."
+			template = "Silas attacks from range.\n\nKeep him behind Savannah and let him shoot from safety."
 		"battle_tera_bloom":
 			title = "Tutorial: Tera"
-			template = "Tera is fragile.\n\nUse Bloom to grow Healflowers."
+			template = "Tera is fragile but powerful.\n\nUse Bloom to grow Healflowers near the fight."
 		"battle_harvest":
 			title = "Tutorial: Harvest"
 			template = "Move Savannah next to a Healflower and choose Harvest to restore HP."
