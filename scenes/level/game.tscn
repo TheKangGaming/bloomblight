@@ -2607,8 +2607,8 @@ size = Vector2(420, 180)
 y_sort_enabled = true
 script = ExtResource("1_f2w0s")
 daytime_gradient = SubResource("Gradient_ig4jx")
-metadata/_edit_vertical_guides_ = [0.0, 2560.0]
-metadata/_edit_horizontal_guides_ = [1920.0, 0.0]
+metadata/_edit_vertical_guides_ = [0.0, 1920.0]
+metadata/_edit_horizontal_guides_ = [1728.0, 0.0]
 
 [node name="World" parent="." unique_id=300117719 instance=ExtResource("2_3ny2s")]
 
@@ -2630,7 +2630,7 @@ grant_glazed_carrots_recipe = false
 reward_popup_text = "+ Old Tools!"
 
 [node name="Player" parent="Objects" unique_id=1926952309 instance=ExtResource("1_e6yxx")]
-position = Vector2(1036, 1492)
+position = Vector2(970, 1674)
 scale = Vector2(1.5, 1.5)
 metadata/_edit_horizontal_guides_ = [-16.0]
 
@@ -2649,32 +2649,17 @@ visual_offset = Vector2(0, -12)
 y_sort_enabled = true
 position = Vector2(-5, 78)
 
-[node name="Tree" parent="Objects/Trees" unique_id=288341825 instance=ExtResource("5_qrcxb")]
-position = Vector2(749, 1122)
-
 [node name="Tree10" parent="Objects/Trees" unique_id=1866142504 instance=ExtResource("5_qrcxb")]
-position = Vector2(772, 969)
-
-[node name="Tree4" parent="Objects/Trees" unique_id=496755013 instance=ExtResource("5_qrcxb")]
-position = Vector2(1777, 853)
-
-[node name="Tree11" parent="Objects/Trees" unique_id=1547475504 instance=ExtResource("5_qrcxb")]
-position = Vector2(1661, 1063)
+position = Vector2(768, 922)
 
 [node name="Tree2" parent="Objects/Trees" unique_id=1495150000 instance=ExtResource("5_qrcxb")]
 position = Vector2(1390, 451)
-
-[node name="Tree3" parent="Objects/Trees" unique_id=930810458 instance=ExtResource("5_qrcxb")]
-position = Vector2(883, 794)
 
 [node name="Tree9" parent="Objects/Trees" unique_id=2072042373 instance=ExtResource("5_qrcxb")]
 position = Vector2(761, 745)
 
 [node name="Tree6" parent="Objects/Trees" unique_id=860554321 instance=ExtResource("5_qrcxb")]
-position = Vector2(1406, 1120)
-
-[node name="Tree7" parent="Objects/Trees" unique_id=1409322427 instance=ExtResource("5_qrcxb")]
-position = Vector2(1261, 1128)
+position = Vector2(1582, 1231)
 
 [node name="Tree8" parent="Objects/Trees" unique_id=717149509 instance=ExtResource("5_qrcxb")]
 position = Vector2(1207, 548)
@@ -2683,14 +2668,17 @@ position = Vector2(1207, 548)
 position = Vector2(1188, 424)
 
 [node name="Sign" parent="Objects" unique_id=663850889 instance=ExtResource("13_lw8he")]
+visible = false
 position = Vector2(961, 1183)
 sign_text = "The southern road is gone. Blight swallowed it whole."
 
 [node name="Sign2" parent="Objects" unique_id=1868326030 instance=ExtResource("13_lw8he")]
+visible = false
 position = Vector2(957, 874)
 sign_text = "Abandoned fields ahead. Shelter, if the roof still holds."
 
 [node name="RegularSign" type="StaticBody2D" parent="Objects" unique_id=1859774796]
+visible = false
 y_sort_enabled = true
 
 [node name="Sign5" type="Sprite2D" parent="Objects/RegularSign" unique_id=390230266]

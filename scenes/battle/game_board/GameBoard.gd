@@ -186,7 +186,19 @@ func _get_configuration_warning() -> String:
 
 
 func is_occupied(cell: Vector2) -> bool:
-	return _units.has(cell)
+	return _get_unit_at_cell(cell) != null
+
+
+func _get_unit_at_cell(cell: Vector2) -> Unit:
+	if not _units.has(cell):
+		return null
+
+	var unit := _units[cell] as Unit
+	if unit == null or not is_instance_valid(unit):
+		_units.erase(cell)
+		return null
+
+	return unit
 
 
 func _is_cell_blocked(cell: Vector2) -> bool:
@@ -411,6 +423,30 @@ func _reinitialize() -> void:
 		if not unit.died.is_connected(_on_unit_died):
 			unit.died.connect(_on_unit_died)
 
+	if Global.loop_hub_mode_active:
+		_apply_loop_battle_perk()
+
+func _apply_loop_battle_perk() -> void:
+	var perk_stats: Dictionary = Global.consume_loop_equipped_perk_stats()
+	if perk_stats.is_empty():
+		return
+
+	var unit_delta := {}
+	for raw_key in perk_stats.keys():
+		unit_delta[raw_key] = int(perk_stats[raw_key])
+	var vitality_bonus := int(perk_stats.get("VIT", 0)) * 2
+	if vitality_bonus > 0:
+		unit_delta["MAX_HP"] = int(unit_delta.get("MAX_HP", 0)) + vitality_bonus
+		unit_delta["HP"] = int(unit_delta.get("HP", 0)) + vitality_bonus
+	unit_delta.erase("VIT")
+
+	for unit_variant in _units.values():
+		var unit := unit_variant as Unit
+		if unit == null or unit.is_enemy or unit.current_stats == null:
+			continue
+		unit.current_stats.apply_delta(unit_delta)
+		unit.current_stats.clamp_to_caps()
+
 func _flood_fill(cell: Vector2, max_distance: int) -> Array:
 	var full_array := []
 	var wall_array := []
@@ -525,10 +561,11 @@ func _unit_can_freely_move(unit: Unit) -> bool:
 
 
 func _select_unit(cell: Vector2) -> void:
-	if not _units.has(cell):
+	var selected_unit := _get_unit_at_cell(cell)
+	if selected_unit == null:
 		return
 
-	_active_unit = _units[cell]
+	_active_unit = selected_unit
 	_prev_cell = cell
 	_prev_position = _active_unit.position
 	_active_unit.is_selected = true
@@ -602,9 +639,8 @@ func _begin_attack_preview_on_target(target_unit: Unit) -> void:
 		_complete_demo_first_action()
 
 func _hover_display(cell: Vector2) -> void:
-	if is_occupied(cell):
-		var curr_unit = _units[cell]
-		
+	var curr_unit := _get_unit_at_cell(cell)
+	if curr_unit != null:
 		_walkable_cells = get_walkable_cells(curr_unit)
 		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range, curr_unit)
 		_unit_overlay.clear() 
@@ -872,12 +908,13 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 			_unit_path.stop()
 			
 	else:
-		if _units.has(new_cell):
-			_show_unit_hover_tooltip(_units[new_cell], new_cell)
+		var hovered_unit := _get_unit_at_cell(new_cell)
+		if hovered_unit != null:
+			_show_unit_hover_tooltip(hovered_unit, new_cell)
 		else:
 			_hide_unit_hover_tooltip()
 
-		if _units.has(new_cell) and not _units[new_cell].is_wait:
+		if hovered_unit != null and not hovered_unit.is_wait:
 			_hover_display(new_cell)
 		else:
 			_unit_overlay.clear()
@@ -1543,7 +1580,7 @@ func _show_results_screen(is_victory: bool) -> void:
 	_cursor.is_active = false 
 	
 	if MusicManager and MusicManager.has_method("fade_to_silence"):
-		MusicManager.fade_to_silence(1.5)
+		MusicManager.fade_to_silence(0.5)
 	
 	if is_instance_valid(_results_canvas):
 		_results_canvas.queue_free()
@@ -1589,14 +1626,14 @@ func _show_results_screen(is_victory: bool) -> void:
 	vbox.add_child(title)
 	
 	var stats = Label.new()
-	stats.text = "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
+	stats.text = _build_results_summary_text(is_victory)
 	stats.add_theme_font_size_override("font_size", 38)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(stats)
 	
 	# 5. A Much Bigger, Unmissable Button
 	var btn = Button.new()
-	btn.text = "Return to Farm"
+	btn.text = "Return to Settlement" if Global.loop_hub_mode_active else "Return to Farm"
 	btn.focus_mode = Control.FOCUS_ALL
 	btn.add_theme_font_size_override("font_size", 40)
 	btn.custom_minimum_size = Vector2(540, 104)
@@ -1607,8 +1644,26 @@ func _show_results_screen(is_victory: bool) -> void:
 	
 	vbox.modulate.a = 0
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(bg, "color:a", 0.85, 1.5)
-	tween.tween_property(vbox, "modulate:a", 1.0, 1.5)
+	tween.tween_property(bg, "color:a", 0.85, 0.45)
+	tween.tween_property(vbox, "modulate:a", 1.0, 0.45)
+
+func _build_results_summary_text(is_victory: bool) -> String:
+	if Global.loop_hub_mode_active:
+		if is_victory:
+			var current_battle_index: int = maxi(Global.loop_battle_index, 1)
+			var bp_rewards: Array[int] = [8, 10, 12, 14, 20]
+			var gold_rewards: Array[int] = [4, 6, 8, 10, 14]
+			var reward_index: int = current_battle_index - 1
+			var bp_reward: int = bp_rewards[reward_index] if reward_index < bp_rewards.size() else bp_rewards.back() + ((reward_index - bp_rewards.size() + 1) * 2)
+			var gold_reward: int = (gold_rewards[reward_index] if reward_index < gold_rewards.size() else gold_rewards.back() + ((reward_index - gold_rewards.size() + 1) * 2)) + (_enemies_defeated * 2)
+			return "Enemies Defeated: %d\n\nRewards:\n+ %d BP\n+ %d Gold" % [_enemies_defeated, bp_reward, gold_reward]
+
+		var lost_gold: int = mini(int(ceil(float(Global.loop_gold) * 0.25)), Global.loop_gold)
+		var lost_wood: int = mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * 0.25)), int(Global.inventory.get(Global.Items.WOOD, 0)))
+		var lost_stone: int = mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * 0.25)), int(Global.inventory.get(Global.Items.STONE, 0)))
+		return "Enemies Defeated: %d\n\nRaid Losses:\n- %d Gold\n- %d Wood\n- %d Stone" % [_enemies_defeated, lost_gold, lost_wood, lost_stone]
+
+	return "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
 	
 func _on_return_button_pressed(btn: Button) -> void:
 	btn.disabled = true
@@ -1640,6 +1695,12 @@ func _on_return_button_pressed(btn: Button) -> void:
 		var hud = farm.get_node_or_null("CanvasLayer/DayTimeHUD")
 		if farm.has_method("resume_after_combat"):
 			farm.resume_after_combat()
+
+		if Global.loop_hub_mode_active and farm.has_method("handle_loop_battle_result"):
+			farm.handle_loop_battle_result(is_victory, _enemies_defeated)
+			Global.saved_farm_scene = null
+			get_parent().queue_free()
+			return
 		
 		if is_victory:
 			# ==========================================

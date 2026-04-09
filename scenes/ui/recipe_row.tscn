@@ -15,9 +15,10 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
 text = "Recipe"
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="IngredientsLabel" type="Label" parent="." unique_id=423577794]
-custom_minimum_size = Vector2(460, 56)
+custom_minimum_size = Vector2(420, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
@@ -26,7 +27,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="BuffLabel" type="Label" parent="." unique_id=1124289663]
-custom_minimum_size = Vector2(300, 56)
+custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22

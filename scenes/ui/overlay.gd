@@ -50,11 +50,11 @@ func _on_player_tool_changed(tool: Global.Tools) -> void:
 func _setup_quest_ui() -> void:
 	var margin = MarginContainer.new()
 	margin.name = "QuestUI"
-	margin.anchor_left = 0.5
-	margin.anchor_right = 0.5
+	margin.anchor_left = 0.0
+	margin.anchor_right = 0.0
 	margin.anchor_top = 0.0
 	margin.anchor_bottom = 0.0
-	margin.position = Vector2(-220, 20)
+	margin.position = Vector2(20, 20)
 	margin.custom_minimum_size = Vector2(440, 0)
 
 	var panel = PanelContainer.new()
@@ -100,11 +100,11 @@ func _setup_quest_ui() -> void:
 func _setup_notice_ui() -> void:
 	var margin = MarginContainer.new()
 	margin.name = "NoticeUI"
-	margin.anchor_left = 0.5
-	margin.anchor_right = 0.5
+	margin.anchor_left = 0.0
+	margin.anchor_right = 0.0
 	margin.anchor_top = 0.0
 	margin.anchor_bottom = 0.0
-	margin.position = Vector2(-220, 92)
+	margin.position = Vector2(20, 96)
 	margin.custom_minimum_size = Vector2(440, 0)
 
 	var panel = PanelContainer.new()

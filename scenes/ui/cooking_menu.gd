@@ -41,6 +41,11 @@ func _ready() -> void:
 		DemoDirector.input_mode_changed.connect(_on_input_mode_changed)
 	_refresh_subtitle()
 
+func _input(event) -> void:
+	if _handle_close_input(event):
+		close_menu()
+		get_viewport().set_input_as_handled()
+
 func open_menu() -> void:
 	if not visible:
 		visible = true
@@ -59,9 +64,14 @@ func close_menu() -> void:
 	menu_closed.emit()
 
 func _unhandled_input(event) -> void:
-	if visible and (event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel")):
+	if _handle_close_input(event):
 		close_menu()
 		get_viewport().set_input_as_handled()
+
+func _handle_close_input(event) -> bool:
+	if not visible or event == null:
+		return false
+	return event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel")
 
 func _on_inventory_updated() -> void:
 	if visible:
@@ -196,16 +206,19 @@ func _craft_item(recipe_output: Global.Items) -> void:
 	for ingredient in ingredient_data:
 		Global.inventory[ingredient] -= int(ingredient_data[ingredient])
 
-	Global.inventory[recipe_output] = int(Global.inventory.get(recipe_output, 0)) + 1
+	if Global.loop_hub_mode_active:
+		Global.set_loop_equipped_perk(recipe_output)
+	else:
+		Global.inventory[recipe_output] = int(Global.inventory.get(recipe_output, 0)) + 1
 	Global.inventory_updated.emit()
 	var ui_sounds := _ui_sound_manager()
 	if ui_sounds:
 		ui_sounds.play_accept()
 	meal_cooked.emit(recipe_output)
-	if DemoDirector:
+	if DemoDirector and not Global.loop_hub_mode_active:
 		DemoDirector.notify_meal_cooked(recipe_output)
 
-	if Global.tutorial_step == 11:
+	if not Global.loop_hub_mode_active and Global.tutorial_step == 11:
 		Global.advance_tutorial()
 
 	_refresh_recipe_rows()
@@ -222,6 +235,12 @@ func _format_item_name(item_type: Global.Items) -> String:
 
 func _refresh_subtitle() -> void:
 	if subtitle_label == null:
+		return
+	if Global.loop_hub_mode_active:
+		if DemoDirector != null and DemoDirector.current_input_mode == DemoDirector.InputMode.CONTROLLER:
+			subtitle_label.text = "Choose one meal perk for the next battle, then press %s to cook." % DemoDirector.get_confirm_label()
+		else:
+			subtitle_label.text = "Choose one meal perk for the next battle, then press E to cook."
 		return
 	if DemoDirector == null:
 		subtitle_label.text = "Cook role meals. Use Up/Down to choose a meal, then press E to cook."

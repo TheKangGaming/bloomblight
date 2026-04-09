@@ -134,6 +134,7 @@ const plant_data = {
 
 var plant_type: Global.Items
 var _is_harvesting := false
+var _visuals_pending := false
 
 func _resolve_water_layer() -> TileMapLayer:
 	var current_scene := get_tree().current_scene
@@ -147,12 +148,9 @@ func setup(seed_enum: Global.Items, grid_position: Vector2i):
 	max_age = plant_data[seed_enum]['max age']
 	grow_speed = plant_data[seed_enum]['grow speed']
 	grid_pos = grid_position
-	
-	$Sprite2D.texture = ATLAS_TEXTURE
-	$Sprite2D.hframes = HFRAMES
-	$Sprite2D.vframes = VFRAMES
-	var origin = plant_data[seed_enum]['origin']
-	$Sprite2D.frame_coords = origin
+	age = min(1.0, float(max_age))
+	_visuals_pending = true
+	_refresh_crop_visuals()
 
 func grow(watered: bool):
 		if watered:
@@ -165,21 +163,62 @@ func grow(watered: bool):
 
 func advance_growth() -> void:
 	age = min(age + grow_speed, max_age)
-	var origin = plant_data[plant_type]['origin']
-	var current_x = origin.x + int(age)
-	crop_sprite.frame_coords = Vector2i(current_x, origin.y)
+	_refresh_crop_visuals()
 
 func force_mature() -> void:
 	await _play_bloom_feedback()
 	age = max_age
-	var origin = plant_data[plant_type]['origin']
-	crop_sprite.frame_coords = Vector2i(origin.x + max_age, origin.y)
+	_refresh_crop_visuals()
+	if not sparkle_fx.visible:
+		sparkle_fx.visible = true
+		sparkle_fx.play("sparkle")
+
+
+func mature_immediately() -> void:
+	age = max_age
+	_refresh_crop_visuals()
 	if not sparkle_fx.visible:
 		sparkle_fx.visible = true
 		sparkle_fx.play("sparkle")
 	
 func _ready() -> void:
 	add_to_group('Plants')
+	_refresh_crop_visuals()
+
+
+func _refresh_crop_visuals() -> void:
+	if crop_sprite == null:
+		return
+	if not plant_data.has(plant_type):
+		return
+
+	_ensure_crop_sprite_config()
+	var origin = plant_data[plant_type]['origin']
+	var current_age := clampi(int(age), 0, max_age)
+	_set_crop_frame(Vector2i(origin.x + current_age, origin.y))
+	_visuals_pending = false
+
+
+func _ensure_crop_sprite_config() -> void:
+	if crop_sprite == null:
+		return
+
+	if crop_sprite.texture != ATLAS_TEXTURE:
+		crop_sprite.texture = ATLAS_TEXTURE
+	if crop_sprite.hframes != HFRAMES:
+		crop_sprite.hframes = HFRAMES
+	if crop_sprite.vframes != VFRAMES:
+		crop_sprite.vframes = VFRAMES
+
+
+func _set_crop_frame(frame_coords: Vector2i) -> void:
+	_ensure_crop_sprite_config()
+	if crop_sprite == null:
+		return
+
+	var safe_x := clampi(frame_coords.x, 0, maxi(crop_sprite.hframes - 1, 0))
+	var safe_y := clampi(frame_coords.y, 0, maxi(crop_sprite.vframes - 1, 0))
+	crop_sprite.frame_coords = Vector2i(safe_x, safe_y)
 
 
 func _on_area_2d_body_entered(_body: Node2D) -> void:

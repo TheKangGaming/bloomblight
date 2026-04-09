@@ -43,8 +43,10 @@ var returning_from_combat: bool = false
 var loop_hub_mode_active := false
 var loop_gold := 0
 var loop_bloom_points := 0
+var loop_battle_index := 1
 var loop_unlocked_plots: Dictionary = {}
 var loop_built_structures: Dictionary = {}
+var loop_equipped_perk_item: int = -1
 var pending_intro_forest_visit := false
 var pending_intro_forest_return := false
 var intro_forest_day_time_left := 0.0
@@ -424,7 +426,14 @@ func get_progression_save_data() -> Dictionary:
 		"resolved_encounters": resolved_encounters.duplicate(true),
 		"player_level": get_player_level(),
 		"player_class_name": get_player_class_name(),
-		"known_recipes": known_recipes.duplicate()
+		"known_recipes": known_recipes.duplicate(),
+		"loop_hub_mode_active": loop_hub_mode_active,
+		"loop_gold": loop_gold,
+		"loop_bloom_points": loop_bloom_points,
+		"loop_battle_index": loop_battle_index,
+		"loop_unlocked_plots": loop_unlocked_plots.duplicate(true),
+		"loop_built_structures": loop_built_structures.duplicate(true),
+		"loop_equipped_perk_item": loop_equipped_perk_item
 	}
 
 func apply_progression_save_data(save_data: Dictionary) -> void:
@@ -437,8 +446,20 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 	set_player_level(int(save_data.get("player_level", get_player_level())))
 	set_player_class_name(String(save_data.get("player_class_name", get_player_class_name())))
 	_migrate_known_recipes_from_save(save_data)
+	loop_hub_mode_active = bool(save_data.get("loop_hub_mode_active", loop_hub_mode_active))
+	loop_gold = int(save_data.get("loop_gold", loop_gold))
+	loop_bloom_points = int(save_data.get("loop_bloom_points", loop_bloom_points))
+	loop_battle_index = maxi(int(save_data.get("loop_battle_index", loop_battle_index)), 1)
+	var saved_loop_plots = save_data.get("loop_unlocked_plots", loop_unlocked_plots)
+	if saved_loop_plots is Dictionary:
+		loop_unlocked_plots = saved_loop_plots.duplicate(true)
+	var saved_loop_structures = save_data.get("loop_built_structures", loop_built_structures)
+	if saved_loop_structures is Dictionary:
+		loop_built_structures = saved_loop_structures.duplicate(true)
+	loop_equipped_perk_item = int(save_data.get("loop_equipped_perk_item", loop_equipped_perk_item))
 	inventory_updated.emit()
 	update_tutorial_ui()
+	loop_state_changed.emit()
 
 func _migrate_known_recipes_from_save(save_data: Dictionary) -> void:
 	if not save_data.has("known_recipes"):
@@ -485,8 +506,10 @@ func reset_demo_state() -> void:
 	loop_hub_mode_active = false
 	loop_gold = 0
 	loop_bloom_points = 0
+	loop_battle_index = 1
 	loop_unlocked_plots.clear()
 	loop_built_structures.clear()
+	loop_equipped_perk_item = -1
 	pending_intro_forest_visit = false
 	pending_intro_forest_return = false
 	intro_forest_day_time_left = 0.0
@@ -519,9 +542,10 @@ func begin_loop_hub_run() -> void:
 	reset_demo_state()
 	loop_hub_mode_active = true
 	loop_gold = 0
-	loop_bloom_points = 15
+	loop_bloom_points = 0
+	loop_battle_index = 1
 	loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
-	inventory[Items.WOOD] = 10
+	inventory[Items.WOOD] = 0
 	inventory[Items.STONE] = 0
 	inventory[Items.CARROT_SEED] = 4
 	inventory[Items.PARSNIP_SEED] = 4
@@ -551,6 +575,69 @@ func is_loop_structure_built(structure_id: StringName) -> bool:
 func build_loop_structure(structure_id: StringName) -> void:
 	loop_built_structures[String(structure_id)] = true
 	loop_state_changed.emit()
+
+func add_loop_gold(amount: int) -> void:
+	if amount == 0:
+		return
+	loop_gold = maxi(loop_gold + amount, 0)
+	loop_state_changed.emit()
+
+func add_loop_bloom_points(amount: int) -> void:
+	if amount == 0:
+		return
+	loop_bloom_points = maxi(loop_bloom_points + amount, 0)
+	loop_state_changed.emit()
+
+func spend_loop_gold(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if loop_gold < amount:
+		return false
+	loop_gold -= amount
+	loop_state_changed.emit()
+	return true
+
+func spend_loop_bloom_points(amount: int) -> bool:
+	if amount <= 0:
+		return true
+	if loop_bloom_points < amount:
+		return false
+	loop_bloom_points -= amount
+	loop_state_changed.emit()
+	return true
+
+func set_loop_equipped_perk(recipe_item: Items) -> void:
+	loop_equipped_perk_item = int(recipe_item)
+	loop_state_changed.emit()
+
+func clear_loop_equipped_perk() -> void:
+	if loop_equipped_perk_item == -1:
+		return
+	loop_equipped_perk_item = -1
+	loop_state_changed.emit()
+
+func has_loop_equipped_perk() -> bool:
+	return loop_equipped_perk_item >= 0
+
+func get_loop_equipped_perk_item() -> int:
+	return loop_equipped_perk_item
+
+func get_loop_equipped_perk_label() -> String:
+	if not has_loop_equipped_perk():
+		return "None"
+	var recipe_data: Dictionary = recipes.get(loop_equipped_perk_item, {})
+	var item_keys := Items.keys()
+	var fallback_name := "Unknown"
+	if loop_equipped_perk_item >= 0 and loop_equipped_perk_item < item_keys.size():
+		fallback_name = String(item_keys[loop_equipped_perk_item])
+	return String(recipe_data.get("display_name", fallback_name))
+
+func consume_loop_equipped_perk_stats() -> Dictionary:
+	if not has_loop_equipped_perk():
+		return {}
+	var perk_item := loop_equipped_perk_item
+	clear_loop_equipped_perk()
+	return food_stats.get(perk_item, {}).duplicate(true)
 
 func remove_item(item_type: Items, amount: int = 1) -> bool:
 	if inventory.get(item_type, 0) >= amount:

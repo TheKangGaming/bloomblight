@@ -40,10 +40,16 @@ const CUTSCENE_GROUP_ZOOM := Vector2(1.7, 1.7)
 const CUTSCENE_CLOSE_ZOOM := Vector2(1.9, 1.9)
 const LOOP_START_PLAYER_POS := Vector2(960, 1536)
 const LOOP_CAMPFIRE_POS := Vector2(960, 1438)
+const LOOP_BRIDGE_BATTLE_POS := Vector2(960, 1656)
 const LOOP_PLOT_SIZE := Vector2(640.0, 480.0)
 const LOOP_PURIFY_VFX_TEXTURE: Texture2D = preload("res://graphics/animations/vfx/Fantasy Spells/spell_heal_001/spell_heal_001_large_green/spritesheet.png")
 const LOOP_MERCHANT_NAKED_TEXTURE := preload("res://graphics/npcs/merchant/vendor structure - naked.png")
 const LOOP_MERCHANT_COMPLETE_TEXTURE := preload("res://graphics/npcs/merchant/vendor structure - complete - on grass.png")
+const LOOP_PURIFY_SFX := preload("res://audio/sfx/Spell Impact 1.wav")
+const LOOP_INTERACTION_RADIUS_PLOT := 96.0
+const LOOP_INTERACTION_RADIUS_STRUCTURE := 88.0
+const LOOP_PLOT_INTERACTION_EDGE_MARGIN := 64.0
+const LOOP_BRIDGE_BATTLE_SCENE := "res://scenes/level/forest_battle.tscn"
 const LOOP_PLOT_MERCHANT := &"merchant"
 const LOOP_PLOT_STARTING_FARM := &"starting_farm"
 const LOOP_PLOT_FOREST := &"forest"
@@ -54,6 +60,15 @@ const LOOP_PLOT_WATCHTOWER := &"watchtower"
 const LOOP_PLOT_QUARRY := &"quarry"
 const LOOP_PLOT_BLOOM_SHRINE := &"bloom_shrine"
 const LOOP_MERCHANT_BUILD_WOOD_COST := 8
+const LOOP_CABIN_UNLOCK_BP_COST := 12
+const LOOP_BATTLE_BP_REWARDS: Array[int] = [8, 10, 12, 14, 20]
+const LOOP_BATTLE_GOLD_REWARDS: Array[int] = [4, 6, 8, 10, 14]
+const LOOP_BATTLE_BP_BASE_REWARD := 8
+const LOOP_BATTLE_GOLD_BASE_REWARD := 4
+const LOOP_BATTLE_BP_STEP := 2
+const LOOP_BATTLE_GOLD_STEP := 2
+const LOOP_POST_BATTLE_GROWTH_TICKS := 2
+const LOOP_RAID_LOSS_RATIO := 0.25
 const LOOP_SEED_SHOP := {
 	Global.Items.CARROT_SEED: {"cost": 3, "label": "Carrot Seeds x1"},
 	Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
@@ -71,16 +86,17 @@ const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(640, 0), LOOP_PLOT_SIZE), "unlock_cost": 7},
 	LOOP_PLOT_BLOOM_SHRINE: {"rect": Rect2(Vector2(1280, 0), LOOP_PLOT_SIZE), "unlock_cost": 9},
 	LOOP_PLOT_GARDEN: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 6},
-	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": 5},
+	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": LOOP_CABIN_UNLOCK_BP_COST},
 	LOOP_PLOT_WORKSHOP: {"rect": Rect2(Vector2(1280, 480), LOOP_PLOT_SIZE), "unlock_cost": 8},
-	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 3},
+	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 8},
 	LOOP_PLOT_STARTING_FARM: {"rect": Rect2(Vector2(640, 960), LOOP_PLOT_SIZE), "unlock_cost": 0},
-	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 4},
+	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 10},
 }
 const LOOP_INTERACTION_POINTS := {
 	LOOP_PLOT_MERCHANT: Vector2(700, 1200),
 	LOOP_PLOT_FOREST: Vector2(1220, 1200),
 	LOOP_PLOT_CABIN: Vector2(960, 980),
+	&"bridge_battle": LOOP_BRIDGE_BATTLE_POS,
 }
 const LOOP_MERCHANT_STRUCTURE_POS := Vector2(360, 1216)
 const LOOP_MERCHANT_NPC_POS := Vector2(374, 1288)
@@ -166,12 +182,18 @@ var _merchant_sequence_started := false
 var _loop_plot_cover_root: Node2D = null
 var _loop_plot_cover_polygons: Dictionary = {}
 var _loop_plot_cover_bodies: Dictionary = {}
+var _loop_plot_outline_lines: Dictionary = {}
 var _loop_merchant_structure_naked: Sprite2D = null
 var _loop_merchant_structure_complete: Sprite2D = null
 var _loop_merchant_menu: PanelContainer = null
 var _loop_merchant_status: Label = null
 var _loop_merchant_actions: VBoxContainer = null
 var _loop_spawned_forest_nodes: Array[Node2D] = []
+var _loop_hud_root: PanelContainer = null
+var _loop_hud_stats_label: Label = null
+var _loop_hud_perk_label: Label = null
+var _loop_prompt_root: PanelContainer = null
+var _loop_prompt_label: Label = null
 
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
@@ -227,8 +249,8 @@ func _setup_loop_hub_mode() -> void:
 	if story_markers != null:
 		story_markers.visible = false
 	if story_chest != null:
-		story_chest.visible = false
-		story_chest.process_mode = Node.PROCESS_MODE_DISABLED
+		story_chest.queue_free()
+		story_chest = null
 	if tera_actor != null:
 		tera_actor.visible = false
 	if silas_actor != null:
@@ -251,12 +273,25 @@ func _setup_loop_hub_mode() -> void:
 	$GrowTimer.wait_time = _grow_timer_cycle_seconds
 	water_layer.clear()
 	_restore_player_camera()
+	_ensure_story_setpieces()
 	_ensure_loop_plot_covers()
 	_ensure_loop_merchant_nodes()
+	_ensure_loop_hud()
+	_ensure_loop_prompt()
 	_spawn_loop_forest_content()
 	_refresh_loop_plot_visuals()
 	_refresh_loop_merchant_visuals()
 	_refresh_loop_objective()
+	_refresh_loop_hud()
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud != null:
+		hud.visible = false
+		if "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
+			MusicManager.crossfade_to(hud.day_music, 0.55, -4.0)
+	if not Global.inventory_updated.is_connected(_on_loop_state_ui_changed):
+		Global.inventory_updated.connect(_on_loop_state_ui_changed)
+	if not Global.loop_state_changed.is_connected(_on_loop_state_ui_changed):
+		Global.loop_state_changed.connect(_on_loop_state_ui_changed)
 
 func _ensure_loop_plot_covers() -> void:
 	if _loop_plot_cover_root != null and is_instance_valid(_loop_plot_cover_root):
@@ -283,6 +318,22 @@ func _ensure_loop_plot_covers() -> void:
 		cover.z_index = 4
 		_loop_plot_cover_root.add_child(cover)
 		_loop_plot_cover_polygons[String(plot_id)] = cover
+
+		var outline := Line2D.new()
+		outline.name = "%sOutline" % String(plot_id)
+		outline.width = 6.0
+		outline.default_color = Color(0.72, 1.0, 0.72, 0.85)
+		outline.closed = true
+		outline.points = PackedVector2Array([
+			rect.position,
+			rect.position + Vector2(rect.size.x, 0),
+			rect.position + rect.size,
+			rect.position + Vector2(0, rect.size.y),
+		])
+		outline.visible = false
+		outline.z_index = 5
+		_loop_plot_cover_root.add_child(outline)
+		_loop_plot_outline_lines[String(plot_id)] = outline
 
 		var blocker_body := StaticBody2D.new()
 		blocker_body.name = "%sBlocker" % String(plot_id)
@@ -320,11 +371,114 @@ func _ensure_loop_merchant_nodes() -> void:
 		_merchant_actor = _merchant_actor_scene.instantiate() as Node2D
 		_merchant_actor.name = "MerchantActor"
 		_merchant_actor.position = LOOP_MERCHANT_NPC_POS
+		_merchant_actor.z_index = 2
 		_merchant_actor.visible = false
 		objects_root.add_child(_merchant_actor)
 
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
 		_build_loop_merchant_menu()
+
+func _ensure_loop_hud() -> void:
+	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
+		return
+	var canvas_layer := get_node_or_null("CanvasLayer")
+	if canvas_layer == null:
+		return
+
+	var panel := PanelContainer.new()
+	panel.name = "LoopHud"
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = -280
+	panel.offset_right = 280
+	panel.offset_top = 16
+	panel.offset_bottom = 88
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.07, 0.08, 0.92)
+	style.border_color = Color(0.72, 0.86, 0.7, 0.95)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	panel.add_theme_stylebox_override("panel", style)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	panel.add_child(margin)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 4)
+	margin.add_child(layout)
+
+	_loop_hud_stats_label = Label.new()
+	_loop_hud_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loop_hud_stats_label.add_theme_font_size_override("font_size", 22)
+	layout.add_child(_loop_hud_stats_label)
+
+	_loop_hud_perk_label = Label.new()
+	_loop_hud_perk_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loop_hud_perk_label.add_theme_font_size_override("font_size", 18)
+	layout.add_child(_loop_hud_perk_label)
+
+	canvas_layer.add_child(panel)
+	_loop_hud_root = panel
+
+func _ensure_loop_prompt() -> void:
+	if _loop_prompt_root != null and is_instance_valid(_loop_prompt_root):
+		return
+	var canvas_layer := get_node_or_null("CanvasLayer")
+	if canvas_layer == null:
+		return
+
+	var panel := PanelContainer.new()
+	panel.name = "LoopInteractionPrompt"
+	panel.visible = false
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.07, 0.94)
+	style.border_color = Color(0.84, 0.92, 0.7, 0.95)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	panel.add_theme_stylebox_override("panel", style)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	panel.add_child(margin)
+
+	var label := Label.new()
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 20)
+	margin.add_child(label)
+
+	canvas_layer.add_child(panel)
+	_loop_prompt_root = panel
+	_loop_prompt_label = label
+
+func _on_loop_state_ui_changed() -> void:
+	_refresh_loop_merchant_menu()
+	_refresh_loop_objective()
+	_refresh_loop_hud()
 
 func _build_loop_merchant_menu() -> void:
 	var canvas_layer := get_node_or_null("CanvasLayer")
@@ -382,6 +536,11 @@ func _build_loop_merchant_menu() -> void:
 	_loop_merchant_actions.add_theme_constant_override("separation", 6)
 	layout.add_child(_loop_merchant_actions)
 
+	var close_button := Button.new()
+	close_button.text = "Close"
+	close_button.pressed.connect(_close_loop_merchant_menu)
+	layout.add_child(close_button)
+
 	var close_hint := Label.new()
 	close_hint.text = "Press Cancel to close"
 	close_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -397,10 +556,12 @@ func _refresh_loop_merchant_menu() -> void:
 	if _loop_merchant_status == null or _loop_merchant_actions == null:
 		return
 
-	_loop_merchant_status.text = "Gold: %d\nBloom: %d\nWood: %d" % [
+	_loop_merchant_status.text = "Gold: %d\nBP: %d\nWood: %d\nStone: %d\nPerk: %s" % [
 		Global.loop_gold,
 		Global.loop_bloom_points,
-		int(Global.inventory.get(Global.Items.WOOD, 0))
+		int(Global.inventory.get(Global.Items.WOOD, 0)),
+		int(Global.inventory.get(Global.Items.STONE, 0)),
+		Global.get_loop_equipped_perk_label()
 	]
 
 	for child in _loop_merchant_actions.get_children():
@@ -468,21 +629,44 @@ func _refresh_loop_merchant_visuals() -> void:
 	if _loop_merchant_structure_complete != null and is_instance_valid(_loop_merchant_structure_complete):
 		_loop_merchant_structure_complete.visible = merchant_unlocked and merchant_built
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
+		_merchant_actor.global_position = LOOP_MERCHANT_NPC_POS
+		_merchant_actor.z_index = 2
 		_merchant_actor.visible = merchant_unlocked and merchant_built
+		_merchant_actor.modulate = Color.WHITE
+		if _merchant_actor.visible and _merchant_actor.has_method("face_side"):
+			_merchant_actor.face_side(true)
 		if _merchant_actor.visible and _merchant_actor.has_method("play_idle"):
 			_merchant_actor.play_idle()
 	_refresh_loop_merchant_menu()
 
+func _refresh_loop_hud() -> void:
+	if _loop_hud_root == null or not is_instance_valid(_loop_hud_root):
+		return
+	if _loop_hud_stats_label != null:
+		_loop_hud_stats_label.text = "BP %d    Gold %d    Wood %d    Stone %d" % [
+			Global.loop_bloom_points,
+			Global.loop_gold,
+			int(Global.inventory.get(Global.Items.WOOD, 0)),
+			int(Global.inventory.get(Global.Items.STONE, 0))
+		]
+	if _loop_hud_perk_label != null:
+		_loop_hud_perk_label.text = "Next Battle Perk: %s" % Global.get_loop_equipped_perk_label()
+
 func _refresh_loop_objective() -> void:
-	var objective := "Purify the merchant plot. Bloom: %d  Gold: %d" % [Global.loop_bloom_points, Global.loop_gold]
+	var objective := "Fight your first battle at the bridge to earn BP."
+	if Global.loop_battle_index > 1:
+		objective = "Purify the merchant plot. BP: %d  Gold: %d" % [Global.loop_bloom_points, Global.loop_gold]
 	if Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-		objective = "Build the merchant wagon with %d Wood. Wood: %d" % [LOOP_MERCHANT_BUILD_WOOD_COST, int(Global.inventory.get(Global.Items.WOOD, 0))]
-	elif Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON) and not Global.has_loop_plot(LOOP_PLOT_FOREST):
-		objective = "Purify the forest plot to recruit Silas. Bloom: %d" % Global.loop_bloom_points
+		objective = "Purify the forest plot to find wood for the wagon. BP: %d  Wood: %d" % [Global.loop_bloom_points, int(Global.inventory.get(Global.Items.WOOD, 0))]
+	elif Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.has_loop_plot(LOOP_PLOT_FOREST):
+		objective = "Purify the forest plot to recruit Silas. BP: %d" % Global.loop_bloom_points
 	elif Global.has_loop_plot(LOOP_PLOT_FOREST) and not Global.has_loop_plot(LOOP_PLOT_CABIN):
-		objective = "Purify the center cabin plot. Bloom: %d" % Global.loop_bloom_points
+		if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
+			objective = "Use the forest's wood to repair the merchant wagon."
+		else:
+			objective = "Purify the center cabin plot. BP: %d" % Global.loop_bloom_points
 	elif Global.has_loop_plot(LOOP_PLOT_CABIN):
-		objective = "Tend crops, cook at the fire, and trade at the wagon."
+		objective = "Tend crops, cook at the fire, trade at the wagon, then head to the bridge."
 	Global.show_tutorial_text(objective)
 
 func _restore_intro_forest_day_time() -> void:
@@ -642,6 +826,7 @@ func _on_seed_menu_cancelled() -> void:
 func _process(_delta: float) -> void:
 	if Global.loop_hub_mode_active:
 		$CanvasModulate.color = daytime_gradient.sample(0.28)
+		_update_loop_interaction_ui()
 		return
 
 	var daytime_point: float = 1.0 - ($DayTimer.time_left / _day_timer_cycle_seconds)
@@ -868,6 +1053,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 		if _try_handle_loop_plot_interaction():
 			get_viewport().set_input_as_handled()
+
+func _input(event: InputEvent) -> void:
+	if not Global.loop_hub_mode_active:
+		return
+	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu) or not _loop_merchant_menu.visible:
+		return
+	if event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel"):
+		_close_loop_merchant_menu()
+		get_viewport().set_input_as_handled()
 
 func _begin_intro_sequence() -> void:
 	_intro_busy = true
@@ -1248,7 +1442,7 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 		_restore_player_camera()
 		return
 
-	if DemoDirector:
+	if DemoDirector and not Global.loop_hub_mode_active:
 		DemoDirector.prepare_day_two_battle_intro()
 
 	var scene_tree := get_tree()
@@ -1266,10 +1460,13 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	transition_layer.add_child(fade_rect)
 
 	var combat_scene = load(combat_scene_path).instantiate()
+	var combat_root := _resolve_combat_scene_root(combat_scene)
 	combat_scene.set_meta("skip_scene_music_sync", _suppress_battle_music_sync)
+	if combat_root != combat_scene:
+		combat_root.set_meta("skip_scene_music_sync", _suppress_battle_music_sync)
 	if ProgressionService != null and ProgressionService.has_method("sync_runtime_party_to_scene"):
-		ProgressionService.sync_runtime_party_to_scene(combat_scene)
-	var combat_music: AudioStreamPlayer = combat_scene.get_node_or_null("AudioStreamPlayer")
+		ProgressionService.sync_runtime_party_to_scene(combat_root)
+	var combat_music: AudioStreamPlayer = combat_root.get_node_or_null("AudioStreamPlayer")
 	if is_instance_valid(combat_music):
 		combat_music.autoplay = false
 		combat_music.stop()
@@ -1283,8 +1480,8 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	if is_instance_valid(combat_music) and combat_music.stream != null and MusicManager and MusicManager.has_method("crossfade_to"):
 		MusicManager.crossfade_to(combat_music.stream, 0.2, combat_music.volume_db)
 
-	var savannah: Node = combat_scene.get_node_or_null("GameBoard/Savannah")
-	var cursor: Node = combat_scene.get_node_or_null("GameBoard/Cursor")
+	var savannah: Node = combat_root.get_node_or_null("GameBoard/Savannah")
+	var cursor: Node = combat_root.get_node_or_null("GameBoard/Cursor")
 	if savannah != null and cursor != null and "cell" in savannah and "cell" in cursor:
 		cursor.cell = savannah.cell.round()
 		if "is_active" in cursor:
@@ -1293,12 +1490,19 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	var reveal := scene_tree.create_tween()
 	reveal.set_ease(Tween.EASE_IN_OUT)
 	reveal.set_trans(Tween.TRANS_SINE)
-	reveal.tween_interval(0.1)
-	reveal.tween_property(fade_rect, "color:a", 0.0, 0.85)
+	reveal.tween_interval(0.03)
+	reveal.tween_property(fade_rect, "color:a", 0.0, 0.35)
 	await reveal.finished
 
 	if is_instance_valid(transition_layer):
 		transition_layer.queue_free()
+
+func _resolve_combat_scene_root(combat_scene: Node) -> Node:
+	if combat_scene == null:
+		return null
+
+	var battle_root := combat_scene.get_node_or_null("BattleRoot")
+	return battle_root if battle_root != null else combat_scene
 
 func resume_after_combat() -> void:
 	_clear_intrusion_bandits()
@@ -1339,25 +1543,202 @@ func _get_active_planting_layer() -> TileMapLayer:
 	return soil_layer
 
 func _try_handle_loop_plot_interaction() -> bool:
-	var player_pos: Vector2 = player.global_position
-	if _point_in_range(player_pos, LOOP_INTERACTION_POINTS[LOOP_PLOT_MERCHANT], 84.0):
-		return _handle_loop_merchant_interaction()
-	if _point_in_range(player_pos, LOOP_INTERACTION_POINTS[LOOP_PLOT_FOREST], 84.0):
-		return _handle_loop_forest_interaction()
-	if _point_in_range(player_pos, LOOP_INTERACTION_POINTS[LOOP_PLOT_CABIN], 84.0):
-		return _handle_loop_cabin_interaction()
+	var interaction := _get_current_loop_interaction()
+	if interaction.is_empty():
+		return false
+
+	match String(interaction.get("target", "")):
+		"merchant":
+			return _handle_loop_merchant_interaction()
+		"forest":
+			return _handle_loop_forest_interaction()
+		"cabin":
+			return _handle_loop_cabin_interaction()
+		"bridge_battle":
+			return _handle_loop_bridge_battle_interaction()
 	return false
 
-func _point_in_range(player_pos: Vector2, target_point: Vector2, radius: float) -> bool:
-	return player_pos.distance_to(target_point) <= radius
+func _get_current_loop_interaction() -> Dictionary:
+	var player_pos: Vector2 = player.global_position
+	var merchant_target_pos := LOOP_INTERACTION_POINTS[LOOP_PLOT_MERCHANT]
+	var merchant_radius := LOOP_INTERACTION_RADIUS_PLOT
+	if Global.has_loop_plot(LOOP_PLOT_MERCHANT):
+		merchant_target_pos = LOOP_MERCHANT_STRUCTURE_POS
+		merchant_radius = LOOP_INTERACTION_RADIUS_STRUCTURE
+		if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
+			merchant_target_pos = LOOP_MERCHANT_NPC_POS
+
+	var interactions := [
+		{
+			"target": "merchant",
+			"point": merchant_target_pos,
+			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_MERCHANT).get("start", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_MERCHANT) else Vector2.ZERO,
+			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_MERCHANT).get("end", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_MERCHANT) else Vector2.ZERO,
+			"radius": merchant_radius,
+			"label": _build_loop_merchant_prompt(),
+			"highlight_plot": String(LOOP_PLOT_MERCHANT) if not Global.has_loop_plot(LOOP_PLOT_MERCHANT) else "",
+			"highlight_sprite": "merchant"
+		},
+		{
+			"target": "forest",
+			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_FOREST],
+			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_FOREST).get("start", Vector2.ZERO),
+			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_FOREST).get("end", Vector2.ZERO),
+			"radius": LOOP_INTERACTION_RADIUS_PLOT,
+			"label": _build_loop_forest_prompt(),
+			"highlight_plot": String(LOOP_PLOT_FOREST) if not Global.has_loop_plot(LOOP_PLOT_FOREST) else ""
+		},
+		{
+			"target": "cabin",
+			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_CABIN],
+			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_CABIN).get("start", Vector2.ZERO),
+			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_CABIN).get("end", Vector2.ZERO),
+			"radius": LOOP_INTERACTION_RADIUS_PLOT,
+			"label": _build_loop_cabin_prompt(),
+			"highlight_plot": String(LOOP_PLOT_CABIN) if not Global.has_loop_plot(LOOP_PLOT_CABIN) else ""
+		},
+		{
+			"target": "bridge_battle",
+			"point": LOOP_INTERACTION_POINTS[&"bridge_battle"],
+			"radius": 110.0,
+			"label": "%s  To Battle" % _get_loop_confirm_label()
+		}
+	]
+
+	var best_match: Dictionary = {}
+	var best_distance := INF
+	for interaction_variant in interactions:
+		var interaction: Dictionary = interaction_variant
+		var label := String(interaction.get("label", ""))
+		if label.is_empty():
+			continue
+		var point: Vector2 = _get_loop_interaction_focus_point(interaction, player_pos)
+		var radius := float(interaction.get("radius", LOOP_INTERACTION_RADIUS_PLOT))
+		var distance := _get_loop_interaction_distance(interaction, player_pos)
+		if distance > radius or distance >= best_distance:
+			continue
+		best_distance = distance
+		interaction["point"] = point
+		best_match = interaction
+
+	return best_match
+
+func _get_loop_plot_interaction_edge(plot_id: StringName) -> Dictionary:
+	var rect_variant = LOOP_PLOT_DEFS.get(plot_id, {}).get("rect", Rect2())
+	if not (rect_variant is Rect2):
+		return {}
+
+	var rect: Rect2 = rect_variant
+	var margin := LOOP_PLOT_INTERACTION_EDGE_MARGIN
+	match plot_id:
+		LOOP_PLOT_MERCHANT:
+			return {
+				"start": Vector2(rect.position.x + rect.size.x, rect.position.y + margin),
+				"end": Vector2(rect.position.x + rect.size.x, rect.position.y + rect.size.y - margin)
+			}
+		LOOP_PLOT_FOREST:
+			return {
+				"start": Vector2(rect.position.x, rect.position.y + margin),
+				"end": Vector2(rect.position.x, rect.position.y + rect.size.y - margin)
+			}
+		LOOP_PLOT_CABIN:
+			return {
+				"start": Vector2(rect.position.x + margin, rect.position.y + rect.size.y),
+				"end": Vector2(rect.position.x + rect.size.x - margin, rect.position.y + rect.size.y)
+			}
+		_:
+			return {}
+
+func _get_loop_interaction_focus_point(interaction: Dictionary, player_pos: Vector2) -> Vector2:
+	var segment_start: Vector2 = interaction.get("segment_start", Vector2.ZERO)
+	var segment_end: Vector2 = interaction.get("segment_end", Vector2.ZERO)
+	if segment_start != Vector2.ZERO or segment_end != Vector2.ZERO:
+		return Geometry2D.get_closest_point_to_segment(player_pos, segment_start, segment_end)
+	return interaction.get("point", Vector2.ZERO)
+
+func _get_loop_interaction_distance(interaction: Dictionary, player_pos: Vector2) -> float:
+	return player_pos.distance_to(_get_loop_interaction_focus_point(interaction, player_pos))
+
+func _build_loop_merchant_prompt() -> String:
+	var confirm_label := _get_loop_confirm_label()
+	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
+		return "%s  Purify Merchant Plot (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))]
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
+		return "%s  Build Wagon (%d Wood)" % [confirm_label, LOOP_MERCHANT_BUILD_WOOD_COST]
+	return "%s  Trade" % confirm_label
+
+func _build_loop_forest_prompt() -> String:
+	var confirm_label := _get_loop_confirm_label()
+	if Global.has_loop_plot(LOOP_PLOT_FOREST):
+		return ""
+	return "%s  Purify Forest (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))]
+
+func _build_loop_cabin_prompt() -> String:
+	var confirm_label := _get_loop_confirm_label()
+	if Global.has_loop_plot(LOOP_PLOT_CABIN):
+		return ""
+	return "%s  Purify Cabin (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_CABIN].get("unlock_cost", 0))]
+
+func _get_loop_confirm_label() -> String:
+	if DemoDirector != null:
+		return DemoDirector.get_confirm_label()
+	return "E"
+
+func _update_loop_interaction_ui() -> void:
+	if not player.can_move:
+		for outline_variant in _loop_plot_outline_lines.keys():
+			var frozen_outline = _loop_plot_outline_lines.get(outline_variant, null)
+			if frozen_outline != null and is_instance_valid(frozen_outline):
+				frozen_outline.visible = false
+		if _loop_prompt_root != null and is_instance_valid(_loop_prompt_root):
+			_loop_prompt_root.visible = false
+		return
+
+	if _loop_merchant_menu != null and is_instance_valid(_loop_merchant_menu) and _loop_merchant_menu.visible:
+		for outline_variant in _loop_plot_outline_lines.keys():
+			var outline = _loop_plot_outline_lines.get(outline_variant, null)
+			if outline != null and is_instance_valid(outline):
+				outline.visible = false
+		if _loop_prompt_root != null and is_instance_valid(_loop_prompt_root):
+			_loop_prompt_root.visible = false
+		return
+
+	var interaction := _get_current_loop_interaction()
+	var active_target := String(interaction.get("target", ""))
+
+	for outline_variant in _loop_plot_outline_lines.keys():
+		var outline = _loop_plot_outline_lines.get(outline_variant, null)
+		if outline != null and is_instance_valid(outline):
+			outline.visible = String(interaction.get("highlight_plot", "")) == String(outline_variant)
+
+	if _loop_merchant_structure_naked != null and is_instance_valid(_loop_merchant_structure_naked):
+		_loop_merchant_structure_naked.self_modulate = Color(1.18, 1.18, 1.18) if active_target == "merchant" else Color(1, 1, 1)
+	if _loop_merchant_structure_complete != null and is_instance_valid(_loop_merchant_structure_complete):
+		_loop_merchant_structure_complete.self_modulate = Color(1.18, 1.18, 1.18) if active_target == "merchant" else Color(1, 1, 1)
+	if _merchant_actor != null and is_instance_valid(_merchant_actor):
+		_merchant_actor.modulate = Color(1.15, 1.15, 1.15) if active_target == "merchant" else Color(1, 1, 1)
+
+	if _loop_prompt_root == null or not is_instance_valid(_loop_prompt_root) or _loop_prompt_label == null:
+		return
+	if interaction.is_empty():
+		_loop_prompt_root.visible = false
+		return
+
+	_loop_prompt_label.text = String(interaction.get("label", ""))
+	_loop_prompt_root.reset_size()
+	var focus_point: Vector2 = interaction.get("point", player.global_position)
+	var canvas_transform := get_viewport().get_canvas_transform()
+	var screen_point := canvas_transform * (focus_point + Vector2(0, -56))
+	_loop_prompt_root.position = screen_point - (_loop_prompt_root.size * 0.5)
+	_loop_prompt_root.visible = true
 
 func _handle_loop_merchant_interaction() -> bool:
 	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
 		var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))
 		if Global.loop_bloom_points < bloom_cost:
-			_show_player_notice("Need %d Bloom to purify the merchant plot." % bloom_cost)
+			_show_player_notice("Need %d BP to purify the merchant plot." % bloom_cost)
 			return true
-		Global.loop_bloom_points -= bloom_cost
+		Global.spend_loop_bloom_points(bloom_cost)
 		Global.unlock_loop_plot(LOOP_PLOT_MERCHANT)
 		_run_loop_plot_purified_feedback(LOOP_PLOT_MERCHANT)
 		_show_player_notice("A wagon frame emerges from the ash.")
@@ -1372,6 +1753,15 @@ func _handle_loop_merchant_interaction() -> bool:
 			return true
 		Global.remove_item(Global.Items.WOOD, LOOP_MERCHANT_BUILD_WOOD_COST)
 		Global.build_loop_structure(Global.LOOP_STRUCTURE_MERCHANT_WAGON)
+		if _merchant_actor != null and is_instance_valid(_merchant_actor):
+			_merchant_actor.global_position = LOOP_MERCHANT_NPC_POS
+			_merchant_actor.z_index = 2
+			_merchant_actor.visible = true
+			_merchant_actor.modulate = Color.WHITE
+			if _merchant_actor.has_method("face_side"):
+				_merchant_actor.face_side(true)
+			if _merchant_actor.has_method("play_idle"):
+				_merchant_actor.play_idle()
 		_show_player_notice("The merchant wagon is ready for trade.")
 		_refresh_loop_merchant_visuals()
 		_refresh_loop_objective()
@@ -1385,16 +1775,16 @@ func _handle_loop_forest_interaction() -> bool:
 		_show_player_notice("The forest path is open. Silas watches the tree line.")
 		return true
 
-	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT) or not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
+	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
 		_show_player_notice("Set up trading first. Then head for the forest.")
 		return true
 
 	var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))
 	if Global.loop_bloom_points < bloom_cost:
-		_show_player_notice("Need %d Bloom to purify the forest plot." % bloom_cost)
+		_show_player_notice("Need %d BP to purify the forest plot." % bloom_cost)
 		return true
 
-	Global.loop_bloom_points -= bloom_cost
+	Global.spend_loop_bloom_points(bloom_cost)
 	Global.unlock_loop_plot(LOOP_PLOT_FOREST)
 	if ProgressionService != null and ProgressionService.has_method("ensure_party_member"):
 		ProgressionService.ensure_party_member("Silas")
@@ -1416,10 +1806,10 @@ func _handle_loop_cabin_interaction() -> bool:
 
 	var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_CABIN].get("unlock_cost", 0))
 	if Global.loop_bloom_points < bloom_cost:
-		_show_player_notice("Need %d Bloom to purify the cabin plot." % bloom_cost)
+		_show_player_notice("Need %d BP to purify the cabin plot." % bloom_cost)
 		return true
 
-	Global.loop_bloom_points -= bloom_cost
+	Global.spend_loop_bloom_points(bloom_cost)
 	Global.unlock_loop_plot(LOOP_PLOT_CABIN)
 	_run_loop_plot_purified_feedback(LOOP_PLOT_CABIN)
 	_show_player_notice("The ruined cabin site stands ready at the heart of the farm.")
@@ -1427,10 +1817,82 @@ func _handle_loop_cabin_interaction() -> bool:
 	_refresh_loop_objective()
 	return true
 
+func _handle_loop_bridge_battle_interaction() -> bool:
+	_close_loop_merchant_menu()
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_show_player_notice("Crossing the bridge into the next fight...")
+	call_deferred("_start_loop_battle")
+	return true
+
+func _start_loop_battle() -> void:
+	await get_tree().create_timer(0.08, true).timeout
+	await _launch_direct_combat_scene(LOOP_BRIDGE_BATTLE_SCENE)
+
+func _get_loop_battle_reward(reward_table: Array[int], fallback_base: int, fallback_step: int) -> int:
+	var battle_offset := maxi(Global.loop_battle_index - 1, 0)
+	if battle_offset < reward_table.size():
+		return reward_table[battle_offset]
+
+	var overflow_offset := battle_offset - reward_table.size() + 1
+	return reward_table.back() + (overflow_offset * fallback_step) if not reward_table.is_empty() else fallback_base + (battle_offset * fallback_step)
+
+func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_close_loop_merchant_menu()
+	_refresh_loop_merchant_visuals()
+	_refresh_loop_plot_visuals()
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud != null and "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
+		MusicManager.crossfade_to(hud.day_music, 0.25, -4.0)
+	if is_victory:
+		var bp_reward := _get_loop_battle_reward(LOOP_BATTLE_BP_REWARDS, LOOP_BATTLE_BP_BASE_REWARD, LOOP_BATTLE_BP_STEP)
+		var gold_reward := _get_loop_battle_reward(LOOP_BATTLE_GOLD_REWARDS, LOOP_BATTLE_GOLD_BASE_REWARD, LOOP_BATTLE_GOLD_STEP) + (enemies_defeated * 2)
+		Global.add_loop_bloom_points(bp_reward)
+		Global.add_loop_gold(gold_reward)
+		Global.loop_battle_index += 1
+		Global.loop_state_changed.emit()
+		_mature_loop_crops_after_battle()
+		if Global.has_loop_plot(LOOP_PLOT_FOREST):
+			_spawn_loop_forest_content()
+		_show_player_notice("Victory. +%d BP, +%d Gold." % [bp_reward, gold_reward], 1.8)
+	else:
+		var lost_gold := mini(int(ceil(float(Global.loop_gold) * LOOP_RAID_LOSS_RATIO)), Global.loop_gold)
+		var lost_wood := mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.WOOD, 0)))
+		var lost_stone := mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.STONE, 0)))
+		Global.add_loop_gold(-lost_gold)
+		if lost_wood > 0:
+			Global.remove_item(Global.Items.WOOD, lost_wood)
+		if lost_stone > 0:
+			Global.remove_item(Global.Items.STONE, lost_stone)
+		_show_player_notice("Driven back. Raiders stole %d Gold, %d Wood, and %d Stone." % [lost_gold, lost_wood, lost_stone], 2.0)
+	player.can_move = true
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+
+func _advance_loop_crop_growth(ticks: int) -> void:
+	for _i in range(maxi(ticks, 0)):
+		_on_grow_timer_timeout()
+
+
+func _mature_loop_crops_after_battle() -> void:
+	for plant in get_tree().get_nodes_in_group("Plants"):
+		if plant == null or not is_instance_valid(plant):
+			continue
+		if plant.has_method("mature_immediately"):
+			plant.mature_immediately()
+		elif plant.has_method("force_mature"):
+			plant.force_mature()
+		elif plant.has_method("advance_growth"):
+			for _i in range(maxi(LOOP_POST_BATTLE_GROWTH_TICKS, 0)):
+				plant.advance_growth()
+
 func _run_loop_plot_purified_feedback(plot_id: StringName) -> void:
 	var interaction_point: Vector2 = LOOP_INTERACTION_POINTS.get(plot_id, player.global_position)
 	spawn_overworld_burst(interaction_point, LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), 8, 14.0, Vector2(1.5, 1.5))
 	play_overworld_camera_shake(3.0, 0.12)
+	_play_loop_world_sfx(LOOP_PURIFY_SFX, interaction_point)
 
 func _open_loop_merchant_menu() -> void:
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
@@ -1460,7 +1922,7 @@ func _on_loop_sell_harvest_pressed() -> void:
 	if total_gold <= 0:
 		_show_player_notice("Nothing to sell yet.")
 		return
-	Global.loop_gold += total_gold
+	Global.add_loop_gold(total_gold)
 	Global.inventory_updated.emit()
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
@@ -1472,11 +1934,21 @@ func _on_loop_buy_seed_pressed(seed_item: int) -> void:
 	if Global.loop_gold < cost:
 		_show_player_notice("Not enough Gold.")
 		return
-	Global.loop_gold -= cost
+	Global.spend_loop_gold(cost)
 	Global.add_item(seed_item, 1)
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % String(offer.get("label", "seed bundle")))
+
+func _play_loop_world_sfx(stream: AudioStream, at_global_position: Vector2) -> void:
+	if stream == null:
+		return
+	var sfx_player := AudioStreamPlayer2D.new()
+	sfx_player.stream = stream
+	sfx_player.global_position = at_global_position
+	add_child(sfx_player)
+	sfx_player.finished.connect(sfx_player.queue_free)
+	sfx_player.play()
 
 func _show_player_notice(text: String, duration := 1.4) -> void:
 	var overlay := get_node_or_null("CanvasLayer/Overlay")
