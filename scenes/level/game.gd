@@ -106,13 +106,18 @@ const LOOP_INTERACTION_POINTS := {
 }
 const LOOP_MERCHANT_STRUCTURE_POS := Vector2(360, 1216)
 const LOOP_MERCHANT_NPC_POS := Vector2(374, 1288)
-const LOOP_FOREST_SILAS_POS := Vector2(1538, 1196)
+const LOOP_FOREST_SILAS_POS := Vector2(1704, 1120)
 const LOOP_FOREST_TREE_POSITIONS := [
-	Vector2(1460, 1216),
-	Vector2(1584, 1168),
-	Vector2(1696, 1268),
+	Vector2(1520, 1196),
+	Vector2(1560, 1158),
+	Vector2(1600, 1220),
+	Vector2(1640, 1180),
+	Vector2(1588, 1260),
+	Vector2(1504, 1256),
 ]
 const LOOP_OBJECTIVE_FIGHT := "Fight for BP"
+const LOOP_OBJECTIVE_PLANT := "Plant seeds before battle"
+const LOOP_OBJECTIVE_HARVEST := "Harvest after combat"
 const LOOP_OBJECTIVE_MERCHANT := "Purify Merchant"
 const LOOP_OBJECTIVE_FOREST := "Open Forest"
 const LOOP_OBJECTIVE_REPAIR := "Repair Wagon"
@@ -155,8 +160,7 @@ var _overworld_burst_scene: PackedScene = preload("res://scenes/level/overworld_
 var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
 var _forest_scene_path := "res://scenes/level/forest.tscn"
-var _bandit_tension_music_path := "res://audio/music/Music_Anxiety.wav"
-var _bandit_tension_music: AudioStream = null
+var _bandit_tension_music: AudioStream = preload("res://audio/music/Music_Anxiety.wav")
 var _rebuild_hit_a: AudioStream = preload("res://audio/sfx/axe.wav")
 var _rebuild_hit_b: AudioStream = preload("res://audio/sfx/hoe.wav")
 var _story_actor_scene: PackedScene = preload("res://scenes/level/story_actor.tscn")
@@ -207,6 +211,9 @@ var _loop_hud_perk_label: Label = null
 var _loop_prompt_root: PanelContainer = null
 var _loop_prompt_label: Label = null
 var _loop_hub_entry_uses_transition_handoff: bool = false
+var _loop_battle_launch_pending := false
+var _loop_plant_tutorial_active := false
+var _loop_battle_tutorial_active := false
 
 func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
@@ -214,7 +221,6 @@ func _log_run_start(message: String) -> void:
 
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
-	_bandit_tension_music = load(_bandit_tension_music_path) as AudioStream
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
 	if seed_menu != null:
 		seed_menu.seed_chosen.connect(_on_seed_chosen_from_menu)
@@ -659,6 +665,7 @@ func _spawn_loop_forest_content() -> void:
 	if silas_actor != null:
 		silas_actor.visible = true
 		silas_actor.global_position = LOOP_FOREST_SILAS_POS
+		silas_actor.z_index = 6
 		silas_actor.face_side(false)
 		silas_actor.play_idle()
 
@@ -711,20 +718,102 @@ func _refresh_loop_hud() -> void:
 
 func _refresh_loop_objective() -> void:
 	var objective := LOOP_OBJECTIVE_FIGHT
-	if Global.loop_battle_index > 1:
+	if _has_ready_loop_crops():
+		objective = LOOP_OBJECTIVE_HARVEST
+	elif Global.loop_battle_index <= 1 and not _has_any_loop_crops():
+		objective = LOOP_OBJECTIVE_PLANT
+	elif Global.loop_battle_index > 1:
 		objective = LOOP_OBJECTIVE_MERCHANT
-	if Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-		objective = LOOP_OBJECTIVE_FOREST
-	elif Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.has_loop_plot(LOOP_PLOT_FOREST):
-		objective = LOOP_OBJECTIVE_FOREST
-	elif Global.has_loop_plot(LOOP_PLOT_FOREST) and not Global.has_loop_plot(LOOP_PLOT_CABIN):
-		if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-			objective = LOOP_OBJECTIVE_REPAIR
-		else:
-			objective = LOOP_OBJECTIVE_CABIN
-	elif Global.has_loop_plot(LOOP_PLOT_CABIN):
-		objective = LOOP_OBJECTIVE_SETTLE
+	if not _has_ready_loop_crops() and (Global.loop_battle_index > 1 or _has_any_loop_crops()):
+		if Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
+			objective = LOOP_OBJECTIVE_FOREST
+		elif Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.has_loop_plot(LOOP_PLOT_FOREST):
+			objective = LOOP_OBJECTIVE_FOREST
+		elif Global.has_loop_plot(LOOP_PLOT_FOREST) and not Global.has_loop_plot(LOOP_PLOT_CABIN):
+			if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
+				objective = LOOP_OBJECTIVE_REPAIR
+			else:
+				objective = LOOP_OBJECTIVE_CABIN
+		elif Global.has_loop_plot(LOOP_PLOT_CABIN):
+			objective = LOOP_OBJECTIVE_SETTLE
 	Global.show_tutorial_text(objective)
+
+func _has_any_loop_crops() -> bool:
+	for plant in get_tree().get_nodes_in_group("Plants"):
+		if is_instance_valid(plant):
+			return true
+	return false
+
+func _has_ready_loop_crops() -> bool:
+	for plant in get_tree().get_nodes_in_group("Plants"):
+		if not is_instance_valid(plant):
+			continue
+		if plant.has_method("is_ready_to_harvest") and plant.is_ready_to_harvest():
+			return true
+	return false
+
+func _maybe_show_loop_planting_tutorial(seed_menu: Control, screen_pos: Vector2) -> bool:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return false
+	if DemoDirector.has_seen_tutorial("loop_planting"):
+		return false
+	_loop_plant_tutorial_active = true
+	player.can_move = false
+	call_deferred("_show_loop_planting_tutorial_then_open_seed_menu", seed_menu, screen_pos)
+	return true
+
+func _show_loop_planting_tutorial_then_open_seed_menu(seed_menu: Control, screen_pos: Vector2) -> void:
+	if DemoDirector != null:
+		await DemoDirector.show_tutorial_card("loop_planting", self)
+	_loop_plant_tutorial_active = false
+	if seed_menu != null and is_instance_valid(seed_menu):
+		player.can_move = false
+		seed_menu.open(screen_pos)
+	else:
+		player.can_move = true
+
+func _maybe_show_loop_planting_tutorial_auto() -> void:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_plant_tutorial_active or DemoDirector.has_seen_tutorial("loop_planting"):
+		return
+	if _loop_battle_launch_pending or not player.can_move:
+		return
+	if not is_tilled_soil_at(player.global_position):
+		return
+
+	_loop_plant_tutorial_active = true
+	player.can_move = false
+	call_deferred("_show_loop_planting_tutorial_auto_card")
+
+func _show_loop_planting_tutorial_auto_card() -> void:
+	if DemoDirector != null:
+		await DemoDirector.show_tutorial_card("loop_planting", self)
+	player.can_move = true
+	_loop_plant_tutorial_active = false
+
+func _maybe_begin_loop_battle_with_tutorial() -> bool:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return false
+	if DemoDirector.has_seen_tutorial("loop_battle"):
+		return false
+	if _loop_battle_launch_pending:
+		return true
+	_loop_battle_launch_pending = true
+	_loop_battle_tutorial_active = true
+	player.can_move = false
+	call_deferred("_show_loop_battle_tutorial_then_launch")
+	return true
+
+func _show_loop_battle_tutorial_then_launch() -> void:
+	if DemoDirector != null:
+		await DemoDirector.show_tutorial_card("loop_battle", self)
+	_loop_battle_tutorial_active = false
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	_show_player_notice("Crossing the bridge into the next fight...")
+	await get_tree().create_timer(0.1, true).timeout
+	await _start_loop_battle()
 
 func _restore_intro_forest_day_time() -> void:
 	if Global.intro_forest_day_time_left <= 0.0:
@@ -884,6 +973,7 @@ func _process(_delta: float) -> void:
 	if Global.loop_hub_mode_active:
 		$CanvasModulate.color = daytime_gradient.sample(0.28)
 		_update_loop_interaction_ui()
+		_maybe_show_loop_planting_tutorial_auto()
 		return
 
 	var daytime_point: float = 1.0 - ($DayTimer.time_left / _day_timer_cycle_seconds)
@@ -969,6 +1059,8 @@ func _on_player_menu_requested(target_pos: Vector2) -> void:
 		pending_plant_pos = adjusted_pos
 
 		var screen_pos = player.get_global_transform_with_canvas().origin
+		if _maybe_show_loop_planting_tutorial(seed_menu, screen_pos):
+			return
 		seed_menu.open(screen_pos)
 	else:
 		_show_player_notice("Need plowed soil" if Global.loop_hub_mode_active else "Need tilled soil")
@@ -991,8 +1083,8 @@ func _on_seed_chosen_from_menu(seed_type: int) -> void:
 
 	if Global.tutorial_step == 5:
 		Global.advance_tutorial()
-	Global.inventory[seed_type] -= 1
-	Global.inventory_updated.emit()
+	if not Global.remove_item(seed_type, 1):
+		return
 	_register_intro_plant(seed_type, planted_plant)
 
 func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
@@ -1516,7 +1608,17 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	fade_rect.color = Color(0, 0, 0, 1)
 	transition_layer.add_child(fade_rect)
 
-	var combat_scene = load(combat_scene_path).instantiate()
+	var combat_scene_packed: PackedScene = Global.get_preloaded_launch_scene(combat_scene_path)
+	if combat_scene_packed == null:
+		combat_scene_packed = load(combat_scene_path) as PackedScene
+	if combat_scene_packed == null:
+		push_error("Combat scene failed to load: %s" % combat_scene_path)
+		_intro_busy = false
+		player.can_move = true
+		_restore_player_camera()
+		return
+
+	var combat_scene = combat_scene_packed.instantiate()
 	var combat_root := _resolve_combat_scene_root(combat_scene)
 	combat_scene.set_meta("skip_scene_music_sync", _suppress_battle_music_sync)
 	if combat_root != combat_scene:
@@ -1779,6 +1881,7 @@ func _update_loop_interaction_ui() -> void:
 		return
 	if interaction.is_empty():
 		_loop_prompt_root.visible = false
+		_maybe_show_loop_battle_tutorial(false)
 		return
 
 	_loop_prompt_label.text = String(interaction.get("label", ""))
@@ -1788,6 +1891,25 @@ func _update_loop_interaction_ui() -> void:
 	var screen_point := canvas_transform * (focus_point + Vector2(0, -56))
 	_loop_prompt_root.position = screen_point - (_loop_prompt_root.size * 0.5)
 	_loop_prompt_root.visible = true
+	_maybe_show_loop_battle_tutorial(String(interaction.get("target", "")) == "bridge_battle")
+
+func _maybe_show_loop_battle_tutorial(bridge_is_active: bool) -> void:
+	if not bridge_is_active or not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_battle_tutorial_active or DemoDirector.has_seen_tutorial("loop_battle"):
+		return
+	if not player.can_move:
+		return
+
+	_loop_battle_tutorial_active = true
+	player.can_move = false
+	call_deferred("_show_loop_battle_tutorial_near_bridge")
+
+func _show_loop_battle_tutorial_near_bridge() -> void:
+	if DemoDirector != null:
+		await DemoDirector.show_tutorial_card("loop_battle", self)
+	player.can_move = true
+	_loop_battle_tutorial_active = false
 
 func _handle_loop_merchant_interaction() -> bool:
 	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
@@ -1876,6 +1998,10 @@ func _handle_loop_cabin_interaction() -> bool:
 
 func _handle_loop_bridge_battle_interaction() -> bool:
 	_close_loop_merchant_menu()
+	if _maybe_begin_loop_battle_with_tutorial():
+		return true
+	if _loop_battle_launch_pending:
+		return true
 	player.can_move = false
 	player.direction = Vector2.ZERO
 	_show_player_notice("Crossing the bridge into the next fight...")
@@ -1884,6 +2010,7 @@ func _handle_loop_bridge_battle_interaction() -> bool:
 
 func _start_loop_battle() -> void:
 	await get_tree().create_timer(0.08, true).timeout
+	_loop_battle_launch_pending = false
 	await _launch_direct_combat_scene(LOOP_BRIDGE_BATTLE_SCENE)
 
 func _get_loop_battle_reward(reward_table: Array[int], fallback_base: int, fallback_step: int) -> int:

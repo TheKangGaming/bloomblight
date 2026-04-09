@@ -11,7 +11,7 @@ const ORC_HIT_SFX := preload("res://audio/sfx/Monster_Grunt6.mp3")
 const ORC_DEATH_SFX := preload("res://audio/sfx/Monster_Grunt4.mp3")
 const ORC_THUD_SFX := preload("res://audio/sfx/Monster_Thud.mp3")
 const BOW_ATTACK_SFX_DELAY := 0.06
-const STRIKE_IMPACT_TIMEOUT := 1.2
+const STRIKE_IMPACT_TIMEOUT := 0.5
 const DEBUG_COMBAT_LOGS := false
 
 # --- NODE REFERENCES ---
@@ -82,6 +82,8 @@ func _ready() -> void:
 		
 	if payload == null:
 		push_error("BattleScene Error: Booted up without a CombatPayload!")
+		if CombatManager and CombatManager.has_method("queue_failure_notice"):
+			CombatManager.queue_failure_notice("Combat failed to load.", 1.8)
 		_return_to_map() # <--- SAFETY NET ADDED HERE
 		return
 		
@@ -148,6 +150,8 @@ func _spawn_actors() -> bool:
 		
 	if active_attacker == null or active_defender == null:
 		push_error("BattleScene Error: Failed to spawn actors. Aborting sequence.")
+		if CombatManager and CombatManager.has_method("queue_failure_notice"):
+			CombatManager.queue_failure_notice("Combat failed to load.", 1.8)
 		_return_to_map()
 		return false # Tell _ready() to abort!
 		
@@ -332,6 +336,7 @@ func _await_strike_impact(striker: BattleActor, strike_index: int = -1) -> void:
 		await get_tree().process_frame
 
 	if not impact_received[0]:
+		push_warning("BattleScene: Strike impact timeout for %s. Continuing combat sequence." % _actor_name(striker))
 		_debug_combat("Strike %d impact timeout: %s" % [strike_index, _actor_name(striker)])
 
 func _play_orc_hit_sfx(target: BattleActor) -> void:

@@ -1262,6 +1262,13 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 	
 	# 2. Wait for the battle to finish
 	await TransitionManager.overlay_closed
+
+	var failure_notice: Dictionary = {}
+	if CombatManager and CombatManager.has_method("consume_failure_notice"):
+		failure_notice = CombatManager.consume_failure_notice()
+	if not String(failure_notice.get("text", "")).is_empty():
+		_show_overlay_notice(String(failure_notice.get("text", "Combat failed to load.")), float(failure_notice.get("duration", 1.8)))
+		return false
 	
 	# --- 3. APPLY THE ACTUAL COMBAT RESULTS ---
 	# Iterate through the script and let the Unit script handle the exact damage!
@@ -2135,6 +2142,10 @@ func _return_camera_to_player_side() -> void:
 		return
 
 	_end_enemy_move_camera_follow()
+	if _battle_camera == null or not is_instance_valid(_battle_camera):
+		_handoff_to_cursor_camera(_get_unit_camera_focus_position(focus_unit))
+		return
+
 	_sync_battle_camera_to_current_view()
 	_battle_camera.make_current()
 	await _focus_battle_camera(_get_unit_camera_focus_position(focus_unit), 0.32)
@@ -2163,14 +2174,16 @@ func _complete_demo_first_action() -> void:
 		DemoDirector.refresh_current_prompt()
 
 func _maybe_show_unit_tutorial(unit: Unit) -> void:
-	if not _demo_battle_active or DemoDirector == null or unit == null:
+	if DemoDirector == null or unit == null:
+		return
+	if not _demo_battle_active and not Global.loop_hub_mode_active:
 		return
 
 	match String(unit.name):
 		"Savannah":
 			if not DemoDirector.has_seen_tutorial("battle_savannah"):
 				await DemoDirector.show_tutorial_card("battle_savannah", self)
-			elif not DemoDirector.has_seen_tutorial("battle_harvest") and _has_adjacent_battle_plant(unit):
+			elif _demo_battle_active and not DemoDirector.has_seen_tutorial("battle_harvest") and _has_adjacent_battle_plant(unit):
 				await DemoDirector.show_tutorial_card("battle_harvest", self)
 		"Silas":
 			if not DemoDirector.has_seen_tutorial("battle_silas"):

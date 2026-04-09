@@ -16,6 +16,8 @@ var _focus_tooltip: ItemTooltip
 var _focus_tooltip_layer: CanvasLayer
 var _focus_tooltip_text := ""
 var _is_hovered := false
+var _style_focused: StyleBoxFlat
+var _style_default: StyleBoxFlat
 const FOCUS_TINT := Color(1.0, 0.95, 0.72, 1.0)
 const DEFAULT_TINT := Color(1, 1, 1, 1)
 const FOCUS_BORDER_COLOR := Color(1.0, 0.88, 0.3, 1.0)
@@ -29,6 +31,8 @@ func _ui_sound_manager() -> Node:
 func _ready():
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	focus_mode = Control.FOCUS_ALL
+	_style_default = _create_panel_style(DEFAULT_BG_COLOR, DEFAULT_BORDER_COLOR)
+	_style_focused = _create_panel_style(FOCUS_BG_COLOR, FOCUS_BORDER_COLOR)
 	focus_entered.connect(_on_focus_entered)
 	focus_exited.connect(_on_focus_exited)
 	mouse_entered.connect(_on_mouse_entered)
@@ -157,20 +161,21 @@ func _on_mouse_exited() -> void:
 
 func _apply_focus_visual(is_focused: bool) -> void:
 	self_modulate = FOCUS_TINT if is_focused else DEFAULT_TINT
+	add_theme_stylebox_override("panel", _style_focused if is_focused else _style_default)
 
+func _create_panel_style(background: Color, border: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.content_margin_left = 2
 	style.content_margin_right = 2
 	style.content_margin_top = 2
 	style.content_margin_bottom = 2
-	style.bg_color = FOCUS_BG_COLOR if is_focused else DEFAULT_BG_COLOR
+	style.bg_color = background
 	style.border_width_left = 2
 	style.border_width_right = 2
 	style.border_width_top = 2
 	style.border_width_bottom = 2
-	style.border_color = FOCUS_BORDER_COLOR if is_focused else DEFAULT_BORDER_COLOR
-
-	add_theme_stylebox_override("panel", style)
+	style.border_color = border
+	return style
 
 func _show_focus_tooltip(prefer_cursor: bool = false) -> void:
 	if _focus_tooltip_text.is_empty():

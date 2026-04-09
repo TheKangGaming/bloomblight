@@ -52,6 +52,9 @@ var _story_harvests := {}
 var _seen_tutorial_cards: Dictionary = {}
 
 const TUTORIAL_CARD_ORDER := [
+	"loop_planting",
+	"loop_battle",
+	"loop_cooking",
 	"farm_controls",
 	"farm_farming",
 	"meal_buff",
@@ -79,6 +82,14 @@ func begin_new_demo() -> void:
 		ProgressionService.reset_demo_roster()
 	set_stage(DemoStage.OPENER)
 	clear_prompt()
+
+func begin_loop_tutorial_run() -> void:
+	demo_active = false
+	pending_day_two_battle_intro = false
+	_manual_prompt_id = ""
+	_manual_prompt_replacements.clear()
+	_story_harvests.clear()
+	_seen_tutorial_cards.clear()
 
 func _input(event: InputEvent) -> void:
 	if event == null:
@@ -206,6 +217,15 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 	var template := ""
 	var title := ""
 	match card_id:
+		"loop_planting":
+			title = "Tutorial: Planting"
+			template = "Stand on plowed soil and press {plant} to plant a seed.\n\nPlant before battle. Crops keep growing while you fight, then pay off as food, gold, and momentum when you return."
+		"loop_battle":
+			title = "Tutorial: Battle Runs"
+			template = "Walk to the bridge and press {confirm} to start the fight.\n\nBattles earn BP and Gold."
+		"loop_cooking":
+			title = "Tutorial: Cooking"
+			template = "Cook at the campfire before battle.\n\nMeals turn ingredients into a one-battle perk."
 		"farm_controls":
 			title = "Tutorial: Movement"
 			template = "Move with {move}. Hold {run} to run, and press {confirm} near objects to interact."
@@ -217,22 +237,23 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nPress {inventory} to open the menu, switch to the Status tab, review the meal buff, then close the menu when you're ready to continue."
 		"battle_savannah":
 			title = "Tutorial: Savannah"
-			template = "Move the cursor with {battle_cursor}, then {battle_confirm} to select Savannah and confirm her movement. After moving, choose Attack or Wait from her action menu.\n\nSavannah is your steady frontliner. She wants to be near the fight, but you can always end her turn instead of attacking."
+			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to act."
 		"battle_silas":
 			title = "Tutorial: Silas"
-			template = "Silas fights from range. He does not need to stand next to enemies to attack.\n\nKeep him behind Savannah when you can. Hunt improves his accuracy before he attacks."
+			template = "Silas attacks from range.\n\nKeep him behind Savannah."
 		"battle_tera_bloom":
 			title = "Tutorial: Tera"
-			template = "Tera is a powerful magic user, but she is fragile.\n\nWhen roots are still living under the ash, she can use Bloom to force them up through the ground and create Healflowers near the fight."
+			template = "Tera is fragile.\n\nUse Bloom to grow Healflowers."
 		"battle_harvest":
 			title = "Tutorial: Harvest"
-			template = "Move Savannah next to a Healflower, choose Harvest, then press {confirm} to recover HP.\n\nHarvest only helps if the target unit is already hurt."
+			template = "Move Savannah next to a Healflower and choose Harvest to restore HP."
 		_:
 			return {}
 
 	return {
 		"id": card_id,
 		"title": title,
+		"card_layout": "battle" if card_id in ["loop_battle", "battle_savannah", "battle_silas", "battle_tera_bloom", "battle_harvest"] else ("compact" if card_id == "loop_cooking" else "full"),
 		"body": _format_template(template, {
 			"confirm": get_confirm_label(),
 			"move": get_move_label(),

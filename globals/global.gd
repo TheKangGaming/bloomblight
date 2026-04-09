@@ -83,6 +83,22 @@ const LOOP_PLOT_FOREST := &"forest"
 const LOOP_PLOT_CABIN := &"cabin"
 const LOOP_STRUCTURE_MERCHANT_WAGON := &"merchant_wagon"
 
+# Warm the launch path before the title screen becomes interactive so Start never races scene loading.
+const LAUNCH_GAME_SCENE: PackedScene = preload("res://scenes/level/game.tscn")
+const LAUNCH_FOREST_BATTLE_SCENE: PackedScene = preload("res://scenes/level/forest_battle.tscn")
+const LAUNCH_DAY_TWO_BATTLE_SCENE: PackedScene = preload("res://scenes/level/day_two_battle.tscn")
+
+func get_preloaded_launch_scene(scene_path: String) -> PackedScene:
+	match scene_path:
+		"res://scenes/level/game.tscn":
+			return LAUNCH_GAME_SCENE
+		"res://scenes/level/forest_battle.tscn":
+			return LAUNCH_FOREST_BATTLE_SCENE
+		"res://scenes/level/day_two_battle.tscn":
+			return LAUNCH_DAY_TWO_BATTLE_SCENE
+		_:
+			return null
+
 func advance_tutorial() -> void:
 	if not tutorial_enabled:
 		return
@@ -540,6 +556,8 @@ func reset_demo_state() -> void:
 
 func begin_loop_hub_run() -> void:
 	reset_demo_state()
+	if DemoDirector and DemoDirector.has_method("begin_loop_tutorial_run"):
+		DemoDirector.begin_loop_tutorial_run()
 	loop_hub_mode_active = true
 	loop_gold = 0
 	loop_bloom_points = 0

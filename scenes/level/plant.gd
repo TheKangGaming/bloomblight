@@ -180,6 +180,9 @@ func mature_immediately() -> void:
 	if not sparkle_fx.visible:
 		sparkle_fx.visible = true
 		sparkle_fx.play("sparkle")
+
+func is_ready_to_harvest() -> bool:
+	return not _is_harvesting and age >= max_age
 	
 func _ready() -> void:
 	add_to_group('Plants')
@@ -239,9 +242,9 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 	if Global.tutorial_step == 9:
 		Global.advance_tutorial()
 
-	queue_free()
 	if water_layer:
 		water_layer.erase_cell(grid_pos)
+	queue_free()
 
 func _play_bloom_feedback() -> void:
 	var current_scene := get_tree().current_scene

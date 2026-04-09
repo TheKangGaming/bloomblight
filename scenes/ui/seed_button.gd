@@ -53,8 +53,14 @@ func setup(seed_type: Global.Items, amount: int, can_plant_now: bool = true, sta
 		$Sprite2D.frame_coords = Vector2i(0, 0)
 
 	disabled = not can_plant_now
-	modulate = Color(1, 1, 1, 1) if can_plant_now else Color(1, 1, 1, 0.45)
-	tooltip_text = status_tooltip
+	modulate = Color(1, 1, 1, 1) if can_plant_now else Color(0.5, 0.5, 0.5, 0.55)
+	var tooltip := status_tooltip
+	if not can_plant_now:
+		var season_note := " (Out of Season)"
+		if not tooltip.contains("Out of season"):
+			tooltip += season_note if not tooltip.is_empty() else "Out of Season"
+	$Sprite2D/Label.text = str(amount) if can_plant_now else "%s X" % amount
+	tooltip_text = tooltip
 	
 func _pressed():
 	seed_selected.emit(my_seed_type)

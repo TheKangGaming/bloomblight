@@ -4,6 +4,8 @@ signal payload_set(payload: CombatPayload)
 signal payload_cleared
 
 var _active_payload: CombatPayload = null
+var _pending_notice_text: String = ""
+var _pending_notice_duration: float = 1.4
 
 func has_payload() -> bool:
 	return _active_payload != null
@@ -14,6 +16,19 @@ func get_payload() -> CombatPayload:
 func clear_payload() -> void:
 	_active_payload = null
 	payload_cleared.emit()
+
+func queue_failure_notice(text: String, duration: float = 1.6) -> void:
+	_pending_notice_text = text
+	_pending_notice_duration = duration
+
+func consume_failure_notice() -> Dictionary:
+	var notice := {
+		"text": _pending_notice_text,
+		"duration": _pending_notice_duration,
+	}
+	_pending_notice_text = ""
+	_pending_notice_duration = 1.4
+	return notice
 
 ## Extracts data from the live map units, builds a secure snapshot, and stores it for transition.
 func setup_combat(attacker, defender, terrain_modifier: int = 0, distance: int = 1) -> CombatPayload:

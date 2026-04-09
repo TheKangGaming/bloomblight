@@ -15,12 +15,6 @@ const HIDDEN_THREAT_CALENDAR: Dictionary = {
 		"display_name": "Bandit Warband",
 		"combat_scene": "res://scenes/level/day_two_battle.tscn",
 		"difficulty_tier": 1
-	},
-	7: {
-		"id": &"blight_swarm",
-		"display_name": "Blighted Swarm",
-		"combat_scene": "res://scenes/level/CombatMap_2.tscn", # (You can build this scene later!)
-		"difficulty_tier": 2
 	}
 }
 

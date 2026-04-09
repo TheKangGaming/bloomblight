@@ -154,7 +154,7 @@ func _handle_menu_toggle_input(event: InputEvent) -> bool:
 		get_viewport().set_input_as_handled()
 		return true
 
-	if visible and event.is_action_pressed("ui_cancel"):
+	if visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel")):
 		if _try_close_equipment_picker():
 			get_viewport().set_input_as_handled()
 			return true
