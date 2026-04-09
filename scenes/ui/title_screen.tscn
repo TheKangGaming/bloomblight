@@ -43,25 +43,99 @@ shadow_offset = Vector2(4, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxEmpty_cfe2f"]
 bg_color = Color(1, 1, 1, 0)
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
-border_color = Color(1, 1, 1, 0)
+border_color = Color(0.72, 0.86, 0.68, 0.0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ik4u"]
-bg_color = Color(1, 1, 1, 0.1)
+bg_color = Color(0.72, 1, 0.72, 0.14)
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.72, 0.96, 0.72, 0.7)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxEmpty_aqu7r"]
 bg_color = Color(1, 1, 1, 0)
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jsbfx"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+bg_color = Color(0.72, 1, 0.72, 0.14)
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.72, 0.96, 0.72, 0.7)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a4ium"]
-bg_color = Color(1, 1, 1, 0.1)
+bg_color = Color(0.72, 1, 0.72, 0.18)
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.78, 1, 0.78, 0.8)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_start"]
+bg_color = Color(0.6, 0.92, 0.62, 0.24)
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.82, 1, 0.82, 0.95)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="TitleScreen" type="Control" unique_id=1986978738]
 layout_mode = 3
@@ -129,34 +203,41 @@ horizontal_alignment = 1
 [node name="Buttons" type="VBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=101251817]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_constants/separation = 8
 
 [node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=475952342]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+custom_minimum_size = Vector2(320, 72)
+theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
 theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_start")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_cfe2f")
 text = "Start Game"
 
 [node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=117905331]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+custom_minimum_size = Vector2(320, 72)
+theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
 theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
 theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_start")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_cfe2f")
 text = "Settings"
 
 [node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=1634308205]
 texture_filter = 2
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+custom_minimum_size = Vector2(320, 72)
+theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxEmpty_aqu7r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_jsbfx")
 theme_override_styles/focus = SubResource("StyleBoxFlat_a4ium")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_start")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_aqu7r")
 text = "Exit Game"
 

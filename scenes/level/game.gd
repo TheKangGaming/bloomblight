@@ -69,6 +69,9 @@ const LOOP_BATTLE_BP_STEP := 2
 const LOOP_BATTLE_GOLD_STEP := 2
 const LOOP_POST_BATTLE_GROWTH_TICKS := 2
 const LOOP_RAID_LOSS_RATIO := 0.25
+const LOOP_HUB_ENTRY_FADE_ALPHA := 0.5
+const LOOP_HUB_ENTRY_FADE_DURATION := 0.24
+const LOOP_HUB_ENTRY_HUD_DURATION := 0.2
 const LOOP_SEED_SHOP := {
 	Global.Items.CARROT_SEED: {"cost": 3, "label": "Carrot Seeds x1"},
 	Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
@@ -106,6 +109,12 @@ const LOOP_FOREST_TREE_POSITIONS := [
 	Vector2(1584, 1168),
 	Vector2(1696, 1268),
 ]
+const LOOP_OBJECTIVE_FIGHT := "Fight for BP"
+const LOOP_OBJECTIVE_MERCHANT := "Purify Merchant"
+const LOOP_OBJECTIVE_FOREST := "Open Forest"
+const LOOP_OBJECTIVE_REPAIR := "Repair Wagon"
+const LOOP_OBJECTIVE_CABIN := "Purify Cabin"
+const LOOP_OBJECTIVE_SETTLE := "Plant, Trade, Fight"
 
 enum IntroState {
 	INACTIVE,
@@ -283,15 +292,35 @@ func _setup_loop_hub_mode() -> void:
 	_refresh_loop_merchant_visuals()
 	_refresh_loop_objective()
 	_refresh_loop_hud()
+	_prepare_loop_hub_entry_transition()
 	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
 	if hud != null:
 		hud.visible = false
 		if "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
-			MusicManager.crossfade_to(hud.day_music, 0.55, -4.0)
+			MusicManager.crossfade_to(hud.day_music, 0.18, -4.0)
 	if not Global.inventory_updated.is_connected(_on_loop_state_ui_changed):
 		Global.inventory_updated.connect(_on_loop_state_ui_changed)
 	if not Global.loop_state_changed.is_connected(_on_loop_state_ui_changed):
 		Global.loop_state_changed.connect(_on_loop_state_ui_changed)
+	call_deferred("_play_loop_hub_entry_transition")
+
+func _prepare_loop_hub_entry_transition() -> void:
+	player.can_move = false
+	var color_rect := get_node_or_null("CanvasLayer/ColorRect") as ColorRect
+	if color_rect != null:
+		color_rect.modulate.a = LOOP_HUB_ENTRY_FADE_ALPHA
+	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
+		_loop_hud_root.modulate.a = 0.0
+
+func _play_loop_hub_entry_transition() -> void:
+	var tween := create_tween().set_parallel(true)
+	var color_rect := get_node_or_null("CanvasLayer/ColorRect") as ColorRect
+	if color_rect != null:
+		tween.tween_property(color_rect, "modulate:a", 0.0, LOOP_HUB_ENTRY_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
+		tween.tween_property(_loop_hud_root, "modulate:a", 1.0, LOOP_HUB_ENTRY_HUD_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tween.finished
+	player.can_move = true
 
 func _ensure_loop_plot_covers() -> void:
 	if _loop_plot_cover_root != null and is_instance_valid(_loop_plot_cover_root):
@@ -653,20 +682,20 @@ func _refresh_loop_hud() -> void:
 		_loop_hud_perk_label.text = "Next Battle Perk: %s" % Global.get_loop_equipped_perk_label()
 
 func _refresh_loop_objective() -> void:
-	var objective := "Fight your first battle at the bridge to earn BP."
+	var objective := LOOP_OBJECTIVE_FIGHT
 	if Global.loop_battle_index > 1:
-		objective = "Purify the merchant plot. BP: %d  Gold: %d" % [Global.loop_bloom_points, Global.loop_gold]
+		objective = LOOP_OBJECTIVE_MERCHANT
 	if Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-		objective = "Purify the forest plot to find wood for the wagon. BP: %d  Wood: %d" % [Global.loop_bloom_points, int(Global.inventory.get(Global.Items.WOOD, 0))]
+		objective = LOOP_OBJECTIVE_FOREST
 	elif Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.has_loop_plot(LOOP_PLOT_FOREST):
-		objective = "Purify the forest plot to recruit Silas. BP: %d" % Global.loop_bloom_points
+		objective = LOOP_OBJECTIVE_FOREST
 	elif Global.has_loop_plot(LOOP_PLOT_FOREST) and not Global.has_loop_plot(LOOP_PLOT_CABIN):
 		if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-			objective = "Use the forest's wood to repair the merchant wagon."
+			objective = LOOP_OBJECTIVE_REPAIR
 		else:
-			objective = "Purify the center cabin plot. BP: %d" % Global.loop_bloom_points
+			objective = LOOP_OBJECTIVE_CABIN
 	elif Global.has_loop_plot(LOOP_PLOT_CABIN):
-		objective = "Tend crops, cook at the fire, trade at the wagon, then head to the bridge."
+		objective = LOOP_OBJECTIVE_SETTLE
 	Global.show_tutorial_text(objective)
 
 func _restore_intro_forest_day_time() -> void:
