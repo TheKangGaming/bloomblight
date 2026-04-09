@@ -5,9 +5,14 @@ signal overlay_closed
 @onready var flash_rect: ColorRect = $FlashRect
 var _is_transitioning: bool = false
 var _pending_scene_path: String = ""
+var _pending_scene_packed: PackedScene = null
 var _scene_handoff_active: bool = false
 var _scene_handoff_dim_alpha: float = 0.0
 var _scene_handoff_tween: Tween = null
+
+func _log_run_start(message: String) -> void:
+	if OS.is_debug_build():
+		print("[RunStart][Transition] %d %s" % [Time.get_ticks_msec(), message])
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -58,6 +63,7 @@ func change_scene_path(scene_path: String, fade_duration: float = 0.25) -> void:
 	_clear_scene_handoff_state()
 	_is_transitioning = true
 	_pending_scene_path = scene_path.strip_edges()
+	_pending_scene_packed = null
 	
 	# 1. Fade to black
 	var tween = create_tween()
@@ -73,11 +79,27 @@ func change_scene_path_bloom(scene_path: String, flash_duration: float = 0.1, fa
 	_clear_scene_handoff_state()
 	_is_transitioning = true
 	_pending_scene_path = scene_path.strip_edges()
+	_pending_scene_packed = null
 	_scene_handoff_active = handoff_dim_alpha > 0.0
 	_scene_handoff_dim_alpha = clampf(handoff_dim_alpha, 0.0, 1.0)
+	_begin_bloom_transition(flash_duration, fade_duration)
+
+func change_scene_packed_bloom(scene: PackedScene, flash_duration: float = 0.1, fade_duration: float = 0.16, handoff_dim_alpha: float = 0.0) -> void:
+	if _is_transitioning or scene == null:
+		return
+
+	_clear_scene_handoff_state()
+	_is_transitioning = true
+	_pending_scene_path = ""
+	_pending_scene_packed = scene
+	_scene_handoff_active = handoff_dim_alpha > 0.0
+	_scene_handoff_dim_alpha = clampf(handoff_dim_alpha, 0.0, 1.0)
+	_begin_bloom_transition(flash_duration, fade_duration)
+
+func _begin_bloom_transition(flash_duration: float, fade_duration: float) -> void:
 	_reset_transition_visuals()
 	flash_rect.color = Color(0.86, 1.0, 0.78, 1.0)
-
+	_log_run_start("Bloom transition begin")
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(flash_rect, "modulate:a", 0.96, flash_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property(fade_rect, "modulate:a", 0.1, flash_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -136,6 +158,7 @@ func _finish_scene_transition() -> void:
 func _change_scene_after_fade(fade_duration: float) -> void:
 	var next_scene_path := _pending_scene_path
 	_pending_scene_path = ""
+	_pending_scene_packed = null
 	if next_scene_path.is_empty():
 		_is_transitioning = false
 		_reset_transition_visuals()
@@ -149,14 +172,20 @@ func _change_scene_after_fade(fade_duration: float) -> void:
 
 func _change_scene_after_bloom(fade_duration: float) -> void:
 	var next_scene_path := _pending_scene_path
+	var next_scene_packed := _pending_scene_packed
 	_pending_scene_path = ""
-	if next_scene_path.is_empty():
+	_pending_scene_packed = null
+	if next_scene_path.is_empty() and next_scene_packed == null:
 		_is_transitioning = false
 		_clear_scene_handoff_state()
 		_reset_transition_visuals()
 		return
 
-	get_tree().change_scene_to_file(next_scene_path)
+	_log_run_start("Scene swap")
+	if next_scene_packed != null:
+		get_tree().change_scene_to_packed(next_scene_packed)
+	else:
+		get_tree().change_scene_to_file(next_scene_path)
 
 	var in_tween := create_tween().set_parallel(true)
 	in_tween.tween_property(flash_rect, "modulate:a", 0.0, fade_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)

@@ -69,12 +69,12 @@ const LOOP_BATTLE_BP_STEP := 2
 const LOOP_BATTLE_GOLD_STEP := 2
 const LOOP_POST_BATTLE_GROWTH_TICKS := 2
 const LOOP_RAID_LOSS_RATIO := 0.25
-const LOOP_HUB_ENTRY_FADE_ALPHA := 0.48
-const LOOP_HUB_ENTRY_FADE_DURATION := 0.32
-const LOOP_HUB_ENTRY_HUD_DURATION := 0.2
-const LOOP_HUB_ENTRY_HUD_DELAY := 0.09
-const LOOP_HUB_ENTRY_MUSIC_DELAY := 0.07
-const LOOP_HUB_ENTRY_MUSIC_FADE := 0.28
+const LOOP_HUB_ENTRY_FADE_ALPHA := 0.54
+const LOOP_HUB_ENTRY_FADE_DURATION := 0.4
+const LOOP_HUB_ENTRY_HUD_DURATION := 0.24
+const LOOP_HUB_ENTRY_HUD_DELAY := 0.11
+const LOOP_HUB_ENTRY_MUSIC_DELAY := 0.09
+const LOOP_HUB_ENTRY_MUSIC_FADE := 0.32
 const LOOP_SEED_SHOP := {
 	Global.Items.CARROT_SEED: {"cost": 3, "label": "Carrot Seeds x1"},
 	Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
@@ -208,6 +208,10 @@ var _loop_prompt_root: PanelContainer = null
 var _loop_prompt_label: Label = null
 var _loop_hub_entry_uses_transition_handoff: bool = false
 
+func _log_run_start(message: String) -> void:
+	if OS.is_debug_build():
+		print("[RunStart][Hub] %d %s" % [Time.get_ticks_msec(), message])
+
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
 	_bandit_tension_music = load(_bandit_tension_music_path) as AudioStream
@@ -254,6 +258,7 @@ func _ready() -> void:
 		call_deferred("_begin_intro_sequence")
 
 func _setup_loop_hub_mode() -> void:
+	_log_run_start("Loop hub setup begin")
 	_intro_busy = false
 	_intro_state = IntroState.INACTIVE
 	Global.tutorial_enabled = false
@@ -304,6 +309,7 @@ func _setup_loop_hub_mode() -> void:
 		Global.inventory_updated.connect(_on_loop_state_ui_changed)
 	if not Global.loop_state_changed.is_connected(_on_loop_state_ui_changed):
 		Global.loop_state_changed.connect(_on_loop_state_ui_changed)
+	_log_run_start("Loop hub setup end")
 	call_deferred("_play_loop_hub_entry_transition")
 
 func _prepare_loop_hub_entry_transition() -> void:
@@ -345,6 +351,7 @@ func _play_loop_hub_entry_transition() -> void:
 	if reveal_tween != null:
 		await reveal_tween.finished
 	player.can_move = true
+	_log_run_start("Control returned")
 
 func _ensure_loop_plot_covers() -> void:
 	if _loop_plot_cover_root != null and is_instance_valid(_loop_plot_cover_root):
@@ -427,9 +434,6 @@ func _ensure_loop_merchant_nodes() -> void:
 		_merchant_actor.z_index = 2
 		_merchant_actor.visible = false
 		objects_root.add_child(_merchant_actor)
-
-	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
-		_build_loop_merchant_menu()
 
 func _ensure_loop_hud() -> void:
 	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
@@ -1948,6 +1952,8 @@ func _run_loop_plot_purified_feedback(plot_id: StringName) -> void:
 	_play_loop_world_sfx(LOOP_PURIFY_SFX, interaction_point)
 
 func _open_loop_merchant_menu() -> void:
+	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
+		_build_loop_merchant_menu()
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
 		return
 	_refresh_loop_merchant_menu()

@@ -7,11 +7,12 @@ const START_BUTTON_PRESS_SCALE := Vector2(0.94, 0.94)
 const START_BUTTON_IDLE_SCALE := Vector2.ONE
 const TITLE_BUTTON_HOVER_SCALE := Vector2(1.04, 1.04)
 const TITLE_LABEL_PULSE_SCALE := Vector2(1.02, 1.02)
-const TITLE_FLASH_DURATION := 0.07
-const TITLE_FLASH_RECOVERY := 0.17
+const TITLE_FLASH_DURATION := 0.09
+const TITLE_FLASH_RECOVERY := 0.22
 const TITLE_START_OVERLAP_DELAY := 0.025
 const TITLE_START_MUSIC_DUCK := 0.13
-const TITLE_POST_SWAP_DIM_ALPHA := 0.48
+const TITLE_POST_SWAP_DIM_ALPHA := 0.52
+const TITLE_PRELOAD_TYPE_HINT := "PackedScene"
 
 @onready var menu_root: Control = $MarginContainer
 @onready var start_button: Button = $MarginContainer/VBoxContainer/Buttons/StartButton
@@ -28,9 +29,19 @@ const GAME_SCENE_PATH := "res://scenes/level/game.tscn"
 
 var _is_transitioning: bool = true
 var _fade_tween: Tween
+var _game_scene_preload_requested: bool = false
+var _game_scene_preload_ready: bool = false
+var _game_scene_preload_failed: bool = false
+var _pending_start_scene_swap: bool = false
+var _start_scene_swap_started: bool = false
+var _cached_game_scene: PackedScene = null
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
+
+func _log_run_start(message: String) -> void:
+	if OS.is_debug_build():
+		print("[RunStart][Title] %d %s" % [Time.get_ticks_msec(), message])
 
 func _ready() -> void:
 	get_tree().root.size_changed.connect(_update_particle_layout)
@@ -69,6 +80,42 @@ func _ready() -> void:
 	_wire_button_feedback(start_button)
 	_wire_button_feedback(settings_button)
 	_wire_button_feedback(quit_button)
+	_begin_game_scene_preload()
+
+func _process(_delta: float) -> void:
+	_poll_game_scene_preload()
+	if _pending_start_scene_swap and not _start_scene_swap_started:
+		_try_begin_demo_scene_transition()
+
+func _begin_game_scene_preload() -> void:
+	if _game_scene_preload_requested:
+		return
+	_game_scene_preload_requested = true
+	_log_run_start("Preload request start")
+	var request_result := ResourceLoader.load_threaded_request(GAME_SCENE_PATH, TITLE_PRELOAD_TYPE_HINT, false)
+	if request_result != OK:
+		_game_scene_preload_failed = true
+		_log_run_start("Preload request failed: %d" % request_result)
+
+func _poll_game_scene_preload() -> void:
+	if not _game_scene_preload_requested or _game_scene_preload_ready or _game_scene_preload_failed:
+		return
+	var progress: Array = []
+	var status := ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH, progress)
+	if status == ResourceLoader.THREAD_LOAD_FAILED or status == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		_game_scene_preload_failed = true
+		_log_run_start("Preload status failed: %d" % status)
+		return
+	if status != ResourceLoader.THREAD_LOAD_LOADED:
+		return
+	var loaded_resource := ResourceLoader.load_threaded_get(GAME_SCENE_PATH)
+	if loaded_resource is PackedScene:
+		_cached_game_scene = loaded_resource as PackedScene
+		_game_scene_preload_ready = true
+		_log_run_start("Preload ready")
+	else:
+		_game_scene_preload_failed = true
+		_log_run_start("Preload yielded unexpected resource")
 
 func _on_fade_in_complete() -> void:
 	_is_transitioning = false
@@ -91,6 +138,7 @@ func _on_start_pressed() -> void:
 		return
 
 	_is_transitioning = true
+	_log_run_start("Start pressed")
 	var ui_sounds := _ui_sound_manager()
 	if ui_sounds:
 		ui_sounds.play_start_game()
@@ -111,10 +159,27 @@ func _play_start_transition() -> void:
 		MusicManager.fade_to_silence(TITLE_START_MUSIC_DUCK)
 
 	await get_tree().create_timer(TITLE_START_OVERLAP_DELAY, true).timeout
-	_begin_demo_scene_transition()
+	_pending_start_scene_swap = true
+	_try_begin_demo_scene_transition()
+
+func _try_begin_demo_scene_transition() -> void:
+	if _start_scene_swap_started or not _pending_start_scene_swap:
+		return
+	if _game_scene_preload_ready and _cached_game_scene != null:
+		_begin_demo_scene_transition()
+	elif _game_scene_preload_failed:
+		_begin_demo_scene_transition()
 
 func _begin_demo_scene_transition() -> void:
-	if TransitionManager and TransitionManager.has_method("change_scene_path_bloom"):
+	if _start_scene_swap_started:
+		return
+	_start_scene_swap_started = true
+	_pending_start_scene_swap = false
+	_log_run_start("Scene transition begin")
+	if TransitionManager and _cached_game_scene != null and TransitionManager.has_method("change_scene_packed_bloom"):
+		TransitionManager.change_scene_packed_bloom(_cached_game_scene, TITLE_FLASH_DURATION, TITLE_FLASH_RECOVERY, TITLE_POST_SWAP_DIM_ALPHA)
+	elif TransitionManager and TransitionManager.has_method("change_scene_path_bloom"):
+		_log_run_start("Falling back to path-based bloom swap")
 		TransitionManager.change_scene_path_bloom(GAME_SCENE_PATH, TITLE_FLASH_DURATION, TITLE_FLASH_RECOVERY, TITLE_POST_SWAP_DIM_ALPHA)
 	else:
 		TransitionManager.change_scene_path(GAME_SCENE_PATH, 0.16)
