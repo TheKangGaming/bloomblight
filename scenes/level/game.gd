@@ -69,9 +69,12 @@ const LOOP_BATTLE_BP_STEP := 2
 const LOOP_BATTLE_GOLD_STEP := 2
 const LOOP_POST_BATTLE_GROWTH_TICKS := 2
 const LOOP_RAID_LOSS_RATIO := 0.25
-const LOOP_HUB_ENTRY_FADE_ALPHA := 0.5
-const LOOP_HUB_ENTRY_FADE_DURATION := 0.24
+const LOOP_HUB_ENTRY_FADE_ALPHA := 0.48
+const LOOP_HUB_ENTRY_FADE_DURATION := 0.32
 const LOOP_HUB_ENTRY_HUD_DURATION := 0.2
+const LOOP_HUB_ENTRY_HUD_DELAY := 0.09
+const LOOP_HUB_ENTRY_MUSIC_DELAY := 0.07
+const LOOP_HUB_ENTRY_MUSIC_FADE := 0.28
 const LOOP_SEED_SHOP := {
 	Global.Items.CARROT_SEED: {"cost": 3, "label": "Carrot Seeds x1"},
 	Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
@@ -203,6 +206,7 @@ var _loop_hud_stats_label: Label = null
 var _loop_hud_perk_label: Label = null
 var _loop_prompt_root: PanelContainer = null
 var _loop_prompt_label: Label = null
+var _loop_hub_entry_uses_transition_handoff: bool = false
 
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
@@ -296,8 +300,6 @@ func _setup_loop_hub_mode() -> void:
 	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
 	if hud != null:
 		hud.visible = false
-		if "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
-			MusicManager.crossfade_to(hud.day_music, 0.18, -4.0)
 	if not Global.inventory_updated.is_connected(_on_loop_state_ui_changed):
 		Global.inventory_updated.connect(_on_loop_state_ui_changed)
 	if not Global.loop_state_changed.is_connected(_on_loop_state_ui_changed):
@@ -306,20 +308,42 @@ func _setup_loop_hub_mode() -> void:
 
 func _prepare_loop_hub_entry_transition() -> void:
 	player.can_move = false
+	_loop_hub_entry_uses_transition_handoff = false
+	if TransitionManager != null and TransitionManager.has_method("has_active_scene_handoff"):
+		_loop_hub_entry_uses_transition_handoff = TransitionManager.has_active_scene_handoff()
 	var color_rect := get_node_or_null("CanvasLayer/ColorRect") as ColorRect
 	if color_rect != null:
-		color_rect.modulate.a = LOOP_HUB_ENTRY_FADE_ALPHA
+		color_rect.modulate.a = 0.0 if _loop_hub_entry_uses_transition_handoff else LOOP_HUB_ENTRY_FADE_ALPHA
 	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
 		_loop_hud_root.modulate.a = 0.0
 
 func _play_loop_hub_entry_transition() -> void:
-	var tween := create_tween().set_parallel(true)
-	var color_rect := get_node_or_null("CanvasLayer/ColorRect") as ColorRect
-	if color_rect != null:
-		tween.tween_property(color_rect, "modulate:a", 0.0, LOOP_HUB_ENTRY_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var reveal_tween: Tween = null
+	if _loop_hub_entry_uses_transition_handoff and TransitionManager != null and TransitionManager.has_method("finish_scene_handoff"):
+		reveal_tween = TransitionManager.finish_scene_handoff(LOOP_HUB_ENTRY_FADE_DURATION, 0.0)
+	else:
+		var color_rect := get_node_or_null("CanvasLayer/ColorRect") as ColorRect
+		reveal_tween = create_tween()
+		if color_rect != null:
+			reveal_tween.tween_property(color_rect, "modulate:a", 0.0, LOOP_HUB_ENTRY_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		else:
+			reveal_tween.tween_interval(LOOP_HUB_ENTRY_FADE_DURATION)
+
+	var hud_tween := create_tween()
 	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
-		tween.tween_property(_loop_hud_root, "modulate:a", 1.0, LOOP_HUB_ENTRY_HUD_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	await tween.finished
+		hud_tween.tween_interval(LOOP_HUB_ENTRY_HUD_DELAY)
+		hud_tween.tween_property(_loop_hud_root, "modulate:a", 1.0, LOOP_HUB_ENTRY_HUD_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud != null and "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
+		var music_tween := create_tween()
+		music_tween.tween_interval(LOOP_HUB_ENTRY_MUSIC_DELAY)
+		music_tween.tween_callback(func():
+			MusicManager.crossfade_to(hud.day_music, LOOP_HUB_ENTRY_MUSIC_FADE, -4.0)
+		)
+
+	if reveal_tween != null:
+		await reveal_tween.finished
 	player.can_move = true
 
 func _ensure_loop_plot_covers() -> void:

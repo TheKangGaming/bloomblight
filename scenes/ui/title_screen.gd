@@ -8,8 +8,10 @@ const START_BUTTON_IDLE_SCALE := Vector2.ONE
 const TITLE_BUTTON_HOVER_SCALE := Vector2(1.04, 1.04)
 const TITLE_LABEL_PULSE_SCALE := Vector2(1.02, 1.02)
 const TITLE_FLASH_DURATION := 0.07
-const TITLE_FLASH_RECOVERY := 0.12
+const TITLE_FLASH_RECOVERY := 0.17
 const TITLE_START_OVERLAP_DELAY := 0.025
+const TITLE_START_MUSIC_DUCK := 0.13
+const TITLE_POST_SWAP_DIM_ALPHA := 0.48
 
 @onready var menu_root: Control = $MarginContainer
 @onready var start_button: Button = $MarginContainer/VBoxContainer/Buttons/StartButton
@@ -102,18 +104,18 @@ func _on_start_pressed() -> void:
 func _play_start_transition() -> void:
 	var press_tween := create_tween().set_parallel(true)
 	press_tween.tween_property(start_button, "scale", START_BUTTON_PRESS_SCALE, 0.03).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	press_tween.tween_property(menu_root, "modulate:a", 0.0, 0.08).set_delay(0.005)
-	press_tween.tween_property(atmosphere_particles, "modulate:a", 0.0, 0.08)
+	press_tween.tween_property(menu_root, "modulate:a", 0.0, 0.09).set_delay(0.004)
+	press_tween.tween_property(atmosphere_particles, "modulate:a", 0.0, 0.09)
 
 	if MusicManager and MusicManager.has_method("fade_to_silence"):
-		MusicManager.fade_to_silence(0.08)
+		MusicManager.fade_to_silence(TITLE_START_MUSIC_DUCK)
 
 	await get_tree().create_timer(TITLE_START_OVERLAP_DELAY, true).timeout
 	_begin_demo_scene_transition()
 
 func _begin_demo_scene_transition() -> void:
 	if TransitionManager and TransitionManager.has_method("change_scene_path_bloom"):
-		TransitionManager.change_scene_path_bloom(GAME_SCENE_PATH, TITLE_FLASH_DURATION, TITLE_FLASH_RECOVERY)
+		TransitionManager.change_scene_path_bloom(GAME_SCENE_PATH, TITLE_FLASH_DURATION, TITLE_FLASH_RECOVERY, TITLE_POST_SWAP_DIM_ALPHA)
 	else:
 		TransitionManager.change_scene_path(GAME_SCENE_PATH, 0.16)
 
