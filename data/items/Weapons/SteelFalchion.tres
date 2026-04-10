@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://data/types/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://graphics/weapons/w22.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+weapon_name = "Steel Falchion"
+description = "A sturdier upgrade for Savannah with more bite and a cleaner edge."
+icon = ExtResource("2_icon")
+might = 8
+hit_rate = 88
+attack_range = 1
+stat_bonuses = {
+"speed": 1,
+"strength": 1
+}
+

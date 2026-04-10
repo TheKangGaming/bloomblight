@@ -47,6 +47,13 @@ func play_attack() -> void:
 	else:
 		_fake_attack_animation()
 
+func play_attack_variant(variant: StringName) -> void:
+	var animation_name := String(variant)
+	if anim_player != null and not animation_name.is_empty() and anim_player.has_animation(animation_name):
+		anim_player.play(animation_name)
+		return
+	play_attack()
+
 func play_hit() -> void:
 	if anim_player and anim_player.has_animation("hit"):
 		anim_player.play("hit")

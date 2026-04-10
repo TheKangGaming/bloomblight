@@ -38,6 +38,15 @@ var attack_range: int:
 			return maxi(1, current_stats.atk_rng)
 		return 1
 
+var min_attack_range: int:
+	get:
+		if character_data != null and character_data.equipped_weapon != null:
+			var equipped_weapon := character_data.equipped_weapon
+			if int(equipped_weapon.min_attack_range) >= 0:
+				return maxi(1, int(equipped_weapon.min_attack_range))
+			return maxi(1, int(equipped_weapon.attack_range))
+		return attack_range
+
 @export var skin: Texture:
 	set(value):
 		skin = value
@@ -244,7 +253,7 @@ func _sync_player_hp_to_global() -> void:
 
 
 ## Calculates and returns combat math without actually executing the attack
-func get_combat_stats(target: Unit) -> Dictionary:
+func get_combat_stats(target: Unit, distance: int = -1) -> Dictionary:
 	var equipped_weapon: WeaponData = null
 	if character_data != null:
 		equipped_weapon = character_data.equipped_weapon
@@ -263,6 +272,8 @@ func get_combat_stats(target: Unit) -> Dictionary:
 
 	var defense_stat := target.magic_defense if is_magic_damage else target.defense
 	var actual_damage = max(0, (attack_stat + weapon_might) - defense_stat)
+	if distance > 1 and equipped_weapon != null:
+		actual_damage = max(0, actual_damage - maxi(int(equipped_weapon.ranged_damage_penalty), 0))
 
 	return {
 		"hit": hit_chance,

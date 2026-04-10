@@ -12,6 +12,9 @@ extends Resource
 @export var might: int = 5
 @export var hit_rate: int = 90
 @export var attack_range: int = 1
+@export var min_attack_range: int = -1
+@export var ranged_damage_penalty: int = 0
+@export var projectile_style: StringName = &""
 
 @export_group("Bonus Modifiers")
 @export var stat_bonuses: Dictionary = {

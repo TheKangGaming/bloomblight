@@ -216,6 +216,22 @@ func get_seen_tutorial_cards() -> Array[Dictionary]:
 		})
 	return cards
 
+func get_seen_tutorial_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for card_id_variant in _seen_tutorial_cards.keys():
+		if bool(_seen_tutorial_cards.get(card_id_variant, false)):
+			ids.append(String(card_id_variant))
+	ids.sort()
+	return ids
+
+func apply_seen_tutorial_ids(card_ids: Array) -> void:
+	_seen_tutorial_cards.clear()
+	for raw_card_id in card_ids:
+		var card_id := String(raw_card_id)
+		if card_id.is_empty():
+			continue
+		_seen_tutorial_cards[card_id] = true
+
 func get_tutorial_card_config(card_id: String) -> Dictionary:
 	var template := ""
 	var title := ""
@@ -249,13 +265,13 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nPress {inventory} to open the menu, switch to the Status tab, review the meal buff, then close the menu when you're ready to continue."
 		"battle_savannah":
 			title = "Tutorial: Savannah"
-			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to act.\n\nKeep her between the enemy and the rest of the party."
+			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to move or attack.\n\nKeep her between the enemy and the rest of the party, and Harvest adjacent Healflowers when she needs HP back."
 		"battle_silas":
 			title = "Tutorial: Silas"
-			template = "Silas attacks from range.\n\nKeep him behind Savannah and let him shoot from safety."
+			template = "Silas attacks from range and wants a clear lane to fire.\n\nKeep him behind Savannah, avoid exposing him, and pick off enemies from safety."
 		"battle_tera_bloom":
 			title = "Tutorial: Tera"
-			template = "Tera is fragile but powerful.\n\nUse Bloom to grow Healflowers near the fight."
+			template = "Tera is fragile, but Bloom can shape the fight.\n\nUse Bloom to grow Healflowers near the front line so Savannah can Harvest them when the pressure starts."
 		"battle_harvest":
 			title = "Tutorial: Harvest"
 			template = "Move Savannah next to a Healflower and choose Harvest to restore HP."

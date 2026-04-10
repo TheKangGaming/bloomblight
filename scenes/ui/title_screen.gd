@@ -15,6 +15,7 @@ const TITLE_POST_SWAP_DIM_ALPHA := 0.52
 
 @onready var menu_root: Control = $MarginContainer
 @onready var start_button: Button = $MarginContainer/VBoxContainer/Buttons/StartButton
+@onready var continue_button: Button = $MarginContainer/VBoxContainer/Buttons/ContinueButton
 @onready var settings_button: Button = $MarginContainer/VBoxContainer/Buttons/SettingsButton
 @onready var quit_button: Button = $MarginContainer/VBoxContainer/Buttons/QuitButton
 @onready var title_label: Label = $MarginContainer/VBoxContainer/Label
@@ -42,18 +43,22 @@ func _ready() -> void:
 	_update_particle_layout()
 	fade_rect.modulate.a = 1.0 
 	start_button.disabled = true
+	continue_button.disabled = true
 	settings_button.disabled = true
 	quit_button.disabled = true
 	
 	start_button.modulate.a = 0.0
+	continue_button.modulate.a = 0.0
 	settings_button.modulate.a = 0.0
 	quit_button.modulate.a = 0.0
 	title_label.modulate.a = 0.0
 	title_label.scale = Vector2.ONE
 	menu_root.modulate.a = 1.0
 	start_button.scale = START_BUTTON_IDLE_SCALE
+	continue_button.scale = START_BUTTON_IDLE_SCALE
 	settings_button.scale = START_BUTTON_IDLE_SCALE
 	quit_button.scale = START_BUTTON_IDLE_SCALE
+	continue_button.visible = _can_continue()
 
 	_cached_game_scene = Global.get_preloaded_launch_scene(GAME_SCENE_PATH)
 	if title_music:
@@ -64,21 +69,26 @@ func _ready() -> void:
 	
 	_fade_tween.parallel().tween_property(title_label, "modulate:a", 1.0, 0.28).set_delay(0.04)
 	_fade_tween.parallel().tween_property(start_button, "modulate:a", 1.0, 0.2).set_delay(0.08)
-	_fade_tween.parallel().tween_property(settings_button, "modulate:a", 1.0, 0.2).set_delay(0.08 + TITLE_BUTTON_STAGGER)
-	_fade_tween.parallel().tween_property(quit_button, "modulate:a", 1.0, 0.2).set_delay(0.08 + (TITLE_BUTTON_STAGGER * 2.0))
+	_fade_tween.parallel().tween_property(continue_button, "modulate:a", 1.0 if _can_continue() else 0.0, 0.2).set_delay(0.08 + TITLE_BUTTON_STAGGER)
+	_fade_tween.parallel().tween_property(settings_button, "modulate:a", 1.0, 0.2).set_delay(0.08 + (TITLE_BUTTON_STAGGER * 2.0))
+	_fade_tween.parallel().tween_property(quit_button, "modulate:a", 1.0, 0.2).set_delay(0.08 + (TITLE_BUTTON_STAGGER * 3.0))
 	
 	_fade_tween.tween_callback(_on_fade_in_complete)
 	
 	start_button.pressed.connect(_on_start_pressed)
+	continue_button.pressed.connect(_on_continue_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 	_wire_button_feedback(start_button)
+	_wire_button_feedback(continue_button)
 	_wire_button_feedback(settings_button)
 	_wire_button_feedback(quit_button)
 
 func _on_fade_in_complete() -> void:
 	_is_transitioning = false
 	start_button.disabled = false
+	continue_button.disabled = not _can_continue()
+	continue_button.visible = _can_continue()
 	settings_button.disabled = false
 	quit_button.disabled = false
 	
@@ -108,9 +118,34 @@ func _on_start_pressed() -> void:
 	Global.begin_loop_hub_run()
 	_play_start_transition()
 
+func _on_continue_pressed() -> void:
+	if _is_transitioning or not _can_continue():
+		return
+
+	_is_transitioning = true
+	_log_run_start("Continue pressed")
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_start_game()
+	start_button.disabled = true
+	continue_button.disabled = true
+	settings_button.disabled = true
+	quit_button.disabled = true
+
+	if SaveManager == null or not SaveManager.has_method("load_current_run") or not SaveManager.load_current_run():
+		_is_transitioning = false
+		start_button.disabled = false
+		continue_button.disabled = not _can_continue()
+		settings_button.disabled = false
+		quit_button.disabled = false
+		return
+
+	_play_start_transition()
+
 func _play_start_transition() -> void:
 	var press_tween := create_tween().set_parallel(true)
 	press_tween.tween_property(start_button, "scale", START_BUTTON_PRESS_SCALE, 0.03).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	press_tween.tween_property(continue_button, "modulate:a", 0.0, 0.08)
 	press_tween.tween_property(menu_root, "modulate:a", 0.0, 0.09).set_delay(0.004)
 	press_tween.tween_property(atmosphere_particles, "modulate:a", 0.0, 0.09)
 
@@ -133,6 +168,9 @@ func _begin_demo_scene_transition() -> void:
 		TransitionManager.change_scene_path_bloom(GAME_SCENE_PATH, TITLE_FLASH_DURATION, TITLE_FLASH_RECOVERY, TITLE_POST_SWAP_DIM_ALPHA)
 	else:
 		TransitionManager.change_scene_path(GAME_SCENE_PATH, 0.16)
+
+func _can_continue() -> bool:
+	return SaveManager != null and SaveManager.has_method("has_save") and SaveManager.has_save()
 
 func _wire_button_feedback(button: Button) -> void:
 	if button == null:

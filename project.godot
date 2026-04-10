@@ -30,6 +30,7 @@ UISoundManager="*res://systems/audio/ui_sound_manager.gd"
 SettingsManager="*res://systems/settings/settings_manager.gd"
 TransitionManager="*res://scenes/ui/transition_manager.tscn"
 CombatManager="*res://systems/combat_manager/combat_manager.gd"
+SaveManager="*res://systems/save/save_manager.gd"
 
 [display]
 

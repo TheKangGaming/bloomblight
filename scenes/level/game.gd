@@ -86,6 +86,22 @@ const LOOP_SELL_PRICES := {
 	Global.Items.POTATO: 6,
 	Global.Items.GARLIC: 5,
 }
+const LOOP_MAX_FOREST_STAGE := 10
+const LOOP_MERCHANT_GEAR_OFFERS := [
+	{"stage": 2, "cost": 34, "item": preload("res://data/items/Weapons/SteelFalchion.tres"), "slot": "Weapon"},
+	{"stage": 2, "cost": 34, "item": preload("res://data/items/Weapons/LonghunterBow.tres"), "slot": "Weapon"},
+	{"stage": 2, "cost": 34, "item": preload("res://data/items/Weapons/EmberbranchStaff.tres"), "slot": "Weapon"},
+	{"stage": 4, "cost": 30, "item": preload("res://data/items/Armor/GuardCoat.tres"), "slot": "Armor"},
+	{"stage": 4, "cost": 30, "item": preload("res://data/items/Armor/RangerJerkin.tres"), "slot": "Armor"},
+	{"stage": 4, "cost": 30, "item": preload("res://data/items/Armor/WardingCloak.tres"), "slot": "Armor"},
+	{"stage": 6, "cost": 28, "item": preload("res://data/items/Accessories/DuelistCharm.tres"), "slot": "Accessory"},
+	{"stage": 6, "cost": 28, "item": preload("res://data/items/Accessories/HawkeyeBand.tres"), "slot": "Accessory"},
+	{"stage": 6, "cost": 28, "item": preload("res://data/items/Accessories/FocusCharm.tres"), "slot": "Accessory"},
+	{"stage": 8, "cost": 48, "item": preload("res://data/items/Weapons/CaptainsEdge.tres"), "slot": "Weapon"},
+	{"stage": 8, "cost": 52, "item": preload("res://data/items/Weapons/RangersLongbow.tres"), "slot": "Weapon"},
+	{"stage": 8, "cost": 50, "item": preload("res://data/items/Weapons/SunfireScepter.tres"), "slot": "Weapon"},
+	{"stage": 8, "cost": 40, "item": preload("res://data/items/Accessories/ForestCrest.tres"), "slot": "Accessory"},
+]
 const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_WATCHTOWER: {"rect": Rect2(Vector2(0, 0), LOOP_PLOT_SIZE), "unlock_cost": 8},
 	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(640, 0), LOOP_PLOT_SIZE), "unlock_cost": 7},
@@ -224,6 +240,108 @@ func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
 		print("[RunStart][Hub] %d %s" % [Time.get_ticks_msec(), message])
 
+func _get_loop_stage() -> int:
+	return clampi(maxi(Global.loop_battle_index, 1), 1, LOOP_MAX_FOREST_STAGE)
+
+func _autosave_loop_run() -> void:
+	if not Global.loop_hub_mode_active or SaveManager == null or not SaveManager.has_method("save_current_run"):
+		return
+	SaveManager.save_current_run(get_loop_run_save_state())
+
+func get_loop_run_save_state() -> Dictionary:
+	var crops: Array[Dictionary] = []
+	for plant_variant in get_tree().get_nodes_in_group("Plants"):
+		var plant := plant_variant as StaticBody2D
+		if plant == null or not is_instance_valid(plant):
+			continue
+		var plant_type_value = plant.get("plant_type")
+		var grid_pos_value = plant.get("grid_pos")
+		var age_value = plant.get("age")
+		if plant_type_value == null or grid_pos_value == null or age_value == null:
+			continue
+		var grid_pos: Vector2i = grid_pos_value
+		crops.append({
+			"seed_type": int(plant_type_value),
+			"grid_x": grid_pos.x,
+			"grid_y": grid_pos.y,
+			"age": float(age_value),
+		})
+
+	return {
+		"player_position": {"x": player.global_position.x, "y": player.global_position.y},
+		"crops": crops,
+	}
+
+func apply_loop_run_save_state(save_data: Dictionary) -> void:
+	if save_data.is_empty():
+		return
+
+	var player_position: Variant = save_data.get("player_position", {})
+	if player_position is Dictionary:
+		player.global_position = Vector2(
+			float((player_position as Dictionary).get("x", player.global_position.x)),
+			float((player_position as Dictionary).get("y", player.global_position.y))
+		)
+
+	_clear_loop_crops()
+	for crop_variant in Array(save_data.get("crops", [])):
+		if crop_variant is not Dictionary:
+			continue
+		var crop: Dictionary = crop_variant
+		_restore_loop_crop(crop)
+
+func _apply_pending_loop_save_if_needed() -> void:
+	if SaveManager == null or not SaveManager.has_method("has_pending_loop_state") or not SaveManager.has_pending_loop_state():
+		return
+	apply_loop_run_save_state(SaveManager.consume_pending_loop_state())
+
+func _clear_loop_crops() -> void:
+	for plant_variant in get_tree().get_nodes_in_group("Plants"):
+		if plant_variant != null and is_instance_valid(plant_variant):
+			plant_variant.queue_free()
+
+func _restore_loop_crop(crop: Dictionary) -> void:
+	var seed_type := int(crop.get("seed_type", -1))
+	if seed_type < 0:
+		return
+
+	var planting_layer := _get_active_planting_layer()
+	if planting_layer == null:
+		return
+
+	var grid_pos := Vector2i(int(crop.get("grid_x", 0)), int(crop.get("grid_y", 0)))
+	var plant_pos := planting_layer.map_to_local(grid_pos)
+	plant_pos.y -= 8
+	var plant := plant_scene.instantiate() as StaticBody2D
+	if plant == null:
+		return
+	if plant.has_method("restore_state"):
+		plant.restore_state(seed_type, grid_pos, float(crop.get("age", 1.0)))
+	else:
+		plant.setup(seed_type, grid_pos)
+		if plant.get("age") != null:
+			plant.age = float(crop.get("age", 1.0))
+	objects_root.add_child(plant)
+	plant.position = plant_pos
+
+func _get_equipment_display_name(item: Resource) -> String:
+	if item is WeaponData:
+		return String((item as WeaponData).weapon_name)
+	if item is ArmorData:
+		return String((item as ArmorData).armor_name)
+	if item is AccessoryData:
+		return String((item as AccessoryData).accessory_name)
+	return item.resource_name if item != null else "Item"
+
+func _get_loop_merchant_equipment_offers() -> Array[Dictionary]:
+	var offers: Array[Dictionary] = []
+	var current_stage := _get_loop_stage()
+	for offer_variant in LOOP_MERCHANT_GEAR_OFFERS:
+		var offer: Dictionary = offer_variant
+		if int(offer.get("stage", 99)) <= current_stage:
+			offers.append(offer)
+	return offers
+
 func _ready() -> void:
 	var seed_menu = $CanvasLayer/SeedMenu
 	player.toggle_menu_requested.connect(_on_player_menu_requested)
@@ -308,6 +426,7 @@ func _setup_loop_hub_mode() -> void:
 	_ensure_loop_hud()
 	_ensure_loop_prompt()
 	_spawn_loop_forest_content()
+	_apply_pending_loop_save_if_needed()
 	_refresh_loop_plot_visuals()
 	_refresh_loop_merchant_visuals()
 	_refresh_loop_objective()
@@ -620,7 +739,10 @@ func _refresh_loop_merchant_menu() -> void:
 	if _loop_merchant_status == null or _loop_merchant_actions == null:
 		return
 
-	_loop_merchant_status.text = "Gold: %d\nBP: %d\nWood: %d\nStone: %d\nPerk: %s" % [
+	var current_stage := _get_loop_stage()
+	_loop_merchant_status.text = "Stage %d/%d\nGold: %d\nBloom Points: %d\nWood: %d\nStone: %d\nPerk: %s" % [
+		current_stage,
+		LOOP_MAX_FOREST_STAGE,
 		Global.loop_gold,
 		Global.loop_bloom_points,
 		int(Global.inventory.get(Global.Items.WOOD, 0)),
@@ -636,6 +758,11 @@ func _refresh_loop_merchant_menu() -> void:
 	sell_button.pressed.connect(_on_loop_sell_harvest_pressed)
 	_loop_merchant_actions.add_child(sell_button)
 
+	var seed_heading := Label.new()
+	seed_heading.text = "Seeds"
+	seed_heading.add_theme_font_size_override("font_size", 18)
+	_loop_merchant_actions.add_child(seed_heading)
+
 	for seed_item_variant in LOOP_SEED_SHOP.keys():
 		var seed_item: int = int(seed_item_variant)
 		var offer: Dictionary = LOOP_SEED_SHOP[seed_item]
@@ -644,6 +771,31 @@ func _refresh_loop_merchant_menu() -> void:
 		button.disabled = Global.loop_gold < int(offer.get("cost", 0))
 		button.pressed.connect(_on_loop_buy_seed_pressed.bind(seed_item))
 		_loop_merchant_actions.add_child(button)
+
+	var gear_heading := Label.new()
+	gear_heading.text = "Gear"
+	gear_heading.add_theme_font_size_override("font_size", 18)
+	_loop_merchant_actions.add_child(gear_heading)
+
+	var unlocked_gear := _get_loop_merchant_equipment_offers()
+	if unlocked_gear.is_empty():
+		var locked_label := Label.new()
+		locked_label.text = "Clear more stages to unlock better equipment."
+		locked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_loop_merchant_actions.add_child(locked_label)
+	else:
+		for offer in unlocked_gear:
+			var item: Resource = offer.get("item", null)
+			if item == null:
+				continue
+			var owned_items: Array = ProgressionService.get_owned_equipment(String(offer.get("slot", ""))) if ProgressionService != null and ProgressionService.has_method("get_owned_equipment") else []
+			var item_name := _get_equipment_display_name(item)
+			var already_owned := owned_items.has(item)
+			var button := Button.new()
+			button.text = "%s (%d Gold)%s" % [item_name, int(offer.get("cost", 0)), " [Owned]" if already_owned else ""]
+			button.disabled = already_owned or Global.loop_gold < int(offer.get("cost", 0))
+			button.pressed.connect(_on_loop_buy_equipment_pressed.bind(item, int(offer.get("cost", 0))))
+			_loop_merchant_actions.add_child(button)
 
 func _spawn_loop_forest_content() -> void:
 	for node in _loop_spawned_forest_nodes:
@@ -848,6 +1000,7 @@ func _show_loop_forest_unlock_tutorials() -> void:
 	player.can_move = true
 
 func _on_loop_crop_harvested(_harvested_item: int) -> void:
+	_autosave_loop_run()
 	if not Global.loop_hub_mode_active or DemoDirector == null:
 		return
 	if _loop_cooking_tutorial_active or DemoDirector.has_seen_tutorial("loop_cooking"):
@@ -1132,6 +1285,7 @@ func _on_seed_chosen_from_menu(seed_type: int) -> void:
 	if Global.loop_hub_mode_active:
 		_refresh_loop_objective()
 		_maybe_show_loop_battle_tutorial_after_planting()
+		_autosave_loop_run()
 
 func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
 	var season := CalendarService.get_current_season()
@@ -1955,6 +2109,7 @@ func _handle_loop_merchant_interaction() -> bool:
 		_refresh_loop_plot_visuals()
 		_refresh_loop_merchant_visuals()
 		_refresh_loop_objective()
+		_autosave_loop_run()
 		return true
 
 	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
@@ -1975,6 +2130,7 @@ func _handle_loop_merchant_interaction() -> bool:
 		_show_player_notice("The merchant wagon is ready for trade.")
 		_refresh_loop_merchant_visuals()
 		_refresh_loop_objective()
+		_autosave_loop_run()
 		return true
 
 	_open_loop_merchant_menu()
@@ -2003,6 +2159,7 @@ func _handle_loop_forest_interaction() -> bool:
 	_maybe_show_loop_forest_unlock_tutorials()
 	_refresh_loop_plot_visuals()
 	_refresh_loop_objective()
+	_autosave_loop_run()
 	return true
 
 func _handle_loop_cabin_interaction() -> bool:
@@ -2025,6 +2182,7 @@ func _handle_loop_cabin_interaction() -> bool:
 	_show_player_notice("The ruined cabin site stands ready at the heart of the farm.")
 	_refresh_loop_plot_visuals()
 	_refresh_loop_objective()
+	_autosave_loop_run()
 	return true
 
 func _handle_loop_bridge_battle_interaction() -> bool:
@@ -2065,8 +2223,12 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		var gold_reward := _get_loop_battle_reward(LOOP_BATTLE_GOLD_REWARDS, LOOP_BATTLE_GOLD_BASE_REWARD, LOOP_BATTLE_GOLD_STEP) + (enemies_defeated * 2)
 		Global.add_loop_bloom_points(bp_reward)
 		Global.add_loop_gold(gold_reward)
+		Global.apply_player_auto_levels(1)
 		Global.loop_battle_index += 1
+		Global.stats_updated.emit()
 		Global.loop_state_changed.emit()
+		if ProgressionService != null:
+			ProgressionService.party_roster_changed.emit()
 		_mature_loop_crops_after_battle()
 		if Global.has_loop_plot(LOOP_PLOT_FOREST):
 			_spawn_loop_forest_content()
@@ -2084,6 +2246,7 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		_show_player_notice("Driven back. Raiders stole %d Gold, %d Wood, and %d Stone." % [lost_gold, lost_wood, lost_stone], 2.0)
 	if is_victory and Global.loop_hub_mode_active and DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_bloom_points"):
 		await _maybe_show_loop_bloom_points_tutorial()
+	_autosave_loop_run()
 	player.can_move = true
 	_refresh_loop_hud()
 	_refresh_loop_objective()
@@ -2146,6 +2309,7 @@ func _on_loop_sell_harvest_pressed() -> void:
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
 	_show_player_notice("Sold the harvest for %d Gold." % total_gold)
+	_autosave_loop_run()
 
 func _on_loop_buy_seed_pressed(seed_item: int) -> void:
 	var offer: Dictionary = LOOP_SEED_SHOP.get(seed_item, {})
@@ -2158,6 +2322,26 @@ func _on_loop_buy_seed_pressed(seed_item: int) -> void:
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % String(offer.get("label", "seed bundle")))
+	_autosave_loop_run()
+
+func _on_loop_buy_equipment_pressed(item: Resource, cost: int) -> void:
+	if item == null:
+		return
+	if Global.loop_gold < cost:
+		_show_player_notice("Not enough Gold.")
+		return
+	if ProgressionService == null or not ProgressionService.has_method("add_owned_equipment"):
+		_show_player_notice("Merchant stock is unavailable right now.")
+		return
+	if not ProgressionService.add_owned_equipment(item):
+		_show_player_notice("You already own %s." % _get_equipment_display_name(item))
+		return
+
+	Global.spend_loop_gold(cost)
+	_refresh_loop_merchant_menu()
+	_refresh_loop_hud()
+	_show_player_notice("Purchased %s." % _get_equipment_display_name(item))
+	_autosave_loop_run()
 
 func _play_loop_world_sfx(stream: AudioStream, at_global_position: Vector2) -> void:
 	if stream == null:

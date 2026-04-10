@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AccessoryData" format=3]
+
+[ext_resource type="Script" path="res://data/types/accessory_data.gd" id="1_accessory"]
+[ext_resource type="Texture2D" path="res://graphics/accessories/ac7.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_accessory")
+accessory_name = "Hawkeye Band"
+description = "A simple headband that keeps an archer's aim steady and their feet quick."
+icon = ExtResource("2_icon")
+stat_bonuses = {
+"dexterity": 2,
+"speed": 1
+}
+

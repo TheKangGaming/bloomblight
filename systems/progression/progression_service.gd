@@ -45,6 +45,83 @@ func reset_demo_roster() -> void:
 	party_roster_changed.emit()
 	equipment_catalog_changed.emit()
 
+func get_save_data() -> Dictionary:
+	var roster: Array[Dictionary] = []
+	for member in party_roster:
+		if member == null:
+			continue
+		roster.append({
+			"display_name": String(member.display_name),
+			"weapon": _resource_path_or_empty(member.equipped_weapon),
+			"armor": _resource_path_or_empty(member.equipped_armor),
+			"accessory": _resource_path_or_empty(member.equipped_accessory),
+		})
+
+	var owned_equipment := {}
+	for slot_name in _equipment_catalog.keys():
+		var resources: Array = _equipment_catalog.get(slot_name, [])
+		var saved_resources: Array[String] = []
+		for item in resources:
+			if item is Resource and not String((item as Resource).resource_path).is_empty():
+				saved_resources.append(String((item as Resource).resource_path))
+		owned_equipment[slot_name] = saved_resources
+
+	return {
+		"seed": current_seed,
+		"roster": roster,
+		"owned_equipment": owned_equipment,
+	}
+
+func apply_save_data(save_data: Dictionary) -> void:
+	if save_data.is_empty():
+		return
+
+	_character_library.clear()
+	_equipment_catalog = {
+		"Weapon": [],
+		"Armor": [],
+		"Accessory": [],
+	}
+	party_roster.clear()
+
+	var saved_seed := int(save_data.get("seed", current_seed))
+	if saved_seed != 0:
+		seed_from_save(saved_seed)
+
+	for entry_variant in Array(save_data.get("roster", [])):
+		if entry_variant is not Dictionary:
+			continue
+		var entry: Dictionary = entry_variant
+		var display_name := String(entry.get("display_name", ""))
+		var character := ensure_party_member(display_name)
+		if character == null:
+			continue
+		character.equipped_weapon = _load_weapon(entry.get("weapon", ""))
+		character.equipped_armor = _load_armor(entry.get("armor", ""))
+		character.equipped_accessory = _load_accessory(entry.get("accessory", ""))
+
+	var saved_owned_equipment: Variant = save_data.get("owned_equipment", {})
+	if saved_owned_equipment is Dictionary:
+		for slot_name_variant in (saved_owned_equipment as Dictionary).keys():
+			var slot_name := _normalize_slot_name(String(slot_name_variant))
+			if slot_name.is_empty():
+				continue
+			var catalog: Array = []
+			for raw_path_variant in Array((saved_owned_equipment as Dictionary).get(slot_name_variant, [])):
+				var item: Resource = load(String(raw_path_variant))
+				if item != null and not catalog.has(item):
+					catalog.append(item)
+			_equipment_catalog[slot_name] = catalog
+
+	for member in party_roster:
+		if member == null:
+			continue
+		_register_character_equipment(member)
+
+	_sync_player_equipment_to_global()
+	party_roster_changed.emit()
+	equipment_catalog_changed.emit()
+
 func get_party_roster() -> Array[CharacterData]:
 	return party_roster.duplicate()
 
@@ -111,6 +188,30 @@ func get_owned_equipment(slot_name: String) -> Array:
 	var catalog: Array = _equipment_catalog.get(slot_name, [])
 	return catalog.duplicate()
 
+func add_owned_equipment(item: Resource) -> bool:
+	if item == null:
+		return false
+
+	var slot_name := ""
+	if item is WeaponData:
+		slot_name = "Weapon"
+	elif item is ArmorData:
+		slot_name = "Armor"
+	elif item is AccessoryData:
+		slot_name = "Accessory"
+
+	if slot_name.is_empty():
+		return false
+
+	var catalog: Array = _equipment_catalog.get(slot_name, [])
+	if catalog.has(item):
+		return false
+
+	catalog.append(item)
+	_equipment_catalog[slot_name] = catalog
+	equipment_catalog_changed.emit()
+	return true
+
 func equip_character_item(character: CharacterData, slot_name: String, item: Resource) -> bool:
 	if character == null:
 		return false
@@ -151,6 +252,7 @@ func sync_runtime_party_to_scene(scene_root: Node) -> void:
 		var unit := scene_root.get_node_or_null("GameBoard/%s" % String(member.display_name))
 		if unit != null:
 			unit.character_data = member
+			unit.level = Global.get_player_level() if Global != null else 1
 
 func print_class_growth_debug_summary(characters: Array[CharacterData], levels_to_simulate: int = 20, simulations_per_class: int = 250) -> void:
 	if characters.is_empty():
@@ -266,3 +368,26 @@ func _sync_player_equipment_to_global() -> void:
 	if Global.has_method("_refresh_equipment_temporary_modifiers"):
 		Global.call("_refresh_equipment_temporary_modifiers")
 	Global.stats_updated.emit()
+
+func _resource_path_or_empty(item: Resource) -> String:
+	if item == null:
+		return ""
+	return String(item.resource_path)
+
+func _load_weapon(path: Variant) -> WeaponData:
+	var resolved_path := String(path)
+	if resolved_path.is_empty():
+		return null
+	return load(resolved_path) as WeaponData
+
+func _load_armor(path: Variant) -> ArmorData:
+	var resolved_path := String(path)
+	if resolved_path.is_empty():
+		return null
+	return load(resolved_path) as ArmorData
+
+func _load_accessory(path: Variant) -> AccessoryData:
+	var resolved_path := String(path)
+	if resolved_path.is_empty():
+		return null
+	return load(resolved_path) as AccessoryData

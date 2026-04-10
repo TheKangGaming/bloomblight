@@ -217,6 +217,18 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_start")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_cfe2f")
 text = "Start Game"
 
+[node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons"]
+texture_filter = 2
+layout_mode = 2
+custom_minimum_size = Vector2(320, 72)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxEmpty_cfe2f")
+theme_override_styles/hover = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/focus = SubResource("StyleBoxFlat_6ik4u")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_start")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_cfe2f")
+text = "Continue"
+
 [node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=117905331]
 texture_filter = 2
 layout_mode = 2

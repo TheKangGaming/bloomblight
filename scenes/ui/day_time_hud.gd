@@ -34,7 +34,10 @@ func _ready() -> void:
 	
 func _update_day_display(new_day: int) -> void:
 	if day_label:
-		day_label.text = "Day " + str(new_day)
+		if Global != null and Global.loop_hub_mode_active:
+			day_label.text = "Stage " + str(maxi(Global.loop_battle_index, 1))
+		else:
+			day_label.text = "Day " + str(new_day)
 func _process(_delta: float) -> void:
 	if not is_instance_valid(day_timer):
 		_resolve_day_timer()
@@ -69,7 +72,10 @@ func _set_day_label(force := false) -> void:
 		return
 
 	_last_rendered_day = Global.current_day
-	day_label.text = "Day " + str(Global.current_day)
+	if Global != null and Global.loop_hub_mode_active:
+		day_label.text = "Stage " + str(maxi(Global.loop_battle_index, 1))
+	else:
+		day_label.text = "Day " + str(Global.current_day)
 
 func _set_time_label(next_time: String, force := false) -> void:
 	if not force and _last_rendered_time == next_time:

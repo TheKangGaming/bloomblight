@@ -449,7 +449,9 @@ func get_progression_save_data() -> Dictionary:
 		"loop_battle_index": loop_battle_index,
 		"loop_unlocked_plots": loop_unlocked_plots.duplicate(true),
 		"loop_built_structures": loop_built_structures.duplicate(true),
-		"loop_equipped_perk_item": loop_equipped_perk_item
+		"loop_equipped_perk_item": loop_equipped_perk_item,
+		"player_permanent_stats": player_permanent_stats.duplicate(true),
+		"active_food_buff": active_food_buff.duplicate(true)
 	}
 
 func apply_progression_save_data(save_data: Dictionary) -> void:
@@ -473,7 +475,14 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 	if saved_loop_structures is Dictionary:
 		loop_built_structures = saved_loop_structures.duplicate(true)
 	loop_equipped_perk_item = int(save_data.get("loop_equipped_perk_item", loop_equipped_perk_item))
+	if save_data.has("player_permanent_stats") and save_data.player_permanent_stats is Dictionary:
+		player_permanent_stats = save_data.player_permanent_stats.duplicate(true)
+		ensure_player_stat_formats()
+	if save_data.has("active_food_buff") and save_data.active_food_buff is Dictionary:
+		active_food_buff = save_data.active_food_buff.duplicate(true)
 	inventory_updated.emit()
+	recipe_knowledge_updated.emit()
+	stats_updated.emit()
 	update_tutorial_ui()
 	loop_state_changed.emit()
 
@@ -782,7 +791,7 @@ var villagers_fed_yesterday: bool = true
 
 
 func ensure_player_stat_formats() -> void:
-	var has_new_permanent_format := player_permanent_stats is Dictionary and player_permanent_stats.has("base")
+	var has_new_permanent_format: bool = player_permanent_stats is Dictionary and player_permanent_stats.has("base")
 
 	if not has_new_permanent_format:
 		_upgrade_legacy_player_stats(player_stats)

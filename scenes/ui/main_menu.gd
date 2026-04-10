@@ -15,6 +15,11 @@ const NAV_REPEAT_INITIAL_DELAY_MS := 460
 const NAV_REPEAT_INTERVAL_MS := 320
 const CALENDAR_GRID_COLUMNS := 7
 const CALENDAR_GRID_DAYS := 28
+const LOOP_STAGE_COLUMNS := 5
+const LOOP_STAGE_COUNT := 10
+const LOOP_STAGE_CHECK_TEXTURE := preload("res://graphics/animations/ui/symbol_success_001_small_green/spritesheet.png")
+const LOOP_STAGE_CHECK_FRAME_SIZE := Vector2i(40, 40)
+const LOOP_STAGE_CHECK_FRAMES := 60
 
 enum MenuSection { PARTY, INVENTORY, CALENDAR }
 enum PartySubview { STATUS, EQUIPMENT, SKILLS }
@@ -83,6 +88,8 @@ var _equipment_choices_by_slot := {
 }
 var _calendar_day_panels: Array[PanelContainer] = []
 var _calendar_day_labels: Array[Label] = []
+var _calendar_day_checks: Array[TextureRect] = []
+var _last_rendered_loop_stage := -1
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
@@ -580,29 +587,54 @@ func _build_calendar_grid() -> void:
 
 	_calendar_day_panels.clear()
 	_calendar_day_labels.clear()
+	_calendar_day_checks.clear()
 	for child in calendar_grid.get_children():
 		calendar_grid.remove_child(child)
 		child.queue_free()
 
-	calendar_grid.columns = CALENDAR_GRID_COLUMNS
-	for day in range(1, CALENDAR_GRID_DAYS + 1):
+	var loop_mode := Global != null and Global.loop_hub_mode_active
+	var cell_count := LOOP_STAGE_COUNT if loop_mode else CALENDAR_GRID_DAYS
+	calendar_grid.columns = LOOP_STAGE_COLUMNS if loop_mode else CALENDAR_GRID_COLUMNS
+	for day in range(1, cell_count + 1):
 		var day_panel := PanelContainer.new()
 		day_panel.custom_minimum_size = Vector2(0, 76)
 		day_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		day_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+		var margin := MarginContainer.new()
+		margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+		margin.add_theme_constant_override("margin_left", 8)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_right", 8)
+		margin.add_theme_constant_override("margin_bottom", 8)
+		day_panel.add_child(margin)
+
+		var stack := VBoxContainer.new()
+		stack.alignment = BoxContainer.ALIGNMENT_CENTER
+		stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		margin.add_child(stack)
 
 		var day_label := Label.new()
 		day_label.text = str(day)
 		day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		day_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		day_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		day_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		day_label.add_theme_font_size_override("font_size", 26)
-		day_panel.add_child(day_label)
+		stack.add_child(day_label)
+
+		var check_rect := TextureRect.new()
+		check_rect.custom_minimum_size = Vector2(28, 28)
+		check_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		check_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		check_rect.visible = false
+		stack.add_child(check_rect)
 
 		calendar_grid.add_child(day_panel)
 		_calendar_day_panels.append(day_panel)
 		_calendar_day_labels.append(day_label)
+		_calendar_day_checks.append(check_rect)
 
 func _make_calendar_cell_style(background_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -643,6 +675,10 @@ func _apply_calendar_cell_state(day_panel: PanelContainer, day_label: Label, sta
 	day_label.add_theme_font_size_override("font_size", font_size)
 
 func _refresh_calendar_view() -> void:
+	if Global != null and Global.loop_hub_mode_active:
+		_refresh_loop_stage_tracker()
+		return
+
 	var current_day: int = int(Global.current_day)
 	if current_day <= 0:
 		current_day = 1
@@ -680,6 +716,63 @@ func _refresh_calendar_view() -> void:
 		elif displayed_day == season_day:
 			state = "current"
 		_apply_calendar_cell_state(_calendar_day_panels[index], _calendar_day_labels[index], state)
+
+func _refresh_loop_stage_tracker() -> void:
+	if _calendar_day_panels.size() != LOOP_STAGE_COUNT:
+		_build_calendar_grid()
+
+	var current_stage := clampi(maxi(Global.loop_battle_index, 1), 1, LOOP_STAGE_COUNT)
+	var completed_count := clampi(maxi(Global.loop_battle_index - 1, 0), 0, LOOP_STAGE_COUNT)
+
+	calendar_kicker_label.text = "Forest Stages"
+	calendar_season_label.text = "Biome 1"
+	calendar_day_summary_label.text = "Stage %d of %d" % [current_stage, LOOP_STAGE_COUNT]
+	calendar_note_label.text = "Clear each stage to earn Bloom Points, Gold, and party levels."
+	calendar_flavor_label.text = "Completed stages stay marked as the forest route opens up."
+
+	for index in range(_calendar_day_panels.size()):
+		var stage_number := index + 1
+		var state := "future"
+		if stage_number <= completed_count:
+			state = "past"
+		elif stage_number == current_stage:
+			state = "current"
+		_apply_calendar_cell_state(_calendar_day_panels[index], _calendar_day_labels[index], state)
+
+		var check_rect := _calendar_day_checks[index] if index < _calendar_day_checks.size() else null
+		if check_rect != null:
+			if stage_number <= completed_count:
+				check_rect.visible = true
+				_set_stage_check_frame(check_rect, LOOP_STAGE_CHECK_FRAMES - 1)
+			else:
+				check_rect.visible = false
+
+	if completed_count > 0 and completed_count != _last_rendered_loop_stage:
+		var animated_index := clampi(completed_count - 1, 0, _calendar_day_checks.size() - 1)
+		if animated_index < _calendar_day_checks.size():
+			var animated_check := _calendar_day_checks[animated_index]
+			if animated_check != null:
+				animated_check.visible = true
+				call_deferred("_play_stage_check_animation", animated_check)
+	_last_rendered_loop_stage = completed_count
+
+func _set_stage_check_frame(target: TextureRect, frame: int) -> void:
+	if target == null:
+		return
+	var atlas := AtlasTexture.new()
+	atlas.atlas = LOOP_STAGE_CHECK_TEXTURE
+	atlas.region = Rect2(frame * LOOP_STAGE_CHECK_FRAME_SIZE.x, 0, LOOP_STAGE_CHECK_FRAME_SIZE.x, LOOP_STAGE_CHECK_FRAME_SIZE.y)
+	target.texture = atlas
+
+func _play_stage_check_animation(target: TextureRect) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	for frame in range(LOOP_STAGE_CHECK_FRAMES):
+		if target == null or not is_instance_valid(target):
+			return
+		_set_stage_check_frame(target, frame)
+		await get_tree().process_frame
+	_set_stage_check_frame(target, LOOP_STAGE_CHECK_FRAMES - 1)
 
 func _build_party_status_text(character: CharacterData) -> String:
 	var stats := _build_character_unit_stats(character)
@@ -729,6 +822,9 @@ func _build_character_unit_stats(character: CharacterData) -> UnitStats:
 		return stats
 
 	stats.apply_class_progression(character)
+	var shared_level := maxi(Global.get_player_level(), 1) if Global != null else 1
+	if shared_level > 1:
+		stats.apply_auto_levels(shared_level - 1)
 	stats.apply_delta(_extract_equipment_delta(character.equipped_weapon))
 	stats.apply_delta(_extract_equipment_delta(character.equipped_armor))
 	stats.apply_delta(_extract_equipment_delta(character.equipped_accessory))
@@ -767,7 +863,7 @@ func _build_character_role_text(character: CharacterData) -> String:
 	return "%s | %s" % [class_label, role_name]
 
 func _resolve_character_level(character: CharacterData) -> int:
-	return Global.get_player_level() if _is_player_character(character) else 1
+	return Global.get_player_level() if Global != null else 1
 
 func _build_meal_status_text(character: CharacterData) -> String:
 	if character == null:

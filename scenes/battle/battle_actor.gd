@@ -46,6 +46,15 @@ func play_attack() -> void:
 	if _visual_driver and _visual_driver.has_method("play_attack"):
 		_waiting_for_action_finish = true
 		_visual_driver.play_attack()
+
+func play_attack_variant(variant: StringName) -> void:
+	if _visual_driver == null:
+		return
+	if variant != StringName() and _visual_driver.has_method("play_attack_variant"):
+		_waiting_for_action_finish = true
+		_visual_driver.play_attack_variant(variant)
+		return
+	play_attack()
 		
 func play_run() -> void:
 	if _visual_driver and _visual_driver.has_method("play_run"):

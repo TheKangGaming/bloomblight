@@ -68,6 +68,8 @@ var _demo_story_dialogue_layer: CanvasLayer = null
 var _demo_story_dialogue: Control = null
 var _demo_overlay_layer: CanvasLayer = null
 var _demo_overlay: Control = null
+var _battle_tutorial_layer: CanvasLayer = null
+var _battle_tutorial_open := false
 var _battle_camera: Camera2D = null
 var _default_camera_focus := Vector2.ZERO
 var _selection_sfx_player: AudioStreamPlayer = null
@@ -138,6 +140,8 @@ func _sync_scene_music_to_manager() -> void:
 		MusicManager.crossfade_to(music_stream, fade_duration, music_volume_db)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _battle_tutorial_open:
+		return
 	if event.is_action_pressed("menu_toggle"):
 		_hide_unit_hover_tooltip()
 		_show_pause_menu()
@@ -381,10 +385,10 @@ func _get_collision_shape_bounds(collision_shape: CollisionShape2D) -> Rect2:
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit, unit.move_range, false)
 	
-func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit) -> Array:
+func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit, min_attack_range: int = -1) -> Array:
 	var attackable_dict = {}
 	var walkable_dict = {}
-	var attack_offsets = _get_attack_offsets(attack_range)
+	var attack_offsets = _get_attack_offsets(attack_range, min_attack_range)
 	
 	for cell in walkable_cells:
 		walkable_dict[cell] = true
@@ -574,7 +578,7 @@ func _select_unit(cell: Vector2) -> void:
 		_walkable_cells = get_walkable_cells(_active_unit)
 	else:
 		_walkable_cells = [_active_unit.cell]
-	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range, _active_unit)
+	_attackable_cells = get_attackable_cells(_walkable_cells, _active_unit.attack_range, _active_unit, _active_unit.min_attack_range)
 	
 	_unit_overlay.draw_attackable_cells(_attackable_cells)
 	
@@ -594,9 +598,9 @@ func _select_unit(cell: Vector2) -> void:
 	
 	await _maybe_show_unit_tutorial(_active_unit)
 
-func _get_attack_cells_from_origin(origin: Vector2, attack_range: int) -> Dictionary:
+func _get_attack_cells_from_origin(origin: Vector2, attack_range: int, min_attack_range: int = -1) -> Dictionary:
 	var cells: Dictionary = {}
-	for offset in _get_attack_offsets(attack_range):
+	for offset in _get_attack_offsets(attack_range, min_attack_range):
 		var target_cell = origin + offset
 		if grid.is_within_bounds(target_cell):
 			cells[target_cell] = true
@@ -607,6 +611,7 @@ func _find_attack_origin_for_target(target_cell: Vector2) -> Variant:
 		return null
 
 	var attack_range = _active_unit.attack_range
+	var min_attack_range = _active_unit.min_attack_range
 	if attack_range <= 0:
 		return null
 
@@ -617,7 +622,7 @@ func _find_attack_origin_for_target(target_cell: Vector2) -> Variant:
 			continue
 
 		var dist := _manhattan_distance(candidate, target_cell)
-		if not _is_distance_in_attack_range(dist, attack_range):
+		if not _is_distance_in_attack_range(dist, attack_range, min_attack_range):
 			continue
 
 		var move_distance := _manhattan_distance(_active_unit.cell, candidate)
@@ -630,7 +635,7 @@ func _find_attack_origin_for_target(target_cell: Vector2) -> Variant:
 func _begin_attack_preview_on_target(target_unit: Unit) -> void:
 	_target_unit_for_forecast = target_unit
 	_is_targeting_attack = true
-	_valid_target_cells = _get_attack_cells_from_origin(_active_unit.cell, _active_unit.attack_range).keys()
+	_valid_target_cells = _get_attack_cells_from_origin(_active_unit.cell, _active_unit.attack_range, _active_unit.min_attack_range).keys()
 	_unit_overlay.clear()
 	_unit_overlay.draw_attackable_cells(_valid_target_cells)
 	_show_combat_forecast(_active_unit, target_unit)
@@ -642,7 +647,7 @@ func _hover_display(cell: Vector2) -> void:
 	var curr_unit := _get_unit_at_cell(cell)
 	if curr_unit != null:
 		_walkable_cells = get_walkable_cells(curr_unit)
-		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range, curr_unit)
+		_attackable_cells = get_attackable_cells(_walkable_cells, curr_unit.attack_range, curr_unit, curr_unit.min_attack_range)
 		_unit_overlay.clear() 
 		_unit_overlay.draw_attackable_cells(_attackable_cells)
 		_unit_overlay.draw_walkable_cells(_walkable_cells)
@@ -699,7 +704,7 @@ func _unit_has_attack_target_from_current_cell(unit: Unit) -> bool:
 	if unit == null:
 		return false
 
-	for cell in _get_attack_cells_from_origin(unit.cell, unit.attack_range).keys():
+	for cell in _get_attack_cells_from_origin(unit.cell, unit.attack_range, unit.min_attack_range).keys():
 		if not is_occupied(cell):
 			continue
 		var target: Unit = _units[cell]
@@ -771,8 +776,8 @@ func cancel_action_menu() -> void:
 	_clear_active_unit_selection(_can_undo_active_unit_movement())
 
 
-func _is_distance_in_attack_range(distance: int, attack_range: int) -> bool:
-	return CombatCalculator.can_attack_at_distance(distance, attack_range)
+func _is_distance_in_attack_range(distance: int, attack_range: int, min_attack_range: int = -1) -> bool:
+	return CombatCalculator.can_attack_at_distance(distance, attack_range, min_attack_range)
 		
 func _deselect_active_unit() -> void:
 	if _active_unit:
@@ -794,6 +799,8 @@ func _deselect_active_unit() -> void:
 
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	if _battle_tutorial_open:
+		return
 	if _battle_ended:
 		return
 
@@ -898,6 +905,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 
 func _on_Cursor_moved(new_cell: Vector2) -> void:
+	if _battle_tutorial_open:
+		return
 	if _active_unit and _active_unit.is_selected:
 		_hide_unit_hover_tooltip()
 		if _walkable_cells.has(new_cell):
@@ -1032,7 +1041,7 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 
 		for destination in legal_destinations:
 			var dist = _manhattan_distance(destination, player.cell)
-			var can_attack_from_here = _is_distance_in_attack_range(dist, enemy.attack_range)
+			var can_attack_from_here = _is_distance_in_attack_range(dist, enemy.attack_range, enemy.min_attack_range)
 
 			# Priority: secure an attack this turn, then maximize proximity, then focus lower HP targets.
 			var should_replace = false
@@ -1128,7 +1137,7 @@ func start_enemy_phase() -> void:
 		# C. Attack check using the chosen target.
 		if _is_valid_attack_target(enemy, target_player):
 			var final_dist = _manhattan_distance(enemy.cell, target_player.cell)
-			if _is_distance_in_attack_range(final_dist, enemy.attack_range):
+			if _is_distance_in_attack_range(final_dist, enemy.attack_range, enemy.min_attack_range):
 				
 				# NEW: Hand the AI fight over to the combat manager!
 				var combat_completed := await execute_combat(enemy, target_player)
@@ -1177,8 +1186,9 @@ func enter_attack_targeting() -> void:
 	_unit_overlay.clear()
 	
 	var atk_range = _active_unit.attack_range
+	var min_atk_range = _active_unit.min_attack_range
 	var center_cell = _active_unit.cell
-	var attack_offsets = _get_attack_offsets(atk_range)
+	var attack_offsets = _get_attack_offsets(atk_range, min_atk_range)
 	
 	# Calculate attack range from where the unit is currently standing
 	for offset in attack_offsets:
@@ -1477,7 +1487,7 @@ func _can_unit_attack_target(unit: Unit, target: Unit) -> bool:
 		return false
 
 	var dist = _manhattan_distance(unit.cell, target.cell)
-	return _is_distance_in_attack_range(dist, unit.attack_range)
+	return _is_distance_in_attack_range(dist, unit.attack_range, unit.min_attack_range)
 
 
 func _format_forecast_damage(base_damage: int, can_double: bool) -> String:
@@ -1536,21 +1546,22 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 		_phase_banner_layer.queue_free()
 		_phase_banner_layer = null
 
-func _get_attack_offsets(attack_range: int) -> Array:
+func _get_attack_offsets(attack_range: int, min_attack_range: int = -1) -> Array:
 	if attack_range <= 0:
 		return []
 
-	if _attack_offsets_cache.has(attack_range):
-		return _attack_offsets_cache[attack_range]
+	var cache_key := "%d:%d" % [attack_range, min_attack_range]
+	if _attack_offsets_cache.has(cache_key):
+		return _attack_offsets_cache[cache_key]
 
 	var offsets: Array = []
 	for x in range(-attack_range, attack_range + 1):
 		for y in range(-attack_range, attack_range + 1):
 			var distance = abs(x) + abs(y)
-			if distance == attack_range:
+			if CombatCalculator.can_attack_at_distance(distance, attack_range, min_attack_range):
 				offsets.append(Vector2(x, y))
 
-	_attack_offsets_cache[attack_range] = offsets
+	_attack_offsets_cache[cache_key] = offsets
 	return offsets
 
 func _are_all_player_units_waiting() -> bool:
@@ -2176,13 +2187,16 @@ func _complete_demo_first_action() -> void:
 func _show_loop_battle_tutorial_card(card_id: String, unit: Unit) -> void:
 	if DemoDirector == null or card_id.is_empty():
 		return
-
-	if _demo_battle_active or not Global.loop_hub_mode_active:
-		await DemoDirector.show_tutorial_card(card_id, self)
+	if DemoDirector.has_seen_tutorial(card_id):
 		return
 
+	var config := DemoDirector.get_tutorial_card_config(card_id)
+	if config.is_empty():
+		return
+
+	DemoDirector.mark_tutorial_seen(card_id)
 	await _focus_loop_tutorial_camera()
-	await DemoDirector.show_tutorial_card(card_id, self)
+	await _show_battle_tutorial_panel(String(config.get("title", "")), String(config.get("body", "")))
 	if unit != null and is_instance_valid(unit):
 		_handoff_to_cursor_camera(_get_unit_camera_focus_position(unit))
 
@@ -2206,8 +2220,6 @@ func _maybe_show_unit_tutorial(unit: Unit) -> void:
 		"Savannah":
 			if not DemoDirector.has_seen_tutorial("battle_savannah"):
 				await _show_loop_battle_tutorial_card("battle_savannah", unit)
-			elif _demo_battle_active and not DemoDirector.has_seen_tutorial("battle_harvest") and _has_adjacent_battle_plant(unit):
-				await DemoDirector.show_tutorial_card("battle_harvest", self)
 		"Silas":
 			if not DemoDirector.has_seen_tutorial("battle_silas"):
 				await _show_loop_battle_tutorial_card("battle_silas", unit)
@@ -2223,3 +2235,92 @@ func _has_adjacent_battle_plant(unit: Unit) -> bool:
 		if _battle_plants.has(unit.cell + direction):
 			return true
 	return false
+
+func _ensure_battle_tutorial_layer() -> CanvasLayer:
+	if _battle_tutorial_layer != null and is_instance_valid(_battle_tutorial_layer):
+		return _battle_tutorial_layer
+
+	_battle_tutorial_layer = CanvasLayer.new()
+	_battle_tutorial_layer.name = "BattleTutorialLayer"
+	_battle_tutorial_layer.layer = 126
+	add_child(_battle_tutorial_layer)
+	return _battle_tutorial_layer
+
+func _show_battle_tutorial_panel(title_text: String, body_text: String) -> void:
+	var layer := _ensure_battle_tutorial_layer()
+	if layer == null:
+		return
+
+	_battle_tutorial_open = true
+	if _cursor != null:
+		_cursor.is_active = false
+		_cursor.hide()
+	_hide_combat_forecast()
+	_hide_targeting_hint()
+
+	var root := Control.new()
+	root.name = "BattleTutorialPanel"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
+	layer.add_child(root)
+
+	var panel := PanelContainer.new()
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 0.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = -520
+	panel.offset_right = -24
+	panel.offset_top = 24
+	panel.offset_bottom = 270
+	root.add_child(panel)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.08, 0.11, 0.96)
+	style.border_color = Color(0.76, 0.9, 0.78, 0.92)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	panel.add_theme_stylebox_override("panel", style)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	panel.add_child(margin)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 10)
+	margin.add_child(layout)
+
+	var title := Label.new()
+	title.text = title_text
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.add_theme_font_size_override("font_size", 24)
+	layout.add_child(title)
+
+	var body := Label.new()
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(0, 110)
+	body.text = body_text
+	body.add_theme_font_size_override("font_size", 19)
+	layout.add_child(body)
+
+	var continue_button := Button.new()
+	continue_button.text = "Continue"
+	continue_button.custom_minimum_size = Vector2(0, 46)
+	layout.add_child(continue_button)
+	continue_button.grab_focus()
+
+	await continue_button.pressed
+	root.queue_free()
+	_battle_tutorial_open = false
+	if _cursor != null:
+		_cursor.show()
+		_cursor.is_active = true

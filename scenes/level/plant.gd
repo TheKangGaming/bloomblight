@@ -152,6 +152,18 @@ func setup(seed_enum: Global.Items, grid_position: Vector2i):
 	_visuals_pending = true
 	_refresh_crop_visuals()
 
+func restore_state(seed_enum: Global.Items, grid_position: Vector2i, saved_age: float) -> void:
+	plant_type = seed_enum
+	max_age = plant_data[seed_enum]['max age']
+	grow_speed = plant_data[seed_enum]['grow speed']
+	grid_pos = grid_position
+	age = clampf(saved_age, 0.0, float(max_age))
+	_visuals_pending = true
+	_refresh_crop_visuals()
+	if age >= max_age and not sparkle_fx.visible:
+		sparkle_fx.visible = true
+		sparkle_fx.play("sparkle")
+
 func grow(watered: bool):
 		if watered:
 			advance_growth()

@@ -189,7 +189,7 @@ func _execute_battle_sequence() -> void:
 		
 		# Initiate the attack animation
 		_debug_combat("Strike %d attack animation: %s" % [strike_index, _actor_name(striker)])
-		striker.play_attack()
+		striker.play_attack_variant(_get_attack_animation_variant_for_strike(strike))
 		_play_attack_sfx_for_strike(strike)
 		
 		# Wait for the exact frame the weapon connects, but do not let a missing
@@ -199,7 +199,7 @@ func _execute_battle_sequence() -> void:
 		# --- DELIVER THE RANGED/MAGIC PAYLOAD ---
 		if strike.attack_kind == CombatStrike.AttackKind.RANGED:
 			_debug_combat("Strike %d projectile start" % strike_index)
-			await _play_projectile(striker, target, strike.is_hit)
+			await _play_projectile(striker, target, strike.is_hit, _get_weapon_for_strike(strike))
 			if strike.is_hit:
 				_play_impact_sfx_for_strike(strike)
 		elif strike.attack_kind == CombatStrike.AttackKind.MAGIC:
@@ -264,9 +264,13 @@ func _execute_battle_sequence() -> void:
 	_return_to_map()
 	
 func _determine_combatants_reach() -> void:
-	_attacker_is_melee = (_get_attack_kind_for_weapon(_attacker_weapon) == CombatStrike.AttackKind.MELEE)
-	_defender_is_melee = (_get_attack_kind_for_weapon(_defender_weapon) == CombatStrike.AttackKind.MELEE)
-	_defender_will_counter = CombatCalculator.can_attack_at_distance(_combat_distance, _get_attack_range_for_weapon(_defender_weapon, _defender_stats))
+	_attacker_is_melee = (_get_attack_kind_for_weapon(_attacker_weapon, _combat_distance) == CombatStrike.AttackKind.MELEE)
+	_defender_is_melee = (_get_attack_kind_for_weapon(_defender_weapon, _combat_distance) == CombatStrike.AttackKind.MELEE)
+	_defender_will_counter = CombatCalculator.can_attack_at_distance(
+		_combat_distance,
+		_get_attack_range_for_weapon(_defender_weapon, _defender_stats),
+		_get_min_attack_range_for_weapon(_defender_weapon, _defender_stats)
+	)
 	_attacker_has_advanced = false
 	_defender_has_advanced = false
 
@@ -500,8 +504,8 @@ func _get_dynamic_melee_destination(is_attacker_striking: bool) -> Vector2:
 	var x_offset := -MELEE_STANDOFF if is_attacker_striking else MELEE_STANDOFF
 	return target.position + Vector2(x_offset, 0.0)
 
-func _get_attack_kind_for_weapon(weapon: WeaponData) -> CombatStrike.AttackKind:
-	return CombatCalculator.get_attack_kind(weapon)
+func _get_attack_kind_for_weapon(weapon: WeaponData, distance: int = -1) -> CombatStrike.AttackKind:
+	return CombatCalculator.get_attack_kind(weapon, distance)
 
 func _get_attack_range_for_weapon(weapon: WeaponData, stats: UnitStats) -> int:
 	if weapon == null:
@@ -509,6 +513,23 @@ func _get_attack_range_for_weapon(weapon: WeaponData, stats: UnitStats) -> int:
 			return maxi(1, int(stats.atk_rng))
 		return 1
 	return weapon.attack_range
+
+func _get_min_attack_range_for_weapon(weapon: WeaponData, stats: UnitStats) -> int:
+	if weapon == null:
+		if stats != null:
+			return maxi(1, int(stats.atk_rng))
+		return 1
+	if int(weapon.min_attack_range) >= 0:
+		return maxi(1, int(weapon.min_attack_range))
+	return maxi(1, int(weapon.attack_range))
+
+func _get_attack_animation_variant_for_strike(strike: CombatStrike) -> StringName:
+	var weapon := _get_weapon_for_strike(strike)
+	if strike.attack_kind == CombatStrike.AttackKind.RANGED and weapon != null:
+		match String(weapon.projectile_style):
+			"dagger":
+				return &"attack_ranged"
+	return StringName()
 	
 func _return_to_map() -> void:
 	# Tell the transition manager to fade out, delete this node, and unpause the map
@@ -662,9 +683,17 @@ func _spawn_damage_popup(target: BattleActor, strike: CombatStrike) -> void:
 	popup.position = battle_world.to_local(target.get_damage_anchor_position())
 	popup.play()
 
-func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool) -> void:
+func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool, weapon: WeaponData = null) -> void:
 	var arrow = PROJECTILE_VFX_SCRIPT.new()
 	battle_world.add_child(arrow)
+	if arrow is BattleProjectileVfx:
+		var projectile := arrow as BattleProjectileVfx
+		if weapon != null and weapon.projectile_style != StringName():
+			projectile.projectile_style = weapon.projectile_style
+		elif weapon != null and String(weapon.weapon_type) == "Lance":
+			projectile.projectile_style = &"spear"
+		else:
+			projectile.projectile_style = &"arrow"
 	
 	var start_pos = striker.get_effect_anchor_position() + EFFECT_VERTICAL_OFFSET
 	arrow.global_position = start_pos

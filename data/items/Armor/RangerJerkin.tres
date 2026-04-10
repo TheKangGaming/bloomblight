@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ArmorData" format=3]
+
+[ext_resource type="Script" path="res://data/types/armor_data.gd" id="1_armor"]
+[ext_resource type="Texture2D" path="res://graphics/armor/a1.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_armor")
+armor_name = "Ranger Jerkin"
+description = "A light layered jerkin that sharpens movement and field awareness."
+icon = ExtResource("2_icon")
+stat_bonuses = {
+"defense": 2,
+"dexterity": 2,
+"speed": 2
+}
+

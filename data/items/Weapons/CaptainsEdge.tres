@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://data/types/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://graphics/weapons/w22.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+weapon_name = "Captain's Edge"
+description = "A finely balanced blade that turns Savannah into a true stage-clearing duelist."
+icon = ExtResource("2_icon")
+might = 10
+hit_rate = 86
+attack_range = 1
+stat_bonuses = {
+"dexterity": 1,
+"speed": 1,
+"strength": 2
+}
+

@@ -30,6 +30,8 @@ func _ready() -> void:
 	_wire_button(quit_button)
 
 	resume_button.pressed.connect(_close_menu)
+	save_button.pressed.connect(_save_run)
+	load_button.pressed.connect(_load_run)
 	settings_button.pressed.connect(_open_settings)
 	exit_to_title_button.pressed.connect(_exit_to_title)
 	quit_button.pressed.connect(_quit_game)
@@ -75,6 +77,7 @@ func _handle_toggle_input(event: InputEvent) -> bool:
 	return false
 
 func _open_menu() -> void:
+	_refresh_save_load_buttons()
 	visible = true
 	get_tree().paused = true
 	var ui_sounds := _ui_sound_manager()
@@ -126,6 +129,32 @@ func _exit_to_title() -> void:
 		ui_sounds.play_menu_button()
 	get_tree().paused = false
 	TransitionManager.change_scene_path(TITLE_SCENE_PATH)
+
+func _refresh_save_load_buttons() -> void:
+	var current_scene := get_tree().current_scene
+	var can_manage_run := current_scene != null and Global != null and Global.loop_hub_mode_active and current_scene.has_method("get_loop_run_save_state")
+	save_button.disabled = not can_manage_run
+	load_button.disabled = SaveManager == null or not SaveManager.has_method("has_save") or not SaveManager.has_save()
+
+func _save_run() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene == null or not current_scene.has_method("get_loop_run_save_state"):
+		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
+	if SaveManager != null and SaveManager.has_method("save_current_run"):
+		SaveManager.save_current_run(current_scene.get_loop_run_save_state())
+	_refresh_save_load_buttons()
+
+func _load_run() -> void:
+	if SaveManager == null or not SaveManager.has_method("load_current_run") or not SaveManager.load_current_run():
+		return
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_menu_button()
+	get_tree().paused = false
+	TransitionManager.change_scene_path("res://scenes/level/game.tscn")
 
 func _quit_game() -> void:
 	var ui_sounds := _ui_sound_manager()

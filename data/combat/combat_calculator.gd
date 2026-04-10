@@ -3,12 +3,20 @@ class_name CombatCalculator extends RefCounted
 # Locking in your repo's official threshold
 const FOLLOW_UP_SPEED_DIFF: int = 4 
 
-static func can_attack_at_distance(distance: int, attack_range: int) -> bool:
-	return attack_range > 0 and distance == attack_range
+static func can_attack_at_distance(distance: int, attack_range: int, min_attack_range: int = -1) -> bool:
+	if attack_range <= 0:
+		return false
+	if min_attack_range < 0:
+		return distance == attack_range
+	var lower_bound := mini(min_attack_range, attack_range)
+	var upper_bound := maxi(min_attack_range, attack_range)
+	return distance >= lower_bound and distance <= upper_bound
 
-static func get_attack_kind(weapon: WeaponData) -> CombatStrike.AttackKind:
+static func get_attack_kind(weapon: WeaponData, distance: int = -1) -> CombatStrike.AttackKind:
 	if not weapon:
 		return CombatStrike.AttackKind.MELEE
+	if distance > 1 and (weapon.projectile_style != StringName() or weapon.attack_range > 1 or weapon.min_attack_range > 1):
+		return CombatStrike.AttackKind.RANGED
 	if weapon.weapon_type == "Bow":
 		return CombatStrike.AttackKind.RANGED
 	if weapon.weapon_type == "Tome" or weapon.weapon_type == "Staff":
@@ -18,8 +26,8 @@ static func get_attack_kind(weapon: WeaponData) -> CombatStrike.AttackKind:
 ## 1. THE FORECAST: Generates the raw numbers for the UI and the RNG resolver.
 static func get_combat_forecast(attacker: Unit, defender: Unit, distance: int) -> CombatForecast:
 	var forecast = CombatForecast.new()
-	var attacker_preview := attacker.get_combat_stats(defender)
-	var defender_preview := defender.get_combat_stats(attacker)
+	var attacker_preview := attacker.get_combat_stats(defender, distance)
+	var defender_preview := defender.get_combat_stats(attacker, distance)
 
 	forecast.attacker_damage = int(attacker_preview.get("damage", 0))
 	forecast.attacker_hit_chance = int(attacker_preview.get("hit", 0))
@@ -27,7 +35,7 @@ static func get_combat_forecast(attacker: Unit, defender: Unit, distance: int) -
 	forecast.attacker_can_double = (attacker.speed - defender.speed) >= FOLLOW_UP_SPEED_DIFF
 
 	# CRITICAL: Only calculate a counterattack if the defender can actually reach the attacker!
-	if can_attack_at_distance(distance, defender.attack_range):
+	if can_attack_at_distance(distance, defender.attack_range, defender.min_attack_range):
 		forecast.defender_can_counter = true
 		forecast.defender_damage = int(defender_preview.get("damage", 0))
 		forecast.defender_hit_chance = int(defender_preview.get("hit", 0))
@@ -46,8 +54,8 @@ static func resolve_combat(attacker: Unit, defender: Unit, distance: int) -> Arr
 		"defender": defender.current_stats.hp,
 		"attacker": attacker.current_stats.hp
 	}
-	var atk_kind = get_attack_kind(attacker.character_data.equipped_weapon)
-	var def_kind = get_attack_kind(defender.character_data.equipped_weapon)
+	var atk_kind = get_attack_kind(attacker.character_data.equipped_weapon, distance)
+	var def_kind = get_attack_kind(defender.character_data.equipped_weapon, distance)
 	
 	# --- Helper Function to Process a Single Strike ---
 	var process_strike = func(is_attacker: bool, dmg: int, hit_chance: int, crit_chance: int, is_counter: bool, is_follow_up: bool) -> bool:
