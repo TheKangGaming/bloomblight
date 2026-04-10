@@ -891,7 +891,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			
 		elif is_occupied(cell):
 			var target_unit = _units[cell]
-			if target_unit.is_enemy != _active_unit.is_enemy:
+			if target_unit.is_enemy != _active_unit.is_enemy and not _active_unit.main_action_used:
 				var attack_from_cell = _find_attack_origin_for_target(cell)
 				if attack_from_cell != null:
 					if attack_from_cell != _active_unit.cell:

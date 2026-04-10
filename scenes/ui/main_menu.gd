@@ -17,9 +17,10 @@ const CALENDAR_GRID_COLUMNS := 7
 const CALENDAR_GRID_DAYS := 28
 const LOOP_STAGE_COLUMNS := 5
 const LOOP_STAGE_COUNT := 10
-const LOOP_STAGE_CHECK_TEXTURE := preload("res://graphics/animations/ui/symbol_success_001_small_green/spritesheet.png")
-const LOOP_STAGE_CHECK_FRAME_SIZE := Vector2i(40, 40)
+const LOOP_STAGE_CHECK_TEXTURE := preload("res://graphics/animations/ui/symbol_success_001_large_green/spritesheet.png")
+const LOOP_STAGE_CHECK_FRAME_SIZE := Vector2i(80, 80)
 const LOOP_STAGE_CHECK_FRAMES := 60
+const LOOP_STAGE_CHECK_HOLD_FRAME := 30
 
 enum MenuSection { PARTY, INVENTORY, CALENDAR }
 enum PartySubview { STATUS, EQUIPMENT, SKILLS }
@@ -354,7 +355,7 @@ func _update_section_visibility() -> void:
 	items_view.visible = _current_inventory_subview == InventorySubview.ITEMS
 	equipment_catalog_view.visible = _current_inventory_subview == InventorySubview.EQUIPMENT
 
-	section_title.text = ["Party", "Inventory", "Calendar"][_current_section]
+	section_title.text = ["Party", "Inventory", "Stages"][_current_section]
 	_update_button_state(party_button, _current_section == MenuSection.PARTY)
 	_update_button_state(inventory_button, _current_section == MenuSection.INVENTORY)
 	_update_button_state(calendar_button, _current_section == MenuSection.CALENDAR)
@@ -725,7 +726,7 @@ func _refresh_loop_stage_tracker() -> void:
 	var completed_count := clampi(maxi(Global.loop_battle_index - 1, 0), 0, LOOP_STAGE_COUNT)
 
 	calendar_kicker_label.text = "Forest Stages"
-	calendar_season_label.text = "Biome 1"
+	calendar_season_label.text = ""
 	calendar_day_summary_label.text = "Stage %d of %d" % [current_stage, LOOP_STAGE_COUNT]
 	calendar_note_label.text = "Clear each stage to earn Bloom Points, Gold, and party levels."
 	calendar_flavor_label.text = "Completed stages stay marked as the forest route opens up."
@@ -743,7 +744,7 @@ func _refresh_loop_stage_tracker() -> void:
 		if check_rect != null:
 			if stage_number <= completed_count:
 				check_rect.visible = true
-				_set_stage_check_frame(check_rect, LOOP_STAGE_CHECK_FRAMES - 1)
+				_set_stage_check_frame(check_rect, LOOP_STAGE_CHECK_HOLD_FRAME)
 			else:
 				check_rect.visible = false
 
@@ -772,7 +773,7 @@ func _play_stage_check_animation(target: TextureRect) -> void:
 			return
 		_set_stage_check_frame(target, frame)
 		await get_tree().process_frame
-	_set_stage_check_frame(target, LOOP_STAGE_CHECK_FRAMES - 1)
+	_set_stage_check_frame(target, LOOP_STAGE_CHECK_HOLD_FRAME)
 
 func _build_party_status_text(character: CharacterData) -> String:
 	var stats := _build_character_unit_stats(character)
@@ -862,7 +863,7 @@ func _build_character_role_text(character: CharacterData) -> String:
 		return class_label
 	return "%s | %s" % [class_label, role_name]
 
-func _resolve_character_level(character: CharacterData) -> int:
+func _resolve_character_level(_character: CharacterData) -> int:
 	return Global.get_player_level() if Global != null else 1
 
 func _build_meal_status_text(character: CharacterData) -> String:

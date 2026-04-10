@@ -23,7 +23,7 @@ func _apply_visual() -> void:
 		return
 	var atlas_coords: Vector2i = ITEM_ATLAS_COORDS.get(item_type, Vector2i(5, 4))
 	sprite.region_rect = Rect2(atlas_coords.x * 32, atlas_coords.y * 32, 32, 32)
-	sprite.scale = Vector2(0.62, 0.62)
+	sprite.scale = Vector2(1.0, 1.0)
 
 func pop_out(min_angle: float = 0.0, max_angle: float = TAU, min_distance: float = 25.0, max_distance: float = 45.0):
 	# 1. Pick a random direction and distance inside the requested arc.

@@ -425,6 +425,7 @@ func apply_timed_combat_effect(effect_id: StringName, modifiers: Dictionary, tur
 	active_combat_effects[effect_id] = {
 		"turns_remaining": turns,
 		"modifiers": modifiers.duplicate(true),
+		"applied_this_turn": true,
 	}
 	_update_status_indicator()
 
@@ -441,6 +442,11 @@ func tick_timed_combat_effects() -> void:
 	var effect_ids := active_combat_effects.keys()
 	for effect_id in effect_ids:
 		var effect_state: Dictionary = active_combat_effects.get(effect_id, {})
+		# Skip decrementing effects that were just applied this turn
+		if effect_state.get("applied_this_turn", false):
+			effect_state["applied_this_turn"] = false
+			active_combat_effects[effect_id] = effect_state
+			continue
 		var turns_remaining := int(effect_state.get("turns_remaining", 0)) - 1
 		if turns_remaining <= 0:
 			active_combat_effects.erase(effect_id)

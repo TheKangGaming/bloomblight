@@ -31,4 +31,4 @@ position = Vector2(0, -81)
 shape = SubResource("RectangleShape2D_prtra")
 
 [node name="InteractionAnchor" type="Marker2D" parent="." unique_id=1522713887]
-position = Vector2(0, -77)
+position = Vector2(0, -100)

@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls /c/Users/kang/Desktop/BloomBlight/bloomblight/scenes/level/*.gd)"
+      "Bash(ls /c/Users/kang/Desktop/BloomBlight/bloomblight/scenes/level/*.gd)",
+      "Bash(grep -E \"\\(gd|tscn\\)$\")",
+      "Bash(grep -E \"\\(gd|tres\\)$\")",
+      "Bash(xargs grep:*)"
     ]
   }
 }
