@@ -43,11 +43,10 @@ const LOOP_CAMPFIRE_POS := Vector2(960, 1438)
 const LOOP_BRIDGE_BATTLE_POS := Vector2(960, 1656)
 const LOOP_PLOT_SIZE := Vector2(640.0, 480.0)
 const LOOP_PURIFY_VFX_TEXTURE: Texture2D = preload("res://graphics/animations/vfx/Fantasy Spells/spell_heal_001/spell_heal_001_large_green/spritesheet.png")
-const LOOP_MERCHANT_NAKED_TEXTURE := preload("res://graphics/npcs/merchant/vendor structure - naked.png")
-const LOOP_MERCHANT_COMPLETE_TEXTURE := preload("res://graphics/npcs/merchant/vendor structure - complete - on grass.png")
 const LOOP_PURIFY_SFX := preload("res://audio/sfx/Spell Impact 1.wav")
 const LOOP_INTERACTION_RADIUS_PLOT := 96.0
 const LOOP_INTERACTION_RADIUS_STRUCTURE := 88.0
+const LOOP_INTERACTION_RADIUS_MERCHANT := 156.0
 const LOOP_PLOT_INTERACTION_EDGE_MARGIN := 64.0
 const LOOP_BRIDGE_BATTLE_SCENE := "res://scenes/level/forest_battle.tscn"
 const LOOP_PLOT_MERCHANT := &"merchant"
@@ -106,14 +105,15 @@ const LOOP_INTERACTION_POINTS := {
 }
 const LOOP_MERCHANT_STRUCTURE_POS := Vector2(360, 1216)
 const LOOP_MERCHANT_NPC_POS := Vector2(374, 1288)
-const LOOP_FOREST_SILAS_POS := Vector2(1704, 1120)
+const LOOP_MERCHANT_INTERACTION_POS := Vector2(392, 1200)
+const LOOP_FOREST_SILAS_POS := Vector2(1404, 1220)
 const LOOP_FOREST_TREE_POSITIONS := [
-	Vector2(1520, 1196),
-	Vector2(1560, 1158),
-	Vector2(1600, 1220),
-	Vector2(1640, 1180),
-	Vector2(1588, 1260),
-	Vector2(1504, 1256),
+	Vector2(1520, 1296),
+	Vector2(1560, 1258),
+	Vector2(1600, 1320),
+	Vector2(1640, 1280),
+	Vector2(1588, 1360),
+	Vector2(1504, 1356),
 ]
 const LOOP_OBJECTIVE_FIGHT := "Fight for BP"
 const LOOP_OBJECTIVE_PLANT := "Plant seeds before battle"
@@ -156,6 +156,8 @@ enum IntroState {
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _cabin_home_scene: PackedScene = preload("res://scenes/level/cabin_home.tscn")
 var _merchant_actor_scene: PackedScene = preload("res://scenes/level/merchant_actor.tscn")
+var _merchant_wagon_naked_scene: PackedScene = preload("res://scenes/level/merchant_wagon_naked.tscn")
+var _merchant_wagon_complete_scene: PackedScene = preload("res://scenes/level/merchant_wagon_complete.tscn")
 var _overworld_burst_scene: PackedScene = preload("res://scenes/level/overworld_burst_vfx.tscn")
 var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
@@ -199,8 +201,8 @@ var _loop_plot_cover_root: Node2D = null
 var _loop_plot_cover_polygons: Dictionary = {}
 var _loop_plot_cover_bodies: Dictionary = {}
 var _loop_plot_outline_lines: Dictionary = {}
-var _loop_merchant_structure_naked: Sprite2D = null
-var _loop_merchant_structure_complete: Sprite2D = null
+var _loop_merchant_structure_naked: StaticBody2D = null
+var _loop_merchant_structure_complete: StaticBody2D = null
 var _loop_merchant_menu: PanelContainer = null
 var _loop_merchant_status: Label = null
 var _loop_merchant_actions: VBoxContainer = null
@@ -214,6 +216,9 @@ var _loop_hub_entry_uses_transition_handoff: bool = false
 var _loop_battle_launch_pending := false
 var _loop_plant_tutorial_active := false
 var _loop_battle_tutorial_active := false
+var _loop_bloom_points_tutorial_active := false
+var _loop_forest_tutorial_active := false
+var _loop_cooking_tutorial_active := false
 
 func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
@@ -415,20 +420,16 @@ func _ensure_loop_plot_covers() -> void:
 		_loop_plot_cover_bodies[String(plot_id)] = blocker_body
 
 func _ensure_loop_merchant_nodes() -> void:
-	if _loop_merchant_structure_naked == null or not is_instance_valid(_loop_merchant_structure_naked):
-		_loop_merchant_structure_naked = Sprite2D.new()
+	if (_loop_merchant_structure_naked == null or not is_instance_valid(_loop_merchant_structure_naked)) and _merchant_wagon_naked_scene != null:
+		_loop_merchant_structure_naked = _merchant_wagon_naked_scene.instantiate() as StaticBody2D
 		_loop_merchant_structure_naked.name = "MerchantStructureNaked"
-		_loop_merchant_structure_naked.texture = LOOP_MERCHANT_NAKED_TEXTURE
-		_loop_merchant_structure_naked.centered = true
 		_loop_merchant_structure_naked.position = LOOP_MERCHANT_STRUCTURE_POS
 		_loop_merchant_structure_naked.visible = false
 		objects_root.add_child(_loop_merchant_structure_naked)
 
-	if _loop_merchant_structure_complete == null or not is_instance_valid(_loop_merchant_structure_complete):
-		_loop_merchant_structure_complete = Sprite2D.new()
+	if (_loop_merchant_structure_complete == null or not is_instance_valid(_loop_merchant_structure_complete)) and _merchant_wagon_complete_scene != null:
+		_loop_merchant_structure_complete = _merchant_wagon_complete_scene.instantiate() as StaticBody2D
 		_loop_merchant_structure_complete.name = "MerchantStructureComplete"
-		_loop_merchant_structure_complete.texture = LOOP_MERCHANT_COMPLETE_TEXTURE
-		_loop_merchant_structure_complete.centered = true
 		_loop_merchant_structure_complete.position = LOOP_MERCHANT_STRUCTURE_POS
 		_loop_merchant_structure_complete.visible = false
 		objects_root.add_child(_loop_merchant_structure_complete)
@@ -665,7 +666,8 @@ func _spawn_loop_forest_content() -> void:
 	if silas_actor != null:
 		silas_actor.visible = true
 		silas_actor.global_position = LOOP_FOREST_SILAS_POS
-		silas_actor.z_index = 6
+		silas_actor.y_sort_enabled = true
+		silas_actor.z_index = 0
 		silas_actor.face_side(false)
 		silas_actor.play_idle()
 
@@ -690,8 +692,16 @@ func _refresh_loop_merchant_visuals() -> void:
 	var merchant_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON)
 	if _loop_merchant_structure_naked != null and is_instance_valid(_loop_merchant_structure_naked):
 		_loop_merchant_structure_naked.visible = merchant_unlocked and not merchant_built
+		_loop_merchant_structure_naked.collision_layer = 1 if merchant_unlocked and not merchant_built else 0
+		var naked_collision := _loop_merchant_structure_naked.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if naked_collision != null:
+			naked_collision.disabled = not (merchant_unlocked and not merchant_built)
 	if _loop_merchant_structure_complete != null and is_instance_valid(_loop_merchant_structure_complete):
 		_loop_merchant_structure_complete.visible = merchant_unlocked and merchant_built
+		_loop_merchant_structure_complete.collision_layer = 1 if merchant_unlocked and merchant_built else 0
+		var complete_collision := _loop_merchant_structure_complete.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if complete_collision != null:
+			complete_collision.disabled = not (merchant_unlocked and merchant_built)
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
 		_merchant_actor.global_position = LOOP_MERCHANT_NPC_POS
 		_merchant_actor.z_index = 2
@@ -792,28 +802,61 @@ func _show_loop_planting_tutorial_auto_card() -> void:
 	player.can_move = true
 	_loop_plant_tutorial_active = false
 
-func _maybe_begin_loop_battle_with_tutorial() -> bool:
+func _maybe_show_loop_battle_tutorial_after_planting() -> void:
 	if not Global.loop_hub_mode_active or DemoDirector == null:
-		return false
-	if DemoDirector.has_seen_tutorial("loop_battle"):
-		return false
-	if _loop_battle_launch_pending:
-		return true
-	_loop_battle_launch_pending = true
+		return
+	if _loop_battle_tutorial_active or DemoDirector.has_seen_tutorial("loop_battle"):
+		return
 	_loop_battle_tutorial_active = true
 	player.can_move = false
-	call_deferred("_show_loop_battle_tutorial_then_launch")
-	return true
+	call_deferred("_show_loop_battle_tutorial_after_planting_card")
 
-func _show_loop_battle_tutorial_then_launch() -> void:
+func _show_loop_battle_tutorial_after_planting_card() -> void:
 	if DemoDirector != null:
 		await DemoDirector.show_tutorial_card("loop_battle", self)
 	_loop_battle_tutorial_active = false
+	player.can_move = true
+
+func _maybe_show_loop_bloom_points_tutorial() -> void:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_bloom_points_tutorial_active or DemoDirector.has_seen_tutorial("loop_bloom_points"):
+		return
+	_loop_bloom_points_tutorial_active = true
 	player.can_move = false
-	player.direction = Vector2.ZERO
-	_show_player_notice("Crossing the bridge into the next fight...")
-	await get_tree().create_timer(0.1, true).timeout
-	await _start_loop_battle()
+	await DemoDirector.show_tutorial_card("loop_bloom_points", self)
+	_loop_bloom_points_tutorial_active = false
+	player.can_move = true
+
+func _maybe_show_loop_forest_unlock_tutorials() -> void:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_forest_tutorial_active:
+		return
+	if DemoDirector.has_seen_tutorial("loop_forest_join") and DemoDirector.has_seen_tutorial("loop_forest_wood"):
+		return
+	_loop_forest_tutorial_active = true
+	player.can_move = false
+	call_deferred("_show_loop_forest_unlock_tutorials")
+
+func _show_loop_forest_unlock_tutorials() -> void:
+	if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_forest_join"):
+		await DemoDirector.show_tutorial_card("loop_forest_join", self)
+	if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_forest_wood"):
+		await DemoDirector.show_tutorial_card("loop_forest_wood", self)
+	_loop_forest_tutorial_active = false
+	player.can_move = true
+
+func _on_loop_crop_harvested(_harvested_item: int) -> void:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_cooking_tutorial_active or DemoDirector.has_seen_tutorial("loop_cooking"):
+		return
+	_loop_cooking_tutorial_active = true
+	player.can_move = false
+	await DemoDirector.show_tutorial_card("loop_cooking", self)
+	_loop_cooking_tutorial_active = false
+	player.can_move = true
 
 func _restore_intro_forest_day_time() -> void:
 	if Global.intro_forest_day_time_left <= 0.0:
@@ -1086,6 +1129,9 @@ func _on_seed_chosen_from_menu(seed_type: int) -> void:
 	if not Global.remove_item(seed_type, 1):
 		return
 	_register_intro_plant(seed_type, planted_plant)
+	if Global.loop_hub_mode_active:
+		_refresh_loop_objective()
+		_maybe_show_loop_battle_tutorial_after_planting()
 
 func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
 	var season := CalendarService.get_current_season()
@@ -1722,10 +1768,10 @@ func _get_current_loop_interaction() -> Dictionary:
 	var merchant_target_pos := LOOP_INTERACTION_POINTS[LOOP_PLOT_MERCHANT]
 	var merchant_radius := LOOP_INTERACTION_RADIUS_PLOT
 	if Global.has_loop_plot(LOOP_PLOT_MERCHANT):
-		merchant_target_pos = LOOP_MERCHANT_STRUCTURE_POS
-		merchant_radius = LOOP_INTERACTION_RADIUS_STRUCTURE
+		merchant_target_pos = LOOP_MERCHANT_INTERACTION_POS
+		merchant_radius = LOOP_INTERACTION_RADIUS_MERCHANT
 		if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-			merchant_target_pos = LOOP_MERCHANT_NPC_POS
+			merchant_target_pos = LOOP_MERCHANT_INTERACTION_POS
 
 	var interactions := [
 		{
@@ -1870,10 +1916,8 @@ func _update_loop_interaction_ui() -> void:
 		if outline != null and is_instance_valid(outline):
 			outline.visible = String(interaction.get("highlight_plot", "")) == String(outline_variant)
 
-	if _loop_merchant_structure_naked != null and is_instance_valid(_loop_merchant_structure_naked):
-		_loop_merchant_structure_naked.self_modulate = Color(1.18, 1.18, 1.18) if active_target == "merchant" else Color(1, 1, 1)
-	if _loop_merchant_structure_complete != null and is_instance_valid(_loop_merchant_structure_complete):
-		_loop_merchant_structure_complete.self_modulate = Color(1.18, 1.18, 1.18) if active_target == "merchant" else Color(1, 1, 1)
+	_set_loop_merchant_structure_highlight(_loop_merchant_structure_naked, active_target == "merchant")
+	_set_loop_merchant_structure_highlight(_loop_merchant_structure_complete, active_target == "merchant")
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
 		_merchant_actor.modulate = Color(1.15, 1.15, 1.15) if active_target == "merchant" else Color(1, 1, 1)
 
@@ -1881,7 +1925,6 @@ func _update_loop_interaction_ui() -> void:
 		return
 	if interaction.is_empty():
 		_loop_prompt_root.visible = false
-		_maybe_show_loop_battle_tutorial(false)
 		return
 
 	_loop_prompt_label.text = String(interaction.get("label", ""))
@@ -1891,25 +1934,13 @@ func _update_loop_interaction_ui() -> void:
 	var screen_point := canvas_transform * (focus_point + Vector2(0, -56))
 	_loop_prompt_root.position = screen_point - (_loop_prompt_root.size * 0.5)
 	_loop_prompt_root.visible = true
-	_maybe_show_loop_battle_tutorial(String(interaction.get("target", "")) == "bridge_battle")
 
-func _maybe_show_loop_battle_tutorial(bridge_is_active: bool) -> void:
-	if not bridge_is_active or not Global.loop_hub_mode_active or DemoDirector == null:
+func _set_loop_merchant_structure_highlight(structure: Node2D, highlighted: bool) -> void:
+	if structure == null or not is_instance_valid(structure):
 		return
-	if _loop_battle_tutorial_active or DemoDirector.has_seen_tutorial("loop_battle"):
-		return
-	if not player.can_move:
-		return
-
-	_loop_battle_tutorial_active = true
-	player.can_move = false
-	call_deferred("_show_loop_battle_tutorial_near_bridge")
-
-func _show_loop_battle_tutorial_near_bridge() -> void:
-	if DemoDirector != null:
-		await DemoDirector.show_tutorial_card("loop_battle", self)
-	player.can_move = true
-	_loop_battle_tutorial_active = false
+	var sprite := structure.get_node_or_null("Sprite2D") as Sprite2D
+	if sprite != null:
+		sprite.self_modulate = Color(1.18, 1.18, 1.18) if highlighted else Color(1, 1, 1)
 
 func _handle_loop_merchant_interaction() -> bool:
 	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
@@ -1969,7 +2000,7 @@ func _handle_loop_forest_interaction() -> bool:
 		ProgressionService.ensure_party_member("Silas")
 	_spawn_loop_forest_content()
 	_run_loop_plot_purified_feedback(LOOP_PLOT_FOREST)
-	_show_player_notice("Silas steps from the trees and joins the settlement.")
+	_maybe_show_loop_forest_unlock_tutorials()
 	_refresh_loop_plot_visuals()
 	_refresh_loop_objective()
 	return true
@@ -1998,10 +2029,9 @@ func _handle_loop_cabin_interaction() -> bool:
 
 func _handle_loop_bridge_battle_interaction() -> bool:
 	_close_loop_merchant_menu()
-	if _maybe_begin_loop_battle_with_tutorial():
-		return true
 	if _loop_battle_launch_pending:
 		return true
+	_loop_battle_launch_pending = true
 	player.can_move = false
 	player.direction = Vector2.ZERO
 	_show_player_notice("Crossing the bridge into the next fight...")
@@ -2040,7 +2070,8 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		_mature_loop_crops_after_battle()
 		if Global.has_loop_plot(LOOP_PLOT_FOREST):
 			_spawn_loop_forest_content()
-		_show_player_notice("Victory. +%d BP, +%d Gold." % [bp_reward, gold_reward], 1.8)
+		var reward_label := "Bloom Points" if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_bloom_points") else "BP"
+		_show_player_notice("Victory. +%d %s, +%d Gold." % [bp_reward, reward_label, gold_reward], 1.8)
 	else:
 		var lost_gold := mini(int(ceil(float(Global.loop_gold) * LOOP_RAID_LOSS_RATIO)), Global.loop_gold)
 		var lost_wood := mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.WOOD, 0)))
@@ -2051,6 +2082,8 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		if lost_stone > 0:
 			Global.remove_item(Global.Items.STONE, lost_stone)
 		_show_player_notice("Driven back. Raiders stole %d Gold, %d Wood, and %d Stone." % [lost_gold, lost_wood, lost_stone], 2.0)
+	if is_victory and Global.loop_hub_mode_active and DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_bloom_points"):
+		await _maybe_show_loop_bloom_points_tutorial()
 	player.can_move = true
 	_refresh_loop_hud()
 	_refresh_loop_objective()

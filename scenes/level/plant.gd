@@ -238,6 +238,9 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 	Global.add_item(harvested_item)
 	if plant_type in Global.HARVEST_DROPS and DemoDirector:
 		DemoDirector.notify_story_crop_harvested(harvested_item)
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("_on_loop_crop_harvested"):
+		current_scene.call_deferred("_on_loop_crop_harvested", harvested_item)
 
 	if Global.tutorial_step == 9:
 		Global.advance_tutorial()

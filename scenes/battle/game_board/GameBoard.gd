@@ -2173,6 +2173,29 @@ func _complete_demo_first_action() -> void:
 	if DemoDirector:
 		DemoDirector.refresh_current_prompt()
 
+func _show_loop_battle_tutorial_card(card_id: String, unit: Unit) -> void:
+	if DemoDirector == null or card_id.is_empty():
+		return
+
+	if _demo_battle_active or not Global.loop_hub_mode_active:
+		await DemoDirector.show_tutorial_card(card_id, self)
+		return
+
+	await _focus_loop_tutorial_camera()
+	await DemoDirector.show_tutorial_card(card_id, self)
+	if unit != null and is_instance_valid(unit):
+		_handoff_to_cursor_camera(_get_unit_camera_focus_position(unit))
+
+func _focus_loop_tutorial_camera() -> void:
+	if _cursor_camera == null:
+		return
+
+	var tutorial_focus := _compute_default_camera_focus()
+	_cursor_camera.position_smoothing_enabled = false
+	var tween := create_tween()
+	tween.tween_property(_cursor_camera, "global_position", tutorial_focus, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+
 func _maybe_show_unit_tutorial(unit: Unit) -> void:
 	if DemoDirector == null or unit == null:
 		return
@@ -2182,15 +2205,15 @@ func _maybe_show_unit_tutorial(unit: Unit) -> void:
 	match String(unit.name):
 		"Savannah":
 			if not DemoDirector.has_seen_tutorial("battle_savannah"):
-				await DemoDirector.show_tutorial_card("battle_savannah", self)
+				await _show_loop_battle_tutorial_card("battle_savannah", unit)
 			elif _demo_battle_active and not DemoDirector.has_seen_tutorial("battle_harvest") and _has_adjacent_battle_plant(unit):
 				await DemoDirector.show_tutorial_card("battle_harvest", self)
 		"Silas":
 			if not DemoDirector.has_seen_tutorial("battle_silas"):
-				await DemoDirector.show_tutorial_card("battle_silas", self)
+				await _show_loop_battle_tutorial_card("battle_silas", unit)
 		"Tera":
 			if not DemoDirector.has_seen_tutorial("battle_tera_bloom"):
-				await DemoDirector.show_tutorial_card("battle_tera_bloom", self)
+				await _show_loop_battle_tutorial_card("battle_tera_bloom", unit)
 
 func _has_adjacent_battle_plant(unit: Unit) -> bool:
 	if unit == null:

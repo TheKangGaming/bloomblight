@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://bd2u2mpb5l1a2"]
+
+[ext_resource type="Texture2D" uid="uid://cr213h6miccqi" path="res://graphics/npcs/merchant/vendor structure - naked.png" id="1_texture"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wagon_naked"]
+size = Vector2(232, 74)
+
+[node name="MerchantWagonNaked" type="StaticBody2D" unique_id=1723451098]
+y_sort_enabled = true
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1449893329]
+texture = ExtResource("1_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1664067179]
+position = Vector2(-5, 33)
+shape = SubResource("RectangleShape2D_wagon_naked")

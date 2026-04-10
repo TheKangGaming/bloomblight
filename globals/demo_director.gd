@@ -54,6 +54,9 @@ var _seen_tutorial_cards: Dictionary = {}
 const TUTORIAL_CARD_ORDER := [
 	"loop_planting",
 	"loop_battle",
+	"loop_bloom_points",
+	"loop_forest_join",
+	"loop_forest_wood",
 	"loop_cooking",
 	"farm_controls",
 	"farm_farming",
@@ -219,13 +222,22 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 	match card_id:
 		"loop_planting":
 			title = "Tutorial: Planting"
-			template = "Stand on plowed soil and press {plant} to plant a seed.\n\nPlant before battle. Crops keep growing while you fight, then pay off as food, gold, and momentum when you return."
+			template = "Stand on plowed soil and press {plant} to plant a seed.\n\nPlant before battle. Crops grow while you fight, then come back ready to harvest."
 		"loop_battle":
-			title = "Tutorial: Battle Runs"
-			template = "Walk to the bridge and press {confirm} to start the fight.\n\nBattles earn BP and Gold."
+			title = "Tutorial: Next Step"
+			template = "Plant a few seeds, then head to the bridge and press {confirm} to start a battle.\n\nWinning battles earns Bloom Points and Gold."
+		"loop_bloom_points":
+			title = "Tutorial: Bloom Points"
+			template = "Bloom Points let you purify dead plots and expand the settlement.\n\nSpend them at marked plots like the merchant wagon to open the next part of the hub."
+		"loop_forest_join":
+			title = "Tutorial: Silas Joins"
+			template = "Silas joins the party after you open the forest.\n\nHe stays with the settlement and fights beside you from now on."
+		"loop_forest_wood":
+			title = "Tutorial: Forest Wood"
+			template = "Now that the forest is open, use your Axe on the trees to chop Wood.\n\nWood is used to repair the wagon and build the settlement."
 		"loop_cooking":
 			title = "Tutorial: Cooking"
-			template = "Cook at the campfire before battle.\n\nMeals turn ingredients into a one-battle perk."
+			template = "Harvested crops can be cooked at the campfire.\n\nMeals turn ingredients into a one-battle perk for your next fight."
 		"farm_controls":
 			title = "Tutorial: Movement"
 			template = "Move with {move}. Hold {run} to run, and press {confirm} near objects to interact."
@@ -253,7 +265,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 	return {
 		"id": card_id,
 		"title": title,
-		"card_layout": "battle" if card_id in ["loop_battle", "battle_savannah", "battle_silas", "battle_tera_bloom", "battle_harvest"] else ("compact" if card_id == "loop_cooking" else "full"),
+		"card_layout": "battle" if card_id in ["battle_savannah", "battle_silas", "battle_tera_bloom", "battle_harvest"] else ("compact" if card_id == "loop_cooking" else "full"),
 		"body": _format_template(template, {
 			"confirm": get_confirm_label(),
 			"move": get_move_label(),

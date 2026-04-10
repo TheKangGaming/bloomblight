@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cvn0crogta574"]
+
+[ext_resource type="Texture2D" uid="uid://duiuqiwtk6uyf" path="res://graphics/npcs/merchant/vendor structure - complete - on grass.png" id="1_texture"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wagon_complete"]
+size = Vector2(246, 112)
+
+[node name="MerchantWagonComplete" type="StaticBody2D" unique_id=517136112]
+y_sort_enabled = true
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=686293053]
+texture = ExtResource("1_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=553008984]
+position = Vector2(-8, 20)
+shape = SubResource("RectangleShape2D_wagon_complete")

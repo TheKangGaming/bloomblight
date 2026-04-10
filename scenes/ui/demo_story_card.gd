@@ -25,6 +25,7 @@ const BATTLE_TUTORIAL_SKIP_SIZE := 14
 
 @onready var background: TextureRect = $Background
 @onready var fallback_background: ColorRect = $FallbackBackground
+@onready var tint: ColorRect = $Tint
 @onready var panel: PanelContainer = $Content/Panel
 @onready var content_root: Control = $Content
 @onready var title_label: Label = $Content/Panel/Margin/VBox/Title
@@ -198,8 +199,11 @@ func _apply_panel_style() -> void:
 		var body_size := BATTLE_TUTORIAL_BODY_SIZE if battle else (COMPACT_TUTORIAL_BODY_SIZE if compact else TUTORIAL_BODY_SIZE)
 		var confirm_size := BATTLE_TUTORIAL_CONFIRM_SIZE if battle else (COMPACT_TUTORIAL_CONFIRM_SIZE if compact else TUTORIAL_CONFIRM_SIZE)
 		var skip_size := BATTLE_TUTORIAL_SKIP_SIZE if battle else (COMPACT_TUTORIAL_SKIP_SIZE if compact else TUTORIAL_SKIP_SIZE)
-		style.bg_color = Color(0.05, 0.07, 0.11, 0.93)
+		style.bg_color = Color(0.05, 0.07, 0.11, 0.97 if battle else 0.93)
 		style.border_color = Color(0.64, 0.83, 1.0, 0.98)
+		if battle:
+			fallback_background.visible = false
+			tint.visible = false
 		panel.custom_minimum_size = Vector2(tutorial_width, 0)
 		if panel_margin != null:
 			panel_margin.add_theme_constant_override("margin_left", margin_left)

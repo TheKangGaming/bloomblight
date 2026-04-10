@@ -67,7 +67,7 @@ func _unhandled_input(event) -> void:
 			_set_player_movement_locked(true)
 			await get_tree().create_timer(AUTO_OPEN_DELAY_SECONDS, true).timeout
 			if cooking_menu and player_in_range and is_lit and not cooking_menu.visible:
-				await _open_cooking_menu_with_loop_tutorial(cooking_menu)
+				_open_cooking_menu(cooking_menu)
 			else:
 				_set_player_movement_locked(false)
 			return
@@ -75,7 +75,7 @@ func _unhandled_input(event) -> void:
 		if cooking_menu and not cooking_menu.visible:
 			if should_advance_tutorial:
 				Global.advance_tutorial()
-			await _open_cooking_menu_with_loop_tutorial(cooking_menu)
+			_open_cooking_menu(cooking_menu)
 		return
 
 	if is_cancel and is_lit:
@@ -117,21 +117,12 @@ func _on_cooking_menu_opened() -> void:
 func _on_cooking_menu_closed() -> void:
 	_set_player_movement_locked(false)
 
-func _open_cooking_menu_with_loop_tutorial(cooking_menu) -> void:
-	if cooking_menu == null or not player_in_range or not is_lit or cooking_menu.visible:
-		return
-
-	if _should_show_loop_cooking_tutorial() and DemoDirector != null:
-		await DemoDirector.show_tutorial_card("loop_cooking", self)
-
+func _open_cooking_menu(cooking_menu) -> void:
 	if cooking_menu == null or not player_in_range or not is_lit or cooking_menu.visible:
 		return
 
 	cooking_menu.open_menu()
 	show_feedback("Cooking menu opened")
-
-func _should_show_loop_cooking_tutorial() -> bool:
-	return Global.loop_hub_mode_active and DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_cooking")
 
 func _set_player_movement_locked(locked: bool) -> void:
 	if _player_body == null or not is_instance_valid(_player_body):
