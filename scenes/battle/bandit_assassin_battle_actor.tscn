@@ -5,7 +5,7 @@
 
 [sub_resource type="Animation" id="Animation_attack"]
 resource_name = "attack"
-length = 0.6
+length = 0.48
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -13,10 +13,10 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42, 0.48, 0.54),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+"values": [44, 45, 46, 47, 48, 49, 50, 51]
 }
 tracks/1/type = "method"
 tracks/1/imported = false
@@ -35,7 +35,7 @@ tracks/1/keys = {
 
 [sub_resource type="Animation" id="Animation_attack_ranged"]
 resource_name = "attack_ranged"
-length = 0.6
+length = 0.54
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -43,10 +43,10 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = false
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42, 0.48, 0.54),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.06, 0.12, 0.18, 0.24, 0.3, 0.36, 0.42, 0.48),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+"values": [55, 56, 57, 58, 59, 60, 61, 62, 63]
 }
 tracks/1/type = "method"
 tracks/1/imported = false
@@ -193,4 +193,3 @@ region_enabled = false
 [node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1"]
 libraries/ = SubResource("AnimationLibrary_assassin")
 autoplay = &"idle"
-

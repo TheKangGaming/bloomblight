@@ -188,6 +188,13 @@ func get_owned_equipment(slot_name: String) -> Array:
 	var catalog: Array = _equipment_catalog.get(slot_name, [])
 	return catalog.duplicate()
 
+func can_character_equip_item(character: CharacterData, item: Resource) -> bool:
+	if character == null or item == null:
+		return false
+	if item is WeaponData:
+		return _can_character_equip_weapon(character, item as WeaponData)
+	return true
+
 func add_owned_equipment(item: Resource) -> bool:
 	if item == null:
 		return false
@@ -221,6 +228,8 @@ func equip_character_item(character: CharacterData, slot_name: String, item: Res
 		return false
 
 	if item != null:
+		if not can_character_equip_item(character, item):
+			return false
 		_register_equipment_item(canonical_slot, item)
 		_remove_item_from_other_party_members(character, canonical_slot, item)
 
@@ -355,6 +364,40 @@ func _normalize_slot_name(slot_name: String) -> String:
 			return "Accessory"
 		_:
 			return ""
+
+func _can_character_equip_weapon(character: CharacterData, weapon: WeaponData) -> bool:
+	if character == null or weapon == null:
+		return false
+	var allowed_types := _get_allowed_weapon_types(character)
+	if allowed_types.is_empty():
+		return true
+	return allowed_types.has(String(weapon.weapon_type))
+
+func _get_allowed_weapon_types(character: CharacterData) -> PackedStringArray:
+	var allowed := PackedStringArray()
+	if character == null:
+		return allowed
+
+	var class_data := character.class_data
+	var profile := String(class_data.default_weapon_profile).to_lower() if class_data != null else ""
+	if profile.contains("bow"):
+		allowed.append("Bow")
+	elif profile.contains("sword") or profile.contains("dagger"):
+		allowed.append("Sword")
+	elif profile.contains("lance") or profile.contains("spear") or profile.contains("whip"):
+		allowed.append("Lance")
+	elif profile.contains("staff") or profile.contains("tome"):
+		allowed.append_array(PackedStringArray(["Staff", "Tome"]))
+
+	if allowed.is_empty() and character.equipped_weapon != null:
+		allowed.append(String(character.equipped_weapon.weapon_type))
+
+	if allowed.is_empty() and class_data != null:
+		var damage_stat := String(class_data.primary_damage_stat).to_lower()
+		if damage_stat == "intelligence" or damage_stat == "int":
+			allowed.append_array(PackedStringArray(["Staff", "Tome"]))
+
+	return allowed
 
 func _sync_player_equipment_to_global() -> void:
 	if Global == null:

@@ -221,7 +221,11 @@ var _loop_merchant_structure_naked: StaticBody2D = null
 var _loop_merchant_structure_complete: StaticBody2D = null
 var _loop_merchant_menu: PanelContainer = null
 var _loop_merchant_status: Label = null
+var _loop_merchant_detail_label: Label = null
+var _loop_merchant_tab_bar: HBoxContainer = null
+var _loop_merchant_action_scroll: ScrollContainer = null
 var _loop_merchant_actions: VBoxContainer = null
+var _loop_merchant_active_tab := "Seeds"
 var _loop_spawned_forest_nodes: Array[Node2D] = []
 var _loop_hud_root: PanelContainer = null
 var _loop_hud_stats_label: Label = null
@@ -332,6 +336,176 @@ func _get_equipment_display_name(item: Resource) -> String:
 	if item is AccessoryData:
 		return String((item as AccessoryData).accessory_name)
 	return item.resource_name if item != null else "Item"
+
+func _set_loop_merchant_detail_text(text: String) -> void:
+	if _loop_merchant_detail_label == null or not is_instance_valid(_loop_merchant_detail_label):
+		return
+	_loop_merchant_detail_label.text = text
+
+func _build_loop_merchant_seed_description(seed_item: int, cost: int) -> String:
+	var crop_name := "Crops"
+	match seed_item:
+		Global.Items.CARROT_SEED:
+			crop_name = "Carrots"
+		Global.Items.PARSNIP_SEED:
+			crop_name = "Parsnips"
+		Global.Items.POTATO_SEED:
+			crop_name = "Potatoes"
+		Global.Items.GARLIC_SEED:
+			crop_name = "Garlic"
+	return "%d Gold\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, crop_name]
+
+func _build_loop_merchant_item_description(item: Resource, cost: int) -> String:
+	if item == null:
+		return ""
+
+	var lines: PackedStringArray = ["%d Gold" % cost, _get_equipment_display_name(item)]
+	var description := String(item.get("description")).strip_edges()
+	if not description.is_empty():
+		lines.append(description)
+
+	var bonuses: Variant = item.get("stat_bonuses")
+	if bonuses is Dictionary:
+		var bonus_parts: PackedStringArray = []
+		var labels := {
+			"max_health": "HP",
+			"strength": "STR",
+			"defense": "DEF",
+			"magic_defense": "MDEF",
+			"dexterity": "DEX",
+			"intelligence": "INT",
+			"speed": "SPD",
+			"move_range": "MOV",
+			"attack_range": "RNG",
+		}
+		for key in ["max_health", "strength", "defense", "magic_defense", "dexterity", "intelligence", "speed", "move_range", "attack_range"]:
+			var value := int((bonuses as Dictionary).get(key, 0))
+			if value != 0:
+				bonus_parts.append("%s %+d" % [String(labels.get(key, key)), value])
+		if not bonus_parts.is_empty():
+			lines.append(", ".join(bonus_parts))
+
+	if item is WeaponData:
+		var weapon := item as WeaponData
+		lines.append("Weapon type: %s" % String(weapon.weapon_type))
+		lines.append("MT %d | Hit %d" % [weapon.might, weapon.hit_rate])
+		lines.append(_build_loop_merchant_weapon_owner_hint(weapon))
+
+	return "\n".join(lines)
+
+func _build_loop_merchant_weapon_owner_hint(weapon: WeaponData) -> String:
+	if weapon == null:
+		return ""
+	match String(weapon.weapon_type):
+		"Sword":
+			return "Savannah can equip this."
+		"Bow":
+			return "Silas can equip this."
+		"Staff", "Tome":
+			return "Tera can equip this."
+		_:
+			return "Open the party menu to see who can equip this."
+
+func _get_loop_merchant_tabs() -> PackedStringArray:
+	return PackedStringArray(["Sell", "Seeds", "Weapons", "Armor", "Accessories"])
+
+func _set_loop_merchant_tab(tab_id: String) -> void:
+	if not _get_loop_merchant_tabs().has(tab_id):
+		return
+	if _loop_merchant_active_tab == tab_id:
+		return
+	_loop_merchant_active_tab = tab_id
+	_refresh_loop_merchant_menu()
+	_focus_first_loop_merchant_action_button()
+
+func _refresh_loop_merchant_tab_buttons() -> void:
+	if _loop_merchant_tab_bar == null or not is_instance_valid(_loop_merchant_tab_bar):
+		return
+	for child in _loop_merchant_tab_bar.get_children():
+		var button := child as Button
+		if button == null:
+			continue
+		var active := button.text == _loop_merchant_active_tab
+		button.disabled = active
+
+func _get_loop_merchant_default_detail_text() -> String:
+	match _loop_merchant_active_tab:
+		"Sell":
+			return "Turn harvested crops into Gold so you can restock seeds and buy stronger gear."
+		"Seeds":
+			return "Plant seeds before battle so crops can grow while you fight."
+		"Weapons":
+			return "Weapon upgrades improve your party's damage and accuracy. Check the detail panel to see who can equip each one."
+		"Armor":
+			return "Armor adds durability and utility stats that help your front line and back line survive longer."
+		"Accessories":
+			return "Accessories provide small but meaningful stat boosts that round out a build."
+		_:
+			return "Browse stock to preview what each purchase does before you commit."
+
+func _populate_loop_merchant_sell_tab() -> void:
+	var sell_button := Button.new()
+	sell_button.text = "Sell Harvest"
+	sell_button.pressed.connect(_on_loop_sell_harvest_pressed)
+	sell_button.focus_entered.connect(func() -> void:
+		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds and buy better gear.")
+	)
+	sell_button.mouse_entered.connect(func() -> void:
+		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds and buy better gear.")
+	)
+	_loop_merchant_actions.add_child(sell_button)
+
+func _populate_loop_merchant_seed_tab() -> void:
+	for seed_item_variant in LOOP_SEED_SHOP.keys():
+		var seed_item: int = int(seed_item_variant)
+		var offer: Dictionary = LOOP_SEED_SHOP[seed_item]
+		var button := Button.new()
+		button.text = "%s (%d Gold)" % [String(offer.get("label", "Seeds")), int(offer.get("cost", 0))]
+		button.disabled = Global.loop_gold < int(offer.get("cost", 0))
+		button.pressed.connect(_on_loop_buy_seed_pressed.bind(seed_item))
+		var seed_description := _build_loop_merchant_seed_description(seed_item, int(offer.get("cost", 0)))
+		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
+		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
+		_loop_merchant_actions.add_child(button)
+
+func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
+	var unlocked_gear := _get_loop_merchant_equipment_offers()
+	var slot_offers: Array[Dictionary] = []
+	for offer_variant in unlocked_gear:
+		var offer: Dictionary = offer_variant
+		if String(offer.get("slot", "")) == slot_name:
+			slot_offers.append(offer)
+
+	if slot_offers.is_empty():
+		var locked_label := Label.new()
+		locked_label.text = "Clear more stages to unlock better %s." % slot_name.to_lower()
+		locked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_loop_merchant_actions.add_child(locked_label)
+		return
+
+	for offer in slot_offers:
+		var item: Resource = offer.get("item", null)
+		if item == null:
+			continue
+		var owned_items: Array = ProgressionService.get_owned_equipment(String(offer.get("slot", ""))) if ProgressionService != null and ProgressionService.has_method("get_owned_equipment") else []
+		var item_name := _get_equipment_display_name(item)
+		var already_owned := owned_items.has(item)
+		var button := Button.new()
+		button.text = "%s (%d Gold)%s" % [item_name, int(offer.get("cost", 0)), " [Owned]" if already_owned else ""]
+		button.disabled = already_owned or Global.loop_gold < int(offer.get("cost", 0))
+		button.pressed.connect(_on_loop_buy_equipment_pressed.bind(item, int(offer.get("cost", 0))))
+		var gear_description := _build_loop_merchant_item_description(item, int(offer.get("cost", 0)))
+		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(gear_description))
+		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(gear_description))
+		_loop_merchant_actions.add_child(button)
+
+func _focus_first_loop_merchant_action_button() -> void:
+	if _loop_merchant_actions == null or not is_instance_valid(_loop_merchant_actions):
+		return
+	for child in _loop_merchant_actions.get_children():
+		if child is Button and (child as Button).visible and not (child as Button).disabled:
+			(child as Button).grab_focus()
+			return
 
 func _get_loop_merchant_equipment_offers() -> Array[Dictionary]:
 	var offers: Array[Dictionary] = []
@@ -675,10 +849,10 @@ func _build_loop_merchant_menu() -> void:
 	panel.anchor_right = 0.5
 	panel.anchor_top = 0.5
 	panel.anchor_bottom = 0.5
-	panel.offset_left = -220
-	panel.offset_right = 220
-	panel.offset_top = -220
-	panel.offset_bottom = 220
+	panel.offset_left = -460
+	panel.offset_right = 460
+	panel.offset_top = -270
+	panel.offset_bottom = 270
 	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 	var style := StyleBoxFlat.new()
@@ -701,33 +875,98 @@ func _build_loop_merchant_menu() -> void:
 	margin.add_theme_constant_override("margin_bottom", 14)
 	panel.add_child(margin)
 
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 10)
-	margin.add_child(layout)
+	var root_row := HBoxContainer.new()
+	root_row.add_theme_constant_override("separation", 14)
+	margin.add_child(root_row)
+
+	var left_column := VBoxContainer.new()
+	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_column.add_theme_constant_override("separation", 10)
+	root_row.add_child(left_column)
+
+	var detail_panel := PanelContainer.new()
+	detail_panel.custom_minimum_size = Vector2(300, 0)
+	var detail_style := StyleBoxFlat.new()
+	detail_style.bg_color = Color(0.11, 0.12, 0.16, 0.98)
+	detail_style.border_width_left = 2
+	detail_style.border_width_top = 2
+	detail_style.border_width_right = 2
+	detail_style.border_width_bottom = 2
+	detail_style.border_color = Color(0.62, 0.76, 0.68, 0.9)
+	detail_style.corner_radius_top_left = 10
+	detail_style.corner_radius_top_right = 10
+	detail_style.corner_radius_bottom_left = 10
+	detail_style.corner_radius_bottom_right = 10
+	detail_panel.add_theme_stylebox_override("panel", detail_style)
+	root_row.add_child(detail_panel)
+
+	var detail_margin := MarginContainer.new()
+	detail_margin.add_theme_constant_override("margin_left", 14)
+	detail_margin.add_theme_constant_override("margin_right", 14)
+	detail_margin.add_theme_constant_override("margin_top", 12)
+	detail_margin.add_theme_constant_override("margin_bottom", 12)
+	detail_panel.add_child(detail_margin)
+
+	var detail_layout := VBoxContainer.new()
+	detail_layout.add_theme_constant_override("separation", 8)
+	detail_margin.add_child(detail_layout)
 
 	var title := Label.new()
 	title.text = "Merchant Wagon"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
-	layout.add_child(title)
+	left_column.add_child(title)
 
 	_loop_merchant_status = Label.new()
 	_loop_merchant_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	layout.add_child(_loop_merchant_status)
+	_loop_merchant_status.add_theme_font_size_override("font_size", 18)
+	left_column.add_child(_loop_merchant_status)
+
+	_loop_merchant_tab_bar = HBoxContainer.new()
+	_loop_merchant_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_loop_merchant_tab_bar.add_theme_constant_override("separation", 8)
+	left_column.add_child(_loop_merchant_tab_bar)
+	for tab_id in _get_loop_merchant_tabs():
+		var tab_button := Button.new()
+		tab_button.text = tab_id
+		tab_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tab_button.pressed.connect(_set_loop_merchant_tab.bind(tab_id))
+		_loop_merchant_tab_bar.add_child(tab_button)
+
+	_loop_merchant_detail_label = Label.new()
+	_loop_merchant_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loop_merchant_detail_label.custom_minimum_size = Vector2(0, 220)
+	_loop_merchant_detail_label.add_theme_font_size_override("font_size", 17)
+	_loop_merchant_detail_label.modulate = Color(0.94, 0.96, 0.88, 0.96)
+	detail_layout.add_child(_loop_merchant_detail_label)
+
+	var detail_title := Label.new()
+	detail_title.text = "Details"
+	detail_title.add_theme_font_size_override("font_size", 20)
+	detail_layout.add_child(detail_title)
+	detail_layout.move_child(detail_title, 0)
+
+	_loop_merchant_action_scroll = ScrollContainer.new()
+	_loop_merchant_action_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_loop_merchant_action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_loop_merchant_action_scroll.custom_minimum_size = Vector2(0, 300)
+	_loop_merchant_action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	left_column.add_child(_loop_merchant_action_scroll)
 
 	_loop_merchant_actions = VBoxContainer.new()
+	_loop_merchant_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_loop_merchant_actions.add_theme_constant_override("separation", 6)
-	layout.add_child(_loop_merchant_actions)
+	_loop_merchant_action_scroll.add_child(_loop_merchant_actions)
 
 	var close_button := Button.new()
 	close_button.text = "Close"
 	close_button.pressed.connect(_close_loop_merchant_menu)
-	layout.add_child(close_button)
+	left_column.add_child(close_button)
 
 	var close_hint := Label.new()
 	close_hint.text = "Press Cancel to close"
 	close_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	layout.add_child(close_hint)
+	left_column.add_child(close_hint)
 
 	canvas_layer.add_child(panel)
 	_loop_merchant_menu = panel
@@ -740,7 +979,7 @@ func _refresh_loop_merchant_menu() -> void:
 		return
 
 	var current_stage := _get_loop_stage()
-	_loop_merchant_status.text = "Stage %d/%d\nGold: %d\nBloom Points: %d\nWood: %d\nStone: %d\nPerk: %s" % [
+	_loop_merchant_status.text = "Stage %d/%d   Gold: %d   Bloom Points: %d\nWood: %d   Stone: %d   Perk: %s" % [
 		current_stage,
 		LOOP_MAX_FOREST_STAGE,
 		Global.loop_gold,
@@ -749,53 +988,25 @@ func _refresh_loop_merchant_menu() -> void:
 		int(Global.inventory.get(Global.Items.STONE, 0)),
 		Global.get_loop_equipped_perk_label()
 	]
+	_refresh_loop_merchant_tab_buttons()
+	_set_loop_merchant_detail_text(_get_loop_merchant_default_detail_text())
 
 	for child in _loop_merchant_actions.get_children():
 		child.queue_free()
 
-	var sell_button := Button.new()
-	sell_button.text = "Sell Harvest"
-	sell_button.pressed.connect(_on_loop_sell_harvest_pressed)
-	_loop_merchant_actions.add_child(sell_button)
-
-	var seed_heading := Label.new()
-	seed_heading.text = "Seeds"
-	seed_heading.add_theme_font_size_override("font_size", 18)
-	_loop_merchant_actions.add_child(seed_heading)
-
-	for seed_item_variant in LOOP_SEED_SHOP.keys():
-		var seed_item: int = int(seed_item_variant)
-		var offer: Dictionary = LOOP_SEED_SHOP[seed_item]
-		var button := Button.new()
-		button.text = "%s (%d Gold)" % [String(offer.get("label", "Seeds")), int(offer.get("cost", 0))]
-		button.disabled = Global.loop_gold < int(offer.get("cost", 0))
-		button.pressed.connect(_on_loop_buy_seed_pressed.bind(seed_item))
-		_loop_merchant_actions.add_child(button)
-
-	var gear_heading := Label.new()
-	gear_heading.text = "Gear"
-	gear_heading.add_theme_font_size_override("font_size", 18)
-	_loop_merchant_actions.add_child(gear_heading)
-
-	var unlocked_gear := _get_loop_merchant_equipment_offers()
-	if unlocked_gear.is_empty():
-		var locked_label := Label.new()
-		locked_label.text = "Clear more stages to unlock better equipment."
-		locked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_loop_merchant_actions.add_child(locked_label)
-	else:
-		for offer in unlocked_gear:
-			var item: Resource = offer.get("item", null)
-			if item == null:
-				continue
-			var owned_items: Array = ProgressionService.get_owned_equipment(String(offer.get("slot", ""))) if ProgressionService != null and ProgressionService.has_method("get_owned_equipment") else []
-			var item_name := _get_equipment_display_name(item)
-			var already_owned := owned_items.has(item)
-			var button := Button.new()
-			button.text = "%s (%d Gold)%s" % [item_name, int(offer.get("cost", 0)), " [Owned]" if already_owned else ""]
-			button.disabled = already_owned or Global.loop_gold < int(offer.get("cost", 0))
-			button.pressed.connect(_on_loop_buy_equipment_pressed.bind(item, int(offer.get("cost", 0))))
-			_loop_merchant_actions.add_child(button)
+	match _loop_merchant_active_tab:
+		"Sell":
+			_populate_loop_merchant_sell_tab()
+		"Seeds":
+			_populate_loop_merchant_seed_tab()
+		"Weapons":
+			_populate_loop_merchant_equipment_tab("Weapon")
+		"Armor":
+			_populate_loop_merchant_equipment_tab("Armor")
+		"Accessories":
+			_populate_loop_merchant_equipment_tab("Accessory")
+		_:
+			_populate_loop_merchant_seed_tab()
 
 func _spawn_loop_forest_content() -> void:
 	for node in _loop_spawned_forest_nodes:
@@ -2282,9 +2493,7 @@ func _open_loop_merchant_menu() -> void:
 	_refresh_loop_merchant_menu()
 	_loop_merchant_menu.visible = true
 	player.can_move = false
-	var first_button := _loop_merchant_actions.get_child(0) if _loop_merchant_actions != null and _loop_merchant_actions.get_child_count() > 0 else null
-	if first_button is Button:
-		(first_button as Button).grab_focus()
+	_focus_first_loop_merchant_action_button()
 
 func _close_loop_merchant_menu() -> void:
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):

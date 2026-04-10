@@ -6,7 +6,7 @@ class_name AbilityData
 @export var icon: Texture2D
 
 @export_group("Mechanics")
-@export var cooldown_turns: int = 4 # Replaced energy_cost with your Cooldown idea!
+@export var cooldown_turns: int = 2 # Replaced energy_cost with your Cooldown idea!
 @warning_ignore("shadowed_global_identifier")
 @export var range: int = 1          # Casting range
 @export var radius: int = 2         # AOE radius

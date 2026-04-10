@@ -1034,6 +1034,7 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 		"can_attack": false,
 		"target_hp": MAX_VALUE,
 	}
+	var preferred_attack_distance := _get_enemy_preferred_attack_distance(enemy)
 
 	for player in players:
 		if not _is_valid_attack_target(enemy, player):
@@ -1048,7 +1049,18 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 			if can_attack_from_here and not best_choice["can_attack"]:
 				should_replace = true
 			elif can_attack_from_here == best_choice["can_attack"]:
-				if dist < best_choice["distance"]:
+				if can_attack_from_here and preferred_attack_distance > 0:
+					var current_attack_distance := int(best_choice["distance"])
+					var candidate_distance_delta: int = abs(preferred_attack_distance - dist)
+					var current_distance_delta: int = abs(preferred_attack_distance - current_attack_distance)
+					if candidate_distance_delta < current_distance_delta:
+						should_replace = true
+					elif candidate_distance_delta == current_distance_delta:
+						if dist < best_choice["distance"]:
+							should_replace = true
+						elif dist == best_choice["distance"] and player.health < best_choice["target_hp"]:
+							should_replace = true
+				elif dist < best_choice["distance"]:
 					should_replace = true
 				elif dist == best_choice["distance"] and player.health < best_choice["target_hp"]:
 					should_replace = true
@@ -1063,6 +1075,15 @@ func _pick_enemy_action(enemy: Unit, players: Array, legal_destinations: Array) 
 				}
 
 	return best_choice
+
+func _get_enemy_preferred_attack_distance(enemy: Unit) -> int:
+	if enemy == null or enemy.character_data == null or enemy.character_data.equipped_weapon == null:
+		return -1
+
+	var weapon := enemy.character_data.equipped_weapon
+	if String(weapon.weapon_type) == "Lance" and int(weapon.attack_range) > 1:
+		return int(weapon.attack_range)
+	return -1
 
 ## Loops through all enemies and lets them act
 func start_enemy_phase() -> void:

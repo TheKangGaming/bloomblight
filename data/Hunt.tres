@@ -6,7 +6,7 @@
 script = ExtResource("1_hunt")
 ability_name = "Hunt"
 description = "Focus on the kill. Gain hit and crit for the rest of this turn and your next turn."
-cooldown_turns = 3
+cooldown_turns = 2
 range = 0
 radius = 0
 duration_turns = 2

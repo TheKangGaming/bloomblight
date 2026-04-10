@@ -71,6 +71,9 @@ enum InventorySubview { ITEMS, EQUIPMENT }
 @onready var calendar_note_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarNoteLabel
 @onready var calendar_flavor_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarFlavorLabel
 @onready var calendar_legend_panel: PanelContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel
+@onready var calendar_past_legend_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow/PastLegendLabel
+@onready var calendar_today_legend_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow/TodayLegendLabel
+@onready var calendar_upcoming_legend_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow/UpcomingLegendLabel
 
 var _current_section := MenuSection.INVENTORY
 var _current_party_subview := PartySubview.STATUS
@@ -245,13 +248,25 @@ func update_inventory() -> void:
 	for child in inventory_grid.get_children():
 		child.queue_free()
 
-	for item_enum in Global.inventory:
-		var count := int(Global.inventory[item_enum])
+	for raw_item_key in Global.inventory:
+		var item_enum := _resolve_inventory_item_enum(raw_item_key)
+		if item_enum < 0:
+			continue
+		var count := int(Global.inventory[raw_item_key])
 		if count <= 0:
 			continue
 		var slot = SLOT_SCENE.instantiate()
 		inventory_grid.add_child(slot)
 		slot.setup(item_enum, count)
+
+func _resolve_inventory_item_enum(raw_item_key: Variant) -> int:
+	if raw_item_key is int:
+		return int(raw_item_key)
+	var key_name := String(raw_item_key)
+	if key_name.is_empty():
+		return -1
+	var item_keys := Global.Items.keys()
+	return item_keys.find(key_name)
 
 func _refresh_all_views() -> void:
 	_refresh_roster_buttons()
@@ -421,16 +436,18 @@ func _refresh_equipment_panel(character: CharacterData) -> void:
 	for slot_name in ["Weapon", "Armor", "Accessory"]:
 		var slot_button := _get_equipment_slot_button(slot_name)
 		var equipped_item := _get_equipped_item_for_slot(character, slot_name)
-		_equipment_choices_by_slot[slot_name] = _build_equipment_choices(slot_name)
+		_equipment_choices_by_slot[slot_name] = _build_equipment_choices(character, slot_name)
 		_refresh_equipment_slot_button(slot_button, slot_name, equipped_item)
 
 	_refresh_equipment_picker(character)
 	_equipment_refresh_in_progress = false
 
-func _build_equipment_choices(slot_name: String) -> Array:
+func _build_equipment_choices(character: CharacterData, slot_name: String) -> Array:
 	var choices: Array = [null]
 	var owned_equipment: Array = ProgressionService.get_owned_equipment(slot_name) if ProgressionService != null else []
 	for item in owned_equipment:
+		if slot_name == "Weapon" and character != null and ProgressionService != null and ProgressionService.has_method("can_character_equip_item") and not ProgressionService.can_character_equip_item(character, item):
+			continue
 		choices.append(item)
 	return choices
 
@@ -534,7 +551,10 @@ func _apply_equipment_choice(slot_name: String, index: int) -> void:
 		return
 	var item: Resource = choices[index]
 	if ProgressionService != null:
-		ProgressionService.equip_character_item(character, normalized_slot, item)
+		var equipped := ProgressionService.equip_character_item(character, normalized_slot, item)
+		if not equipped and item != null:
+			equipment_detail_label.text = "%s cannot equip %s." % [String(character.display_name), _get_equipment_display_name(item, normalized_slot)]
+			return
 	var ui_sounds := _ui_sound_manager()
 	if ui_sounds:
 		ui_sounds.play_menu_button()
@@ -700,6 +720,9 @@ func _refresh_calendar_view() -> void:
 	calendar_kicker_label.text = "Season Almanac"
 	calendar_season_label.text = season_name
 	calendar_day_summary_label.text = "Day %d of %d" % [season_day, days_per_season]
+	calendar_past_legend_label.text = "Past days"
+	calendar_today_legend_label.text = "Today"
+	calendar_upcoming_legend_label.text = "Upcoming"
 
 	var public_entry_count: int = 0
 	if CalendarService != null and CalendarService.has_method("get_public_calendar_entries_for_day"):
@@ -729,7 +752,10 @@ func _refresh_loop_stage_tracker() -> void:
 	calendar_season_label.text = ""
 	calendar_day_summary_label.text = "Stage %d of %d" % [current_stage, LOOP_STAGE_COUNT]
 	calendar_note_label.text = "Clear each stage to earn Bloom Points, Gold, and party levels."
-	calendar_flavor_label.text = "Completed stages stay marked as the forest route opens up."
+	calendar_flavor_label.text = "Track your progress as the forest route opens up."
+	calendar_past_legend_label.text = "Cleared"
+	calendar_today_legend_label.text = "Current"
+	calendar_upcoming_legend_label.text = "Ahead"
 
 	for index in range(_calendar_day_panels.size()):
 		var stage_number := index + 1

@@ -13,7 +13,7 @@ might = 6
 hit_rate = 86
 attack_range = 2
 min_attack_range = 1
-projectile_style = &"spear"
+projectile_style = &""
 stat_bonuses = {
 "defense": 1
 }

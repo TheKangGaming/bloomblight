@@ -690,8 +690,6 @@ func _play_projectile(striker: BattleActor, target: BattleActor, is_hit: bool, w
 		var projectile := arrow as BattleProjectileVfx
 		if weapon != null and weapon.projectile_style != StringName():
 			projectile.projectile_style = weapon.projectile_style
-		elif weapon != null and String(weapon.weapon_type) == "Lance":
-			projectile.projectile_style = &"spear"
 		else:
 			projectile.projectile_style = &"arrow"
 	

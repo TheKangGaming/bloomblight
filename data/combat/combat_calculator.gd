@@ -15,12 +15,12 @@ static func can_attack_at_distance(distance: int, attack_range: int, min_attack_
 static func get_attack_kind(weapon: WeaponData, distance: int = -1) -> CombatStrike.AttackKind:
 	if not weapon:
 		return CombatStrike.AttackKind.MELEE
-	if distance > 1 and (weapon.projectile_style != StringName() or weapon.attack_range > 1 or weapon.min_attack_range > 1):
-		return CombatStrike.AttackKind.RANGED
 	if weapon.weapon_type == "Bow":
 		return CombatStrike.AttackKind.RANGED
 	if weapon.weapon_type == "Tome" or weapon.weapon_type == "Staff":
 		return CombatStrike.AttackKind.MAGIC
+	if distance > 1 and weapon.projectile_style != StringName():
+		return CombatStrike.AttackKind.RANGED
 	return CombatStrike.AttackKind.MELEE
 
 ## 1. THE FORECAST: Generates the raw numbers for the UI and the RNG resolver.
