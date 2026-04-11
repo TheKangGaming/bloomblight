@@ -628,7 +628,7 @@ visible = false
 z_index = -1
 tile_set = SubResource("TileSet_vtv1r")
 
-[node name="FarmBackdrop" parent="." unique_id=1737119001 instance=ExtResource("27_3adft")]
+[node name="FarmBackdrop" parent="." unique_id=300117719 instance=ExtResource("27_3adft")]
 z_index = -20
 
 [node name="FarmSetDress" type="Node2D" parent="." unique_id=713470234]
@@ -667,7 +667,7 @@ script = ExtResource("8_wkw2y")
 grid = ExtResource("2_gh08p")
 
 [node name="Cursor" parent="GameBoard" unique_id=858830889 instance=ExtResource("3_n7604")]
-position = Vector2(1040, 240)
+position = Vector2(1360, 208)
 
 [node name="Savannah" parent="GameBoard" unique_id=1962973349 instance=ExtResource("14_d3c05")]
 position = Vector2(1040, 816)

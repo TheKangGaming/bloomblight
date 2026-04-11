@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterData" format=3]
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dyxe0mmdfaebp"]
 
-[ext_resource type="Script" path="res://data/types/character_data.gd" id="1_char"]
-[ext_resource type="Resource" path="res://data/units/Assassin.tres" id="2_class"]
+[ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="1_char"]
+[ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/types/ability_data.gd" id="1_ow005"]
+[ext_resource type="Resource" uid="uid://dbh3y5djyivek" path="res://data/units/Assassin.tres" id="2_class"]
 [ext_resource type="PackedScene" path="res://scenes/battle/bandit_assassin_battle_actor.tscn" id="3_actor"]
-[ext_resource type="Resource" path="res://data/items/Weapons/BanditDagger.tres" id="4_weapon"]
+[ext_resource type="Resource" uid="uid://dg5nu376m665x" path="res://data/items/Weapons/BanditDagger.tres" id="4_weapon"]
 
 [resource]
 script = ExtResource("1_char")
@@ -11,4 +12,3 @@ display_name = "Bandit Assassin"
 class_data = ExtResource("2_class")
 battle_actor_scene = ExtResource("3_actor")
 equipped_weapon = ExtResource("4_weapon")
-

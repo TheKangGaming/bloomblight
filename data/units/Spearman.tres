@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="ClassData" format=3]
+[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://b1gs6cege1226"]
 
-[ext_resource type="Script" path="res://data/types/class_data.gd" id="1_class"]
+[ext_resource type="Script" uid="uid://cs3pmkl8vpsw2" path="res://data/types/class_data.gd" id="1_class"]
 
 [resource]
 script = ExtResource("1_class")
 metadata_name = "Spearman"
+tags = PackedStringArray()
 default_weapon_profile = &"lance_basic"
-primary_damage_stat = &"strength"
 secondary_stat = &"defense"
 role = "Reach bruiser that controls lanes and punishes careless positioning"
 base_stats = {
@@ -42,4 +42,3 @@ stat_caps = {
 "speed": 22,
 "strength": 26
 }
-

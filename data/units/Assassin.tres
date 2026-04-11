@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="ClassData" format=3]
+[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://dbh3y5djyivek"]
 
-[ext_resource type="Script" path="res://data/types/class_data.gd" id="1_class"]
+[ext_resource type="Script" uid="uid://cs3pmkl8vpsw2" path="res://data/types/class_data.gd" id="1_class"]
 
 [resource]
 script = ExtResource("1_class")
 metadata_name = "Assassin"
+tags = PackedStringArray()
 default_weapon_profile = &"dagger_basic"
-primary_damage_stat = &"strength"
 secondary_stat = &"speed"
 role = "Fast skirmisher that threatens exposed targets and excels at follow-up pressure"
 base_stats = {
@@ -42,4 +42,3 @@ stat_caps = {
 "speed": 32,
 "strength": 24
 }
-

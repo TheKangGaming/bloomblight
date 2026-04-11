@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="WeaponData" format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://bpnvi0bmc37di"]
 
-[ext_resource type="Script" path="res://data/types/weapon_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://graphics/weapons/w22.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/types/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b3yvxp0g1pnn8" path="res://graphics/weapons/w22.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
@@ -9,11 +9,9 @@ weapon_type = "Bow"
 weapon_name = "Longhunter Bow"
 description = "A stronger hunting bow that keeps Silas accurate without slowing him down."
 icon = ExtResource("2_icon")
-might = 5
 hit_rate = 100
 attack_range = 2
 stat_bonuses = {
 "dexterity": 2,
 "speed": 1
 }
-

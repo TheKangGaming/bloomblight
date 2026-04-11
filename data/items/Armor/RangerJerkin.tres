@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="ArmorData" format=3]
+[gd_resource type="Resource" script_class="ArmorData" format=3 uid="uid://v2l7qi6jyhcw"]
 
-[ext_resource type="Script" path="res://data/types/armor_data.gd" id="1_armor"]
-[ext_resource type="Texture2D" path="res://graphics/armor/a1.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://crjlhbtt5bth0" path="res://data/types/armor_data.gd" id="1_armor"]
+[ext_resource type="Texture2D" uid="uid://c2gkll2ebvlsj" path="res://graphics/armor/a1.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_armor")
@@ -13,4 +13,3 @@ stat_bonuses = {
 "dexterity": 2,
 "speed": 2
 }
-

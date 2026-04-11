@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AbilityData" format=3]
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://lohat10nuwy6"]
 
 [ext_resource type="Script" uid="uid://cwu7xbn7lsrpb" path="res://data/types/ability_data.gd" id="1_hunt"]
 
@@ -6,7 +6,6 @@
 script = ExtResource("1_hunt")
 ability_name = "Hunt"
 description = "Focus on the kill. Gain hit and crit for the rest of this turn and your next turn."
-cooldown_turns = 2
 range = 0
 radius = 0
 duration_turns = 2

@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="WeaponData" format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://b507t1q1y6nni"]
 
-[ext_resource type="Script" path="res://data/types/weapon_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://graphics/weapons/w22.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://c8wssyup5wth4" path="res://data/types/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b3yvxp0g1pnn8" path="res://graphics/weapons/w22.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
@@ -10,9 +10,7 @@ description = "A sturdier upgrade for Savannah with more bite and a cleaner edge
 icon = ExtResource("2_icon")
 might = 8
 hit_rate = 88
-attack_range = 1
 stat_bonuses = {
 "speed": 1,
 "strength": 1
 }
-
