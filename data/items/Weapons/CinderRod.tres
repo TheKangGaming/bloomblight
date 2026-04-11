@@ -11,6 +11,8 @@ description = "A novice purifier focus that channels ember-touched rites."
 icon = ExtResource("1_icon")
 might = 3
 hit_rate = 94
+attack_range = 2
+min_attack_range = 1
 stat_bonuses = {
 "intelligence": 1,
 "magic_defense": 1

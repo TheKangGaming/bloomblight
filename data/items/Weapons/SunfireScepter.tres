@@ -11,6 +11,8 @@ description = "A brighter, steadier purifier focus that rewards careful spell pl
 icon = ExtResource("2_icon")
 might = 6
 hit_rate = 92
+attack_range = 2
+min_attack_range = 1
 stat_bonuses = {
 "intelligence": 3,
 "magic_defense": 2

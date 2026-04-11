@@ -45,6 +45,9 @@ func pop_out(min_angle: float = 0.0, max_angle: float = TAU, min_distance: float
 func _on_body_entered(body):
 	if can_pickup and body.is_in_group("Player"):
 		Global.add_item(item_type)
+		var current_scene := get_tree().current_scene
+		if current_scene != null and current_scene.has_method("show_world_pickup_popup"):
+			current_scene.show_world_pickup_popup(item_type, 1, body.global_position)
 		if Global.tutorial_step == 7 and item_type == Global.Items.WOOD:
 			Global.advance_tutorial()
 		

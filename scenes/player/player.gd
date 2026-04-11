@@ -48,6 +48,7 @@ signal tool_use(tool: Global.Tools, pos: Vector2)
 signal tool_changed(tool: Global.Tools)
 
 func _physics_process(delta: float) -> void:
+	_sync_current_tool_with_unlocks()
 	if can_move:
 		get_input()
 
@@ -149,8 +150,24 @@ func cycle_tool(tool_direction: int) -> void:
 	tool_changed.emit(current_tool)
 
 func _ready() -> void:
+	_sync_current_tool_with_unlocks(false)
 	update_animation_blend_positions(last_direction)
 	$Visuals/AnimationTree.animation_finished.connect(_on_animation_tree_animation_finished)
+
+func _sync_current_tool_with_unlocks(notify: bool = true) -> void:
+	var available_tools: Array[Global.Tools] = []
+	for tool in TOOL_CYCLE_ORDER:
+		if Global.unlocked_tools.has(tool):
+			available_tools.append(tool)
+
+	if available_tools.is_empty():
+		return
+	if available_tools.has(current_tool):
+		return
+
+	current_tool = available_tools[0]
+	if notify:
+		tool_changed.emit(current_tool)
 
 func animation():
 	if _cutscene_anim_state != &"":

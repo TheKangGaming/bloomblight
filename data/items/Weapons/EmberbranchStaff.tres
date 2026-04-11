@@ -11,6 +11,8 @@ description = "A refined focus that pushes Tera's rites a little farther without
 icon = ExtResource("2_icon")
 might = 4
 hit_rate = 96
+attack_range = 2
+min_attack_range = 1
 stat_bonuses = {
 "intelligence": 2,
 "magic_defense": 1

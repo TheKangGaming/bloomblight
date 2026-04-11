@@ -14,7 +14,7 @@ signal moved(new_cell)
 ## Grid resource, giving the node access to the grid size, and more.
 @export var grid: Grid
 ## Time before the cursor can move again in seconds.
-@export var ui_cooldown := 0.1
+@export var ui_cooldown := 0.15
 
 var is_mouse = false
 var is_active: bool = true

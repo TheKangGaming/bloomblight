@@ -251,6 +251,8 @@ func _on_area_2d_body_entered(_body: Node2D) -> void:
 	if plant_type in Global.HARVEST_DROPS and DemoDirector:
 		DemoDirector.notify_story_crop_harvested(harvested_item)
 	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("show_world_pickup_popup"):
+		current_scene.show_world_pickup_popup(harvested_item, 1, global_position)
 	if current_scene != null and current_scene.has_method("_on_loop_crop_harvested"):
 		current_scene.call_deferred("_on_loop_crop_harvested", harvested_item)
 
@@ -287,17 +289,7 @@ func _play_bloom_feedback() -> void:
 	await get_tree().create_timer(0.12, true).timeout
 
 func _play_harvest_feedback() -> void:
-	var current_scene := get_tree().current_scene
 	var harvest_anchor := global_position + Vector2(0, -20)
-	if current_scene != null and current_scene.has_method("spawn_overworld_burst"):
-		current_scene.spawn_overworld_burst(
-			harvest_anchor,
-			BLOOM_ACCENT_VFX,
-			Vector2i(128, 128),
-			16,
-			20.0,
-			Vector2(0.6, 0.6)
-		)
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(crop_sprite, "scale", Vector2(1.18, 1.18), 0.07).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

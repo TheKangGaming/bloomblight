@@ -3,12 +3,18 @@ extends CanvasLayer
 signal overlay_closed
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var flash_rect: ColorRect = $FlashRect
+@onready var prototype_footer_label: Label = $PrototypeFooter/FooterLabel
+
+const PROTOTYPE_DISCLAIMER_TEXT := "Prototype build using placeholder assets."
+const CONTROLLER_CURSOR_THRESHOLD := 0.55
+
 var _is_transitioning: bool = false
 var _pending_scene_path: String = ""
 var _pending_scene_packed: PackedScene = null
 var _scene_handoff_active: bool = false
 var _scene_handoff_dim_alpha: float = 0.0
 var _scene_handoff_tween: Tween = null
+var _last_input_mode: StringName = &"mouse"
 
 func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
@@ -17,6 +23,51 @@ func _log_run_start(message: String) -> void:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_reset_transition_visuals()
+	if prototype_footer_label != null:
+		prototype_footer_label.text = PROTOTYPE_DISCLAIMER_TEXT
+		prototype_footer_label.add_theme_font_size_override("font_size", 15)
+		prototype_footer_label.modulate = Color(0.96, 0.95, 0.9, 0.62)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		var mouse_motion := event as InputEventMouseMotion
+		if mouse_motion.relative.length_squared() > 0.0:
+			_set_input_mode(&"mouse")
+		return
+
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.pressed:
+			_set_input_mode(&"mouse")
+		return
+
+	if event is InputEventJoypadMotion:
+		var joy_motion := event as InputEventJoypadMotion
+		if absf(joy_motion.axis_value) >= CONTROLLER_CURSOR_THRESHOLD:
+			_set_input_mode(&"controller")
+		return
+
+	if event is InputEventJoypadButton:
+		var joy_button := event as InputEventJoypadButton
+		if joy_button.pressed:
+			_set_input_mode(&"controller")
+		return
+
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if key_event.pressed and not key_event.echo:
+			_last_input_mode = &"keyboard"
+
+func _set_input_mode(mode: StringName) -> void:
+	if _last_input_mode == mode:
+		return
+	_last_input_mode = mode
+	match mode:
+		&"mouse":
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		&"controller":
+			Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 
 func _reset_transition_visuals() -> void:
 	fade_rect.modulate.a = 0.0

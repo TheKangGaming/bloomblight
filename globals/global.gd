@@ -437,6 +437,7 @@ func reset_known_recipes_to_defaults() -> void:
 func get_progression_save_data() -> Dictionary:
 	return {
 		"inventory": inventory.duplicate(true),
+		"unlocked_tools": unlocked_tools.duplicate(),
 		"tutorial_step": tutorial_step,
 		"current_day": current_day,
 		"resolved_encounters": resolved_encounters.duplicate(true),
@@ -456,7 +457,12 @@ func get_progression_save_data() -> Dictionary:
 
 func apply_progression_save_data(save_data: Dictionary) -> void:
 	if save_data.has("inventory") and save_data.inventory is Dictionary:
-		inventory = save_data.inventory.duplicate(true)
+		inventory = _normalize_saved_inventory(save_data.inventory)
+
+	if save_data.has("unlocked_tools"):
+		unlocked_tools = _normalize_saved_tools(save_data.get("unlocked_tools", []))
+	elif bool(save_data.get("loop_hub_mode_active", loop_hub_mode_active)):
+		unlocked_tools = [Tools.AXE]
 
 	tutorial_step = int(save_data.get("tutorial_step", tutorial_step))
 	current_day = int(save_data.get("current_day", current_day))
@@ -485,6 +491,45 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 	stats_updated.emit()
 	update_tutorial_ui()
 	loop_state_changed.emit()
+
+func _normalize_saved_inventory(saved_inventory: Dictionary) -> Dictionary:
+	var normalized := {}
+	for raw_item_key in saved_inventory.keys():
+		var item_enum := _resolve_saved_item_enum(raw_item_key)
+		if item_enum < 0:
+			continue
+		normalized[item_enum] = int(saved_inventory.get(raw_item_key, 0))
+	return normalized
+
+func _resolve_saved_item_enum(raw_item_key: Variant) -> int:
+	if raw_item_key is int:
+		return int(raw_item_key)
+
+	var key_name := String(raw_item_key).strip_edges()
+	if key_name.is_empty():
+		return -1
+	if key_name.is_valid_int():
+		return int(key_name)
+
+	var item_keys := Items.keys()
+	return item_keys.find(key_name)
+
+func _normalize_saved_tools(raw_tools: Variant) -> Array[Tools]:
+	var normalized: Array[Tools] = []
+	if raw_tools is not Array:
+		return normalized
+
+	for raw_tool in raw_tools:
+		var tool_value := int(raw_tool)
+		if tool_value < 0 or tool_value >= Tools.size():
+			continue
+		var tool := tool_value as Tools
+		if not normalized.has(tool):
+			normalized.append(tool)
+
+	if loop_hub_mode_active and normalized.is_empty():
+		normalized.append(Tools.AXE)
+	return normalized
 
 func _migrate_known_recipes_from_save(save_data: Dictionary) -> void:
 	if not save_data.has("known_recipes"):

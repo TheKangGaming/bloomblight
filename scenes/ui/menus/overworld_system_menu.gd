@@ -35,6 +35,7 @@ func _ready() -> void:
 	settings_button.pressed.connect(_open_settings)
 	exit_to_title_button.pressed.connect(_exit_to_title)
 	quit_button.pressed.connect(_quit_game)
+	_wire_focus_graph()
 
 func _shortcut_input(event: InputEvent) -> void:
 	if _handle_toggle_input(event):
@@ -135,6 +136,7 @@ func _refresh_save_load_buttons() -> void:
 	var can_manage_run := current_scene != null and Global != null and Global.loop_hub_mode_active and current_scene.has_method("get_loop_run_save_state")
 	save_button.disabled = not can_manage_run
 	load_button.disabled = SaveManager == null or not SaveManager.has_method("has_save") or not SaveManager.has_save()
+	_wire_focus_graph()
 
 func _save_run() -> void:
 	var current_scene := get_tree().current_scene
@@ -168,6 +170,17 @@ func _wire_button(button: Button) -> void:
 		return
 	button.focus_entered.connect(_on_button_highlighted.bind(button))
 	button.mouse_entered.connect(_on_button_highlighted.bind(button))
+
+func _wire_focus_graph() -> void:
+	var buttons: Array[Button] = [resume_button, save_button, load_button, settings_button, exit_to_title_button, quit_button]
+	for index in range(buttons.size()):
+		var button := buttons[index]
+		if button == null:
+			continue
+		var previous := buttons[index - 1] if index > 0 else null
+		var following := buttons[index + 1] if index + 1 < buttons.size() else null
+		button.focus_neighbor_top = button.get_path_to(previous) if previous != null else NodePath()
+		button.focus_neighbor_bottom = button.get_path_to(following) if following != null else NodePath()
 
 func _on_button_highlighted(button: Button) -> void:
 	if button == null or button.disabled:

@@ -42,7 +42,8 @@ const LOOP_START_PLAYER_POS := Vector2(960, 1536)
 const LOOP_CAMPFIRE_POS := Vector2(960, 1438)
 const LOOP_BRIDGE_BATTLE_POS := Vector2(960, 1656)
 const LOOP_PLOT_SIZE := Vector2(640.0, 480.0)
-const LOOP_PURIFY_VFX_TEXTURE: Texture2D = preload("res://graphics/animations/vfx/Fantasy Spells/spell_heal_001/spell_heal_001_large_green/spritesheet.png")
+const LOOP_PURIFY_VFX_TEXTURE: Texture2D = preload("res://graphics/animations/ui/directional_sparkle_burst_002_large_green/spritesheet.png")
+const LOOP_PURIFY_VFX_FRAME_COUNT := 26
 const LOOP_PURIFY_SFX := preload("res://audio/sfx/Spell Impact 1.wav")
 const LOOP_INTERACTION_RADIUS_PLOT := 96.0
 const LOOP_INTERACTION_RADIUS_STRUCTURE := 88.0
@@ -139,6 +140,8 @@ const LOOP_OBJECTIVE_FOREST := "Open Forest"
 const LOOP_OBJECTIVE_REPAIR := "Repair Wagon"
 const LOOP_OBJECTIVE_CABIN := "Purify Cabin"
 const LOOP_OBJECTIVE_SETTLE := "Plant, Trade, Fight"
+const LOOP_MERCHANT_TAB_SWITCH_COOLDOWN_MS := 150
+const WORLD_PICKUP_POPUP_SCRIPT := preload("res://scenes/ui/world_pickup_popup.gd")
 
 enum IntroState {
 	INACTIVE,
@@ -225,7 +228,10 @@ var _loop_merchant_detail_label: Label = null
 var _loop_merchant_tab_bar: HBoxContainer = null
 var _loop_merchant_action_scroll: ScrollContainer = null
 var _loop_merchant_actions: VBoxContainer = null
+var _loop_merchant_tab_buttons: Dictionary = {}
+var _loop_merchant_close_button: Button = null
 var _loop_merchant_active_tab := "Seeds"
+var _loop_merchant_tab_switch_cooldown_until_msec := 0
 var _loop_spawned_forest_nodes: Array[Node2D] = []
 var _loop_hud_root: PanelContainer = null
 var _loop_hud_stats_label: Label = null
@@ -409,6 +415,21 @@ func _build_loop_merchant_weapon_owner_hint(weapon: WeaponData) -> String:
 func _get_loop_merchant_tabs() -> PackedStringArray:
 	return PackedStringArray(["Sell", "Seeds", "Weapons", "Armor", "Accessories"])
 
+func _get_loop_merchant_tab_detail_text(tab_id: String) -> String:
+	match tab_id:
+		"Sell":
+			return "Turn harvested crops into Gold so you can restock seeds and buy stronger gear."
+		"Seeds":
+			return "Plant seeds before battle so crops can grow while you fight."
+		"Weapons":
+			return "Weapon upgrades improve your party's damage and accuracy. Check the detail panel to see who can equip each one."
+		"Armor":
+			return "Armor adds durability and utility stats that help your front line and back line survive longer."
+		"Accessories":
+			return "Accessories provide small but meaningful stat boosts that round out a build."
+		_:
+			return "Browse stock to preview what each purchase does before you commit."
+
 func _set_loop_merchant_tab(tab_id: String) -> void:
 	if not _get_loop_merchant_tabs().has(tab_id):
 		return
@@ -426,22 +447,12 @@ func _refresh_loop_merchant_tab_buttons() -> void:
 		if button == null:
 			continue
 		var active := button.text == _loop_merchant_active_tab
-		button.disabled = active
+		button.toggle_mode = true
+		button.button_pressed = active
+		button.modulate = Color(1.0, 0.95, 0.76, 1.0) if active else Color(1.0, 1.0, 1.0, 0.92)
 
 func _get_loop_merchant_default_detail_text() -> String:
-	match _loop_merchant_active_tab:
-		"Sell":
-			return "Turn harvested crops into Gold so you can restock seeds and buy stronger gear."
-		"Seeds":
-			return "Plant seeds before battle so crops can grow while you fight."
-		"Weapons":
-			return "Weapon upgrades improve your party's damage and accuracy. Check the detail panel to see who can equip each one."
-		"Armor":
-			return "Armor adds durability and utility stats that help your front line and back line survive longer."
-		"Accessories":
-			return "Accessories provide small but meaningful stat boosts that round out a build."
-		_:
-			return "Browse stock to preview what each purchase does before you commit."
+	return _get_loop_merchant_tab_detail_text(_loop_merchant_active_tab)
 
 func _populate_loop_merchant_sell_tab() -> void:
 	var sell_button := Button.new()
@@ -459,11 +470,13 @@ func _populate_loop_merchant_seed_tab() -> void:
 	for seed_item_variant in LOOP_SEED_SHOP.keys():
 		var seed_item: int = int(seed_item_variant)
 		var offer: Dictionary = LOOP_SEED_SHOP[seed_item]
+		var cost := int(offer.get("cost", 0))
+		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
-		button.text = "%s (%d Gold)" % [String(offer.get("label", "Seeds")), int(offer.get("cost", 0))]
-		button.disabled = Global.loop_gold < int(offer.get("cost", 0))
+		button.text = "%s (%d Gold)%s" % [String(offer.get("label", "Seeds")), cost, "" if affordable else " [Need More Gold]"]
+		button.modulate = Color(1, 1, 1, 1) if affordable else Color(0.8, 0.8, 0.8, 0.88)
 		button.pressed.connect(_on_loop_buy_seed_pressed.bind(seed_item))
-		var seed_description := _build_loop_merchant_seed_description(seed_item, int(offer.get("cost", 0)))
+		var seed_description := _build_loop_merchant_seed_description(seed_item, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
 		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
 		_loop_merchant_actions.add_child(button)
@@ -478,7 +491,8 @@ func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
 
 	if slot_offers.is_empty():
 		var locked_label := Label.new()
-		locked_label.text = "Clear more stages to unlock better %s." % slot_name.to_lower()
+		var slot_label := "accessories" if slot_name == "Accessory" else slot_name.to_lower()
+		locked_label.text = "Clear more stages to unlock more %s." % slot_label
 		locked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_loop_merchant_actions.add_child(locked_label)
 		return
@@ -490,11 +504,18 @@ func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
 		var owned_items: Array = ProgressionService.get_owned_equipment(String(offer.get("slot", ""))) if ProgressionService != null and ProgressionService.has_method("get_owned_equipment") else []
 		var item_name := _get_equipment_display_name(item)
 		var already_owned := owned_items.has(item)
+		var cost := int(offer.get("cost", 0))
+		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
-		button.text = "%s (%d Gold)%s" % [item_name, int(offer.get("cost", 0)), " [Owned]" if already_owned else ""]
-		button.disabled = already_owned or Global.loop_gold < int(offer.get("cost", 0))
-		button.pressed.connect(_on_loop_buy_equipment_pressed.bind(item, int(offer.get("cost", 0))))
-		var gear_description := _build_loop_merchant_item_description(item, int(offer.get("cost", 0)))
+		var state_suffix := ""
+		if already_owned:
+			state_suffix = " [Owned]"
+		elif not affordable:
+			state_suffix = " [Need More Gold]"
+		button.text = "%s (%d Gold)%s" % [item_name, cost, state_suffix]
+		button.modulate = Color(1, 1, 1, 1) if not already_owned and affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.pressed.connect(_on_loop_buy_equipment_pressed.bind(item, cost))
+		var gear_description := _build_loop_merchant_item_description(item, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(gear_description))
 		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(gear_description))
 		_loop_merchant_actions.add_child(button)
@@ -506,6 +527,90 @@ func _focus_first_loop_merchant_action_button() -> void:
 		if child is Button and (child as Button).visible and not (child as Button).disabled:
 			(child as Button).grab_focus()
 			return
+	_focus_loop_merchant_tab_button(_loop_merchant_active_tab)
+
+func _focus_loop_merchant_tab_button(tab_id: String) -> void:
+	var button := _loop_merchant_tab_buttons.get(tab_id, null) as Button
+	if button != null and is_instance_valid(button) and button.visible:
+		button.grab_focus()
+
+func _get_loop_merchant_action_buttons() -> Array[Button]:
+	var buttons: Array[Button] = []
+	if _loop_merchant_actions == null or not is_instance_valid(_loop_merchant_actions):
+		return buttons
+	for child in _loop_merchant_actions.get_children():
+		var button := child as Button
+		if button == null or not button.visible or button.disabled:
+			continue
+		buttons.append(button)
+	return buttons
+
+func _configure_loop_merchant_focus_graph() -> void:
+	if _loop_merchant_tab_bar == null or not is_instance_valid(_loop_merchant_tab_bar):
+		return
+
+	var action_buttons := _get_loop_merchant_action_buttons()
+	var active_tab_button := _loop_merchant_tab_buttons.get(_loop_merchant_active_tab, null) as Button
+	var first_action: Button = action_buttons[0] if not action_buttons.is_empty() else null
+	var last_action: Button = action_buttons[action_buttons.size() - 1] if not action_buttons.is_empty() else null
+
+	var tab_buttons: Array[Button] = []
+	for child in _loop_merchant_tab_bar.get_children():
+		var tab_button := child as Button
+		if tab_button == null:
+			continue
+		tab_buttons.append(tab_button)
+
+	for index in range(tab_buttons.size()):
+		var button := tab_buttons[index]
+		var left_button := tab_buttons[maxi(index - 1, 0)]
+		var right_button := tab_buttons[mini(index + 1, tab_buttons.size() - 1)]
+		button.focus_neighbor_left = button.get_path_to(left_button)
+		button.focus_neighbor_right = button.get_path_to(right_button)
+		if first_action != null:
+			button.focus_neighbor_bottom = button.get_path_to(first_action)
+		elif _loop_merchant_close_button != null and is_instance_valid(_loop_merchant_close_button):
+			button.focus_neighbor_bottom = button.get_path_to(_loop_merchant_close_button)
+		else:
+			button.focus_neighbor_bottom = NodePath("")
+
+	if active_tab_button != null and is_instance_valid(active_tab_button):
+		if first_action != null:
+			active_tab_button.focus_neighbor_bottom = active_tab_button.get_path_to(first_action)
+		elif _loop_merchant_close_button != null and is_instance_valid(_loop_merchant_close_button):
+			active_tab_button.focus_neighbor_bottom = active_tab_button.get_path_to(_loop_merchant_close_button)
+		else:
+			active_tab_button.focus_neighbor_bottom = NodePath("")
+
+	for index in range(action_buttons.size()):
+		var action_button := action_buttons[index]
+		var previous_button := action_buttons[maxi(index - 1, 0)]
+		var next_button := action_buttons[mini(index + 1, action_buttons.size() - 1)]
+		action_button.focus_neighbor_top = action_button.get_path_to(active_tab_button) if index == 0 and active_tab_button != null else action_button.get_path_to(previous_button)
+		action_button.focus_neighbor_bottom = action_button.get_path_to(_loop_merchant_close_button) if index == action_buttons.size() - 1 and _loop_merchant_close_button != null else action_button.get_path_to(next_button)
+
+	if _loop_merchant_close_button != null and is_instance_valid(_loop_merchant_close_button):
+		if last_action != null:
+			_loop_merchant_close_button.focus_neighbor_top = _loop_merchant_close_button.get_path_to(last_action)
+		elif active_tab_button != null:
+			_loop_merchant_close_button.focus_neighbor_top = _loop_merchant_close_button.get_path_to(active_tab_button)
+
+func _cycle_loop_merchant_tab(direction: int) -> void:
+	var tab_ids := _get_loop_merchant_tabs()
+	if tab_ids.is_empty():
+		return
+	var current_index := tab_ids.find(_loop_merchant_active_tab)
+	if current_index == -1:
+		current_index = 0
+	var next_index := posmod(current_index + direction, tab_ids.size())
+	_set_loop_merchant_tab(String(tab_ids[next_index]))
+
+func _can_switch_loop_merchant_tabs() -> bool:
+	var now := Time.get_ticks_msec()
+	if now < _loop_merchant_tab_switch_cooldown_until_msec:
+		return false
+	_loop_merchant_tab_switch_cooldown_until_msec = now + LOOP_MERCHANT_TAB_SWITCH_COOLDOWN_MS
+	return true
 
 func _get_loop_merchant_equipment_offers() -> Array[Dictionary]:
 	var offers: Array[Dictionary] = []
@@ -926,12 +1031,16 @@ func _build_loop_merchant_menu() -> void:
 	_loop_merchant_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_loop_merchant_tab_bar.add_theme_constant_override("separation", 8)
 	left_column.add_child(_loop_merchant_tab_bar)
+	_loop_merchant_tab_buttons.clear()
 	for tab_id in _get_loop_merchant_tabs():
 		var tab_button := Button.new()
 		tab_button.text = tab_id
 		tab_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tab_button.pressed.connect(_set_loop_merchant_tab.bind(tab_id))
+		tab_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(_get_loop_merchant_tab_detail_text(tab_id)))
+		tab_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(_get_loop_merchant_tab_detail_text(tab_id)))
 		_loop_merchant_tab_bar.add_child(tab_button)
+		_loop_merchant_tab_buttons[tab_id] = tab_button
 
 	_loop_merchant_detail_label = Label.new()
 	_loop_merchant_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -960,8 +1069,12 @@ func _build_loop_merchant_menu() -> void:
 
 	var close_button := Button.new()
 	close_button.text = "Close"
+	close_button.focus_entered.connect(func() -> void:
+		_set_loop_merchant_detail_text(_get_loop_merchant_default_detail_text())
+	)
 	close_button.pressed.connect(_close_loop_merchant_menu)
 	left_column.add_child(close_button)
+	_loop_merchant_close_button = close_button
 
 	var close_hint := Label.new()
 	close_hint.text = "Press Cancel to close"
@@ -992,6 +1105,7 @@ func _refresh_loop_merchant_menu() -> void:
 	_set_loop_merchant_detail_text(_get_loop_merchant_default_detail_text())
 
 	for child in _loop_merchant_actions.get_children():
+		_loop_merchant_actions.remove_child(child)
 		child.queue_free()
 
 	match _loop_merchant_active_tab:
@@ -1007,6 +1121,8 @@ func _refresh_loop_merchant_menu() -> void:
 			_populate_loop_merchant_equipment_tab("Accessory")
 		_:
 			_populate_loop_merchant_seed_tab()
+
+	_configure_loop_merchant_focus_graph()
 
 func _spawn_loop_forest_content() -> void:
 	for node in _loop_spawned_forest_nodes:
@@ -1286,6 +1402,11 @@ func spawn_overworld_burst(
 		return
 	var burst = _overworld_burst_scene.instantiate()
 	objects_root.add_child(burst)
+	if burst is Node2D:
+		var burst_node := burst as Node2D
+		burst_node.top_level = true
+		burst_node.z_as_relative = false
+		burst_node.z_index = 250
 	burst.global_position = global_position_value
 	if burst.has_method("configure"):
 		burst.configure(texture, frame_size, frame_count, fps, scale_value)
@@ -1297,6 +1418,25 @@ func play_overworld_camera_shake(intensity: float = 4.0, duration: float = 0.16)
 		return
 	var active_camera: Camera2D = player_camera if player_camera != null and player_camera.is_current() else cutscene_camera
 	_camera_fx.play_shake(active_camera, intensity, duration)
+
+func show_world_pickup_popup(item_type: int, amount: int = 1, world_anchor: Variant = null) -> void:
+	var canvas_layer := get_node_or_null("CanvasLayer") as CanvasLayer
+	if canvas_layer == null or WORLD_PICKUP_POPUP_SCRIPT == null:
+		return
+
+	var anchor_position: Vector2 = player.global_position if player != null and is_instance_valid(player) else Vector2.ZERO
+	if world_anchor is Vector2:
+		anchor_position = world_anchor
+
+	var popup := WORLD_PICKUP_POPUP_SCRIPT.new()
+	if popup == null:
+		return
+	canvas_layer.add_child(popup)
+	if popup.has_method("setup"):
+		popup.setup(item_type, amount)
+	var screen_anchor := (get_viewport().get_canvas_transform() * anchor_position) + Vector2(0, -54)
+	if popup.has_method("play_at"):
+		popup.play_at(screen_anchor)
 
 func _play_one_shot_world_sfx(stream: AudioStream, at_position: Vector2) -> void:
 	if stream == null:
@@ -1618,6 +1758,14 @@ func _input(event: InputEvent) -> void:
 	if not Global.loop_hub_mode_active:
 		return
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu) or not _loop_merchant_menu.visible:
+		return
+	if event.is_action_pressed("tool_backward") and _can_switch_loop_merchant_tabs():
+		_cycle_loop_merchant_tab(-1)
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("tool_forward") and _can_switch_loop_merchant_tabs():
+		_cycle_loop_merchant_tab(1)
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel"):
 		_close_loop_merchant_menu()
@@ -2480,10 +2628,14 @@ func _mature_loop_crops_after_battle() -> void:
 				plant.advance_growth()
 
 func _run_loop_plot_purified_feedback(plot_id: StringName) -> void:
-	var interaction_point: Vector2 = LOOP_INTERACTION_POINTS.get(plot_id, player.global_position)
-	spawn_overworld_burst(interaction_point, LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), 8, 14.0, Vector2(1.5, 1.5))
+	var burst_position: Vector2 = LOOP_INTERACTION_POINTS.get(plot_id, player.global_position)
+	var plot_def: Dictionary = LOOP_PLOT_DEFS.get(plot_id, {})
+	if plot_def.has("rect"):
+		var plot_rect: Rect2 = plot_def.get("rect", Rect2())
+		burst_position = plot_rect.get_center()
+	spawn_overworld_burst(burst_position, LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), LOOP_PURIFY_VFX_FRAME_COUNT, 24.0, Vector2(1.45, 1.45))
 	play_overworld_camera_shake(3.0, 0.12)
-	_play_loop_world_sfx(LOOP_PURIFY_SFX, interaction_point)
+	_play_loop_world_sfx(LOOP_PURIFY_SFX, burst_position)
 
 func _open_loop_merchant_menu() -> void:
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
@@ -2493,6 +2645,7 @@ func _open_loop_merchant_menu() -> void:
 	_refresh_loop_merchant_menu()
 	_loop_merchant_menu.visible = true
 	player.can_move = false
+	_loop_merchant_tab_switch_cooldown_until_msec = 0
 	_focus_first_loop_merchant_action_button()
 
 func _close_loop_merchant_menu() -> void:
