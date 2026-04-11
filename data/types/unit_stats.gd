@@ -176,7 +176,7 @@ func apply_player_snapshot(player_stats: Dictionary, buffs: Dictionary = {}) -> 
 	clamp_to_caps()
 
 
-func apply_auto_levels(level_count: int) -> Dictionary:
+func apply_auto_levels(level_count: int, rng_override: RandomNumberGenerator = null) -> Dictionary:
 	var total_gains := {
 		"MAX_HP": 0,
 		"STR": 0,
@@ -204,7 +204,7 @@ func apply_auto_levels(level_count: int) -> Dictionary:
 				continue
 
 			var chance_percent := int(growth_rates[growth_key])
-			if not _roll_growth(chance_percent):
+			if not _roll_growth(chance_percent, rng_override):
 				continue
 
 			if not _can_gain_stat(normalized_key):
@@ -239,7 +239,11 @@ func apply_auto_levels(level_count: int) -> Dictionary:
 	return total_gains
 
 
-func _roll_growth(chance_percent: int) -> bool:
+func _roll_growth(chance_percent: int, rng_override: RandomNumberGenerator = null) -> bool:
+	if rng_override != null:
+		var clamped_override_chance := clampi(chance_percent, 0, 100)
+		return rng_override.randf() < (clamped_override_chance / 100.0)
+
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree != null and tree.root != null:
 		var progression_service := tree.root.get_node_or_null("ProgressionService")

@@ -273,7 +273,7 @@ layout_mode = 2
 bbcode_enabled = true
 fit_content = false
 scroll_active = true
-focus_mode = 2
+focus_mode = 0
 theme_override_font_sizes/normal_font_size = 22
 
 [node name="EquipmentView" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack"]
@@ -540,7 +540,7 @@ autowrap_mode = 3
 
 [node name="CalendarLegendPanel" type="PanelContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter"]
 layout_mode = 2
-focus_mode = 2
+focus_mode = 0
 theme_override_styles/panel = SubResource("2")
 
 [node name="CalendarLegendMargin" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel"]

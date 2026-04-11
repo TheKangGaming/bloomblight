@@ -7,12 +7,6 @@ signal status_tab_viewed
 const SLOT_SCENE := preload("res://scenes/ui/inventory_slot.tscn")
 const TAB_PREV_ACTIONS: Array[StringName] = [&"tool_backward", &"ui_page_up"]
 const TAB_NEXT_ACTIONS: Array[StringName] = [&"tool_forward", &"ui_page_down"]
-const NAV_LEFT_ACTIONS: Array[StringName] = [&"left", &"ui_left"]
-const NAV_RIGHT_ACTIONS: Array[StringName] = [&"right", &"ui_right"]
-const NAV_UP_ACTIONS: Array[StringName] = [&"up", &"ui_up"]
-const NAV_DOWN_ACTIONS: Array[StringName] = [&"down", &"ui_down"]
-const NAV_REPEAT_INITIAL_DELAY_MS := 460
-const NAV_REPEAT_INTERVAL_MS := 320
 const CALENDAR_GRID_COLUMNS := 7
 const CALENDAR_GRID_DAYS := 28
 const LOOP_STAGE_COLUMNS := 5
@@ -79,8 +73,6 @@ var _current_section := MenuSection.INVENTORY
 var _current_party_subview := PartySubview.STATUS
 var _current_inventory_subview := InventorySubview.ITEMS
 var _selected_party_index := 0
-var _last_nav_action: StringName = StringName()
-var _last_nav_time_ms: int = -100000
 var _status_tab_highlight_enabled := false
 var _status_tab_highlight_tween: Tween = null
 var _equipment_refresh_in_progress := false
@@ -198,23 +190,21 @@ func _handle_manual_menu_navigation(event: InputEvent) -> bool:
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
 	if focus_owner == null or not _is_in_active_content(focus_owner):
 		return false
-	if focus_owner == party_button and _can_trigger_navigation(event, NAV_RIGHT_ACTIONS, &"right"):
+	if focus_owner == party_button and _is_action_pressed(event, [&"right", &"ui_right"]):
 		var roster_target := _get_selected_roster_button()
 		if roster_target != null:
 			roster_target.grab_focus()
 			return true
-	if _is_active_party_subtab_focus(focus_owner) and _can_trigger_navigation(event, NAV_LEFT_ACTIONS, &"left"):
+	if _is_active_party_subtab_focus(focus_owner) and _is_action_pressed(event, [&"left", &"ui_left"]):
 		var selected_roster := _get_selected_roster_button()
 		if selected_roster != null:
 			selected_roster.grab_focus()
 			return true
-	if _is_active_inventory_subtab_focus(focus_owner) and _can_trigger_navigation(event, NAV_DOWN_ACTIONS, &"down"):
+	if _is_active_inventory_subtab_focus(focus_owner) and _current_inventory_subview == InventorySubview.ITEMS and (_is_action_pressed(event, [&"down", &"ui_down"]) or _is_action_pressed(event, [&"right", &"ui_right"])):
 		var inventory_slot := _get_first_inventory_slot()
 		if inventory_slot != null:
 			inventory_slot.grab_focus()
 			return true
-	if focus_owner == equipment_choice_list and _can_trigger_navigation(event, NAV_LEFT_ACTIONS, &"left"):
-		return _move_equipment_choice_focus(Vector2.LEFT)
 	return false
 
 func _is_mouse_wheel_event(event: InputEvent) -> bool:
@@ -287,8 +277,7 @@ func update_inventory() -> void:
 	if inventory_grid == null:
 		return
 
-	for child in inventory_grid.get_children():
-		child.queue_free()
+	_clear_container_children(inventory_grid)
 
 	for raw_item_key in Global.inventory:
 		var item_enum := _resolve_inventory_item_enum(raw_item_key)
@@ -341,7 +330,10 @@ func _wire_party_controls() -> void:
 	status_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.STATUS))
 	equipment_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
 	skills_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
-	status_subtab_button.focus_entered.connect(func() -> void: _set_party_subview(PartySubview.STATUS))
+	status_subtab_button.focus_entered.connect(func() -> void:
+		_set_party_subview(PartySubview.STATUS)
+		_complete_status_review_if_needed()
+	)
 	equipment_subtab_button.focus_entered.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
 	skills_subtab_button.focus_entered.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
 	status_subtab_button.mouse_entered.connect(func() -> void: _set_party_subview(PartySubview.STATUS))
@@ -395,6 +387,8 @@ func _set_party_subview(subview: int) -> void:
 		ui_sounds.play_tab_switch()
 	_update_section_visibility()
 	_refresh_all_views()
+	if _current_party_subview == PartySubview.STATUS:
+		_complete_status_review_if_needed()
 	_focus_active_party_subtab_deferred()
 
 func _set_inventory_subview(subview: int) -> void:
@@ -448,8 +442,7 @@ func _refresh_roster_buttons() -> void:
 	if roster_list == null:
 		return
 
-	for child in roster_list.get_children():
-		child.queue_free()
+	_clear_container_children(roster_list)
 
 	var roster := _get_party_roster()
 	if roster.is_empty():
@@ -628,8 +621,7 @@ func _apply_equipment_choice(slot_name: String, index: int) -> void:
 	_refresh_all_views()
 
 func _refresh_inventory_equipment_view() -> void:
-	for child in equipment_catalog_list.get_children():
-		child.queue_free()
+	_clear_container_children(equipment_catalog_list)
 
 	for slot_name in ["Weapon", "Armor", "Accessory"]:
 		var heading := Label.new()
@@ -918,7 +910,10 @@ func _build_character_unit_stats(character: CharacterData) -> UnitStats:
 	stats.apply_class_progression(character)
 	var shared_level := maxi(Global.get_player_level(), 1) if Global != null else 1
 	if shared_level > 1:
-		stats.apply_auto_levels(shared_level - 1)
+		var preview_rng := RandomNumberGenerator.new()
+		var preview_seed_basis := "%s:%d:%d" % [String(character.display_name), shared_level, ProgressionService.current_seed if ProgressionService != null else 0]
+		preview_rng.seed = hash(preview_seed_basis)
+		stats.apply_auto_levels(shared_level - 1, preview_rng)
 	stats.apply_delta(_extract_equipment_delta(character.equipped_weapon))
 	stats.apply_delta(_extract_equipment_delta(character.equipped_armor))
 	stats.apply_delta(_extract_equipment_delta(character.equipped_accessory))
@@ -1118,28 +1113,6 @@ func _on_control_focus_entered(control: Control, battle_menu_sound: bool) -> voi
 func _on_control_mouse_entered(control: Control, battle_menu_sound: bool) -> void:
 	_on_control_focus_entered(control, battle_menu_sound)
 
-func _activate_focused_control() -> void:
-	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
-	if focus_owner == null or not _is_in_active_content(focus_owner):
-		_focus_default_for_current_view_deferred()
-		return
-
-	if focus_owner is BaseButton:
-		(focus_owner as BaseButton).pressed.emit()
-		get_viewport().set_input_as_handled()
-		return
-	if focus_owner is OptionButton:
-		(focus_owner as OptionButton).show_popup()
-		get_viewport().set_input_as_handled()
-		return
-	if focus_owner == equipment_choice_list:
-		_activate_selected_equipment_choice()
-		get_viewport().set_input_as_handled()
-		return
-	if focus_owner.has_method("_try_interact"):
-		focus_owner.call("_try_interact")
-		get_viewport().set_input_as_handled()
-
 func _activate_selected_equipment_choice() -> void:
 	if equipment_choice_list == null:
 		return
@@ -1156,131 +1129,6 @@ func _is_action_pressed(event: InputEvent, actions: Array[StringName]) -> bool:
 		if InputMap.has_action(action) and event.is_action_pressed(action):
 			return true
 	return false
-
-func _can_trigger_navigation(event: InputEvent, actions: Array[StringName], nav_key: StringName) -> bool:
-	if not _is_action_pressed(event, actions):
-		return false
-	for action in actions:
-		if InputMap.has_action(action) and Input.is_action_just_pressed(action):
-			_last_nav_action = nav_key
-			_last_nav_time_ms = Time.get_ticks_msec()
-			return true
-
-	if event is InputEventJoypadMotion:
-		var now := Time.get_ticks_msec()
-		var required_delay := NAV_REPEAT_INTERVAL_MS if _last_nav_action == nav_key else NAV_REPEAT_INITIAL_DELAY_MS
-		if now - _last_nav_time_ms >= required_delay:
-			_last_nav_action = nav_key
-			_last_nav_time_ms = now
-			return true
-	return false
-
-func _move_focus(direction: Vector2) -> void:
-	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
-	if focus_owner == null or not _is_in_active_content(focus_owner):
-		_focus_first_interactable()
-		return
-
-	if focus_owner == equipment_choice_list and _move_equipment_choice_focus(direction):
-		return
-
-	var explicit_neighbor := _get_focus_neighbor_for_direction(focus_owner, direction)
-	if explicit_neighbor != null and _is_in_active_content(explicit_neighbor):
-		explicit_neighbor.grab_focus()
-		return
-
-	var controls := _get_active_focusable_controls()
-	if controls.is_empty():
-		return
-
-	if _move_grid_focus_if_possible(focus_owner, controls, direction):
-		return
-
-	var current_center := _control_center(focus_owner)
-	var best: Control = null
-	var best_score := INF
-	for candidate in controls:
-		if candidate == focus_owner:
-			continue
-		var offset := _control_center(candidate) - current_center
-		if offset == Vector2.ZERO:
-			continue
-		if direction.dot(offset.normalized()) <= 0.25:
-			continue
-		var score := offset.length_squared()
-		if score < best_score:
-			best_score = score
-			best = candidate
-
-	if best != null:
-		best.grab_focus()
-		return
-
-	_move_focus_linear(focus_owner, controls, direction)
-
-func _move_grid_focus_if_possible(focus_owner: Control, controls: Array[Control], direction: Vector2) -> bool:
-	if _current_section != MenuSection.INVENTORY or _current_inventory_subview != InventorySubview.ITEMS or inventory_grid == null:
-		return false
-	var current_index := controls.find(focus_owner)
-	if current_index == -1:
-		return false
-
-	var columns: int = maxi(inventory_grid.columns, 1)
-	var target_index := current_index
-	if direction == Vector2.LEFT:
-		target_index = max(current_index - 1, 0)
-	elif direction == Vector2.RIGHT:
-		target_index = min(current_index + 1, controls.size() - 1)
-	elif direction == Vector2.UP:
-		target_index = max(current_index - columns, 0)
-	elif direction == Vector2.DOWN:
-		target_index = min(current_index + columns, controls.size() - 1)
-
-	if target_index == current_index:
-		return false
-	controls[target_index].grab_focus()
-	return true
-
-func _move_focus_linear(focus_owner: Control, controls: Array[Control], direction: Vector2) -> void:
-	var current_index := controls.find(focus_owner)
-	if current_index == -1:
-		_focus_default_for_current_view()
-		return
-	var step := -1 if direction == Vector2.LEFT or direction == Vector2.UP else 1
-	var target_index := wrapi(current_index + step, 0, controls.size())
-	controls[target_index].grab_focus()
-
-func _move_equipment_choice_focus(direction: Vector2) -> bool:
-	if equipment_choice_list == null or equipment_choice_list.item_count <= 0:
-		return false
-	if direction == Vector2.LEFT:
-		var slot_button := _get_equipment_slot_button(_active_equipment_slot)
-		if slot_button != null:
-			slot_button.grab_focus()
-			return true
-		return false
-	if direction != Vector2.UP and direction != Vector2.DOWN:
-		return false
-
-	var selected := equipment_choice_list.get_selected_items()
-	var current_index := int(selected[0]) if not selected.is_empty() else 0
-	var next_index := clampi(current_index + (-1 if direction == Vector2.UP else 1), 0, equipment_choice_list.item_count - 1)
-	if next_index == current_index and not selected.is_empty():
-		return true
-	equipment_choice_list.select(next_index)
-	equipment_choice_list.ensure_current_is_visible()
-	_on_equipment_choice_selected(next_index)
-	return true
-
-func _focus_default_for_current_view() -> void:
-	var target := _get_default_focus_target()
-	if target != null and target.visible and target.get_focus_mode_with_override() == Control.FOCUS_ALL:
-		target.grab_focus()
-		return
-	_focus_first_interactable()
-
-func _focus_default_for_current_view_deferred() -> void:
-	call_deferred("_focus_default_for_current_view")
 
 func _focus_section_root_deferred() -> void:
 	call_deferred("_focus_section_root")
@@ -1311,37 +1159,24 @@ func _focus_active_inventory_subtab() -> void:
 	if button != null and button.visible:
 		button.grab_focus()
 
-func _get_default_focus_target() -> Control:
-	return _get_section_root_button(_current_section)
-
-func _focus_first_interactable() -> void:
-	for candidate in _get_active_focusable_controls():
-		if candidate.visible and candidate.get_focus_mode_with_override() == Control.FOCUS_ALL:
-			candidate.grab_focus()
-			return
-
-func _focus_first_interactable_deferred() -> void:
-	call_deferred("_focus_first_interactable")
+func _clear_container_children(container: Node) -> void:
+	if container == null:
+		return
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
 
 func _get_selected_roster_button() -> Button:
 	if roster_list == null:
 		return null
-	if _selected_party_index < 0 or _selected_party_index >= roster_list.get_child_count():
+	var buttons := _get_roster_buttons()
+	if _selected_party_index < 0 or _selected_party_index >= buttons.size():
 		return null
-	return roster_list.get_child(_selected_party_index) as Button
+	return buttons[_selected_party_index] as Button
 
 func _get_first_inventory_slot() -> Control:
-	if inventory_grid == null:
-		return null
-	for child in inventory_grid.get_children():
-		if child is Control and child.visible:
-			return child as Control
-	return null
-
-func _get_active_focusable_controls() -> Array[Control]:
-	var result: Array[Control] = []
-	_collect_focusable_controls(self, result)
-	return result
+	var slots := _get_inventory_slot_controls()
+	return slots[0] if not slots.is_empty() else null
 
 func _rebuild_focus_graph() -> void:
 	_link_vertical_focus([party_button, inventory_button, calendar_button])
@@ -1351,7 +1186,7 @@ func _rebuild_focus_graph() -> void:
 	_set_focus_neighbor(calendar_button, Vector2.LEFT, calendar_button)
 	_set_focus_neighbor(party_button, Vector2.RIGHT, party_button)
 	_set_focus_neighbor(inventory_button, Vector2.RIGHT, _get_section_entry_target(MenuSection.INVENTORY))
-	_set_focus_neighbor(calendar_button, Vector2.RIGHT, _get_default_focus_target_for_section(MenuSection.CALENDAR))
+	_set_focus_neighbor(calendar_button, Vector2.RIGHT, calendar_button)
 
 	match _current_section:
 		MenuSection.PARTY:
@@ -1377,18 +1212,14 @@ func _rebuild_party_focus_graph() -> void:
 
 	match _current_party_subview:
 		PartySubview.STATUS:
-			_set_focus_neighbor(status_subtab_button, Vector2.DOWN, status_text)
-			_set_focus_neighbor(equipment_subtab_button, Vector2.DOWN, status_text)
-			_set_focus_neighbor(skills_subtab_button, Vector2.DOWN, status_text)
-			_set_focus_neighbor(status_text, Vector2.LEFT, status_subtab_button)
-			_set_focus_neighbor(status_text, Vector2.UP, status_subtab_button)
-			_set_focus_neighbor(status_text, Vector2.DOWN, status_text)
-			_set_focus_neighbor(status_text, Vector2.RIGHT, status_text)
+			_set_focus_neighbor(status_subtab_button, Vector2.DOWN, status_subtab_button)
+			_set_focus_neighbor(equipment_subtab_button, Vector2.DOWN, equipment_subtab_button)
+			_set_focus_neighbor(skills_subtab_button, Vector2.DOWN, skills_subtab_button)
 		PartySubview.EQUIPMENT:
 			var slot_buttons := [weapon_slot_button, armor_slot_button, accessory_slot_button]
 			_link_vertical_focus(slot_buttons)
 			for slot_button in slot_buttons:
-				_set_focus_neighbor(slot_button, Vector2.LEFT, equipment_subtab_button)
+				_set_focus_neighbor(slot_button, Vector2.LEFT, slot_button)
 				_set_focus_neighbor(slot_button, Vector2.UP, equipment_subtab_button if slot_button == weapon_slot_button else null)
 				_set_focus_neighbor(slot_button, Vector2.RIGHT, equipment_choice_list)
 			_set_focus_neighbor(status_subtab_button, Vector2.DOWN, weapon_slot_button)
@@ -1397,13 +1228,9 @@ func _rebuild_party_focus_graph() -> void:
 			_set_focus_neighbor(equipment_choice_list, Vector2.LEFT, _get_equipment_slot_button(_active_equipment_slot))
 			_set_focus_neighbor(equipment_choice_list, Vector2.UP, equipment_subtab_button)
 		PartySubview.SKILLS:
-			_set_focus_neighbor(status_subtab_button, Vector2.DOWN, skills_text)
-			_set_focus_neighbor(equipment_subtab_button, Vector2.DOWN, skills_text)
-			_set_focus_neighbor(skills_subtab_button, Vector2.DOWN, skills_text)
-			_set_focus_neighbor(skills_text, Vector2.LEFT, skills_subtab_button)
-			_set_focus_neighbor(skills_text, Vector2.UP, skills_subtab_button)
-			_set_focus_neighbor(skills_text, Vector2.DOWN, skills_text)
-			_set_focus_neighbor(skills_text, Vector2.RIGHT, skills_text)
+			_set_focus_neighbor(status_subtab_button, Vector2.DOWN, status_subtab_button)
+			_set_focus_neighbor(equipment_subtab_button, Vector2.DOWN, equipment_subtab_button)
+			_set_focus_neighbor(skills_subtab_button, Vector2.DOWN, skills_subtab_button)
 
 func _rebuild_inventory_focus_graph() -> void:
 	_link_horizontal_focus([items_subtab_button, equipment_inventory_subtab_button])
@@ -1416,31 +1243,24 @@ func _rebuild_inventory_focus_graph() -> void:
 		var slots := _get_inventory_slot_controls()
 		_link_inventory_grid_focus(slots)
 		if not slots.is_empty():
+			var first_slot := slots[0]
+			_set_focus_neighbor(items_subtab_button, Vector2.RIGHT, items_subtab_button)
 			_set_focus_neighbor(items_subtab_button, Vector2.DOWN, items_subtab_button)
 			_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.DOWN, equipment_inventory_subtab_button)
-			for slot in slots:
-				if slot == null:
-					continue
-				if slot.get_index() % maxi(inventory_grid.columns, 1) == 0:
-					_set_focus_neighbor(slot, Vector2.LEFT, slot)
+			_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.RIGHT, equipment_inventory_subtab_button)
+		else:
+			_set_focus_neighbor(items_subtab_button, Vector2.DOWN, items_subtab_button)
+			_set_focus_neighbor(items_subtab_button, Vector2.RIGHT, items_subtab_button)
+			_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.DOWN, equipment_inventory_subtab_button)
+			_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.RIGHT, equipment_inventory_subtab_button)
 	else:
 		_set_focus_neighbor(items_subtab_button, Vector2.DOWN, items_subtab_button)
 		_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.DOWN, equipment_inventory_subtab_button)
+		_set_focus_neighbor(items_subtab_button, Vector2.RIGHT, items_subtab_button)
+		_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.RIGHT, equipment_inventory_subtab_button)
 
 func _rebuild_calendar_focus_graph() -> void:
-	_set_focus_neighbor(calendar_legend_panel, Vector2.LEFT, calendar_legend_panel)
-	_set_focus_neighbor(calendar_legend_panel, Vector2.UP, calendar_legend_panel)
-	_set_focus_neighbor(calendar_button, Vector2.RIGHT, calendar_legend_panel)
-
-func _get_default_focus_target_for_section(section: MenuSection) -> Control:
-	match section:
-		MenuSection.PARTY:
-			return _get_section_entry_target(MenuSection.PARTY)
-		MenuSection.INVENTORY:
-			return _get_section_entry_target(MenuSection.INVENTORY)
-		MenuSection.CALENDAR:
-			return calendar_legend_panel
-	return null
+	pass
 
 func _get_section_root_button(section: MenuSection) -> Button:
 	match section:
@@ -1462,7 +1282,7 @@ func _get_section_entry_target(section: MenuSection) -> Control:
 		MenuSection.INVENTORY:
 			return _get_active_inventory_subtab_button()
 		MenuSection.CALENDAR:
-			return calendar_legend_panel
+			return null
 	return null
 
 func _get_active_party_subtab_button() -> Button:
@@ -1480,12 +1300,8 @@ func _get_active_inventory_subtab_button() -> Button:
 
 func _get_party_detail_entry_target() -> Control:
 	match _current_party_subview:
-		PartySubview.STATUS:
-			return status_text
 		PartySubview.EQUIPMENT:
 			return _get_equipment_slot_button(_active_equipment_slot)
-		PartySubview.SKILLS:
-			return skills_text
 	return null
 
 func _get_inventory_detail_entry_target() -> Control:
@@ -1498,7 +1314,7 @@ func _get_roster_buttons() -> Array[Control]:
 	if roster_list == null:
 		return buttons
 	for child in roster_list.get_children():
-		if child is Control and child.visible:
+		if child is Control and child.visible and not child.is_queued_for_deletion():
 			buttons.append(child as Control)
 	return buttons
 
@@ -1507,7 +1323,7 @@ func _get_inventory_slot_controls() -> Array[Control]:
 	if inventory_grid == null:
 		return slots
 	for child in inventory_grid.get_children():
-		if child is Control and child.visible:
+		if child is Control and child.visible and not child.is_queued_for_deletion():
 			slots.append(child as Control)
 	return slots
 
@@ -1543,7 +1359,7 @@ func _link_inventory_grid_focus(slots: Array[Control]) -> void:
 		var down_index := index + columns
 		_set_focus_neighbor(slot, Vector2.LEFT, slots[left_index] if left_index >= 0 else slot)
 		_set_focus_neighbor(slot, Vector2.RIGHT, slots[right_index] if right_index >= 0 else slot)
-		_set_focus_neighbor(slot, Vector2.UP, slots[up_index] if up_index >= 0 else items_subtab_button)
+		_set_focus_neighbor(slot, Vector2.UP, slots[up_index] if up_index >= 0 else slot)
 		_set_focus_neighbor(slot, Vector2.DOWN, slots[down_index] if down_index < slots.size() else slot)
 
 func _set_focus_neighbor(control: Control, direction: Vector2, neighbor: Control) -> void:
@@ -1560,30 +1376,6 @@ func _set_focus_neighbor(control: Control, direction: Vector2, neighbor: Control
 		control.focus_neighbor_left = neighbor_path
 	elif direction == Vector2.RIGHT:
 		control.focus_neighbor_right = neighbor_path
-
-func _get_focus_neighbor_for_direction(control: Control, direction: Vector2) -> Control:
-	if control == null:
-		return null
-	var neighbor_path := NodePath()
-	if direction == Vector2.UP:
-		neighbor_path = control.focus_neighbor_top
-	elif direction == Vector2.DOWN:
-		neighbor_path = control.focus_neighbor_bottom
-	elif direction == Vector2.LEFT:
-		neighbor_path = control.focus_neighbor_left
-	elif direction == Vector2.RIGHT:
-		neighbor_path = control.focus_neighbor_right
-	if neighbor_path.is_empty():
-		return null
-	return control.get_node_or_null(neighbor_path) as Control
-
-func _collect_focusable_controls(node: Node, result: Array[Control]) -> void:
-	if node is Control:
-		var control := node as Control
-		if control.visible and control.get_focus_mode_with_override() == Control.FOCUS_ALL and _is_in_active_content(control):
-			result.append(control)
-	for child in node.get_children():
-		_collect_focusable_controls(child, result)
 
 func _is_in_active_content(control: Control) -> bool:
 	if control == null or not visible:
@@ -1602,9 +1394,6 @@ func _is_in_active_content(control: Control) -> bool:
 			if calendar_section == control or calendar_section.is_ancestor_of(control):
 				return true
 	return false
-
-func _control_center(control: Control) -> Vector2:
-	return control.get_global_rect().get_center()
 
 func _refresh_status_highlight() -> void:
 	if not _status_tab_highlight_enabled:
@@ -1638,7 +1427,7 @@ func _complete_status_review_if_needed(from_close: bool = false) -> void:
 		return
 	if not from_close:
 		var focus_owner := get_viewport().gui_get_focus_owner() as Control
-		if focus_owner != status_text:
+		if focus_owner != status_text and focus_owner != status_subtab_button:
 			return
 	_status_tab_highlight_enabled = false
 	_stop_status_highlight()
@@ -1698,7 +1487,7 @@ func _try_step_back_within_menu() -> bool:
 func _is_party_detail_focus(control: Control) -> bool:
 	if control == null:
 		return false
-	if control == status_text or control == skills_text or control == equipment_choice_list:
+	if control == equipment_choice_list:
 		return true
 	return control == weapon_slot_button or control == armor_slot_button or control == accessory_slot_button
 
