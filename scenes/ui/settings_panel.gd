@@ -473,45 +473,30 @@ func _on_vsync_toggled(_pressed: bool) -> void:
 func _on_master_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
-	var ui_sounds := _ui_sound_manager()
-	if ui_sounds:
-		ui_sounds.play_menu_button()
 	_set_slider_value_label(_master_slider)
 	SettingsManager.set_audio_volume("master_volume", value)
 
 func _on_music_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
-	var ui_sounds := _ui_sound_manager()
-	if ui_sounds:
-		ui_sounds.play_menu_button()
 	_set_slider_value_label(_music_slider)
 	SettingsManager.set_audio_volume("music_volume", value)
 
 func _on_sfx_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
-	var ui_sounds := _ui_sound_manager()
-	if ui_sounds:
-		ui_sounds.play_menu_button()
 	_set_slider_value_label(_sfx_slider)
 	SettingsManager.set_audio_volume("sfx_volume", value)
 
 func _on_ambience_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
-	var ui_sounds := _ui_sound_manager()
-	if ui_sounds:
-		ui_sounds.play_menu_button()
 	_set_slider_value_label(_ambience_slider)
 	SettingsManager.set_audio_volume("ambience_volume", value)
 
 func _on_ui_volume_changed(value: float) -> void:
 	if _is_refreshing or SettingsManager == null:
 		return
-	var ui_sounds := _ui_sound_manager()
-	if ui_sounds:
-		ui_sounds.play_menu_button()
 	_set_slider_value_label(_ui_slider)
 	SettingsManager.set_audio_volume("ui_volume", value)
 

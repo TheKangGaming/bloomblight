@@ -34,8 +34,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
 		if _units_overlay != null:
 			_close_units_overlay()
-		elif _settings_overlay != null:
-			_close_settings_overlay()
+		elif _request_settings_close():
+			pass
 		elif _tutorials_overlay != null:
 			_close_tutorials_overlay()
 		else:
@@ -282,6 +282,15 @@ func _on_options_button_pressed() -> void:
 	if _settings_overlay.has_signal("modal_closed"):
 		_settings_overlay.modal_closed.connect(_close_settings_overlay)
 
+func _request_settings_close() -> bool:
+	if _settings_overlay == null or not is_instance_valid(_settings_overlay):
+		_settings_overlay = null
+		return false
+	if _settings_overlay.has_method("request_close"):
+		_settings_overlay.call("request_close")
+		return true
+	return false
+
 func _close_settings_overlay() -> void:
 	if _settings_overlay != null:
 		_settings_overlay.queue_free()
@@ -295,7 +304,7 @@ func _on_end_turn_button_pressed() -> void:
 
 func _on_close_button_pressed() -> void:
 	_close_units_overlay()
-	_close_settings_overlay()
+	_request_settings_close()
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	#cursor.reset_cursor()
 	cursor.show()

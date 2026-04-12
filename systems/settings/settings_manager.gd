@@ -227,18 +227,20 @@ func _save_settings() -> void:
 	var config := ConfigFile.new()
 	for key in _settings.keys():
 		config.set_value("settings", key, _settings[key])
-	config.save(CONFIG_PATH)
+	var err := config.save(CONFIG_PATH)
+	if err != OK:
+		push_warning("Failed to save settings: %s" % error_string(err))
 
 func _apply_all_settings() -> void:
 	_apply_display_settings(_get_display_settings())
 	_apply_audio_settings()
 
 func _apply_audio_settings() -> void:
-	_set_bus_volume("Master", float(_settings.get("master_volume", 100.0)))
-	_set_bus_volume("Music", float(_settings.get("music_volume", 55.0)))
-	_set_bus_volume("SFX", float(_settings.get("sfx_volume", 82.0)))
-	_set_bus_volume("Ambience", float(_settings.get("ambience_volume", 58.0)))
-	_set_bus_volume("UI", float(_settings.get("ui_volume", 80.0)))
+	_set_bus_volume("Master", float(_settings.get("master_volume", DEFAULT_SETTINGS["master_volume"])))
+	_set_bus_volume("Music", float(_settings.get("music_volume", DEFAULT_SETTINGS["music_volume"])))
+	_set_bus_volume("SFX", float(_settings.get("sfx_volume", DEFAULT_SETTINGS["sfx_volume"])))
+	_set_bus_volume("Ambience", float(_settings.get("ambience_volume", DEFAULT_SETTINGS["ambience_volume"])))
+	_set_bus_volume("UI", float(_settings.get("ui_volume", DEFAULT_SETTINGS["ui_volume"])))
 
 func _set_bus_volume(bus_name: String, slider_value: float) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
@@ -326,12 +328,10 @@ func _on_display_preview_tick() -> void:
 		return
 
 	_preview_seconds_remaining -= 1
-	if _preview_seconds_remaining > 0:
-		display_preview_updated.emit(_preview_seconds_remaining)
+	display_preview_updated.emit(_preview_seconds_remaining)
 
 func _emit_setting_changed(key: String) -> void:
 	setting_changed.emit(key, _settings.get(key))
-	_emit_settings_changed()
 
 func _emit_settings_changed() -> void:
 	settings_changed.emit(get_settings_copy())
