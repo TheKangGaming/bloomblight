@@ -1,80 +1,111 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://2uc4v8m5pekc"]
 
-[ext_resource type="Script" path="res://scenes/level/cabin_home.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cho1pnesnorqx" path="res://scenes/level/cabin_home.gd" id="1_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_left"]
-size = Vector2(112, 86)
+size = Vector2(146, 83)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_right"]
-size = Vector2(112, 86)
+size = Vector2(139, 86)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
-size = Vector2(196, 28)
+size = Vector2(314, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vjxgd"]
+size = Vector2(20, 111)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door_blocker"]
+size = Vector2(74, 54)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
 size = Vector2(96, 88)
 
-[node name="CabinHome" type="Node2D"]
+[node name="CabinHome" type="Node2D" unique_id=559204970]
 y_sort_enabled = true
 script = ExtResource("1_script")
 
-[node name="Grass" type="Sprite2D" parent="."]
-position = Vector2(0, 66)
+[node name="Grass" type="Sprite2D" parent="." unique_id=320163873]
+position = Vector2(18, 66)
 
-[node name="ShadowBotLeft" type="Sprite2D" parent="."]
+[node name="ShadowBotLeft" type="Sprite2D" parent="." unique_id=559583536]
 position = Vector2(-172, 84)
 
-[node name="ShadowBotRight" type="Sprite2D" parent="."]
+[node name="ShadowBotRight" type="Sprite2D" parent="." unique_id=2063773445]
 position = Vector2(172, 84)
 
-[node name="ShadowTopLeft" type="Sprite2D" parent="."]
+[node name="ShadowTopLeft" type="Sprite2D" parent="." unique_id=2102293330]
 position = Vector2(-152, -146)
 
-[node name="ShadowTopRight" type="Sprite2D" parent="."]
+[node name="ShadowTopRight" type="Sprite2D" parent="." unique_id=1799523584]
 position = Vector2(152, -146)
 
-[node name="Base" type="Sprite2D" parent="."]
-position = Vector2(0, 0)
+[node name="Base" type="Sprite2D" parent="." unique_id=293574904]
 
-[node name="InteriorFront" type="Sprite2D" parent="."]
-visible = false
-z_index = 6
-position = Vector2(0, -14)
+[node name="InteriorSort" type="Node2D" parent="." unique_id=1584082656]
+y_sort_enabled = true
+position = Vector2(0, 56)
 
-[node name="Top" type="AnimatedSprite2D" parent="."]
-z_index = 5
-position = Vector2(0, -128)
+[node name="Interior" type="Sprite2D" parent="InteriorSort" unique_id=321932586]
+y_sort_enabled = true
+position = Vector2(0, -176)
 
-[node name="Door" type="AnimatedSprite2D" parent="."]
-z_index = 6
-position = Vector2(0, -41)
+[node name="FrontFacadeSort" type="Node2D" parent="." unique_id=1560051718]
+position = Vector2(0, 56)
 
-[node name="WallBody" type="StaticBody2D" parent="."]
-collision_layer = 1
+[node name="InteriorFront" type="Sprite2D" parent="FrontFacadeSort" unique_id=981555392]
+position = Vector2(0, -64)
+
+[node name="TopSort" type="Node2D" parent="." unique_id=1075356528]
+position = Vector2(0, 56)
+
+[node name="Top" type="AnimatedSprite2D" parent="TopSort" unique_id=258574563]
+position = Vector2(0, -176)
+
+[node name="DoorSort" type="Node2D" parent="." unique_id=940065265]
+position = Vector2(0, 56)
+
+[node name="Door" type="AnimatedSprite2D" parent="DoorSort" unique_id=1645820319]
+position = Vector2(0, -64)
+
+[node name="WallBody" type="StaticBody2D" parent="." unique_id=2013580982]
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBody"]
-position = Vector2(-122, -8)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBody" unique_id=753329515]
+position = Vector2(-97, 39.5)
 shape = SubResource("RectangleShape2D_left")
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="WallBody"]
-position = Vector2(122, -8)
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="WallBody" unique_id=1596789115]
+position = Vector2(100.5, 42)
 shape = SubResource("RectangleShape2D_right")
 
-[node name="CollisionShape2D3" type="CollisionShape2D" parent="WallBody"]
-position = Vector2(0, -76)
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="WallBody" unique_id=128644627]
+position = Vector2(0, -124)
 shape = SubResource("RectangleShape2D_top")
 
-[node name="DoorArea" type="Area2D" parent="."]
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="WallBody" unique_id=947885285]
+position = Vector2(-163, -59)
+shape = SubResource("RectangleShape2D_vjxgd")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="WallBody" unique_id=1541112588]
+position = Vector2(163, -56)
+shape = SubResource("RectangleShape2D_vjxgd")
+
+[node name="DoorBlocker" type="StaticBody2D" parent="." unique_id=1075898734]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorBlocker" unique_id=1833947448]
+position = Vector2(0, 24)
+shape = SubResource("RectangleShape2D_door_blocker")
+
+[node name="DoorArea" type="Area2D" parent="." unique_id=897414075]
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1916800156]
 position = Vector2(0, 18)
 shape = SubResource("RectangleShape2D_door")
 
-[node name="DoorSfx" type="AudioStreamPlayer2D" parent="."]
-position = Vector2(0, 0)
+[node name="DoorSfx" type="AudioStreamPlayer2D" parent="." unique_id=1436265076]
 
 [connection signal="body_entered" from="DoorArea" to="." method="_on_door_area_body_entered"]
 [connection signal="body_exited" from="DoorArea" to="." method="_on_door_area_body_exited"]

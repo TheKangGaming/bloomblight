@@ -44,6 +44,7 @@ var loop_hub_mode_active := false
 var loop_gold := 0
 var loop_bloom_points := 0
 var loop_battle_index := 1
+var loop_time_phase := &"day"
 var loop_unlocked_plots: Dictionary = {}
 var loop_built_structures: Dictionary = {}
 var loop_equipped_perk_item: int = -1
@@ -77,11 +78,14 @@ var tutorial_enabled := true
 var intro_sequence_complete := false
 const DEMO_CABIN_WOOD_REQUIRED := 10
 const DEMO_CABIN_STONE_REQUIRED := 10
+const LOOP_PHASE_DAY := &"day"
+const LOOP_PHASE_NIGHT := &"night"
 const LOOP_PLOT_STARTING_FARM := &"starting_farm"
 const LOOP_PLOT_MERCHANT := &"merchant"
 const LOOP_PLOT_FOREST := &"forest"
 const LOOP_PLOT_CABIN := &"cabin"
 const LOOP_STRUCTURE_MERCHANT_WAGON := &"merchant_wagon"
+const LOOP_STRUCTURE_CABIN_REPAIRED := &"cabin_repaired"
 
 # Warm the launch path before the title screen becomes interactive so Start never races scene loading.
 const LAUNCH_GAME_SCENE: PackedScene = preload("res://scenes/level/game.tscn")
@@ -448,6 +452,7 @@ func get_progression_save_data() -> Dictionary:
 		"loop_gold": loop_gold,
 		"loop_bloom_points": loop_bloom_points,
 		"loop_battle_index": loop_battle_index,
+		"loop_time_phase": String(loop_time_phase),
 		"loop_unlocked_plots": loop_unlocked_plots.duplicate(true),
 		"loop_built_structures": loop_built_structures.duplicate(true),
 		"loop_equipped_perk_item": loop_equipped_perk_item,
@@ -474,12 +479,16 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 	loop_gold = int(save_data.get("loop_gold", loop_gold))
 	loop_bloom_points = int(save_data.get("loop_bloom_points", loop_bloom_points))
 	loop_battle_index = maxi(int(save_data.get("loop_battle_index", loop_battle_index)), 1)
+	set_loop_time_phase(StringName(String(save_data.get("loop_time_phase", String(loop_time_phase))).strip_edges()))
 	var saved_loop_plots = save_data.get("loop_unlocked_plots", loop_unlocked_plots)
 	if saved_loop_plots is Dictionary:
 		loop_unlocked_plots = saved_loop_plots.duplicate(true)
 	var saved_loop_structures = save_data.get("loop_built_structures", loop_built_structures)
 	if saved_loop_structures is Dictionary:
 		loop_built_structures = saved_loop_structures.duplicate(true)
+	if loop_hub_mode_active:
+		loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
+		loop_unlocked_plots[String(LOOP_PLOT_CABIN)] = true
 	loop_equipped_perk_item = int(save_data.get("loop_equipped_perk_item", loop_equipped_perk_item))
 	if save_data.has("player_permanent_stats") and save_data.player_permanent_stats is Dictionary:
 		player_permanent_stats = save_data.player_permanent_stats.duplicate(true)
@@ -577,6 +586,7 @@ func reset_demo_state() -> void:
 	loop_gold = 0
 	loop_bloom_points = 0
 	loop_battle_index = 1
+	loop_time_phase = LOOP_PHASE_DAY
 	loop_unlocked_plots.clear()
 	loop_built_structures.clear()
 	loop_equipped_perk_item = -1
@@ -616,7 +626,9 @@ func begin_loop_hub_run() -> void:
 	loop_gold = 0
 	loop_bloom_points = 0
 	loop_battle_index = 1
+	loop_time_phase = LOOP_PHASE_DAY
 	loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
+	loop_unlocked_plots[String(LOOP_PLOT_CABIN)] = true
 	inventory[Items.WOOD] = 0
 	inventory[Items.STONE] = 0
 	inventory[Items.CARROT_SEED] = 4
@@ -646,6 +658,15 @@ func is_loop_structure_built(structure_id: StringName) -> bool:
 
 func build_loop_structure(structure_id: StringName) -> void:
 	loop_built_structures[String(structure_id)] = true
+	loop_state_changed.emit()
+
+func set_loop_time_phase(phase: StringName) -> void:
+	var normalized_phase := phase
+	if normalized_phase != LOOP_PHASE_DAY and normalized_phase != LOOP_PHASE_NIGHT:
+		normalized_phase = LOOP_PHASE_DAY
+	if loop_time_phase == normalized_phase:
+		return
+	loop_time_phase = normalized_phase
 	loop_state_changed.emit()
 
 func add_loop_gold(amount: int) -> void:

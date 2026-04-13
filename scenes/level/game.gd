@@ -26,6 +26,7 @@ const BANDIT_DEFENSE_PLAYER_POS := Vector2(1326, 724)
 const BANDIT_DEFENSE_TERA_POS := Vector2(1426, 754)
 const BANDIT_DEFENSE_SILAS_POS := Vector2(1514, 692)
 const CABIN_HOME_POS := Vector2(1488, 544)
+const LOOP_CABIN_HOME_POS := Vector2(960, 720)
 const CABIN_REBUILD_PLAYER_POS := Vector2(1392, 716)
 const CABIN_REBUILD_TERA_POS := Vector2(1460, 706)
 const CABIN_REBUILD_SILAS_POS := Vector2(1560, 696)
@@ -60,7 +61,7 @@ const LOOP_PLOT_WATCHTOWER := &"watchtower"
 const LOOP_PLOT_QUARRY := &"quarry"
 const LOOP_PLOT_BLOOM_SHRINE := &"bloom_shrine"
 const LOOP_MERCHANT_BUILD_WOOD_COST := 8
-const LOOP_CABIN_UNLOCK_BP_COST := 12
+const LOOP_CABIN_REPAIR_WOOD_COST := Global.DEMO_CABIN_WOOD_REQUIRED
 const LOOP_BATTLE_BP_REWARDS: Array[int] = [8, 10, 12, 14, 20]
 const LOOP_BATTLE_GOLD_REWARDS: Array[int] = [4, 6, 8, 10, 14]
 const LOOP_BATTLE_BP_BASE_REWARD := 8
@@ -80,6 +81,18 @@ const LOOP_SEED_SHOP := {
 	Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
 	Global.Items.POTATO_SEED: {"cost": 5, "label": "Potato Seeds x1"},
 	Global.Items.GARLIC_SEED: {"cost": 6, "label": "Garlic Seeds x1"},
+}
+const LOOP_NIGHT_VENDOR_SEED_SHOP := {
+	Global.Items.CAULIFLOWER_SEED: {"cost": 8, "label": "Cauliflower Seeds x1"},
+	Global.Items.GREEN_BEANS_SEED: {"cost": 8, "label": "Green Bean Seeds x1"},
+	Global.Items.STRAWBERRY_SEED: {"cost": 10, "label": "Strawberry Seeds x1"},
+	Global.Items.COFFEE_BEAN_SEED: {"cost": 11, "label": "Coffee Beans x1"},
+}
+const LOOP_NIGHT_VENDOR_INGREDIENT_SHOP := {
+	Global.Items.CAULIFLOWER: {"cost": 9, "label": "Cauliflower x1"},
+	Global.Items.STRAWBERRY: {"cost": 10, "label": "Strawberries x1"},
+	Global.Items.COFFEE_BEAN: {"cost": 8, "label": "Coffee Beans x1"},
+	Global.Items.WATER: {"cost": 3, "label": "Fresh Water x1"},
 }
 const LOOP_SELL_PRICES := {
 	Global.Items.CARROT: 4,
@@ -108,11 +121,11 @@ const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(640, 0), LOOP_PLOT_SIZE), "unlock_cost": 7},
 	LOOP_PLOT_BLOOM_SHRINE: {"rect": Rect2(Vector2(1280, 0), LOOP_PLOT_SIZE), "unlock_cost": 9},
 	LOOP_PLOT_GARDEN: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 6},
-	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": LOOP_CABIN_UNLOCK_BP_COST},
+	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": 0},
 	LOOP_PLOT_WORKSHOP: {"rect": Rect2(Vector2(1280, 480), LOOP_PLOT_SIZE), "unlock_cost": 8},
-	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 8},
+	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 12},
 	LOOP_PLOT_STARTING_FARM: {"rect": Rect2(Vector2(640, 960), LOOP_PLOT_SIZE), "unlock_cost": 0},
-	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 10},
+	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 8},
 }
 const LOOP_INTERACTION_POINTS := {
 	LOOP_PLOT_MERCHANT: Vector2(700, 1200),
@@ -123,6 +136,8 @@ const LOOP_INTERACTION_POINTS := {
 const LOOP_MERCHANT_STRUCTURE_POS := Vector2(360, 1216)
 const LOOP_MERCHANT_NPC_POS := Vector2(374, 1288)
 const LOOP_MERCHANT_INTERACTION_POS := Vector2(392, 1200)
+const LOOP_NIGHT_VENDOR_POS := Vector2(1176, 756)
+const LOOP_NIGHT_VENDOR_INTERACTION_POS := Vector2(1176, 816)
 const LOOP_FOREST_SILAS_POS := Vector2(1404, 1220)
 const LOOP_FOREST_TREE_POSITIONS := [
 	Vector2(1520, 1296),
@@ -136,10 +151,13 @@ const LOOP_OBJECTIVE_FIGHT := "Fight for BP"
 const LOOP_OBJECTIVE_PLANT := "Plant seeds before battle"
 const LOOP_OBJECTIVE_HARVEST := "Harvest after combat"
 const LOOP_OBJECTIVE_MERCHANT := "Purify Merchant"
-const LOOP_OBJECTIVE_FOREST := "Open Forest"
-const LOOP_OBJECTIVE_REPAIR := "Repair Wagon"
-const LOOP_OBJECTIVE_CABIN := "Purify Cabin"
-const LOOP_OBJECTIVE_SETTLE := "Plant, Trade, Fight"
+const LOOP_OBJECTIVE_FOREST := "Unlock Forest"
+const LOOP_OBJECTIVE_REPAIR := "Repair Cabin"
+const LOOP_OBJECTIVE_CABIN := "Gather Wood for Cabin"
+const LOOP_OBJECTIVE_SETTLE := "Sleep to begin a new day"
+const LOOP_OBJECTIVE_NIGHT := "Night: harvest, prep, then sleep"
+const LOOP_MERCHANT_KIND_WAGON := "wagon"
+const LOOP_MERCHANT_KIND_NIGHT := "night"
 const LOOP_MERCHANT_TAB_SWITCH_COOLDOWN_MS := 150
 const WORLD_PICKUP_POPUP_SCRIPT := preload("res://scenes/ui/world_pickup_popup.gd")
 
@@ -169,12 +187,13 @@ enum IntroState {
 @onready var ruin_body_top: StaticBody2D = $World/Obstacles/StaticBody2D2
 @onready var ruin_body_bottom: StaticBody2D = $World/Obstacles/StaticBody2D
 @onready var ruin_sprite_elements_1: Sprite2D = $World/Obstacles/StaticBody2D2/AbandonedStructuresElements1
-@onready var ruin_sprite_elements_2: Sprite2D = get_node_or_null("AbandonedStructuresElements2") as Sprite2D
-@onready var ruin_sprite_elements_0: Sprite2D = get_node_or_null("AbandonedStructuresElements0") as Sprite2D
+@onready var ruin_sprite_elements_2: Sprite2D = get_node_or_null("World/AbandonedStructuresElements2") as Sprite2D
+@onready var ruin_sprite_elements_0: Sprite2D = get_node_or_null("World/AbandonedStructuresElements0") as Sprite2D
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _cabin_home_scene: PackedScene = preload("res://scenes/level/cabin_home.tscn")
 var _merchant_actor_scene: PackedScene = preload("res://scenes/level/merchant_actor.tscn")
+var _night_vendor_actor_scene: PackedScene = preload("res://scenes/level/wandering_merchant_actor.tscn")
 var _merchant_wagon_naked_scene: PackedScene = preload("res://scenes/level/merchant_wagon_naked.tscn")
 var _merchant_wagon_complete_scene: PackedScene = preload("res://scenes/level/merchant_wagon_complete.tscn")
 var _overworld_burst_scene: PackedScene = preload("res://scenes/level/overworld_burst_vfx.tscn")
@@ -223,6 +242,7 @@ var _loop_plot_outline_lines: Dictionary = {}
 var _loop_merchant_structure_naked: StaticBody2D = null
 var _loop_merchant_structure_complete: StaticBody2D = null
 var _loop_merchant_menu: PanelContainer = null
+var _loop_merchant_title_label: Label = null
 var _loop_merchant_status: Label = null
 var _loop_merchant_detail_label: Label = null
 var _loop_merchant_tab_bar: HBoxContainer = null
@@ -231,7 +251,9 @@ var _loop_merchant_actions: VBoxContainer = null
 var _loop_merchant_tab_buttons: Dictionary = {}
 var _loop_merchant_close_button: Button = null
 var _loop_merchant_active_tab := "Seeds"
+var _loop_active_merchant_kind := LOOP_MERCHANT_KIND_WAGON
 var _loop_merchant_tab_switch_cooldown_until_msec := 0
+var _loop_night_vendor_actor = null
 var _loop_spawned_forest_nodes: Array[Node2D] = []
 var _loop_hud_root: PanelContainer = null
 var _loop_hud_stats_label: Label = null
@@ -245,6 +267,8 @@ var _loop_battle_tutorial_active := false
 var _loop_bloom_points_tutorial_active := false
 var _loop_forest_tutorial_active := false
 var _loop_cooking_tutorial_active := false
+var _loop_night_tutorial_active := false
+var _loop_sleep_tutorial_active := false
 
 func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
@@ -299,11 +323,20 @@ func apply_loop_run_save_state(save_data: Dictionary) -> void:
 			continue
 		var crop: Dictionary = crop_variant
 		_restore_loop_crop(crop)
+	_refresh_loop_phase_presentation(true)
 
 func _apply_pending_loop_save_if_needed() -> void:
 	if SaveManager == null or not SaveManager.has_method("has_pending_loop_state") or not SaveManager.has_pending_loop_state():
 		return
 	apply_loop_run_save_state(SaveManager.consume_pending_loop_state())
+
+func _refresh_loop_phase_presentation(force := false) -> void:
+	if not Global.loop_hub_mode_active:
+		return
+	$CanvasModulate.color = daytime_gradient.sample(0.8) if _is_loop_night() else daytime_gradient.sample(0.28)
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud != null and hud.has_method("_update_view"):
+		hud._update_view(force)
 
 func _clear_loop_crops() -> void:
 	for plant_variant in get_tree().get_nodes_in_group("Plants"):
@@ -343,6 +376,50 @@ func _get_equipment_display_name(item: Resource) -> String:
 		return String((item as AccessoryData).accessory_name)
 	return item.resource_name if item != null else "Item"
 
+func _format_loop_item_name(item_type: int) -> String:
+	var item_keys := Global.Items.keys()
+	if item_type >= 0 and item_type < item_keys.size():
+		return String(item_keys[item_type]).replace("_", " ").to_lower().capitalize()
+	return "Item"
+
+func _is_loop_night() -> bool:
+	return Global.loop_hub_mode_active and Global.loop_time_phase == Global.LOOP_PHASE_NIGHT
+
+func _is_loop_day() -> bool:
+	return not _is_loop_night()
+
+func _is_loop_cabin_repaired() -> bool:
+	return Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_REPAIRED)
+
+func _is_loop_night_vendor_available() -> bool:
+	return Global.loop_hub_mode_active and _is_loop_night() and _is_loop_cabin_repaired() and Global.loop_battle_index >= 3
+
+func _get_active_cabin_home_pos() -> Vector2:
+	return LOOP_CABIN_HOME_POS if Global.loop_hub_mode_active else CABIN_HOME_POS
+
+func _set_body_collision_shapes_deferred(body: Node, disabled: bool) -> void:
+	if body == null or not is_instance_valid(body):
+		return
+	for child in body.get_children():
+		if child is CollisionShape2D:
+			(child as CollisionShape2D).set_deferred("disabled", disabled)
+
+func _set_structure_collision_state_deferred(structure: StaticBody2D, active: bool) -> void:
+	if structure == null or not is_instance_valid(structure):
+		return
+	structure.set_deferred("collision_layer", 1 if active else 0)
+	var shape := structure.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape != null:
+		shape.set_deferred("disabled", not active)
+
+func _get_active_loop_seed_shop() -> Dictionary:
+	return LOOP_NIGHT_VENDOR_SEED_SHOP if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT else LOOP_SEED_SHOP
+
+func _get_active_loop_merchant_tabs() -> PackedStringArray:
+	if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT:
+		return PackedStringArray(["Sell", "Rare Seeds", "Ingredients"])
+	return PackedStringArray(["Sell", "Seeds", "Weapons", "Armor", "Accessories"])
+
 func _set_loop_merchant_detail_text(text: String) -> void:
 	if _loop_merchant_detail_label == null or not is_instance_valid(_loop_merchant_detail_label):
 		return
@@ -359,7 +436,21 @@ func _build_loop_merchant_seed_description(seed_item: int, cost: int) -> String:
 			crop_name = "Potatoes"
 		Global.Items.GARLIC_SEED:
 			crop_name = "Garlic"
+		Global.Items.CAULIFLOWER_SEED:
+			crop_name = "Cauliflower"
+		Global.Items.GREEN_BEANS_SEED:
+			crop_name = "Green Beans"
+		Global.Items.STRAWBERRY_SEED:
+			crop_name = "Strawberries"
+		Global.Items.COFFEE_BEAN_SEED:
+			crop_name = "Coffee Beans"
 	return "%d Gold\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, crop_name]
+
+func _build_loop_merchant_inventory_description(item_type: int, cost: int) -> String:
+	return "%d Gold\n%s\nUseful for cooking, meal prep, or stocking up before dawn." % [
+		cost,
+		_format_loop_item_name(item_type)
+	]
 
 func _build_loop_merchant_item_description(item: Resource, cost: int) -> String:
 	if item == null:
@@ -413,9 +504,19 @@ func _build_loop_merchant_weapon_owner_hint(weapon: WeaponData) -> String:
 			return "Open the party menu to see who can equip this."
 
 func _get_loop_merchant_tabs() -> PackedStringArray:
-	return PackedStringArray(["Sell", "Seeds", "Weapons", "Armor", "Accessories"])
+	return _get_active_loop_merchant_tabs()
 
 func _get_loop_merchant_tab_detail_text(tab_id: String) -> String:
+	if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT:
+		match tab_id:
+			"Sell":
+				return "Night is a good time to cash in the harvest and prepare for morning."
+			"Rare Seeds":
+				return "The night trader carries unusual seeds that can open stronger meal paths."
+			"Ingredients":
+				return "A few hard-to-find cooking supplies show up here after dark."
+			_:
+				return "Browse the night stock before you sleep."
 	match tab_id:
 		"Sell":
 			return "Turn harvested crops into Gold so you can restock seeds and buy stronger gear."
@@ -431,7 +532,7 @@ func _get_loop_merchant_tab_detail_text(tab_id: String) -> String:
 			return "Browse stock to preview what each purchase does before you commit."
 
 func _set_loop_merchant_tab(tab_id: String) -> void:
-	if not _get_loop_merchant_tabs().has(tab_id):
+	if not _get_active_loop_merchant_tabs().has(tab_id):
 		return
 	if _loop_merchant_active_tab == tab_id:
 		return
@@ -459,17 +560,18 @@ func _populate_loop_merchant_sell_tab() -> void:
 	sell_button.text = "Sell Harvest"
 	sell_button.pressed.connect(_on_loop_sell_harvest_pressed)
 	sell_button.focus_entered.connect(func() -> void:
-		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds and buy better gear.")
+		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds, meals, and better gear.")
 	)
 	sell_button.mouse_entered.connect(func() -> void:
-		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds and buy better gear.")
+		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds, meals, and better gear.")
 	)
 	_loop_merchant_actions.add_child(sell_button)
 
 func _populate_loop_merchant_seed_tab() -> void:
-	for seed_item_variant in LOOP_SEED_SHOP.keys():
+	var seed_shop := _get_active_loop_seed_shop()
+	for seed_item_variant in seed_shop.keys():
 		var seed_item: int = int(seed_item_variant)
-		var offer: Dictionary = LOOP_SEED_SHOP[seed_item]
+		var offer: Dictionary = seed_shop[seed_item]
 		var cost := int(offer.get("cost", 0))
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
@@ -479,6 +581,25 @@ func _populate_loop_merchant_seed_tab() -> void:
 		var seed_description := _build_loop_merchant_seed_description(seed_item, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
 		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
+		_loop_merchant_actions.add_child(button)
+
+func _populate_loop_night_vendor_ingredients_tab() -> void:
+	for item_variant in LOOP_NIGHT_VENDOR_INGREDIENT_SHOP.keys():
+		var item_type := int(item_variant)
+		var offer: Dictionary = LOOP_NIGHT_VENDOR_INGREDIENT_SHOP[item_type]
+		var cost := int(offer.get("cost", 0))
+		var affordable := Global.loop_gold >= cost
+		var button := Button.new()
+		button.text = "%s (%d Gold)%s" % [
+			String(offer.get("label", _format_loop_item_name(item_type))),
+			cost,
+			"" if affordable else " [Need More Gold]"
+		]
+		button.modulate = Color(1, 1, 1, 1) if affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.pressed.connect(_on_loop_buy_inventory_item_pressed.bind(item_type, cost))
+		var description := _build_loop_merchant_inventory_description(item_type, cost)
+		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
+		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(description))
 		_loop_merchant_actions.add_child(button)
 
 func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
@@ -684,6 +805,9 @@ func _setup_loop_hub_mode() -> void:
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
 		_merchant_actor.queue_free()
 	_merchant_actor = null
+	if _loop_night_vendor_actor != null and is_instance_valid(_loop_night_vendor_actor):
+		_loop_night_vendor_actor.queue_free()
+	_loop_night_vendor_actor = null
 	if _cabin_home != null and is_instance_valid(_cabin_home):
 		_cabin_home.queue_free()
 	_cabin_home = null
@@ -706,6 +830,8 @@ func _setup_loop_hub_mode() -> void:
 	_ensure_loop_prompt()
 	_spawn_loop_forest_content()
 	_apply_pending_loop_save_if_needed()
+	_sync_shelter_state()
+	_refresh_loop_phase_presentation(true)
 	_refresh_loop_plot_visuals()
 	_refresh_loop_merchant_visuals()
 	_refresh_loop_objective()
@@ -840,6 +966,14 @@ func _ensure_loop_merchant_nodes() -> void:
 		_merchant_actor.visible = false
 		objects_root.add_child(_merchant_actor)
 
+	if (_loop_night_vendor_actor == null or not is_instance_valid(_loop_night_vendor_actor)) and _night_vendor_actor_scene != null:
+		_loop_night_vendor_actor = _night_vendor_actor_scene.instantiate() as Node2D
+		_loop_night_vendor_actor.name = "NightVendorActor"
+		_loop_night_vendor_actor.position = LOOP_NIGHT_VENDOR_POS
+		_loop_night_vendor_actor.z_index = 3
+		_loop_night_vendor_actor.visible = false
+		objects_root.add_child(_loop_night_vendor_actor)
+
 func _ensure_loop_hud() -> void:
 	if _loop_hud_root != null and is_instance_valid(_loop_hud_root):
 		return
@@ -941,6 +1075,12 @@ func _on_loop_state_ui_changed() -> void:
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
 	_refresh_loop_hud()
+	call_deferred("_refresh_loop_world_state_from_global")
+
+func _refresh_loop_world_state_from_global() -> void:
+	_sync_shelter_state()
+	_refresh_loop_phase_presentation()
+	_refresh_loop_merchant_visuals()
 
 func _build_loop_merchant_menu() -> void:
 	var canvas_layer := get_node_or_null("CanvasLayer")
@@ -1016,11 +1156,10 @@ func _build_loop_merchant_menu() -> void:
 	detail_layout.add_theme_constant_override("separation", 8)
 	detail_margin.add_child(detail_layout)
 
-	var title := Label.new()
-	title.text = "Merchant Wagon"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	left_column.add_child(title)
+	_loop_merchant_title_label = Label.new()
+	_loop_merchant_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loop_merchant_title_label.add_theme_font_size_override("font_size", 24)
+	left_column.add_child(_loop_merchant_title_label)
 
 	_loop_merchant_status = Label.new()
 	_loop_merchant_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1031,17 +1170,6 @@ func _build_loop_merchant_menu() -> void:
 	_loop_merchant_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_loop_merchant_tab_bar.add_theme_constant_override("separation", 8)
 	left_column.add_child(_loop_merchant_tab_bar)
-	_loop_merchant_tab_buttons.clear()
-	for tab_id in _get_loop_merchant_tabs():
-		var tab_button := Button.new()
-		tab_button.text = tab_id
-		tab_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tab_button.pressed.connect(_set_loop_merchant_tab.bind(tab_id))
-		tab_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(_get_loop_merchant_tab_detail_text(tab_id)))
-		tab_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(_get_loop_merchant_tab_detail_text(tab_id)))
-		_loop_merchant_tab_bar.add_child(tab_button)
-		_loop_merchant_tab_buttons[tab_id] = tab_button
-
 	_loop_merchant_detail_label = Label.new()
 	_loop_merchant_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_loop_merchant_detail_label.custom_minimum_size = Vector2(0, 220)
@@ -1085,11 +1213,35 @@ func _build_loop_merchant_menu() -> void:
 	_loop_merchant_menu = panel
 	_refresh_loop_merchant_menu()
 
+func _rebuild_loop_merchant_tab_bar() -> void:
+	if _loop_merchant_tab_bar == null or not is_instance_valid(_loop_merchant_tab_bar):
+		return
+	for child in _loop_merchant_tab_bar.get_children():
+		_loop_merchant_tab_bar.remove_child(child)
+		child.queue_free()
+	_loop_merchant_tab_buttons.clear()
+	var active_tabs := _get_active_loop_merchant_tabs()
+	if not active_tabs.has(_loop_merchant_active_tab):
+		_loop_merchant_active_tab = String(active_tabs[0]) if not active_tabs.is_empty() else ""
+	for tab_id_variant in active_tabs:
+		var tab_id := String(tab_id_variant)
+		var tab_button := Button.new()
+		tab_button.text = tab_id
+		tab_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tab_button.pressed.connect(_set_loop_merchant_tab.bind(tab_id))
+		tab_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(_get_loop_merchant_tab_detail_text(tab_id)))
+		tab_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(_get_loop_merchant_tab_detail_text(tab_id)))
+		_loop_merchant_tab_bar.add_child(tab_button)
+		_loop_merchant_tab_buttons[tab_id] = tab_button
+
 func _refresh_loop_merchant_menu() -> void:
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
 		return
 	if _loop_merchant_status == null or _loop_merchant_actions == null:
 		return
+	if _loop_merchant_title_label != null and is_instance_valid(_loop_merchant_title_label):
+		_loop_merchant_title_label.text = "Night Trader" if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT else "Merchant Wagon"
+	_rebuild_loop_merchant_tab_bar()
 
 	var current_stage := _get_loop_stage()
 	_loop_merchant_status.text = "Stage %d/%d   Gold: %d   Bloom Points: %d\nWood: %d   Stone: %d   Perk: %s" % [
@@ -1111,8 +1263,10 @@ func _refresh_loop_merchant_menu() -> void:
 	match _loop_merchant_active_tab:
 		"Sell":
 			_populate_loop_merchant_sell_tab()
-		"Seeds":
+		"Seeds", "Rare Seeds":
 			_populate_loop_merchant_seed_tab()
+		"Ingredients":
+			_populate_loop_night_vendor_ingredients_tab()
 		"Weapons":
 			_populate_loop_merchant_equipment_tab("Weapon")
 		"Armor":
@@ -1169,18 +1323,13 @@ func _refresh_loop_plot_visuals() -> void:
 func _refresh_loop_merchant_visuals() -> void:
 	var merchant_unlocked := Global.has_loop_plot(LOOP_PLOT_MERCHANT)
 	var merchant_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON)
+	var night_vendor_visible := _is_loop_night_vendor_available()
 	if _loop_merchant_structure_naked != null and is_instance_valid(_loop_merchant_structure_naked):
 		_loop_merchant_structure_naked.visible = merchant_unlocked and not merchant_built
-		_loop_merchant_structure_naked.collision_layer = 1 if merchant_unlocked and not merchant_built else 0
-		var naked_collision := _loop_merchant_structure_naked.get_node_or_null("CollisionShape2D") as CollisionShape2D
-		if naked_collision != null:
-			naked_collision.disabled = not (merchant_unlocked and not merchant_built)
+		_set_structure_collision_state_deferred(_loop_merchant_structure_naked, merchant_unlocked and not merchant_built)
 	if _loop_merchant_structure_complete != null and is_instance_valid(_loop_merchant_structure_complete):
 		_loop_merchant_structure_complete.visible = merchant_unlocked and merchant_built
-		_loop_merchant_structure_complete.collision_layer = 1 if merchant_unlocked and merchant_built else 0
-		var complete_collision := _loop_merchant_structure_complete.get_node_or_null("CollisionShape2D") as CollisionShape2D
-		if complete_collision != null:
-			complete_collision.disabled = not (merchant_unlocked and merchant_built)
+		_set_structure_collision_state_deferred(_loop_merchant_structure_complete, merchant_unlocked and merchant_built)
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
 		_merchant_actor.global_position = LOOP_MERCHANT_NPC_POS
 		_merchant_actor.z_index = 2
@@ -1190,6 +1339,15 @@ func _refresh_loop_merchant_visuals() -> void:
 			_merchant_actor.face_side(true)
 		if _merchant_actor.visible and _merchant_actor.has_method("play_idle"):
 			_merchant_actor.play_idle()
+	if _loop_night_vendor_actor != null and is_instance_valid(_loop_night_vendor_actor):
+		_loop_night_vendor_actor.global_position = LOOP_NIGHT_VENDOR_POS
+		_loop_night_vendor_actor.z_index = 3
+		_loop_night_vendor_actor.visible = night_vendor_visible
+		_loop_night_vendor_actor.modulate = Color(0.88, 0.94, 1.0, 1.0)
+		if _loop_night_vendor_actor.visible and _loop_night_vendor_actor.has_method("face_side"):
+			_loop_night_vendor_actor.face_side(false)
+		if _loop_night_vendor_actor.visible and _loop_night_vendor_actor.has_method("play_idle"):
+			_loop_night_vendor_actor.play_idle()
 	_refresh_loop_merchant_menu()
 
 func _refresh_loop_hud() -> void:
@@ -1203,28 +1361,49 @@ func _refresh_loop_hud() -> void:
 			int(Global.inventory.get(Global.Items.STONE, 0))
 		]
 	if _loop_hud_perk_label != null:
-		_loop_hud_perk_label.text = "Next Battle Perk: %s" % Global.get_loop_equipped_perk_label()
+		var phase_label := "Night" if _is_loop_night() else "Day"
+		_loop_hud_perk_label.text = "%s Phase   Next Battle Perk: %s" % [phase_label, Global.get_loop_equipped_perk_label()]
+
+func _get_loop_wood_count() -> int:
+	return int(Global.inventory.get(Global.Items.WOOD, 0))
 
 func _refresh_loop_objective() -> void:
+	var forest_open := Global.has_loop_plot(LOOP_PLOT_FOREST)
+	var merchant_open := Global.has_loop_plot(LOOP_PLOT_MERCHANT)
+	var merchant_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON)
+	var cabin_repaired := _is_loop_cabin_repaired()
+	var ready_crops := _has_ready_loop_crops()
+	var wood_count := _get_loop_wood_count()
 	var objective := LOOP_OBJECTIVE_FIGHT
-	if _has_ready_loop_crops():
-		objective = LOOP_OBJECTIVE_HARVEST
-	elif Global.loop_battle_index <= 1 and not _has_any_loop_crops():
-		objective = LOOP_OBJECTIVE_PLANT
-	elif Global.loop_battle_index > 1:
-		objective = LOOP_OBJECTIVE_MERCHANT
-	if not _has_ready_loop_crops() and (Global.loop_battle_index > 1 or _has_any_loop_crops()):
-		if Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-			objective = LOOP_OBJECTIVE_FOREST
-		elif Global.has_loop_plot(LOOP_PLOT_MERCHANT) and not Global.has_loop_plot(LOOP_PLOT_FOREST):
-			objective = LOOP_OBJECTIVE_FOREST
-		elif Global.has_loop_plot(LOOP_PLOT_FOREST) and not Global.has_loop_plot(LOOP_PLOT_CABIN):
-			if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
-				objective = LOOP_OBJECTIVE_REPAIR
-			else:
-				objective = LOOP_OBJECTIVE_CABIN
-		elif Global.has_loop_plot(LOOP_PLOT_CABIN):
+
+	if _is_loop_night():
+		if not forest_open:
+			objective = "Night: unlock the forest with Bloom Points"
+		elif not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
+			objective = "Night: gather wood, repair the cabin, then sleep"
+		elif not cabin_repaired:
+			objective = "Night: repair the cabin, then sleep"
+		elif ready_crops:
+			objective = LOOP_OBJECTIVE_NIGHT
+		else:
 			objective = LOOP_OBJECTIVE_SETTLE
+	else:
+		if not _has_any_loop_crops():
+			objective = LOOP_OBJECTIVE_PLANT
+		elif ready_crops:
+			objective = LOOP_OBJECTIVE_HARVEST
+		elif not forest_open:
+			objective = LOOP_OBJECTIVE_FIGHT if Global.loop_bloom_points < int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0)) else LOOP_OBJECTIVE_FOREST
+		elif not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
+			objective = LOOP_OBJECTIVE_CABIN
+		elif not cabin_repaired:
+			objective = LOOP_OBJECTIVE_REPAIR
+		elif not merchant_open:
+			objective = LOOP_OBJECTIVE_FIGHT if Global.loop_bloom_points < int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0)) else LOOP_OBJECTIVE_MERCHANT
+		elif merchant_open and not merchant_built:
+			objective = "Build Wagon" if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST else "Gather Wood for Wagon"
+		else:
+			objective = LOOP_OBJECTIVE_FIGHT
 	Global.show_tutorial_text(objective)
 
 func _has_any_loop_crops() -> bool:
@@ -1307,6 +1486,28 @@ func _maybe_show_loop_bloom_points_tutorial() -> void:
 	_loop_bloom_points_tutorial_active = false
 	player.can_move = true
 
+func _maybe_show_loop_first_night_tutorial() -> void:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_night_tutorial_active or DemoDirector.has_seen_tutorial("loop_first_night"):
+		return
+	_loop_night_tutorial_active = true
+	player.can_move = false
+	await DemoDirector.show_tutorial_card("loop_first_night", self)
+	_loop_night_tutorial_active = false
+	player.can_move = true
+
+func _maybe_show_loop_sleep_tutorial() -> void:
+	if not Global.loop_hub_mode_active or DemoDirector == null:
+		return
+	if _loop_sleep_tutorial_active or DemoDirector.has_seen_tutorial("loop_sleep"):
+		return
+	_loop_sleep_tutorial_active = true
+	player.can_move = false
+	await DemoDirector.show_tutorial_card("loop_sleep", self)
+	_loop_sleep_tutorial_active = false
+	player.can_move = true
+
 func _maybe_show_loop_forest_unlock_tutorials() -> void:
 	if not Global.loop_hub_mode_active or DemoDirector == null:
 		return
@@ -1361,7 +1562,7 @@ func _ensure_story_setpieces() -> void:
 		_cabin_home = _cabin_home_scene.instantiate() as Node2D
 		_cabin_home.name = "CabinHome"
 		objects_root.add_child(_cabin_home)
-		_cabin_home.global_position = CABIN_HOME_POS
+		_cabin_home.global_position = _get_active_cabin_home_pos()
 
 	if (_merchant_actor == null or not is_instance_valid(_merchant_actor)) and _merchant_actor_scene != null:
 		_merchant_actor = _merchant_actor_scene.instantiate() as Node2D
@@ -1370,17 +1571,16 @@ func _ensure_story_setpieces() -> void:
 		objects_root.add_child(_merchant_actor)
 
 func _sync_shelter_state() -> void:
-	var ruin_visible := not Global.demo_cabin_built
+	var cabin_built := Global.demo_cabin_built
+	if Global.loop_hub_mode_active:
+		cabin_built = _is_loop_cabin_repaired()
+	var ruin_visible := not cabin_built
 	if ruin_body_top != null:
 		ruin_body_top.visible = ruin_visible
-		for child in ruin_body_top.get_children():
-			if child is CollisionShape2D:
-				(child as CollisionShape2D).disabled = not ruin_visible
+		_set_body_collision_shapes_deferred(ruin_body_top, not ruin_visible)
 	if ruin_body_bottom != null:
 		ruin_body_bottom.visible = ruin_visible
-		for child in ruin_body_bottom.get_children():
-			if child is CollisionShape2D:
-				(child as CollisionShape2D).disabled = not ruin_visible
+		_set_body_collision_shapes_deferred(ruin_body_bottom, not ruin_visible)
 	if ruin_sprite_elements_1 != null:
 		ruin_sprite_elements_1.visible = ruin_visible
 	if ruin_sprite_elements_2 != null:
@@ -1388,7 +1588,8 @@ func _sync_shelter_state() -> void:
 	if ruin_sprite_elements_0 != null:
 		ruin_sprite_elements_0.visible = ruin_visible
 	if _cabin_home != null and is_instance_valid(_cabin_home) and _cabin_home.has_method("set_built"):
-		_cabin_home.set_built(Global.demo_cabin_built)
+		_cabin_home.global_position = _get_active_cabin_home_pos()
+		_cabin_home.call_deferred("set_built", cabin_built)
 
 func spawn_overworld_burst(
 	global_position_value: Vector2,
@@ -1518,7 +1719,7 @@ func _on_seed_menu_cancelled() -> void:
 
 func _process(_delta: float) -> void:
 	if Global.loop_hub_mode_active:
-		$CanvasModulate.color = daytime_gradient.sample(0.28)
+		_refresh_loop_phase_presentation()
 		_update_loop_interaction_ui()
 		_maybe_show_loop_planting_tutorial_auto()
 		return
@@ -2268,6 +2469,8 @@ func _try_handle_loop_plot_interaction() -> bool:
 	match String(interaction.get("target", "")):
 		"merchant":
 			return _handle_loop_merchant_interaction()
+		"night_vendor":
+			return _handle_loop_night_vendor_interaction()
 		"forest":
 			return _handle_loop_forest_interaction()
 		"cabin":
@@ -2298,6 +2501,13 @@ func _get_current_loop_interaction() -> Dictionary:
 			"highlight_sprite": "merchant"
 		},
 		{
+			"target": "night_vendor",
+			"point": LOOP_NIGHT_VENDOR_INTERACTION_POS,
+			"radius": LOOP_INTERACTION_RADIUS_STRUCTURE,
+			"label": _build_loop_night_vendor_prompt(),
+			"highlight_sprite": "night_vendor"
+		},
+		{
 			"target": "forest",
 			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_FOREST],
 			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_FOREST).get("start", Vector2.ZERO),
@@ -2319,7 +2529,7 @@ func _get_current_loop_interaction() -> Dictionary:
 			"target": "bridge_battle",
 			"point": LOOP_INTERACTION_POINTS[&"bridge_battle"],
 			"radius": 110.0,
-			"label": "%s  To Battle" % _get_loop_confirm_label()
+			"label": _build_loop_bridge_prompt()
 		}
 	]
 
@@ -2385,6 +2595,11 @@ func _build_loop_merchant_prompt() -> String:
 		return "%s  Build Wagon (%d Wood)" % [confirm_label, LOOP_MERCHANT_BUILD_WOOD_COST]
 	return "%s  Trade" % confirm_label
 
+func _build_loop_night_vendor_prompt() -> String:
+	if not _is_loop_night_vendor_available():
+		return ""
+	return "%s  Night Trade" % _get_loop_confirm_label()
+
 func _build_loop_forest_prompt() -> String:
 	var confirm_label := _get_loop_confirm_label()
 	if Global.has_loop_plot(LOOP_PLOT_FOREST):
@@ -2393,9 +2608,19 @@ func _build_loop_forest_prompt() -> String:
 
 func _build_loop_cabin_prompt() -> String:
 	var confirm_label := _get_loop_confirm_label()
-	if Global.has_loop_plot(LOOP_PLOT_CABIN):
-		return ""
-	return "%s  Purify Cabin (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_CABIN].get("unlock_cost", 0))]
+	if not Global.has_loop_plot(LOOP_PLOT_CABIN):
+		return "%s  Reclaim Cabin" % confirm_label
+	if not _is_loop_cabin_repaired():
+		return "%s  Repair Cabin (%d Wood)" % [confirm_label, LOOP_CABIN_REPAIR_WOOD_COST]
+	if _is_loop_night():
+		return "%s  Sleep" % confirm_label
+	return ""
+
+func _build_loop_bridge_prompt() -> String:
+	var confirm_label := _get_loop_confirm_label()
+	if _is_loop_night():
+		return "%s  Sleep to begin a new day" % confirm_label
+	return "%s  To Battle" % confirm_label
 
 func _get_loop_confirm_label() -> String:
 	if DemoDirector != null:
@@ -2433,6 +2658,8 @@ func _update_loop_interaction_ui() -> void:
 	_set_loop_merchant_structure_highlight(_loop_merchant_structure_complete, active_target == "merchant")
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
 		_merchant_actor.modulate = Color(1.15, 1.15, 1.15) if active_target == "merchant" else Color(1, 1, 1)
+	if _loop_night_vendor_actor != null and is_instance_valid(_loop_night_vendor_actor):
+		_loop_night_vendor_actor.modulate = Color(1.08, 1.12, 1.2, 1.0) if active_target == "night_vendor" else Color(0.88, 0.94, 1.0, 1.0)
 
 	if _loop_prompt_root == null or not is_instance_valid(_loop_prompt_root) or _loop_prompt_label == null:
 		return
@@ -2495,13 +2722,15 @@ func _handle_loop_merchant_interaction() -> bool:
 	_open_loop_merchant_menu()
 	return true
 
+func _handle_loop_night_vendor_interaction() -> bool:
+	if not _is_loop_night_vendor_available():
+		return false
+	_open_loop_merchant_menu(LOOP_MERCHANT_KIND_NIGHT)
+	return true
+
 func _handle_loop_forest_interaction() -> bool:
 	if Global.has_loop_plot(LOOP_PLOT_FOREST):
 		_show_player_notice("The forest path is open. Silas watches the tree line.")
-		return true
-
-	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
-		_show_player_notice("Set up trading first. Then head for the forest.")
 		return true
 
 	var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))
@@ -2522,30 +2751,39 @@ func _handle_loop_forest_interaction() -> bool:
 	return true
 
 func _handle_loop_cabin_interaction() -> bool:
-	if Global.has_loop_plot(LOOP_PLOT_CABIN):
-		_show_player_notice("The cabin site is ready for a later rebuild pass.")
+	if not Global.has_loop_plot(LOOP_PLOT_CABIN):
+		Global.unlock_loop_plot(LOOP_PLOT_CABIN)
+		_refresh_loop_plot_visuals()
+
+	if not _is_loop_cabin_repaired():
+		if not Global.has_loop_plot(LOOP_PLOT_FOREST):
+			_show_player_notice("Unlock the forest first. You need wood before anyone can sleep here.")
+			return true
+		if _get_loop_wood_count() < LOOP_CABIN_REPAIR_WOOD_COST:
+			_show_player_notice("Need %d Wood to repair the cabin." % LOOP_CABIN_REPAIR_WOOD_COST)
+			return true
+		Global.remove_item(Global.Items.WOOD, LOOP_CABIN_REPAIR_WOOD_COST)
+		Global.build_loop_structure(Global.LOOP_STRUCTURE_CABIN_REPAIRED)
+		_sync_shelter_state()
+		_show_player_notice("The cabin is repaired. Sleep here at night to start the next day.")
+		_refresh_loop_objective()
+		_autosave_loop_run()
+		call_deferred("_show_loop_sleep_tutorial_after_repair")
 		return true
 
-	if not Global.has_loop_plot(LOOP_PLOT_FOREST):
-		_show_player_notice("The forest needs to be opened before the cabin site can be reclaimed.")
+	if not _is_loop_night():
+		_show_player_notice("Sleep comes after battle. Use the day to plant, expand, and prepare.")
 		return true
 
-	var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_CABIN].get("unlock_cost", 0))
-	if Global.loop_bloom_points < bloom_cost:
-		_show_player_notice("Need %d BP to purify the cabin plot." % bloom_cost)
-		return true
-
-	Global.spend_loop_bloom_points(bloom_cost)
-	Global.unlock_loop_plot(LOOP_PLOT_CABIN)
-	_run_loop_plot_purified_feedback(LOOP_PLOT_CABIN)
-	_show_player_notice("The ruined cabin site stands ready at the heart of the farm.")
-	_refresh_loop_plot_visuals()
-	_refresh_loop_objective()
-	_autosave_loop_run()
+	player.can_move = false
+	call_deferred("_run_loop_sleep_transition")
 	return true
 
 func _handle_loop_bridge_battle_interaction() -> bool:
 	_close_loop_merchant_menu()
+	if _is_loop_night():
+		_show_player_notice("Night is for prep. Sleep in the cabin when you're ready for the next battle.")
+		return true
 	if _loop_battle_launch_pending:
 		return true
 	_loop_battle_launch_pending = true
@@ -2572,11 +2810,9 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 	player.can_move = false
 	player.direction = Vector2.ZERO
 	_close_loop_merchant_menu()
-	_refresh_loop_merchant_visuals()
+	Global.set_loop_time_phase(Global.LOOP_PHASE_NIGHT)
+	_refresh_loop_phase_presentation(true)
 	_refresh_loop_plot_visuals()
-	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
-	if hud != null and "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
-		MusicManager.crossfade_to(hud.day_music, 0.25, -4.0)
 	if is_victory:
 		var bp_reward := _get_loop_battle_reward(LOOP_BATTLE_BP_REWARDS, LOOP_BATTLE_BP_BASE_REWARD, LOOP_BATTLE_BP_STEP)
 		var gold_reward := _get_loop_battle_reward(LOOP_BATTLE_GOLD_REWARDS, LOOP_BATTLE_GOLD_BASE_REWARD, LOOP_BATTLE_GOLD_STEP) + (enemies_defeated * 2)
@@ -2603,6 +2839,8 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		if lost_stone > 0:
 			Global.remove_item(Global.Items.STONE, lost_stone)
 		_show_player_notice("Driven back. Raiders stole %d Gold, %d Wood, and %d Stone." % [lost_gold, lost_wood, lost_stone], 2.0)
+	_refresh_loop_merchant_visuals()
+	await _maybe_show_loop_first_night_tutorial()
 	if is_victory and Global.loop_hub_mode_active and DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_bloom_points"):
 		await _maybe_show_loop_bloom_points_tutorial()
 	_autosave_loop_run()
@@ -2637,11 +2875,36 @@ func _run_loop_plot_purified_feedback(plot_id: StringName) -> void:
 	play_overworld_camera_shake(3.0, 0.12)
 	_play_loop_world_sfx(LOOP_PURIFY_SFX, burst_position)
 
-func _open_loop_merchant_menu() -> void:
+func _show_loop_sleep_tutorial_after_repair() -> void:
+	await _maybe_show_loop_sleep_tutorial()
+
+func _run_loop_sleep_transition() -> void:
+	_close_loop_merchant_menu()
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	if _cabin_home != null and is_instance_valid(_cabin_home) and _cabin_home.has_method("open_for_entry"):
+		await _cabin_home.open_for_entry()
+	await _fade_to_black(0.32)
+	Global.current_day += 1
+	Global.day_changed.emit(Global.current_day)
+	Global.set_loop_time_phase(Global.LOOP_PHASE_DAY)
+	if _cabin_home != null and is_instance_valid(_cabin_home) and _cabin_home.has_method("close_for_exit") and _cabin_home.has_method("is_open") and bool(_cabin_home.call("is_open")):
+		await _cabin_home.close_for_exit()
+	await _fade_from_black(0.38)
+	_show_player_notice("Dawn breaks over the farm.")
+	player.can_move = true
+	_refresh_loop_objective()
+	_autosave_loop_run()
+
+func _open_loop_merchant_menu(kind: String = LOOP_MERCHANT_KIND_WAGON) -> void:
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
 		_build_loop_merchant_menu()
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu):
 		return
+	_loop_active_merchant_kind = kind if kind in [LOOP_MERCHANT_KIND_WAGON, LOOP_MERCHANT_KIND_NIGHT] else LOOP_MERCHANT_KIND_WAGON
+	if not _get_active_loop_merchant_tabs().has(_loop_merchant_active_tab):
+		var available_tabs := _get_active_loop_merchant_tabs()
+		_loop_merchant_active_tab = String(available_tabs[0]) if not available_tabs.is_empty() else ""
 	_refresh_loop_merchant_menu()
 	_loop_merchant_menu.visible = true
 	player.can_move = false
@@ -2674,7 +2937,8 @@ func _on_loop_sell_harvest_pressed() -> void:
 	_autosave_loop_run()
 
 func _on_loop_buy_seed_pressed(seed_item: int) -> void:
-	var offer: Dictionary = LOOP_SEED_SHOP.get(seed_item, {})
+	var seed_shop := _get_active_loop_seed_shop()
+	var offer: Dictionary = seed_shop.get(seed_item, {})
 	var cost := int(offer.get("cost", 0))
 	if Global.loop_gold < cost:
 		_show_player_notice("Not enough Gold.")
@@ -2684,6 +2948,17 @@ func _on_loop_buy_seed_pressed(seed_item: int) -> void:
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % String(offer.get("label", "seed bundle")))
+	_autosave_loop_run()
+
+func _on_loop_buy_inventory_item_pressed(item_type: int, cost: int) -> void:
+	if Global.loop_gold < cost:
+		_show_player_notice("Not enough Gold.")
+		return
+	Global.spend_loop_gold(cost)
+	Global.add_item(item_type, 1)
+	_refresh_loop_merchant_menu()
+	_refresh_loop_objective()
+	_show_player_notice("Purchased %s." % _format_loop_item_name(item_type))
 	_autosave_loop_run()
 
 func _on_loop_buy_equipment_pressed(item: Resource, cost: int) -> void:

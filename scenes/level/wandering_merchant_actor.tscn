@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/level/wandering_merchant_actor.gd" id="1_script"]
+
+[node name="WanderingMerchantActor" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -10)

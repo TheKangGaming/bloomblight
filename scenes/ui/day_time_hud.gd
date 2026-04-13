@@ -50,6 +50,10 @@ func _resolve_day_timer() -> void:
 		day_timer = main_scene.get_node("DayTimer") as Timer
 
 func _update_view(force := false) -> void:
+	if Global.loop_hub_mode_active:
+		_update_loop_phase_view(force)
+		return
+
 	if Global.pending_day_transition:
 		_set_time_label("Midnight", force)
 		_set_icon_animation("night", force)
@@ -67,14 +71,31 @@ func _update_view(force := false) -> void:
 	if not day_timer.is_stopped():
 		_update_clock(force)
 
-func _set_day_label(force := false) -> void:
-	if not force and _last_rendered_day == Global.current_day:
-		return
+func _update_loop_phase_view(force := false) -> void:
+	_set_day_label(force)
+	var is_night := Global.loop_time_phase == Global.LOOP_PHASE_NIGHT
+	_set_time_label("Night Prep" if is_night else "Day Prep", force)
+	_set_icon_animation("night" if is_night else "day", force)
+	var target_phase := "night" if is_night else "day"
+	if target_phase != _active_music_phase:
+		_active_music_phase = target_phase
+		if target_phase == "day" and day_music:
+			MusicManager.crossfade_to(day_music, 0.35, -4.0)
+		elif target_phase == "night" and night_music:
+			MusicManager.crossfade_to(night_music, 0.35)
+	_check_ambience_transition(target_phase)
 
-	_last_rendered_day = Global.current_day
+func _set_day_label(force := false) -> void:
 	if Global != null and Global.loop_hub_mode_active:
+		var loop_stage := maxi(Global.loop_battle_index, 1)
+		if not force and _last_rendered_day == loop_stage:
+			return
+		_last_rendered_day = loop_stage
 		day_label.text = "Stage " + str(maxi(Global.loop_battle_index, 1))
 	else:
+		if not force and _last_rendered_day == Global.current_day:
+			return
+		_last_rendered_day = Global.current_day
 		day_label.text = "Day " + str(Global.current_day)
 
 func _set_time_label(next_time: String, force := false) -> void:

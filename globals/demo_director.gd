@@ -54,9 +54,11 @@ var _seen_tutorial_cards: Dictionary = {}
 const TUTORIAL_CARD_ORDER := [
 	"loop_planting",
 	"loop_battle",
+	"loop_first_night",
 	"loop_bloom_points",
 	"loop_forest_join",
 	"loop_forest_wood",
+	"loop_sleep",
 	"loop_cooking",
 	"farm_controls",
 	"farm_farming",
@@ -242,15 +244,21 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 		"loop_battle":
 			title = "Tutorial: Next Step"
 			template = "Plant a few seeds, then head to the bridge and press {confirm} to start a battle.\n\nWinning battles earns Bloom Points and Gold."
+		"loop_first_night":
+			title = "Tutorial: Night"
+			template = "Battles advance time. Night is your reward phase.\n\nHarvest, cook, trade, and sleep when you're ready for the next day."
 		"loop_bloom_points":
 			title = "Tutorial: Bloom Points"
-			template = "Bloom Points let you purify dead plots and expand the settlement.\n\nSpend them at marked plots like the merchant wagon to open the next part of the hub."
+			template = "Bloom Points let you purify dead plots and expand the settlement.\n\nOpen the forest first so you can chop wood, repair the cabin, and keep the loop moving."
 		"loop_forest_join":
 			title = "Tutorial: Silas Joins"
 			template = "Silas joins the party after you open the forest.\n\nHe stays with the settlement and fights beside you from now on."
 		"loop_forest_wood":
 			title = "Tutorial: Forest Wood"
-			template = "Now that the forest is open, use your Axe on the trees to chop Wood.\n\nWood is used to repair the wagon and build the settlement."
+			template = "Now that the forest is open, use your Axe on the trees to chop Wood.\n\nWood repairs the cabin first. Once you can sleep, the farm can roll into a new day."
+		"loop_sleep":
+			title = "Tutorial: Cabin Sleep"
+			template = "The cabin is repaired.\n\nAt Night, use the bed to sleep and begin the next day. Battles only open again after you rest."
 		"loop_cooking":
 			title = "Tutorial: Cooking"
 			template = "Harvested crops can be cooked at the campfire.\n\nMeals turn ingredients into a one-battle perk for your next fight."

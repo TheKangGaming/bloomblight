@@ -10,6 +10,7 @@ const TOP_OPEN_TEXTURE := preload("res://graphics/animations/cabin/cabin-top sec
 const TOP_CLOSE_TEXTURE := preload("res://graphics/animations/cabin/cabin-top section no tissue-closing animation.png")
 const DOOR_OPEN_TEXTURE := preload("res://graphics/animations/cabin/cabin -  opening animation door with slight shading detail for better integration with the cabin while accessing the interior .png")
 const DOOR_CLOSE_TEXTURE := preload("res://graphics/animations/cabin/cabin -  closing animation door with slight shading detail for better integration with the cabin while accessing the interior .png")
+const INTERIOR_TEXTURE := preload("res://graphics/animations/cabin/cabin - interior.png")
 const INTERIOR_FRONT_TEXTURE := preload("res://graphics/animations/cabin/cabin - interior - front wall.png")
 const DOOR_SFX := preload("res://audio/ui/Close And Open Inventory.wav")
 
@@ -24,10 +25,16 @@ const CLOSE_DURATION := 0.65
 @onready var shadow_top_left: Sprite2D = $ShadowTopLeft
 @onready var shadow_top_right: Sprite2D = $ShadowTopRight
 @onready var base_sprite: Sprite2D = $Base
-@onready var top_sprite: AnimatedSprite2D = $Top
-@onready var door_sprite: AnimatedSprite2D = $Door
-@onready var interior_front_sprite: Sprite2D = $InteriorFront
+@onready var top_sprite: AnimatedSprite2D = $TopSort/Top
+@onready var door_sprite: AnimatedSprite2D = $DoorSort/Door
+@onready var interior_sprite: Sprite2D = $InteriorSort/Interior
+@onready var interior_front_sprite: Sprite2D = $FrontFacadeSort/InteriorFront
 @onready var door_sfx: AudioStreamPlayer2D = $DoorSfx
+@onready var wall_collision_left: CollisionShape2D = $WallBody/CollisionShape2D
+@onready var wall_collision_right: CollisionShape2D = $WallBody/CollisionShape2D2
+@onready var wall_collision_top: CollisionShape2D = $WallBody/CollisionShape2D3
+@onready var door_area_collision: CollisionShape2D = $DoorArea/CollisionShape2D
+@onready var door_blocker_collision: CollisionShape2D = $DoorBlocker/CollisionShape2D
 
 var _player_in_range := false
 var _is_open := false
@@ -41,6 +48,7 @@ func _ready() -> void:
 	shadow_top_left.texture = SHADOW_TOP_LEFT_TEXTURE
 	shadow_top_right.texture = SHADOW_TOP_RIGHT_TEXTURE
 	base_sprite.texture = BASE_TEXTURE
+	interior_sprite.texture = INTERIOR_TEXTURE
 	interior_front_sprite.texture = INTERIOR_FRONT_TEXTURE
 	door_sfx.stream = DOOR_SFX
 	_build_top_animations()
@@ -52,15 +60,12 @@ func set_built(is_built: bool) -> void:
 	_built = is_built
 	visible = is_built
 	process_mode = Node.PROCESS_MODE_INHERIT if is_built else Node.PROCESS_MODE_DISABLED
-	$WallBody/CollisionShape2D.disabled = not is_built
-	$WallBody/CollisionShape2D2.disabled = not is_built
-	$WallBody/CollisionShape2D3.disabled = not is_built
-	$DoorArea/CollisionShape2D.disabled = not is_built
 	if not is_built:
 		_player_in_range = false
 		_is_open = false
 		_is_animating = false
 		_apply_closed_rest_state()
+	_update_collision_state()
 
 func is_built() -> bool:
 	return _built
@@ -156,11 +161,11 @@ func _play_open() -> void:
 	door_sprite.play(&"open")
 	await get_tree().create_timer(OPEN_DURATION, true).timeout
 	_is_open = true
-	interior_front_sprite.visible = true
 	top_sprite.stop()
 	door_sprite.stop()
 	top_sprite.frame = top_sprite.sprite_frames.get_frame_count(&"open") - 1
 	door_sprite.frame = door_sprite.sprite_frames.get_frame_count(&"open") - 1
+	_update_collision_state()
 	_is_animating = false
 
 func _play_close() -> void:
@@ -172,8 +177,8 @@ func _play_close() -> void:
 	door_sprite.play(&"close")
 	await get_tree().create_timer(CLOSE_DURATION, true).timeout
 	_is_open = false
-	interior_front_sprite.visible = false
 	_apply_closed_rest_state()
+	_update_collision_state()
 	_is_animating = false
 
 func _apply_closed_rest_state() -> void:
@@ -183,9 +188,20 @@ func _apply_closed_rest_state() -> void:
 	door_sprite.play(&"open")
 	door_sprite.stop()
 	door_sprite.frame = 0
-	interior_front_sprite.visible = false
 
 func _play_door_sfx() -> void:
 	if door_sfx == null or door_sfx.stream == null:
 		return
 	door_sfx.play()
+
+func _update_collision_state() -> void:
+	_set_collision_shape_enabled(wall_collision_left, _built)
+	_set_collision_shape_enabled(wall_collision_right, _built)
+	_set_collision_shape_enabled(wall_collision_top, _built)
+	_set_collision_shape_enabled(door_area_collision, _built)
+	_set_collision_shape_enabled(door_blocker_collision, _built and not _is_open)
+
+func _set_collision_shape_enabled(shape: CollisionShape2D, enabled: bool) -> void:
+	if shape == null:
+		return
+	shape.set_deferred("disabled", not enabled)
