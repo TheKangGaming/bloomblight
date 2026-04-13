@@ -24,15 +24,18 @@ script = ExtResource("5_ymsg5")
 
 [node name="MapBoundaries" type="Node2D" parent="." index="6" unique_id=610117517]
 
-[node name="AbandonedStructuresElements2" type="Sprite2D" parent="." index="7" unique_id=1439176673]
-z_index = 1
-position = Vector2(975, 748)
+[node name="AbandonedStructuresElements2" type="Node2D" parent="." index="7" unique_id=1439176673]
+position = Vector2(975, 812)
+
+[node name="Sprite2D" type="Sprite2D" parent="AbandonedStructuresElements2" index="0" unique_id=1698067688]
+position = Vector2(0, -64)
 texture = ExtResource("2_e08np")
 
-[node name="AbandonedStructuresElements0" type="Sprite2D" parent="." index="8" unique_id=995622414]
-z_index = 2
-y_sort_enabled = true
-position = Vector2(976, 619)
+[node name="AbandonedStructuresElements0" type="Node2D" parent="." index="8" unique_id=995622414]
+position = Vector2(976, 779)
+
+[node name="Sprite2D" type="Sprite2D" parent="AbandonedStructuresElements0" index="0" unique_id=495456414]
+position = Vector2(0, -160)
 texture = ExtResource("4_kbnp3")
 
 [node name="Obstacles" parent="." index="9" unique_id=2083172708]

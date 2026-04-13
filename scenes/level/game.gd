@@ -26,7 +26,7 @@ const BANDIT_DEFENSE_PLAYER_POS := Vector2(1326, 724)
 const BANDIT_DEFENSE_TERA_POS := Vector2(1426, 754)
 const BANDIT_DEFENSE_SILAS_POS := Vector2(1514, 692)
 const CABIN_HOME_POS := Vector2(1488, 544)
-const LOOP_CABIN_HOME_POS := Vector2(960, 720)
+const LOOP_CABIN_HOME_POS := Vector2(960, 744)
 const CABIN_REBUILD_PLAYER_POS := Vector2(1392, 716)
 const CABIN_REBUILD_TERA_POS := Vector2(1460, 706)
 const CABIN_REBUILD_SILAS_POS := Vector2(1560, 696)
@@ -40,7 +40,7 @@ const MERCHANT_POS := Vector2(1236, 684)
 const CUTSCENE_GROUP_ZOOM := Vector2(1.7, 1.7)
 const CUTSCENE_CLOSE_ZOOM := Vector2(1.9, 1.9)
 const LOOP_START_PLAYER_POS := Vector2(960, 1536)
-const LOOP_CAMPFIRE_POS := Vector2(960, 1438)
+const LOOP_CAMPFIRE_POS := Vector2(1064, 900)
 const LOOP_BRIDGE_BATTLE_POS := Vector2(960, 1656)
 const LOOP_PLOT_SIZE := Vector2(640.0, 480.0)
 const LOOP_PURIFY_VFX_TEXTURE: Texture2D = preload("res://graphics/animations/ui/directional_sparkle_burst_002_large_green/spritesheet.png")
@@ -123,14 +123,13 @@ const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_GARDEN: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 6},
 	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": 0},
 	LOOP_PLOT_WORKSHOP: {"rect": Rect2(Vector2(1280, 480), LOOP_PLOT_SIZE), "unlock_cost": 8},
-	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 12},
+	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 10},
 	LOOP_PLOT_STARTING_FARM: {"rect": Rect2(Vector2(640, 960), LOOP_PLOT_SIZE), "unlock_cost": 0},
 	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 8},
 }
 const LOOP_INTERACTION_POINTS := {
 	LOOP_PLOT_MERCHANT: Vector2(700, 1200),
 	LOOP_PLOT_FOREST: Vector2(1220, 1200),
-	LOOP_PLOT_CABIN: Vector2(960, 980),
 	&"bridge_battle": LOOP_BRIDGE_BATTLE_POS,
 }
 const LOOP_MERCHANT_STRUCTURE_POS := Vector2(360, 1216)
@@ -187,8 +186,8 @@ enum IntroState {
 @onready var ruin_body_top: StaticBody2D = $World/Obstacles/StaticBody2D2
 @onready var ruin_body_bottom: StaticBody2D = $World/Obstacles/StaticBody2D
 @onready var ruin_sprite_elements_1: Sprite2D = $World/Obstacles/StaticBody2D2/AbandonedStructuresElements1
-@onready var ruin_sprite_elements_2: Sprite2D = get_node_or_null("World/AbandonedStructuresElements2") as Sprite2D
-@onready var ruin_sprite_elements_0: Sprite2D = get_node_or_null("World/AbandonedStructuresElements0") as Sprite2D
+@onready var ruin_sprite_elements_2: Node2D = get_node_or_null("World/AbandonedStructuresElements2") as Node2D
+@onready var ruin_sprite_elements_0: Node2D = get_node_or_null("World/AbandonedStructuresElements0") as Node2D
 
 var plant_scene: PackedScene = preload("res://scenes/level/plant.tscn")
 var _cabin_home_scene: PackedScene = preload("res://scenes/level/cabin_home.tscn")
@@ -397,12 +396,53 @@ func _is_loop_night_vendor_available() -> bool:
 func _get_active_cabin_home_pos() -> Vector2:
 	return LOOP_CABIN_HOME_POS if Global.loop_hub_mode_active else CABIN_HOME_POS
 
+func _get_loop_cabin_interaction_point() -> Vector2:
+	var cabin_plot: Dictionary = LOOP_PLOT_DEFS.get(LOOP_PLOT_CABIN, {})
+	var rect_variant: Variant = cabin_plot.get("rect", Rect2())
+	var plot_center := Vector2(960, 720)
+	if rect_variant is Rect2:
+		var rect: Rect2 = rect_variant
+		plot_center = rect.position + (rect.size * 0.5)
+	if not _is_loop_cabin_repaired():
+		return plot_center
+	return _get_active_cabin_home_pos() + Vector2(0, -36)
+
 func _set_body_collision_shapes_deferred(body: Node, disabled: bool) -> void:
 	if body == null or not is_instance_valid(body):
 		return
 	for child in body.get_children():
 		if child is CollisionShape2D:
 			(child as CollisionShape2D).set_deferred("disabled", disabled)
+
+func _set_area_collision_shapes_deferred(area: Node, disabled: bool) -> void:
+	if area == null or not is_instance_valid(area):
+		return
+	for child in area.get_children():
+		if child is CollisionShape2D:
+			(child as CollisionShape2D).set_deferred("disabled", disabled)
+
+func _sync_loop_campfire_state() -> void:
+	if camp_fire == null or not is_instance_valid(camp_fire):
+		return
+	if not Global.loop_hub_mode_active:
+		camp_fire.visible = true
+		camp_fire.set_deferred("collision_layer", 1)
+		_set_body_collision_shapes_deferred(camp_fire, false)
+		var interact_area := camp_fire.get_node_or_null("InteractArea") as Area2D
+		if interact_area != null:
+			interact_area.set_deferred("collision_mask", 2)
+			_set_area_collision_shapes_deferred(interact_area, false)
+		return
+
+	var campfire_available := _is_loop_cabin_repaired()
+	camp_fire.global_position = LOOP_CAMPFIRE_POS
+	camp_fire.visible = campfire_available
+	camp_fire.set_deferred("collision_layer", 1 if campfire_available else 0)
+	_set_body_collision_shapes_deferred(camp_fire, not campfire_available)
+	var interact_area := camp_fire.get_node_or_null("InteractArea") as Area2D
+	if interact_area != null:
+		interact_area.set_deferred("collision_mask", 2 if campfire_available else 0)
+		_set_area_collision_shapes_deferred(interact_area, not campfire_available)
 
 func _set_structure_collision_state_deferred(structure: StaticBody2D, active: bool) -> void:
 	if structure == null or not is_instance_valid(structure):
@@ -815,8 +855,7 @@ func _setup_loop_hub_mode() -> void:
 	player.can_move = true
 	player.direction = Vector2.ZERO
 	player.global_position = LOOP_START_PLAYER_POS
-	if camp_fire != null and is_instance_valid(camp_fire):
-		camp_fire.global_position = LOOP_CAMPFIRE_POS
+	_sync_loop_campfire_state()
 
 	$DayTimer.stop()
 	$GrowTimer.start()
@@ -1590,6 +1629,7 @@ func _sync_shelter_state() -> void:
 	if _cabin_home != null and is_instance_valid(_cabin_home) and _cabin_home.has_method("set_built"):
 		_cabin_home.global_position = _get_active_cabin_home_pos()
 		_cabin_home.call_deferred("set_built", cabin_built)
+	_sync_loop_campfire_state()
 
 func spawn_overworld_burst(
 	global_position_value: Vector2,
@@ -2518,9 +2558,7 @@ func _get_current_loop_interaction() -> Dictionary:
 		},
 		{
 			"target": "cabin",
-			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_CABIN],
-			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_CABIN).get("start", Vector2.ZERO),
-			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_CABIN).get("end", Vector2.ZERO),
+			"point": _get_loop_cabin_interaction_point(),
 			"radius": LOOP_INTERACTION_RADIUS_PLOT,
 			"label": _build_loop_cabin_prompt(),
 			"highlight_plot": String(LOOP_PLOT_CABIN) if not Global.has_loop_plot(LOOP_PLOT_CABIN) else ""
