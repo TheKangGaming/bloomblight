@@ -16,6 +16,13 @@ const INTRO_MORNING_TERA_POS := Vector2(1508, 734)
 const INTRO_MORNING_SILAS_POS := Vector2(1320, 730)
 const INTRO_CAMP_TERA_POS := Vector2(1496, 670)
 const INTRO_CAMP_SILAS_POS := Vector2(1576, 670)
+const LOOP_ARRIVAL_PLAYER_ENTRY_POS := Vector2(922, 1688)
+const LOOP_ARRIVAL_PLAYER_STOP := Vector2(922, 1416)
+const LOOP_ARRIVAL_TERA_ENTRY_POS := Vector2(994, 1688)
+const LOOP_ARRIVAL_TERA_STOP := Vector2(994, 1408)
+const LOOP_ARRIVAL_TERA_GATE_POS := Vector2(960, 1300)
+const LOOP_ARRIVAL_TERA_CABIN_APPROACH_POS := Vector2(960, 1200)
+const LOOP_ARRIVAL_TERA_REST_POS := Vector2(960, 1120)
 const BANDIT_ENTRY_LEADER_POS := Vector2(1488, 1718)
 const BANDIT_ENTRY_WARRIOR_POS := Vector2(1416, 1762)
 const BANDIT_ENTRY_ARCHER_POS := Vector2(1562, 1786)
@@ -389,6 +396,9 @@ func _is_loop_day() -> bool:
 
 func _is_loop_cabin_repaired() -> bool:
 	return Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_REPAIRED)
+
+func _should_play_loop_arrival_intro() -> bool:
+	return Global.loop_hub_mode_active and Global.pending_loop_arrival_intro
 
 func _is_loop_night_vendor_available() -> bool:
 	return Global.loop_hub_mode_active and _is_loop_night() and _is_loop_cabin_repaired() and Global.loop_battle_index >= 3
@@ -800,6 +810,10 @@ func _ready() -> void:
 	_spawn_overworld_system_menu()
 
 	if Global.loop_hub_mode_active:
+		player.visible = false
+		var color_rect := get_node_or_null("CanvasLayer/ColorRect") as ColorRect
+		if color_rect != null:
+			color_rect.modulate.a = 1.0
 		call_deferred("_setup_loop_hub_mode")
 		return
 
@@ -839,7 +853,10 @@ func _setup_loop_hub_mode() -> void:
 		story_chest.queue_free()
 		story_chest = null
 	if tera_actor != null:
-		tera_actor.visible = false
+		tera_actor.visible = true
+		tera_actor.global_position = LOOP_ARRIVAL_TERA_REST_POS
+		tera_actor.face_down()
+		tera_actor.play_idle()
 	if silas_actor != null:
 		silas_actor.visible = false
 	if _merchant_actor != null and is_instance_valid(_merchant_actor):
@@ -854,6 +871,7 @@ func _setup_loop_hub_mode() -> void:
 
 	player.can_move = true
 	player.direction = Vector2.ZERO
+	player.visible = not _should_play_loop_arrival_intro()
 	player.global_position = LOOP_START_PLAYER_POS
 	_sync_loop_campfire_state()
 
@@ -924,6 +942,9 @@ func _play_loop_hub_entry_transition() -> void:
 
 	if reveal_tween != null:
 		await reveal_tween.finished
+	if _should_play_loop_arrival_intro():
+		call_deferred("_run_loop_arrival_intro")
+		return
 	player.can_move = true
 	_log_run_start("Control returned")
 
@@ -2495,6 +2516,74 @@ func _release_overworld_control(delay_frames: int = 1) -> void:
 	player.can_move = true
 	player.direction = Vector2.ZERO
 	_restore_player_camera()
+
+func _run_loop_arrival_intro() -> void:
+	if not _should_play_loop_arrival_intro():
+		player.visible = true
+		player.can_move = true
+		_log_run_start("Control returned")
+		return
+
+	Global.pending_loop_arrival_intro = false
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	player.visible = true
+	Global.show_tutorial_text("")
+
+	player.global_position = LOOP_ARRIVAL_PLAYER_ENTRY_POS
+	if player.has_method("play_cutscene_idle"):
+		player.play_cutscene_idle(Vector2.UP)
+
+	if tera_actor != null:
+		tera_actor.visible = true
+		tera_actor.global_position = LOOP_ARRIVAL_TERA_ENTRY_POS
+		tera_actor.face_up()
+		tera_actor.play_idle()
+	if silas_actor != null:
+		silas_actor.visible = false
+
+	var intro_cam_target := (LOOP_ARRIVAL_PLAYER_STOP + LOOP_ARRIVAL_TERA_STOP) / 2.0
+	cutscene_camera.position_smoothing_enabled = false
+	cutscene_camera.global_position = intro_cam_target
+	cutscene_camera.zoom = CUTSCENE_GROUP_ZOOM
+	cutscene_camera.make_current()
+	if cutscene_camera.has_method("reset_smoothing"):
+		cutscene_camera.reset_smoothing()
+	cutscene_camera.position_smoothing_enabled = true
+
+	await _focus_cutscene_on_positions([LOOP_ARRIVAL_PLAYER_STOP, LOOP_ARRIVAL_TERA_STOP], 0.35, CUTSCENE_GROUP_ZOOM)
+	await _move_story_group(
+		[player, tera_actor],
+		[LOOP_ARRIVAL_PLAYER_STOP, LOOP_ARRIVAL_TERA_STOP],
+		1.55
+	)
+	await _play_story_dialogue([
+		{"speaker": "Tera", "text": "We actually made it out. I didn't think..."},
+		{"speaker": "Savannah", "text": "Keep your voice down. Deserting is one thing, but getting caught is another. The search parties won't be far behind."},
+		{"speaker": "Tera", "text": "I know. It's just... wait. Savannah, look. By the treeline."}
+	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
+
+	await _focus_cutscene_on_positions([LOOP_ARRIVAL_TERA_CABIN_APPROACH_POS, _get_active_cabin_home_pos()], 0.25, CUTSCENE_CLOSE_ZOOM)
+	await _move_node(tera_actor, LOOP_ARRIVAL_TERA_GATE_POS, 0.4)
+	await _move_node(tera_actor, LOOP_ARRIVAL_TERA_CABIN_APPROACH_POS, 0.4)
+	await _move_node(tera_actor, LOOP_ARRIVAL_TERA_REST_POS, 0.3)
+	tera_actor.face_down()
+	tera_actor.play_idle()
+	await _play_story_dialogue([
+		{"speaker": "Tera", "text": "A farmhouse. Or what's left of one."},
+		{"speaker": "Savannah", "text": "The roof is mostly rot, but the walls still stand. It'll keep the wind off us for tonight."},
+		{"speaker": "Tera", "text": "If I can gather enough strength, I can push the Blight back. We might find timber or salvage in the brush."},
+		{"speaker": "Savannah", "text": "One step at a time. Just focus on resting."},
+		{"speaker": "Tera", "text": "Wait—take these. I grabbed a pouch of seeds from the village before... well, before everything. If this is a farm, we should use it. We can’t run on an empty stomach."},
+		{"speaker": "Savannah", "text": "It's been a long time since I held a spade instead of a sword."},
+		{"speaker": "Tera", "text": "You haven't forgotten how to use one, have you?"},
+		{"speaker": "Savannah", "text": "I’ll manage. Get some rest, Tera."}
+	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
+
+	_refresh_loop_objective()
+	await _release_overworld_control()
+	_log_run_start("Control returned")
 
 func _get_active_planting_layer() -> TileMapLayer:
 	if Global.loop_hub_mode_active and plowed_layer != null:

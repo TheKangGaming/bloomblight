@@ -2603,7 +2603,7 @@ y_sort_enabled = true
 script = ExtResource("1_f2w0s")
 daytime_gradient = SubResource("Gradient_ig4jx")
 metadata/_edit_vertical_guides_ = [0.0, 1920.0]
-metadata/_edit_horizontal_guides_ = [1728.0, 0.0]
+metadata/_edit_horizontal_guides_ = [1728.0, 0.0, 1339.0]
 
 [node name="World" parent="." unique_id=300117719 instance=ExtResource("2_3ny2s")]
 

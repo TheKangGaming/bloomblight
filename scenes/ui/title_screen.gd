@@ -12,6 +12,16 @@ const TITLE_FLASH_RECOVERY := 0.22
 const TITLE_START_OVERLAP_DELAY := 0.025
 const TITLE_START_MUSIC_DUCK := 0.13
 const TITLE_POST_SWAP_DIM_ALPHA := 0.52
+const INTRO_LINE_FADE_IN := 0.42
+const INTRO_LINE_FADE_OUT := 0.36
+const INTRO_FINAL_HOLD := 0.3
+const INTRO_SKIP_HOLD := 0.06
+const INTRO_ADVANCE_BUFFER := 0.08
+const OPENING_LINES := [
+	"The world turned to ash.",
+	"The Empire came for the girl who could stop it.",
+	"The soldier chose to save her instead.",
+]
 
 @onready var menu_root: Control = $MarginContainer
 @onready var start_button: Button = $MarginContainer/VBoxContainer/Buttons/StartButton
@@ -21,6 +31,9 @@ const TITLE_POST_SWAP_DIM_ALPHA := 0.52
 @onready var title_label: Label = $MarginContainer/VBoxContainer/Label
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var atmosphere_particles: GPUParticles2D = $AtmosphereParticles
+@onready var intro_overlay: Control = $IntroOverlay
+@onready var intro_label: Label = $IntroOverlay/CenterContainer/MarginContainer/VBoxContainer/IntroLabel
+@onready var intro_hint: Label = $IntroOverlay/CenterContainer/MarginContainer/VBoxContainer/IntroHint
 
 const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
 const GAME_SCENE_PATH := "res://scenes/level/game.tscn"
@@ -30,6 +43,10 @@ const GAME_SCENE_PATH := "res://scenes/level/game.tscn"
 var _is_transitioning: bool = true
 var _fade_tween: Tween
 var _cached_game_scene: PackedScene = null
+var _intro_active := false
+var _intro_advance_requested := false
+var _intro_skip_requested := false
+var _intro_tween: Tween = null
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
@@ -54,6 +71,10 @@ func _ready() -> void:
 	title_label.modulate.a = 0.0
 	title_label.scale = Vector2.ONE
 	menu_root.modulate.a = 1.0
+	intro_overlay.visible = false
+	intro_overlay.modulate.a = 0.0
+	intro_label.modulate.a = 0.0
+	intro_hint.modulate.a = 0.0
 	start_button.scale = START_BUTTON_IDLE_SCALE
 	continue_button.scale = START_BUTTON_IDLE_SCALE
 	settings_button.scale = START_BUTTON_IDLE_SCALE
@@ -112,11 +133,12 @@ func _on_start_pressed() -> void:
 	if ui_sounds:
 		ui_sounds.play_start_game()
 	start_button.disabled = true 
+	continue_button.disabled = true
 	settings_button.disabled = true
 	quit_button.disabled = true
 
 	Global.begin_loop_hub_run()
-	_play_start_transition()
+	call_deferred("_play_new_game_intro_sequence")
 
 func _on_continue_pressed() -> void:
 	if _is_transitioning or not _can_continue():
@@ -154,6 +176,92 @@ func _play_start_transition() -> void:
 
 	await get_tree().create_timer(TITLE_START_OVERLAP_DELAY, true).timeout
 	_begin_demo_scene_transition()
+
+func _play_new_game_intro_sequence() -> void:
+	await _fade_title_menu_for_intro()
+	await _run_opening_intro()
+	_begin_new_game_scene_transition()
+
+func _fade_title_menu_for_intro() -> void:
+	var press_tween := create_tween().set_parallel(true)
+	press_tween.tween_property(start_button, "scale", START_BUTTON_PRESS_SCALE, 0.03).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	press_tween.tween_property(continue_button, "modulate:a", 0.0, 0.08)
+	press_tween.tween_property(menu_root, "modulate:a", 0.0, 0.12).set_delay(0.004)
+	press_tween.tween_property(atmosphere_particles, "modulate:a", 0.0, 0.12)
+	if MusicManager and MusicManager.has_method("fade_to_silence"):
+		MusicManager.fade_to_silence(TITLE_START_MUSIC_DUCK)
+	await press_tween.finished
+
+func _run_opening_intro() -> void:
+	_intro_active = true
+	_intro_advance_requested = false
+	_intro_skip_requested = false
+	intro_overlay.visible = true
+	intro_overlay.modulate.a = 1.0
+	intro_label.modulate.a = 0.0
+	intro_hint.modulate.a = 0.0
+	intro_hint.text = "Press %s to continue   Press %s to skip" % [_get_confirm_hint_text(), _get_cancel_hint_text()]
+	var hint_tween := create_tween()
+	hint_tween.tween_property(intro_hint, "modulate:a", 1.0, 0.22).set_delay(0.16)
+
+	for line in OPENING_LINES:
+		if _intro_skip_requested:
+			break
+		intro_label.text = line
+		await _play_intro_line()
+
+	_intro_active = false
+	if _intro_tween != null and is_instance_valid(_intro_tween):
+		_intro_tween.kill()
+		_intro_tween = null
+	var outro_tween := create_tween().set_parallel(true)
+	outro_tween.tween_property(intro_label, "modulate:a", 0.0, 0.12)
+	outro_tween.tween_property(intro_hint, "modulate:a", 0.0, 0.1)
+	await outro_tween.finished
+	await get_tree().create_timer(INTRO_SKIP_HOLD if _intro_skip_requested else INTRO_FINAL_HOLD, true).timeout
+	intro_overlay.visible = false
+
+func _play_intro_line() -> void:
+	intro_label.modulate.a = 0.0
+	_intro_advance_requested = false
+	_intro_tween = create_tween()
+	_intro_tween.tween_property(intro_label, "modulate:a", 1.0, INTRO_LINE_FADE_IN).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await _intro_tween.finished
+	if _intro_skip_requested:
+		return
+	await get_tree().create_timer(INTRO_ADVANCE_BUFFER, true).timeout
+	await _wait_for_intro_advance()
+	if _intro_skip_requested:
+		return
+	_intro_tween = create_tween()
+	_intro_tween.tween_property(intro_label, "modulate:a", 0.0, INTRO_LINE_FADE_OUT).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await _intro_tween.finished
+
+func _wait_for_intro_advance() -> void:
+	while not _intro_advance_requested and not _intro_skip_requested:
+		var timer := get_tree().create_timer(0.05, true)
+		await timer.timeout
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _intro_active or event == null:
+		return
+	if event is InputEventKey and (event as InputEventKey).echo:
+		return
+	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
+		_intro_skip_requested = true
+		_intro_advance_requested = true
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+		_intro_advance_requested = true
+		get_viewport().set_input_as_handled()
+		return
+
+func _begin_new_game_scene_transition() -> void:
+	if TransitionManager == null:
+		return
+	_log_run_start("Scene transition begin")
+	TransitionManager.change_scene_path(GAME_SCENE_PATH, 0.18)
 
 func _begin_demo_scene_transition() -> void:
 	if TransitionManager == null:
@@ -200,3 +308,13 @@ func _update_particle_layout() -> void:
 	var mat = atmosphere_particles.process_material as ParticleProcessMaterial
 	if mat:
 		mat.emission_box_extents = Vector3(screen_size.x / 2.0, screen_size.y / 2.0, 1.0)
+
+func _get_confirm_hint_text() -> String:
+	if DemoDirector != null:
+		return DemoDirector.get_confirm_label()
+	return "Enter"
+
+func _get_cancel_hint_text() -> String:
+	if DemoDirector != null and DemoDirector.current_input_mode == DemoDirector.InputMode.CONTROLLER:
+		return "B"
+	return "Esc"

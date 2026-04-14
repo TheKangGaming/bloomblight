@@ -48,6 +48,7 @@ var loop_time_phase := &"day"
 var loop_unlocked_plots: Dictionary = {}
 var loop_built_structures: Dictionary = {}
 var loop_equipped_perk_item: int = -1
+var pending_loop_arrival_intro := false
 var pending_intro_forest_visit := false
 var pending_intro_forest_return := false
 var intro_forest_day_time_left := 0.0
@@ -590,6 +591,7 @@ func reset_demo_state() -> void:
 	loop_unlocked_plots.clear()
 	loop_built_structures.clear()
 	loop_equipped_perk_item = -1
+	pending_loop_arrival_intro = false
 	pending_intro_forest_visit = false
 	pending_intro_forest_return = false
 	intro_forest_day_time_left = 0.0
@@ -627,6 +629,7 @@ func begin_loop_hub_run() -> void:
 	loop_bloom_points = 0
 	loop_battle_index = 1
 	loop_time_phase = LOOP_PHASE_DAY
+	pending_loop_arrival_intro = true
 	loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
 	loop_unlocked_plots[String(LOOP_PLOT_CABIN)] = true
 	inventory[Items.WOOD] = 0
