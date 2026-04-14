@@ -1,8 +1,5 @@
 extends Node2D
 
-const FRAME_SIZE := Vector2i(128, 128)
-const FRAME_COUNT := 8
-
 const IDLE_TEXTURE := preload("res://graphics/npcs/wandering merchant/NPC Merchant-idle.png")
 const ENTRY_TEXTURE := preload("res://graphics/npcs/wandering merchant/NPC Merchant-interaction-entry.png")
 const LOOP_TEXTURE := preload("res://graphics/npcs/wandering merchant/NPC Merchant-interaction-loop.png")
@@ -11,10 +8,10 @@ const REST_TEXTURE := preload("res://graphics/npcs/wandering merchant/NPC Mercha
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 func _ready() -> void:
-	_build_animation(&"idle", IDLE_TEXTURE, FRAME_COUNT, true, 8.0)
-	_build_animation(&"entry", ENTRY_TEXTURE, FRAME_COUNT, false, 8.0)
-	_build_animation(&"loop", LOOP_TEXTURE, FRAME_COUNT, true, 8.0)
-	_build_animation(&"rest", REST_TEXTURE, FRAME_COUNT, false, 8.0)
+	_build_animation(&"idle", IDLE_TEXTURE, true, 8.0)
+	_build_animation(&"entry", ENTRY_TEXTURE, false, 8.0)
+	_build_animation(&"loop", LOOP_TEXTURE, true, 8.0)
+	_build_animation(&"rest", REST_TEXTURE, false, 8.0)
 	play_idle()
 
 func face_side(face_right: bool) -> void:
@@ -35,9 +32,15 @@ func play_rest() -> void:
 func play_talk_loop() -> void:
 	animated_sprite.play(&"loop")
 
-func _build_animation(anim_name: StringName, texture: Texture2D, frame_count: int, loops: bool, fps: float) -> void:
+func _build_animation(anim_name: StringName, texture: Texture2D, loops: bool, fps: float) -> void:
 	if texture == null or animated_sprite == null:
 		return
+
+	var texture_size := texture.get_size()
+	var frame_height := int(texture_size.y)
+	if frame_height <= 0:
+		return
+	var frame_count := maxi(int(texture_size.x) / frame_height, 1)
 
 	var frames := animated_sprite.sprite_frames
 	if frames == null:
@@ -53,5 +56,5 @@ func _build_animation(anim_name: StringName, texture: Texture2D, frame_count: in
 	for frame_index in range(frame_count):
 		var atlas := AtlasTexture.new()
 		atlas.atlas = texture
-		atlas.region = Rect2(frame_index * FRAME_SIZE.x, 0, FRAME_SIZE.x, FRAME_SIZE.y)
+		atlas.region = Rect2(frame_index * frame_height, 0, frame_height, frame_height)
 		frames.add_frame(anim_name, atlas)

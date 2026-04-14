@@ -261,7 +261,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "The cabin is repaired.\n\nAt Night, use the bed to sleep and begin the next day. Battles only open again after you rest."
 		"loop_cooking":
 			title = "Tutorial: Cooking"
-			template = "Harvested crops can be cooked at the campfire.\n\nMeals turn ingredients into a one-battle perk for your next fight."
+			template = "Harvested crops can be cooked at the campfire.\n\n{loop_perk_rule}"
 		"farm_controls":
 			title = "Tutorial: Movement"
 			template = "Move with {move}. Hold {run} to run, and press {confirm} near objects to interact."
@@ -270,7 +270,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}.\n\nTo plant, face a tilled soil tile and press {plant} to open the seed menu, then choose a seed."
 		"meal_buff":
 			title = "Tutorial: Meal Buffs"
-			template = "Eating cooked food temporarily boosts the party's stats and morale for the day.\n\nPress {inventory} to open the menu, switch to the Status tab, review the meal buff, then close the menu when you're ready to continue."
+			template = "{loop_perk_rule}\n\nPress {inventory} to open the menu, switch to the Status tab, review the prepared perk, then close the menu when you're ready to continue."
 		"battle_savannah":
 			title = "Tutorial: Savannah"
 			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to move or attack.\n\nKeep her between the enemy and the rest of the party, and Harvest adjacent Healflowers when she needs HP back."
@@ -298,6 +298,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			"plant": get_action_label("plant"),
 			"tool_cycle": get_tool_cycle_label(),
 			"inventory": get_action_label("menu_toggle"),
+			"loop_perk_rule": Global.LOOP_PERK_RULE_TEXT if Global != null else "Meals grant a perk that lasts until your next battle.",
 			"battle_confirm": get_battle_confirm_label(),
 			"battle_cursor": get_battle_cursor_label(),
 		}),
@@ -451,7 +452,7 @@ func _get_stage_prompt_text(stage: DemoStage) -> String:
 		DemoStage.EAT_MEAL:
 			return "Objective: Eat the Glazed Carrots from the menu. Press %s to open it." % get_action_label("menu_toggle")
 		DemoStage.MEAL_REVIEW:
-			return "Objective: Review your meal buff in the Status tab. Press %s to open the menu." % get_action_label("menu_toggle")
+			return "Objective: Review your prepared perk in the Status tab. Press %s to open the menu." % get_action_label("menu_toggle")
 		DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
 			return "Objective: Drive off the bandits."
 		DemoStage.GATHER_MATERIALS:

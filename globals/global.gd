@@ -235,6 +235,33 @@ const SEED_PLANTING_RULES := {
 	Items.GRAPE_SEED: {"seasons": [FALL], "allow_off_season": false}
 }
 
+const SEED_GROWTH_SPEEDS := {
+	Items.BLUEBERRY_SEED: 1.0,
+	Items.WHEAT_SEED: 1.0,
+	Items.MELON_SEED: 0.75,
+	Items.CORN_SEED: 1.0,
+	Items.HOT_PEPPER_SEED: 0.75,
+	Items.RADISH_SEED: 1.0,
+	Items.RED_CABBAGE_SEED: 0.75,
+	Items.TOMATO_SEED: 0.75,
+	Items.CARROT_SEED: 1.0,
+	Items.CAULIFLOWER_SEED: 0.75,
+	Items.POTATO_SEED: 1.0,
+	Items.PARSNIP_SEED: 1.0,
+	Items.GARLIC_SEED: 1.0,
+	Items.GREEN_BEANS_SEED: 0.75,
+	Items.STRAWBERRY_SEED: 0.75,
+	Items.COFFEE_BEAN_SEED: 0.75,
+	Items.PUMPKIN_SEED: 0.2,
+	Items.BROCCOLI_SEED: 0.75,
+	Items.ARTICHOKE_SEED: 0.75,
+	Items.EGGPLANT_SEED: 0.75,
+	Items.BOK_CHOY_SEED: 1.0,
+	Items.GRAPE_SEED: 0.75,
+}
+
+const LOOP_PERK_RULE_TEXT := "Meals grant a perk that lasts until your next battle."
+
 func get_seed_seasons(seed_type: Items) -> Array:
 	if not SEED_PLANTING_RULES.has(seed_type):
 		return []
@@ -253,6 +280,17 @@ func is_seed_in_season(seed_type: Items, season: StringName) -> bool:
 
 	var allowed_seasons := get_seed_seasons(seed_type)
 	return season in allowed_seasons
+
+func get_seed_growth_speed(seed_type: Items) -> float:
+	return float(SEED_GROWTH_SPEEDS.get(seed_type, 0.75))
+
+func get_seed_growth_label(seed_type: Items) -> String:
+	var growth_speed := get_seed_growth_speed(seed_type)
+	if growth_speed <= 0.3:
+		return "Slow"
+	if growth_speed >= 0.95:
+		return "Fast"
+	return "Standard"
 
 # 3. TOOLS (Kept separate for state machine logic)
 enum Tools { HOE, WATER, AXE, PLANT }
@@ -727,6 +765,24 @@ func get_loop_equipped_perk_label() -> String:
 	if loop_equipped_perk_item >= 0 and loop_equipped_perk_item < item_keys.size():
 		fallback_name = String(item_keys[loop_equipped_perk_item])
 	return String(recipe_data.get("display_name", fallback_name))
+
+func get_loop_equipped_perk_status_text() -> String:
+	if not has_loop_equipped_perk():
+		return "Next Battle Perk: None prepared."
+
+	var perk_item := loop_equipped_perk_item
+	var perk_name := get_loop_equipped_perk_label()
+	var perk_stats: Dictionary = food_stats.get(perk_item, {})
+	var stat_parts: PackedStringArray = []
+	for stat_name in ["VIT", "STR", "DEF", "DEX", "INT", "SPD", "MOV"]:
+		var stat_value := int(perk_stats.get(stat_name, 0))
+		if stat_value != 0:
+			stat_parts.append("+%d %s" % [stat_value, stat_name])
+
+	return "Next Battle Perk: %s%s" % [
+		perk_name,
+		" (%s)" % ", ".join(stat_parts) if not stat_parts.is_empty() else ""
+	]
 
 func consume_loop_equipped_perk_stats() -> Dictionary:
 	if not has_loop_equipped_perk():

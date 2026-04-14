@@ -45,13 +45,14 @@ func open(player_pos: Vector2):
 				$PanelContainer/Grid.add_child(btn)
 
 				var in_season := Global.is_seed_in_season(item_type, current_season)
-				var tooltip := "In season (%s)" % String(current_season).capitalize()
+				var growth_label := Global.get_seed_growth_label(item_type)
+				var tooltip := "In season (%s)\nGrowth: %s" % [String(current_season).capitalize(), growth_label]
 				if not in_season:
 					var allowed_seasons: Array = Global.get_seed_seasons(item_type)
 					var season_names: PackedStringArray = []
 					for season_name in allowed_seasons:
 						season_names.append(String(season_name).capitalize())
-					tooltip = "Out of season. Plantable in: %s" % ", ".join(season_names)
+					tooltip = "Out of season. Plantable in: %s\nGrowth: %s" % [", ".join(season_names), growth_label]
 
 				btn.setup(item_type, amount, in_season, tooltip)
 				btn.seed_selected.connect(_on_seed_selected)

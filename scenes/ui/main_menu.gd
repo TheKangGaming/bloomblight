@@ -597,11 +597,16 @@ func _update_equipment_detail_from_index(slot_name: String, index: int) -> void:
 	var choices: Array = _equipment_choices_by_slot.get(_normalize_equipment_slot_name(slot_name), [])
 	if index < 0 or index >= choices.size():
 		return
+	var character := _get_selected_party_member()
+	var equipped_item := _get_equipped_item_for_slot(character, slot_name) if character != null else null
 	var item: Resource = choices[index]
 	if item == null:
-		equipment_detail_label.text = "Unequip the current %s and leave this slot empty." % slot_name.to_lower()
+		equipment_detail_label.text = "Unequip the current %s and leave this slot empty.\n%s" % [
+			slot_name.to_lower(),
+			_build_equipment_compare_text(null, equipped_item)
+		]
 		return
-	equipment_detail_label.text = _build_equipment_description(item, "No %s equipped." % slot_name.to_lower())
+	equipment_detail_label.text = _build_equipment_description(item, "No %s equipped." % slot_name.to_lower(), equipped_item)
 
 func _apply_equipment_choice(slot_name: String, index: int) -> void:
 	var normalized_slot := _normalize_equipment_slot_name(slot_name)
@@ -957,6 +962,8 @@ func _resolve_character_level(_character: CharacterData) -> int:
 func _build_meal_status_text(character: CharacterData) -> String:
 	if character == null:
 		return "No meal active."
+	if Global.loop_hub_mode_active:
+		return Global.get_loop_equipped_perk_status_text()
 	if not _is_player_character(character):
 		return "Meal buffs are currently tracked on Savannah's lead slot."
 	if Global.active_food_buff.item == null:
@@ -970,7 +977,7 @@ func _build_meal_status_text(character: CharacterData) -> String:
 			stat_parts.append("+%d %s" % [stat_value, stat_name])
 	return "Meal: %s%s" % [meal_name, " (%s)" % ", ".join(stat_parts) if not stat_parts.is_empty() else ""]
 
-func _build_equipment_description(item: Resource, empty_text: String) -> String:
+func _build_equipment_description(item: Resource, empty_text: String, equipped_item: Resource = null) -> String:
 	if item == null:
 		return empty_text
 	var display_name := _get_equipment_display_name(item, "")
@@ -990,11 +997,46 @@ func _build_equipment_description(item: Resource, empty_text: String) -> String:
 			var value := int((bonuses as Dictionary).get(key, 0))
 			if value != 0:
 				bonus_parts.append("%s %+d" % [String(label_map[key]), value])
+	var compare_text := _build_equipment_compare_text(item, equipped_item)
 	return "%s%s%s" % [
 		display_name,
 		"\n" + ", ".join(bonus_parts) if not bonus_parts.is_empty() else "",
-		"\n" + description if not description.is_empty() else ""
+		"\n%s%s" % [
+			compare_text,
+			"\n" + description if not description.is_empty() else ""
+		]
 	]
+
+func _build_equipment_compare_text(selected_item: Resource, equipped_item: Resource) -> String:
+	if selected_item == null and equipped_item == null:
+		return "No stat change from current gear."
+	if selected_item == equipped_item:
+		return "Currently equipped."
+
+	var selected_delta := _extract_equipment_delta(selected_item)
+	var equipped_delta := _extract_equipment_delta(equipped_item)
+	var stat_order := ["MAX_HP", "STR", "DEF", "MDEF", "DEX", "INT", "SPD", "MOV", "ATK_RNG"]
+	var stat_labels := {
+		"MAX_HP": "HP",
+		"STR": "STR",
+		"DEF": "DEF",
+		"MDEF": "MDEF",
+		"DEX": "DEX",
+		"INT": "INT",
+		"SPD": "SPD",
+		"MOV": "MOV",
+		"ATK_RNG": "RNG",
+	}
+	var compare_parts: PackedStringArray = []
+	for stat_name in stat_order:
+		var delta_value := int(selected_delta.get(stat_name, 0)) - int(equipped_delta.get(stat_name, 0))
+		if delta_value != 0:
+			compare_parts.append("%s %+d" % [String(stat_labels.get(stat_name, stat_name)), delta_value])
+
+	if compare_parts.is_empty():
+		return "No stat change from current gear."
+
+	return "Compared to equipped: %s" % ", ".join(compare_parts)
 
 func _build_equipment_owner_suffix(item: Resource, slot_name: String) -> String:
 	if item == null or ProgressionService == null:

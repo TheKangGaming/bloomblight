@@ -47,6 +47,10 @@ var _intro_active := false
 var _intro_advance_requested := false
 var _intro_skip_requested := false
 var _intro_tween: Tween = null
+var _new_game_confirm_open := false
+var _new_game_confirm_overlay: Control = null
+var _new_game_confirm_button: Button = null
+var _new_game_cancel_button: Button = null
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
@@ -80,6 +84,7 @@ func _ready() -> void:
 	settings_button.scale = START_BUTTON_IDLE_SCALE
 	quit_button.scale = START_BUTTON_IDLE_SCALE
 	continue_button.visible = _can_continue()
+	_build_new_game_overwrite_prompt()
 
 	_cached_game_scene = Global.get_preloaded_launch_scene(GAME_SCENE_PATH)
 	if title_music:
@@ -116,6 +121,143 @@ func _on_fade_in_complete() -> void:
 	# Hold focus until the fade is over so controller players do not move around in the dark.
 	start_button.grab_focus()
 
+func _build_new_game_overwrite_prompt() -> void:
+	if _new_game_confirm_overlay != null and is_instance_valid(_new_game_confirm_overlay):
+		return
+
+	var overlay := Control.new()
+	overlay.name = "NewGameOverwritePrompt"
+	overlay.visible = false
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0.0, 0.0, 0.0, 0.72)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(dim)
+
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -240.0
+	panel.offset_top = -110.0
+	panel.offset_right = 240.0
+	panel.offset_bottom = 110.0
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.1, 0.96)
+	panel_style.border_color = Color(0.88, 0.82, 0.56, 0.95)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.corner_radius_top_left = 10
+	panel_style.corner_radius_top_right = 10
+	panel_style.corner_radius_bottom_left = 10
+	panel_style.corner_radius_bottom_right = 10
+	panel.add_theme_stylebox_override("panel", panel_style)
+	overlay.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	panel.add_child(margin)
+
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 16)
+	margin.add_child(stack)
+
+	var title := Label.new()
+	title.text = "Overwrite Current Run?"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	stack.add_child(title)
+
+	var body := Label.new()
+	body.text = "Starting a new game will replace your current save.\nContinue only if you want to begin a fresh run."
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_font_size_override("font_size", 20)
+	stack.add_child(body)
+
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 16)
+	stack.add_child(buttons)
+
+	var cancel_button := Button.new()
+	cancel_button.text = "Cancel"
+	cancel_button.custom_minimum_size = Vector2(160, 54)
+	buttons.add_child(cancel_button)
+
+	var confirm_button := Button.new()
+	confirm_button.text = "Start New Game"
+	confirm_button.custom_minimum_size = Vector2(190, 54)
+	buttons.add_child(confirm_button)
+
+	cancel_button.focus_neighbor_right = cancel_button.get_path_to(confirm_button)
+	confirm_button.focus_neighbor_left = confirm_button.get_path_to(cancel_button)
+
+	cancel_button.pressed.connect(_close_new_game_overwrite_prompt)
+	confirm_button.pressed.connect(_confirm_new_game_overwrite_prompt)
+	_wire_button_feedback(cancel_button)
+	_wire_button_feedback(confirm_button)
+
+	add_child(overlay)
+	_new_game_confirm_overlay = overlay
+	_new_game_cancel_button = cancel_button
+	_new_game_confirm_button = confirm_button
+
+func _open_new_game_overwrite_prompt() -> void:
+	if _new_game_confirm_overlay == null or not is_instance_valid(_new_game_confirm_overlay):
+		return
+	_new_game_confirm_open = true
+	_new_game_confirm_overlay.visible = true
+	start_button.disabled = true
+	continue_button.disabled = true
+	settings_button.disabled = true
+	quit_button.disabled = true
+	if _new_game_cancel_button != null and is_instance_valid(_new_game_cancel_button):
+		_new_game_cancel_button.grab_focus()
+
+func _close_new_game_overwrite_prompt() -> void:
+	if _new_game_confirm_overlay == null or not is_instance_valid(_new_game_confirm_overlay):
+		return
+	_new_game_confirm_open = false
+	_new_game_confirm_overlay.visible = false
+	if _is_transitioning:
+		return
+	start_button.disabled = false
+	continue_button.disabled = not _can_continue()
+	settings_button.disabled = false
+	quit_button.disabled = false
+	start_button.grab_focus()
+
+func _confirm_new_game_overwrite_prompt() -> void:
+	_close_new_game_overwrite_prompt()
+	_begin_new_game_start()
+
+func _begin_new_game_start() -> void:
+	if _is_transitioning:
+		return
+	_is_transitioning = true
+	_log_run_start("Start pressed")
+	var ui_sounds := _ui_sound_manager()
+	if ui_sounds:
+		ui_sounds.play_start_game()
+	start_button.disabled = true
+	continue_button.disabled = true
+	settings_button.disabled = true
+	quit_button.disabled = true
+
+	Global.begin_loop_hub_run()
+	call_deferred("_play_new_game_intro_sequence")
+
 func _on_settings_pressed() -> void:
 	if _is_transitioning:
 		return
@@ -124,21 +266,14 @@ func _on_settings_pressed() -> void:
 	add_child(modal)
 
 func _on_start_pressed() -> void:
-	if _is_transitioning:
+	if _is_transitioning or _new_game_confirm_open:
 		return
 
-	_is_transitioning = true
-	_log_run_start("Start pressed")
-	var ui_sounds := _ui_sound_manager()
-	if ui_sounds:
-		ui_sounds.play_start_game()
-	start_button.disabled = true 
-	continue_button.disabled = true
-	settings_button.disabled = true
-	quit_button.disabled = true
+	if _can_continue():
+		_open_new_game_overwrite_prompt()
+		return
 
-	Global.begin_loop_hub_run()
-	call_deferred("_play_new_game_intro_sequence")
+	_begin_new_game_start()
 
 func _on_continue_pressed() -> void:
 	if _is_transitioning or not _can_continue():
@@ -243,6 +378,11 @@ func _wait_for_intro_advance() -> void:
 		await timer.timeout
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _new_game_confirm_open:
+		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
+			_close_new_game_overwrite_prompt()
+			get_viewport().set_input_as_handled()
+		return
 	if not _intro_active or event == null:
 		return
 	if event is InputEventKey and (event as InputEventKey).echo:

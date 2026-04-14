@@ -153,15 +153,16 @@ const LOOP_FOREST_TREE_POSITIONS := [
 	Vector2(1588, 1360),
 	Vector2(1504, 1356),
 ]
-const LOOP_OBJECTIVE_FIGHT := "Fight for BP"
+const LOOP_OBJECTIVE_FIGHT := "To Battle"
 const LOOP_OBJECTIVE_PLANT := "Plant seeds before battle"
-const LOOP_OBJECTIVE_HARVEST := "Harvest after combat"
+const LOOP_OBJECTIVE_HARVEST := "Harvest your crops"
+const LOOP_OBJECTIVE_COOK := "Cook a meal"
 const LOOP_OBJECTIVE_MERCHANT := "Purify Merchant"
 const LOOP_OBJECTIVE_FOREST := "Unlock Forest"
 const LOOP_OBJECTIVE_REPAIR := "Repair Cabin"
 const LOOP_OBJECTIVE_CABIN := "Gather Wood for Cabin"
-const LOOP_OBJECTIVE_SETTLE := "Sleep to begin a new day"
-const LOOP_OBJECTIVE_NIGHT := "Night: harvest, prep, then sleep"
+const LOOP_OBJECTIVE_SETTLE := "Sleep in the cabin"
+const OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS := 0.45
 const LOOP_MERCHANT_KIND_WAGON := "wagon"
 const LOOP_MERCHANT_KIND_NIGHT := "night"
 const LOOP_MERCHANT_TAB_SWITCH_COOLDOWN_MS := 150
@@ -275,6 +276,10 @@ var _loop_forest_tutorial_active := false
 var _loop_cooking_tutorial_active := false
 var _loop_night_tutorial_active := false
 var _loop_sleep_tutorial_active := false
+var _overworld_cutscene_skip_label: Label = null
+var _overworld_cutscene_skip_active := false
+var _overworld_cutscene_skip_requested := false
+var _overworld_cutscene_skip_hold_time := 0.0
 
 func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
@@ -282,6 +287,87 @@ func _log_run_start(message: String) -> void:
 
 func _get_loop_stage() -> int:
 	return clampi(maxi(Global.loop_battle_index, 1), 1, LOOP_MAX_FOREST_STAGE)
+
+func _ensure_overworld_cutscene_skip_label() -> void:
+	if _overworld_cutscene_skip_label != null and is_instance_valid(_overworld_cutscene_skip_label):
+		return
+
+	var canvas_layer := get_node_or_null("CanvasLayer") as CanvasLayer
+	if canvas_layer == null:
+		return
+
+	var skip_label := Label.new()
+	skip_label.name = "OverworldCutsceneSkipLabel"
+	skip_label.visible = false
+	skip_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	skip_label.anchor_left = 1.0
+	skip_label.anchor_right = 1.0
+	skip_label.anchor_top = 1.0
+	skip_label.anchor_bottom = 1.0
+	skip_label.offset_left = -420.0
+	skip_label.offset_top = -66.0
+	skip_label.offset_right = -24.0
+	skip_label.offset_bottom = -24.0
+	skip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	skip_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	skip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	skip_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	skip_label.add_theme_font_size_override("font_size", 20)
+	skip_label.add_theme_color_override("font_color", Color(0.96, 0.94, 0.86, 0.94))
+	skip_label.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.02, 1.0))
+	skip_label.add_theme_constant_override("outline_size", 2)
+	canvas_layer.add_child(skip_label)
+	_overworld_cutscene_skip_label = skip_label
+
+func _get_overworld_cutscene_skip_hint_text(progress: float = 0.0) -> String:
+	var cancel_label := "Esc"
+	if DemoDirector != null:
+		cancel_label = DemoDirector.get_action_label("cancel")
+	var progress_percent := clampi(int(round(progress * 100.0)), 0, 100)
+	return "Hold %s to skip (%d%%)" % [cancel_label, progress_percent]
+
+func _begin_overworld_skippable_cutscene() -> void:
+	_overworld_cutscene_skip_active = true
+	_overworld_cutscene_skip_requested = false
+	_overworld_cutscene_skip_hold_time = 0.0
+	_ensure_overworld_cutscene_skip_label()
+	if _overworld_cutscene_skip_label != null and is_instance_valid(_overworld_cutscene_skip_label):
+		_overworld_cutscene_skip_label.text = _get_overworld_cutscene_skip_hint_text()
+		_overworld_cutscene_skip_label.visible = true
+
+func _end_overworld_skippable_cutscene() -> void:
+	_overworld_cutscene_skip_active = false
+	_overworld_cutscene_skip_requested = false
+	_overworld_cutscene_skip_hold_time = 0.0
+	if _overworld_cutscene_skip_label != null and is_instance_valid(_overworld_cutscene_skip_label):
+		_overworld_cutscene_skip_label.visible = false
+
+func _update_overworld_cutscene_skip(delta: float) -> void:
+	if not _overworld_cutscene_skip_active:
+		return
+
+	var skip_held := Input.is_action_pressed("cancel") or Input.is_action_pressed("ui_cancel")
+	if skip_held:
+		_overworld_cutscene_skip_hold_time = minf(_overworld_cutscene_skip_hold_time + delta, OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS)
+	else:
+		_overworld_cutscene_skip_hold_time = 0.0
+
+	var progress := _overworld_cutscene_skip_hold_time / OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS
+	if _overworld_cutscene_skip_label != null and is_instance_valid(_overworld_cutscene_skip_label):
+		_overworld_cutscene_skip_label.text = _get_overworld_cutscene_skip_hint_text(progress)
+
+	if skip_held and _overworld_cutscene_skip_hold_time >= OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS:
+		_overworld_cutscene_skip_requested = true
+		if _overworld_cutscene_skip_label != null and is_instance_valid(_overworld_cutscene_skip_label):
+			_overworld_cutscene_skip_label.text = "Skipping..."
+
+func _await_tween_or_skip(tween: Tween) -> bool:
+	while tween != null and is_instance_valid(tween) and tween.is_running():
+		if _overworld_cutscene_skip_requested:
+			tween.kill()
+			return true
+		await get_tree().process_frame
+	return _overworld_cutscene_skip_requested
 
 func _autosave_loop_run() -> void:
 	if not Global.loop_hub_mode_active or SaveManager == null or not SaveManager.has_method("save_current_run"):
@@ -477,6 +563,7 @@ func _set_loop_merchant_detail_text(text: String) -> void:
 
 func _build_loop_merchant_seed_description(seed_item: int, cost: int) -> String:
 	var crop_name := "Crops"
+	var growth_label := Global.get_seed_growth_label(seed_item)
 	match seed_item:
 		Global.Items.CARROT_SEED:
 			crop_name = "Carrots"
@@ -494,7 +581,7 @@ func _build_loop_merchant_seed_description(seed_item: int, cost: int) -> String:
 			crop_name = "Strawberries"
 		Global.Items.COFFEE_BEAN_SEED:
 			crop_name = "Coffee Beans"
-	return "%d Gold\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, crop_name]
+	return "%d Gold\nGrowth: %s\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, growth_label, crop_name]
 
 func _build_loop_merchant_inventory_description(item_type: int, cost: int) -> String:
 	return "%d Gold\n%s\nUseful for cooking, meal prep, or stocking up before dawn." % [
@@ -808,6 +895,7 @@ func _ready() -> void:
 		story_chest.opened.connect(_on_story_chest_opened)
 
 	_spawn_overworld_system_menu()
+	_ensure_overworld_cutscene_skip_label()
 
 	if Global.loop_hub_mode_active:
 		player.visible = false
@@ -1434,17 +1522,22 @@ func _refresh_loop_objective() -> void:
 	var cabin_repaired := _is_loop_cabin_repaired()
 	var ready_crops := _has_ready_loop_crops()
 	var wood_count := _get_loop_wood_count()
+	var merchant_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))
 	var objective := LOOP_OBJECTIVE_FIGHT
 
 	if _is_loop_night():
 		if not forest_open:
-			objective = "Night: unlock the forest with Bloom Points"
+			objective = LOOP_OBJECTIVE_FOREST
 		elif not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
-			objective = "Night: gather wood, repair the cabin, then sleep"
+			objective = LOOP_OBJECTIVE_CABIN
 		elif not cabin_repaired:
-			objective = "Night: repair the cabin, then sleep"
+			objective = LOOP_OBJECTIVE_REPAIR
 		elif ready_crops:
-			objective = LOOP_OBJECTIVE_NIGHT
+			objective = LOOP_OBJECTIVE_HARVEST
+		elif not Global.has_loop_equipped_perk() and _has_cookable_loop_meals():
+			objective = LOOP_OBJECTIVE_COOK
+		elif not merchant_open and Global.loop_battle_index >= 3 and Global.loop_bloom_points >= merchant_unlock_cost:
+			objective = LOOP_OBJECTIVE_MERCHANT
 		else:
 			objective = LOOP_OBJECTIVE_SETTLE
 	else:
@@ -1459,7 +1552,7 @@ func _refresh_loop_objective() -> void:
 		elif not cabin_repaired:
 			objective = LOOP_OBJECTIVE_REPAIR
 		elif not merchant_open:
-			objective = LOOP_OBJECTIVE_FIGHT if Global.loop_bloom_points < int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0)) else LOOP_OBJECTIVE_MERCHANT
+			objective = LOOP_OBJECTIVE_FIGHT if Global.loop_bloom_points < merchant_unlock_cost else LOOP_OBJECTIVE_MERCHANT
 		elif merchant_open and not merchant_built:
 			objective = "Build Wagon" if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST else "Gather Wood for Wagon"
 		else:
@@ -1478,6 +1571,27 @@ func _has_ready_loop_crops() -> bool:
 			continue
 		if plant.has_method("is_ready_to_harvest") and plant.is_ready_to_harvest():
 			return true
+	return false
+
+func _has_cookable_loop_meals() -> bool:
+	for recipe_variant in Global.known_recipes:
+		var recipe_item := int(recipe_variant)
+		var recipe_data: Dictionary = Global.recipes.get(recipe_item, {})
+		var ingredient_data: Dictionary = recipe_data.get("ingredients", {})
+		if ingredient_data.is_empty():
+			continue
+
+		var can_cook := true
+		for ingredient_variant in ingredient_data.keys():
+			var ingredient := int(ingredient_variant)
+			var required_amount := int(ingredient_data[ingredient_variant])
+			if int(Global.inventory.get(ingredient, 0)) < required_amount:
+				can_cook = false
+				break
+
+		if can_cook:
+			return true
+
 	return false
 
 func _maybe_show_loop_planting_tutorial(seed_menu: Control, screen_pos: Vector2) -> bool:
@@ -1778,7 +1892,9 @@ func _apply_story_time_passage(elapsed_seconds: float) -> void:
 func _on_seed_menu_cancelled() -> void:
 	player.can_move = true
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_update_overworld_cutscene_skip(delta)
+
 	if Global.loop_hub_mode_active:
 		_refresh_loop_phase_presentation()
 		_update_loop_interaction_ui()
@@ -2526,6 +2642,7 @@ func _run_loop_arrival_intro() -> void:
 
 	Global.pending_loop_arrival_intro = false
 	_intro_busy = true
+	_begin_overworld_skippable_cutscene()
 	player.can_move = false
 	player.direction = Vector2.ZERO
 	player.visible = true
@@ -2581,6 +2698,7 @@ func _run_loop_arrival_intro() -> void:
 		{"speaker": "Savannah", "text": "I’ll manage. Get some rest, Tera."}
 	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
 
+	_end_overworld_skippable_cutscene()
 	_refresh_loop_objective()
 	await _release_overworld_control()
 	_log_run_start("Control returned")
@@ -3134,28 +3252,49 @@ func _spawn_overworld_system_menu() -> void:
 		_overworld_system_menu.call("setup", main_menu)
 
 func _play_story_dialogue(lines: Array[Dictionary], focus_nodes: Array[Node2D] = [], zoom: Vector2 = CUTSCENE_GROUP_ZOOM) -> void:
+	if _overworld_cutscene_skip_requested:
+		if story_dialogue != null and is_instance_valid(story_dialogue) and story_dialogue.has_method("hide_box"):
+			story_dialogue.hide_box()
+		return
 	if not focus_nodes.is_empty():
 		await _focus_cutscene_on_nodes(focus_nodes, 0.3, zoom)
+		if _overworld_cutscene_skip_requested:
+			if story_dialogue != null and is_instance_valid(story_dialogue) and story_dialogue.has_method("hide_box"):
+				story_dialogue.hide_box()
+			return
 	story_dialogue.play(lines)
-	await story_dialogue.dialogue_finished
+	while story_dialogue != null and is_instance_valid(story_dialogue) and story_dialogue.visible:
+		if _overworld_cutscene_skip_requested:
+			if story_dialogue.has_method("hide_box"):
+				story_dialogue.hide_box()
+			return
+		await get_tree().process_frame
 
 func _move_node(node: Node2D, destination: Vector2, duration: float) -> void:
+	if node == null or not is_instance_valid(node):
+		return
 	var travel := destination - node.global_position
 	_play_cutscene_move(node, travel)
 	var tween = create_tween()
 	tween.tween_property(node, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tween.finished
+	var skipped := await _await_tween_or_skip(tween)
+	if skipped:
+		node.global_position = destination
 	_play_cutscene_idle(node, travel)
 
 func _fade_to_black(duration: float) -> void:
 	var tween = create_tween()
 	tween.tween_property($CanvasLayer/ColorRect, "modulate:a", 1.0, duration)
-	await tween.finished
+	var skipped := await _await_tween_or_skip(tween)
+	if skipped:
+		$CanvasLayer/ColorRect.modulate.a = 1.0
 
 func _fade_from_black(duration: float) -> void:
 	var tween = create_tween()
 	tween.tween_property($CanvasLayer/ColorRect, "modulate:a", 0.0, duration)
-	await tween.finished
+	var skipped := await _await_tween_or_skip(tween)
+	if skipped:
+		$CanvasLayer/ColorRect.modulate.a = 0.0
 
 func _focus_cutscene_on_nodes(nodes: Array[Node2D], duration: float, zoom: Vector2) -> void:
 	var positions: Array[Vector2] = []
@@ -3185,7 +3324,10 @@ func _focus_cutscene_on_positions(positions: Array[Vector2], duration: float, zo
 	var tween = create_tween()
 	tween.parallel().tween_property(cutscene_camera, "global_position", target, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.parallel().tween_property(cutscene_camera, "zoom", zoom, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tween.finished
+	var skipped := await _await_tween_or_skip(tween)
+	if skipped:
+		cutscene_camera.global_position = target
+		cutscene_camera.zoom = zoom
 
 func _restore_player_camera(sync_to_cutscene: bool = false) -> void:
 	if player and player.has_method("clear_cutscene_animation"):
@@ -3548,7 +3690,13 @@ func _move_story_group(actors: Array[Node2D], destinations: Array[Vector2], dura
 		_play_cutscene_move(actor, travel)
 		tween.tween_property(actor, "global_position", destination, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
-	await tween.finished
+	var skipped := await _await_tween_or_skip(tween)
+	if skipped:
+		for index in range(actors.size()):
+			var actor := actors[index]
+			if actor == null or not is_instance_valid(actor):
+				continue
+			actor.global_position = destinations[index]
 
 	for index in range(actors.size()):
 		var actor := actors[index]
