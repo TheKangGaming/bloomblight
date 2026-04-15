@@ -32,7 +32,7 @@ func open(player_pos: Vector2):
 		$PanelContainer/Grid.remove_child(child)
 		child.queue_free()
 
-	var current_season := CalendarService.get_current_season()
+	var current_season := Global.get_active_planting_season()
 		
 	var has_seeds = false
 	for item_type in Global.inventory:

@@ -252,7 +252,7 @@ func _execute_battle_sequence() -> void:
 		# Keep a little air between multi-hit strikes, but do not add a dead pause
 		# after the final hit before retreating back to the map.
 		if strike_index < _combat_strikes.size():
-			await get_tree().create_timer(0.06).timeout
+			await get_tree().create_timer(0.10).timeout
 
 	# --- 3. THE RETREAT ---
 	_debug_combat("Retreat start: attacker_survived=%s defender_survived=%s" % [str(attacker_survived), str(defender_survived)])
@@ -260,7 +260,7 @@ func _execute_battle_sequence() -> void:
 	await _tween_world_focus(_get_actor_midpoint(), IDLE_ZOOM, 0.16)
 
 	# The script is over! Let the dust settle, then close the overlay.
-	await get_tree().create_timer(0.16).timeout
+	await get_tree().create_timer(0.22).timeout
 	_return_to_map()
 	
 func _determine_combatants_reach() -> void:
@@ -631,7 +631,7 @@ func _focus_on_exchange(striker: BattleActor, target: BattleActor, attack_kind: 
 		return
 
 	var midpoint := (striker.position + target.position) * 0.5
-	await _tween_world_focus(midpoint, _get_zoom_for_attack_kind(attack_kind), 0.12)
+	await _tween_world_focus(midpoint, _get_zoom_for_attack_kind(attack_kind), 0.18)
 
 func _play_hit_feedback(striker: BattleActor, target: BattleActor, strike: CombatStrike) -> void:
 	_debug_combat("Hit feedback start: %s -> %s" % [_actor_name(striker), _actor_name(target)])

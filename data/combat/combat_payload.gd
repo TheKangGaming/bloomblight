@@ -21,6 +21,8 @@ var attacker_armor: ArmorData
 var defender_armor: ArmorData
 var attacker_accessory: AccessoryData
 var defender_accessory: AccessoryData
+var attacker_combat_modifiers: Dictionary = {}
+var defender_combat_modifiers: Dictionary = {}
 
 # Context
 var terrain_modifier: int = 0

@@ -36,6 +36,11 @@ func play_attack() -> void:
 	if _actor_instance and _actor_instance.has_method("play_attack"):
 		_actor_instance.play_attack()
 
+func play_cast() -> void:
+	_stop_emote()
+	if _actor_instance and _actor_instance.has_method("play_attack"):
+		_actor_instance.play_attack()
+
 func play_hit() -> void:
 	_stop_emote()
 	if _actor_instance and _actor_instance.has_method("play_hit"):
@@ -74,6 +79,10 @@ func play_bow_aim() -> void:
 func set_actor_scene(scene: PackedScene) -> void:
 	actor_scene = scene
 	_rebuild_actor()
+
+func setup_combat_snapshot(data, stats, is_attacker: bool = true, weapon: Resource = null) -> void:
+	if _actor_instance and _actor_instance.has_method("setup_from_combat_snapshot"):
+		_actor_instance.setup_from_combat_snapshot(data, stats, is_attacker, weapon)
 
 func _set_facing(direction: Vector2) -> void:
 	_stop_emote()

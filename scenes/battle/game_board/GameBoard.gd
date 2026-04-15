@@ -12,6 +12,7 @@ const OBSTACLE_ATLAS_ID = 2
 const FOLLOW_UP_SPEED_DIFF := 4
 const PauseMenu = preload("res://scenes/ui/menus/PauseMenu.tscn")
 const ActionMenu = preload("res://scenes/ui/menus/ActionMenu.tscn")
+const BattleItemMenu = preload("res://scenes/ui/menus/BattleItemMenu.tscn")
 const STORY_DIALOGUE_SCENE = preload("res://scenes/ui/story_dialogue_box.tscn")
 const OVERLAY_SCENE = preload("res://scenes/ui/overlay.tscn")
 const HEALFLOWER_TEXTURE = preload("res://graphics/interactables/items-flowers1_0.png")
@@ -692,6 +693,21 @@ func _handle_post_action_flow(unit: Unit) -> void:
 	else:
 		finish_unit_turn()
 
+func _get_available_battle_tonics() -> Array[int]:
+	var tonics: Array[int] = []
+	for item_variant in Global.get_battle_tonic_items():
+		var item_type := int(item_variant)
+		if int(Global.inventory.get(item_type, 0)) > 0:
+			tonics.append(item_type)
+	return tonics
+
+func _unit_has_usable_battle_items(unit: Unit) -> bool:
+	if unit == null or not _unit_has_available_main_action(unit):
+		return false
+	if unit.health >= unit.max_health:
+		return false
+	return not _get_available_battle_tonics().is_empty()
+
 func _get_primary_ability(unit: Unit) -> AbilityData:
 	if unit == null or unit.character_data == null or unit.character_data.abilities.is_empty():
 		return null
@@ -749,6 +765,8 @@ func _unit_has_available_bonus_action(unit: Unit) -> bool:
 func _clear_active_unit_selection(rewind_movement: bool) -> void:
 	if has_node("ActionMenu"):
 		$ActionMenu.queue_free()
+	if has_node("BattleItemMenu"):
+		$BattleItemMenu.queue_free()
 
 	if _active_unit != null:
 		if rewind_movement and _can_undo_active_unit_movement() and _active_unit.cell != _prev_cell:
@@ -951,6 +969,8 @@ func _on_unit_died(unit: Unit) -> void:
 func _show_action_menu() -> void:
 	if has_node("ActionMenu"):
 		$ActionMenu.queue_free()
+	if has_node("BattleItemMenu"):
+		$BattleItemMenu.queue_free()
 
 	var action_menu = ActionMenu.instantiate()
 	action_menu.name = "ActionMenu"
@@ -962,6 +982,65 @@ func _show_action_menu() -> void:
 	
 	_cursor.is_active = false
 	_hide_targeting_hint()
+
+func get_active_unit_available_tonics() -> Array[int]:
+	if _active_unit == null:
+		return []
+	return _get_available_battle_tonics()
+
+func open_battle_item_menu() -> void:
+	if _battle_ended:
+		return
+	if _active_unit == null or not _unit_has_usable_battle_items(_active_unit):
+		_show_overlay_notice("No usable tonics right now.")
+		_show_action_menu()
+		return
+	if has_node("ActionMenu"):
+		$ActionMenu.queue_free()
+	if has_node("BattleItemMenu"):
+		$BattleItemMenu.queue_free()
+
+	var item_menu = BattleItemMenu.instantiate()
+	item_menu.name = "BattleItemMenu"
+	add_child(item_menu)
+	if item_menu.has_method("refresh_for_current_unit"):
+		item_menu.call_deferred("refresh_for_current_unit")
+
+	_cursor.is_active = false
+	_hide_targeting_hint()
+
+func cancel_battle_item_menu() -> void:
+	if has_node("BattleItemMenu"):
+		$BattleItemMenu.queue_free()
+	_show_action_menu()
+
+func try_use_battle_item_on_active_unit(item_type: int) -> bool:
+	if _battle_ended or _active_unit == null:
+		return false
+	if not _unit_has_available_main_action(_active_unit):
+		_show_overlay_notice("That unit has already used its main action.")
+		return false
+	if not Global.is_battle_tonic(item_type):
+		_show_overlay_notice("That item can't be used in battle.")
+		return false
+	if int(Global.inventory.get(item_type, 0)) <= 0:
+		_show_overlay_notice("You're out of %s." % Global.get_item_display_name(item_type))
+		return false
+
+	var heal_amount := Global.get_tonic_heal_amount(item_type)
+	var actual_healed := _active_unit.heal(heal_amount)
+	if actual_healed <= 0:
+		_show_overlay_notice("%s doesn't need healing yet" % _active_unit.name)
+		return false
+
+	Global.remove_item(item_type, 1)
+	_active_unit.consume_main_action()
+	_commit_active_unit_position()
+	_show_overlay_notice("%s uses %s and recovers %d HP." % [_active_unit.name, Global.get_item_display_name(item_type), actual_healed], 1.4)
+	if _battle_ended:
+		return true
+	_handle_post_action_flow(_active_unit)
+	return true
 
 func _resume_player_phase_after_active_unit_loss() -> void:
 	if _battle_ended or current_phase != TurnPhase.PLAYER:
@@ -991,6 +1070,8 @@ func finish_unit_turn() -> void:
 		
 	if has_node("ActionMenu"):
 		$ActionMenu.queue_free()
+	if has_node("BattleItemMenu"):
+		$BattleItemMenu.queue_free()
 		
 	_deselect_active_unit()
 	
@@ -1274,7 +1355,7 @@ func execute_combat(attacker: Unit, defender: Unit) -> bool:
 		return false
 	
 	# 2. Ask the Calculator to roll the dice and write the combat script!
-	var strikes := CombatCalculator.resolve_combat(attacker, defender, distance)
+	var strikes := CombatCalculator.resolve_combat_from_payload(payload)
 	payload.strikes = strikes
 
 	# 3. Clean up the map UI so it isn't stuck open when we return

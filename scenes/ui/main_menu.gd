@@ -899,12 +899,12 @@ func _build_party_skills_text(character: CharacterData) -> String:
 	return "\n".join(lines).strip_edges()
 
 func _build_attack_label(character: CharacterData, stats: UnitStats) -> String:
-	var weapon := character.equipped_weapon
-	var weapon_might := int(weapon.might) if weapon != null else 0
-	var uses_magic := _class_uses_magic_damage(character.class_data)
-	var attack_stat := stats.int_stat if uses_magic else stats.str
-	var attack_total: int = max(0, attack_stat + weapon_might)
-	var stat_label := "INT" if uses_magic else "STR"
+	var preview := CombatCalculator.get_attack_preview_data_from_snapshot(stats, character, character.equipped_weapon)
+	var attack_total := int(preview.get("attack_total", 0))
+	var weapon_might := int(preview.get("weapon_might", 0))
+	var attack_stat := int(preview.get("attack_stat", 0))
+	var profile: Dictionary = preview.get("profile", {})
+	var stat_label := String(profile.get("stat_label", "STR"))
 	return "ATK: %d (%s %d + MT %d)" % [attack_total, stat_label, attack_stat, weapon_might]
 
 func _build_character_unit_stats(character: CharacterData) -> UnitStats:

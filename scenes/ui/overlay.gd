@@ -264,7 +264,12 @@ func hide_targeting_hint() -> void:
 		targeting_hint_root.modulate.a = 0.0
 
 func _process(_delta):
-	var should_show_toolbar = not Global.unlocked_tools.is_empty() and player_ref != null and is_instance_valid(player_ref)
+	if player_ref == null or not is_instance_valid(player_ref):
+		player_ref = get_tree().get_first_node_in_group("Player")
+		_try_bind_to_player_signal()
+
+	var has_valid_player := player_ref != null and is_instance_valid(player_ref)
+	var should_show_toolbar = not Global.unlocked_tools.is_empty() and has_valid_player
 	if toolbar_visible_state != should_show_toolbar:
 		toolbar_visible_state = should_show_toolbar
 		$ToolBar.visible = should_show_toolbar
@@ -272,10 +277,7 @@ func _process(_delta):
 	if not should_show_toolbar:
 		return
 
-	if not player_ref:
-		player_ref = get_tree().get_first_node_in_group("Player")
-		_try_bind_to_player_signal()
-	if player_ref:
+	if has_valid_player:
 		_update_tool_display(player_ref.current_tool)
 
 func _update_tool_display(tool: Global.Tools) -> void:

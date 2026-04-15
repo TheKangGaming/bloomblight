@@ -249,7 +249,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Battles advance time. Night is your reward phase.\n\nHarvest, cook, trade, and sleep when you're ready for the next day."
 		"loop_bloom_points":
 			title = "Tutorial: Bloom Points"
-			template = "Bloom Points let you purify dead plots and expand the settlement.\n\nOpen the forest first so you can chop wood, repair the cabin, and keep the loop moving."
+			template = "Bloom Points let Tera use Bloom to purify dead plots and expand the settlement.\n\nOpen the forest first so you can chop wood, repair the cabin, and keep the loop moving."
 		"loop_forest_join":
 			title = "Tutorial: Silas Joins"
 			template = "Silas joins the party after you open the forest.\n\nHe stays with the settlement and fights beside you from now on."

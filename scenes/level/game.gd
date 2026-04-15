@@ -53,6 +53,25 @@ const LOOP_PLOT_SIZE := Vector2(640.0, 480.0)
 const LOOP_PURIFY_VFX_TEXTURE: Texture2D = preload("res://graphics/animations/ui/directional_sparkle_burst_002_large_green/spritesheet.png")
 const LOOP_PURIFY_VFX_FRAME_COUNT := 26
 const LOOP_PURIFY_SFX := preload("res://audio/sfx/Spell Impact 1.wav")
+const LOOP_PURIFY_CHARGE_SCALE := Vector2(0.92, 0.92)
+const LOOP_PURIFY_MAIN_SCALE := Vector2(1.62, 1.62)
+const LOOP_PURIFY_FOLLOWUP_SCALE := Vector2(1.16, 1.16)
+const LOOP_PURIFY_CAMERA_IN_DURATION := 0.22
+const LOOP_PURIFY_CAMERA_PAN_DURATION := 0.26
+const LOOP_PURIFY_CAMERA_OUT_DURATION := 0.24
+const LOOP_PURIFY_PLAYER_STEP_BACK_DURATION := 0.16
+const LOOP_PURIFY_TERA_FOCUS_HOLD_SECONDS := 0.18
+const LOOP_PURIFY_CAST_LEAD_SECONDS := 0.3
+const LOOP_PURIFY_FOLLOWUP_DELAY := 0.08
+const LOOP_PURIFY_IMPACT_HOLD_SECONDS := 0.34
+const LOOP_PURIFY_POST_REVEAL_SETTLE_SECONDS := 0.48
+const LOOP_PURIFY_STAGING_BUFFER := 40.0
+const LOOP_PURIFY_PLAYER_RETREAT_BUFFER := 72.0
+const LOOP_PURIFY_FLASH_ALPHA := 0.82
+const LOOP_PURIFY_FLASH_DURATION := 0.16
+const LOOP_PURIFY_SHAKE_INTENSITY := 5.0
+const LOOP_PURIFY_SHAKE_DURATION := 0.16
+const LOOP_FIRST_PURIFY_NOTICE_ID := "loop_first_purify_notice"
 const LOOP_INTERACTION_RADIUS_PLOT := 96.0
 const LOOP_INTERACTION_RADIUS_STRUCTURE := 88.0
 const LOOP_INTERACTION_RADIUS_MERCHANT := 156.0
@@ -83,30 +102,151 @@ const LOOP_HUB_ENTRY_HUD_DURATION := 0.24
 const LOOP_HUB_ENTRY_HUD_DELAY := 0.11
 const LOOP_HUB_ENTRY_MUSIC_DELAY := 0.09
 const LOOP_HUB_ENTRY_MUSIC_FADE := 0.32
-const LOOP_SEED_SHOP := {
-	Global.Items.CARROT_SEED: {"cost": 3, "label": "Carrot Seeds x1"},
-	Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
-	Global.Items.POTATO_SEED: {"cost": 5, "label": "Potato Seeds x1"},
-	Global.Items.GARLIC_SEED: {"cost": 6, "label": "Garlic Seeds x1"},
+const LOOP_BIOME_NAMES := {
+	1: "Spring",
+	2: "Summer",
+	3: "Fall",
 }
-const LOOP_NIGHT_VENDOR_SEED_SHOP := {
-	Global.Items.CAULIFLOWER_SEED: {"cost": 8, "label": "Cauliflower Seeds x1"},
-	Global.Items.GREEN_BEANS_SEED: {"cost": 8, "label": "Green Bean Seeds x1"},
-	Global.Items.STRAWBERRY_SEED: {"cost": 10, "label": "Strawberry Seeds x1"},
-	Global.Items.COFFEE_BEAN_SEED: {"cost": 11, "label": "Coffee Beans x1"},
+const LOOP_WAGON_SEED_SHOPS := {
+	1: {
+		Global.Items.CARROT_SEED: {"cost": 3, "label": "Carrot Seeds x1"},
+		Global.Items.PARSNIP_SEED: {"cost": 4, "label": "Parsnip Seeds x1"},
+		Global.Items.POTATO_SEED: {"cost": 5, "label": "Potato Seeds x1"},
+		Global.Items.GARLIC_SEED: {"cost": 6, "label": "Garlic Seeds x1"},
+	},
+	2: {
+		Global.Items.BLUEBERRY_SEED: {"cost": 5, "label": "Blueberry Seeds x1"},
+		Global.Items.WHEAT_SEED: {"cost": 4, "label": "Wheat Seeds x1"},
+		Global.Items.HOT_PEPPER_SEED: {"cost": 5, "label": "Hot Pepper Seeds x1"},
+		Global.Items.RADISH_SEED: {"cost": 6, "label": "Radish Seeds x1"},
+	},
+	3: {
+		Global.Items.BROCCOLI_SEED: {"cost": 6, "label": "Broccoli Seeds x1"},
+		Global.Items.EGGPLANT_SEED: {"cost": 6, "label": "Eggplant Seeds x1"},
+		Global.Items.BOK_CHOY_SEED: {"cost": 7, "label": "Bok Choy Seeds x1"},
+		Global.Items.ARTICHOKE_SEED: {"cost": 8, "label": "Artichoke Seeds x1"},
+	},
 }
-const LOOP_NIGHT_VENDOR_INGREDIENT_SHOP := {
-	Global.Items.CAULIFLOWER: {"cost": 9, "label": "Cauliflower x1"},
-	Global.Items.STRAWBERRY: {"cost": 10, "label": "Strawberries x1"},
-	Global.Items.COFFEE_BEAN: {"cost": 8, "label": "Coffee Beans x1"},
-	Global.Items.WATER: {"cost": 3, "label": "Fresh Water x1"},
+const LOOP_NIGHT_VENDOR_SEED_SHOPS := {
+	1: {
+		Global.Items.CAULIFLOWER_SEED: {"cost": 8, "label": "Cauliflower Seeds x1"},
+		Global.Items.GREEN_BEANS_SEED: {"cost": 8, "label": "Green Bean Seeds x1"},
+		Global.Items.STRAWBERRY_SEED: {"cost": 10, "label": "Strawberry Seeds x1"},
+		Global.Items.COFFEE_BEAN_SEED: {"cost": 11, "label": "Coffee Beans x1"},
+	},
+	2: {
+		Global.Items.CORN_SEED: {"cost": 7, "label": "Corn Seeds x1"},
+		Global.Items.TOMATO_SEED: {"cost": 7, "label": "Tomato Seeds x1"},
+		Global.Items.MELON_SEED: {"cost": 9, "label": "Melon Seeds x1"},
+		Global.Items.RED_CABBAGE_SEED: {"cost": 10, "label": "Red Cabbage Seeds x1"},
+	},
+	3: {
+		Global.Items.GRAPE_SEED: {"cost": 9, "label": "Grape Seeds x1"},
+		Global.Items.PUMPKIN_SEED: {"cost": 11, "label": "Pumpkin Seeds x1"},
+	},
+}
+const LOOP_NIGHT_VENDOR_INGREDIENT_SHOPS := {
+	1: {
+		Global.Items.CAULIFLOWER: {"cost": 9, "label": "Cauliflower x1"},
+		Global.Items.STRAWBERRY: {"cost": 10, "label": "Strawberry x1"},
+		Global.Items.COFFEE_BEAN: {"cost": 8, "label": "Coffee Bean x1"},
+		Global.Items.WATER: {"cost": 3, "label": "Fresh Water x1"},
+	},
+	2: {
+		Global.Items.CORN: {"cost": 8, "label": "Corn x1"},
+		Global.Items.TOMATO: {"cost": 8, "label": "Tomato x1"},
+		Global.Items.MELON: {"cost": 10, "label": "Melon x1"},
+		Global.Items.WATER: {"cost": 4, "label": "Fresh Water x1"},
+	},
+	3: {
+		Global.Items.PUMPKIN: {"cost": 12, "label": "Pumpkin x1"},
+		Global.Items.GRAPE: {"cost": 10, "label": "Grape x1"},
+		Global.Items.ARTICHOKE: {"cost": 9, "label": "Artichoke x1"},
+		Global.Items.WATER: {"cost": 4, "label": "Fresh Water x1"},
+	},
+}
+const LOOP_NIGHT_VENDOR_RECIPE_OFFERS := {
+	1: [
+		{"recipe_item": Global.Items.PARSNIP_SOUP, "cost": 10, "label": "Recipe Scroll: Parsnip Soup"},
+		{"recipe_item": Global.Items.CAULIFLOWER_STEAK, "cost": 12, "label": "Recipe Scroll: Cauliflower Steak"},
+		{"recipe_item": Global.Items.GREEN_BEAN_SAUTE, "cost": 12, "label": "Recipe Scroll: Green Bean Saute"},
+		{"recipe_item": Global.Items.STRAWBERRY_ENERGY_BOWL, "cost": 14, "label": "Recipe Scroll: Strawberry Energy Bowl"},
+		{"recipe_item": Global.Items.MORNING_COFFEE, "cost": 15, "label": "Recipe Scroll: Morning Coffee"},
+	],
+	2: [
+		{"recipe_item": Global.Items.ROASTED_CORN, "cost": 13, "label": "Recipe Scroll: Roasted Corn"},
+		{"recipe_item": Global.Items.TOMATO_SOUP, "cost": 13, "label": "Recipe Scroll: Tomato Soup"},
+		{"recipe_item": Global.Items.PEPPER_STIR_FRY, "cost": 14, "label": "Recipe Scroll: Pepper Stir Fry"},
+		{"recipe_item": Global.Items.MELON_COOLER, "cost": 15, "label": "Recipe Scroll: Melon Cooler"},
+		{"recipe_item": Global.Items.CABBAGE_SKILLET, "cost": 16, "label": "Recipe Scroll: Cabbage Skillet"},
+	],
+	3: [
+		{"recipe_item": Global.Items.PUMPKIN_STEW, "cost": 17, "label": "Recipe Scroll: Pumpkin Stew"},
+		{"recipe_item": Global.Items.BROCCOLI_BAKE, "cost": 16, "label": "Recipe Scroll: Broccoli Bake"},
+		{"recipe_item": Global.Items.BOK_CHOY_STIR_FRY, "cost": 16, "label": "Recipe Scroll: Bok Choy Stir Fry"},
+		{"recipe_item": Global.Items.EGGPLANT_ROAST, "cost": 16, "label": "Recipe Scroll: Eggplant Roast"},
+		{"recipe_item": Global.Items.GRAPE_TONIC, "cost": 17, "label": "Recipe Scroll: Grape Tonic"},
+	],
+}
+const LOOP_NIGHT_VENDOR_POTION_OFFERS := {
+	1: [
+		{"item_type": Global.Items.MINOR_TONIC, "cost": 14, "label": "Minor Tonic"},
+	],
+	2: [
+		{"item_type": Global.Items.FIELD_TONIC, "cost": 18, "label": "Field Tonic"},
+	],
+	3: [
+		{"item_type": Global.Items.RESTORATIVE_DRAFT, "cost": 22, "label": "Restorative Draft"},
+	],
 }
 const LOOP_SELL_PRICES := {
-	Global.Items.CARROT: 4,
-	Global.Items.PARSNIP: 4,
-	Global.Items.POTATO: 6,
-	Global.Items.GARLIC: 5,
+	Global.Items.CARROT: 5,
+	Global.Items.PARSNIP: 6,
+	Global.Items.POTATO: 7,
+	Global.Items.GARLIC: 8,
+	Global.Items.CAULIFLOWER: 11,
+	Global.Items.GREEN_BEANS: 10,
+	Global.Items.STRAWBERRY: 13,
+	Global.Items.COFFEE_BEAN: 14,
+	Global.Items.BLUEBERRY: 8,
+	Global.Items.WHEAT: 7,
+	Global.Items.HOT_PEPPER: 8,
+	Global.Items.RADISH: 9,
+	Global.Items.CORN: 10,
+	Global.Items.TOMATO: 10,
+	Global.Items.MELON: 13,
+	Global.Items.RED_CABBAGE: 14,
+	Global.Items.BROCCOLI: 9,
+	Global.Items.EGGPLANT: 9,
+	Global.Items.BOK_CHOY: 10,
+	Global.Items.ARTICHOKE: 11,
+	Global.Items.GRAPE: 13,
+	Global.Items.PUMPKIN: 16,
 }
+const LOOP_SELL_ORDER := [
+	Global.Items.CARROT,
+	Global.Items.PARSNIP,
+	Global.Items.POTATO,
+	Global.Items.GARLIC,
+	Global.Items.CAULIFLOWER,
+	Global.Items.GREEN_BEANS,
+	Global.Items.STRAWBERRY,
+	Global.Items.COFFEE_BEAN,
+	Global.Items.BLUEBERRY,
+	Global.Items.WHEAT,
+	Global.Items.HOT_PEPPER,
+	Global.Items.RADISH,
+	Global.Items.CORN,
+	Global.Items.TOMATO,
+	Global.Items.MELON,
+	Global.Items.RED_CABBAGE,
+	Global.Items.BROCCOLI,
+	Global.Items.EGGPLANT,
+	Global.Items.BOK_CHOY,
+	Global.Items.ARTICHOKE,
+	Global.Items.GRAPE,
+	Global.Items.PUMPKIN,
+]
 const LOOP_MAX_FOREST_STAGE := 10
 const LOOP_MERCHANT_GEAR_OFFERS := [
 	{"stage": 2, "cost": 34, "item": preload("res://data/items/Weapons/SteelFalchion.tres"), "slot": "Weapon"},
@@ -115,13 +255,13 @@ const LOOP_MERCHANT_GEAR_OFFERS := [
 	{"stage": 4, "cost": 30, "item": preload("res://data/items/Armor/GuardCoat.tres"), "slot": "Armor"},
 	{"stage": 4, "cost": 30, "item": preload("res://data/items/Armor/RangerJerkin.tres"), "slot": "Armor"},
 	{"stage": 4, "cost": 30, "item": preload("res://data/items/Armor/WardingCloak.tres"), "slot": "Armor"},
-	{"stage": 6, "cost": 28, "item": preload("res://data/items/Accessories/DuelistCharm.tres"), "slot": "Accessory"},
-	{"stage": 6, "cost": 28, "item": preload("res://data/items/Accessories/HawkeyeBand.tres"), "slot": "Accessory"},
-	{"stage": 6, "cost": 28, "item": preload("res://data/items/Accessories/FocusCharm.tres"), "slot": "Accessory"},
+	{"stage": 6, "cost": 24, "item": preload("res://data/items/Accessories/DuelistCharm.tres"), "slot": "Accessory"},
+	{"stage": 6, "cost": 24, "item": preload("res://data/items/Accessories/HawkeyeBand.tres"), "slot": "Accessory"},
+	{"stage": 6, "cost": 24, "item": preload("res://data/items/Accessories/FocusCharm.tres"), "slot": "Accessory"},
 	{"stage": 8, "cost": 48, "item": preload("res://data/items/Weapons/CaptainsEdge.tres"), "slot": "Weapon"},
 	{"stage": 8, "cost": 52, "item": preload("res://data/items/Weapons/RangersLongbow.tres"), "slot": "Weapon"},
 	{"stage": 8, "cost": 50, "item": preload("res://data/items/Weapons/SunfireScepter.tres"), "slot": "Weapon"},
-	{"stage": 8, "cost": 40, "item": preload("res://data/items/Accessories/ForestCrest.tres"), "slot": "Accessory"},
+	{"stage": 8, "cost": 34, "item": preload("res://data/items/Accessories/ForestCrest.tres"), "slot": "Accessory"},
 ]
 const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_WATCHTOWER: {"rect": Rect2(Vector2(0, 0), LOOP_PLOT_SIZE), "unlock_cost": 8},
@@ -134,6 +274,7 @@ const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_STARTING_FARM: {"rect": Rect2(Vector2(640, 960), LOOP_PLOT_SIZE), "unlock_cost": 0},
 	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 8},
 }
+const LOOP_NIGHT_VENDOR_UNLOCK_BATTLE_INDEX := 4
 const LOOP_INTERACTION_POINTS := {
 	LOOP_PLOT_MERCHANT: Vector2(700, 1200),
 	LOOP_PLOT_FOREST: Vector2(1220, 1200),
@@ -280,6 +421,9 @@ var _overworld_cutscene_skip_label: Label = null
 var _overworld_cutscene_skip_active := false
 var _overworld_cutscene_skip_requested := false
 var _overworld_cutscene_skip_hold_time := 0.0
+var _loop_plot_unlock_sequence_active := false
+var _loop_purify_flash_rect: ColorRect = null
+var _loop_purify_flash_tween: Tween = null
 
 func _log_run_start(message: String) -> void:
 	if OS.is_debug_build():
@@ -287,6 +431,12 @@ func _log_run_start(message: String) -> void:
 
 func _get_loop_stage() -> int:
 	return clampi(maxi(Global.loop_battle_index, 1), 1, LOOP_MAX_FOREST_STAGE)
+
+func _get_current_loop_biome_tier() -> int:
+	return Global.get_current_loop_biome_tier() if Global != null and Global.has_method("get_current_loop_biome_tier") else 1
+
+func _get_current_loop_biome_name() -> String:
+	return String(LOOP_BIOME_NAMES.get(_get_current_loop_biome_tier(), "Spring"))
 
 func _ensure_overworld_cutscene_skip_label() -> void:
 	if _overworld_cutscene_skip_label != null and is_instance_valid(_overworld_cutscene_skip_label):
@@ -325,6 +475,148 @@ func _get_overworld_cutscene_skip_hint_text(progress: float = 0.0) -> String:
 		cancel_label = DemoDirector.get_action_label("cancel")
 	var progress_percent := clampi(int(round(progress * 100.0)), 0, 100)
 	return "Hold %s to skip (%d%%)" % [cancel_label, progress_percent]
+
+func _ensure_loop_purify_flash_rect() -> void:
+	if _loop_purify_flash_rect != null and is_instance_valid(_loop_purify_flash_rect):
+		return
+
+	var canvas_layer := get_node_or_null("CanvasLayer") as CanvasLayer
+	if canvas_layer == null:
+		return
+
+	var flash_rect := ColorRect.new()
+	flash_rect.name = "LoopPurifyFlash"
+	flash_rect.visible = false
+	flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash_rect.anchor_right = 1.0
+	flash_rect.anchor_bottom = 1.0
+	flash_rect.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	flash_rect.grow_vertical = Control.GROW_DIRECTION_BOTH
+	flash_rect.color = Color(0.92, 1.0, 0.9, 1.0)
+	flash_rect.modulate.a = 0.0
+	flash_rect.z_index = 260
+	canvas_layer.add_child(flash_rect)
+	_loop_purify_flash_rect = flash_rect
+
+func _play_loop_purify_flash() -> void:
+	_ensure_loop_purify_flash_rect()
+	if _loop_purify_flash_rect == null or not is_instance_valid(_loop_purify_flash_rect):
+		return
+
+	if _loop_purify_flash_tween != null and is_instance_valid(_loop_purify_flash_tween):
+		_loop_purify_flash_tween.kill()
+
+	_loop_purify_flash_rect.visible = true
+	_loop_purify_flash_rect.modulate.a = 0.0
+	_loop_purify_flash_tween = create_tween()
+	_loop_purify_flash_tween.tween_property(_loop_purify_flash_rect, "modulate:a", LOOP_PURIFY_FLASH_ALPHA, LOOP_PURIFY_FLASH_DURATION * 0.32)
+	_loop_purify_flash_tween.tween_property(_loop_purify_flash_rect, "modulate:a", 0.0, LOOP_PURIFY_FLASH_DURATION * 0.68)
+	_loop_purify_flash_tween.tween_callback(func():
+		if _loop_purify_flash_rect != null and is_instance_valid(_loop_purify_flash_rect):
+			_loop_purify_flash_rect.visible = false
+	)
+
+func _get_loop_plot_rect(plot_id: StringName) -> Rect2:
+	var rect_variant = LOOP_PLOT_DEFS.get(plot_id, {}).get("rect", Rect2())
+	if rect_variant is Rect2:
+		return rect_variant
+	return Rect2()
+
+func _get_loop_plot_purify_staging(plot_id: StringName) -> Dictionary:
+	var plot_rect: Rect2 = _get_loop_plot_rect(plot_id)
+	var plot_center: Vector2 = LOOP_INTERACTION_POINTS.get(plot_id, player.global_position)
+	if plot_rect.size != Vector2.ZERO:
+		plot_center = plot_rect.get_center()
+
+	var edge: Dictionary = _get_loop_plot_interaction_edge(plot_id)
+	var edge_start: Vector2 = edge.get("start", plot_center)
+	var edge_end: Vector2 = edge.get("end", plot_center)
+	var edge_mid: Vector2 = (edge_start + edge_end) * 0.5
+	var outward: Vector2 = edge_mid - plot_center
+	if outward.length_squared() <= 0.001:
+		outward = Vector2.DOWN
+	outward = outward.normalized()
+	var tera_pos: Vector2 = edge_mid + (outward * LOOP_PURIFY_STAGING_BUFFER)
+	var retreat_pos: Vector2 = edge_mid + (outward * LOOP_PURIFY_PLAYER_RETREAT_BUFFER)
+	return {
+		"plot_center": plot_center,
+		"tera_pos": tera_pos,
+		"edge_mid": edge_mid,
+		"retreat_pos": retreat_pos,
+		"outward": outward,
+	}
+
+func _get_loop_purify_tera_character_data() -> CharacterData:
+	if ProgressionService != null and ProgressionService.has_method("get_party_member_by_name"):
+		var roster_tera := ProgressionService.get_party_member_by_name("Tera") as CharacterData
+		if roster_tera != null:
+			return roster_tera
+	return load("res://data/units/Tera/tera_data.tres") as CharacterData
+
+func _build_loop_purify_tera_stats(character: CharacterData) -> UnitStats:
+	var stats := UnitStats.new()
+	if character == null:
+		return stats
+	stats.apply_class_progression(character)
+	var shared_level := maxi(Global.get_player_level(), 1) if Global != null else 1
+	if shared_level > 1:
+		var preview_rng := RandomNumberGenerator.new()
+		preview_rng.seed = hash("%s:%d:%s" % [String(character.display_name), shared_level, "loop_purify"])
+		stats.apply_auto_levels(shared_level - 1, preview_rng)
+	return stats
+
+func _spawn_loop_plot_purify_tera(stage_position: Vector2, face_target: Vector2) -> Node2D:
+	if _story_actor_scene == null or objects_root == null:
+		return null
+
+	var temp_tera := _story_actor_scene.instantiate() as Node2D
+	if temp_tera == null:
+		return null
+
+	temp_tera.name = "LoopPurifyTera"
+	if tera_actor != null and is_instance_valid(tera_actor):
+		var source_actor_scene: Variant = tera_actor.get("actor_scene")
+		if source_actor_scene is PackedScene:
+			temp_tera.set("actor_scene", source_actor_scene)
+		temp_tera.set("actor_scale", tera_actor.get("actor_scale"))
+		temp_tera.set("visual_offset", tera_actor.get("visual_offset"))
+
+	objects_root.add_child(temp_tera)
+	temp_tera.global_position = stage_position
+	var tera_character := _get_loop_purify_tera_character_data()
+	if tera_character != null and temp_tera.has_method("setup_combat_snapshot"):
+		temp_tera.setup_combat_snapshot(tera_character, _build_loop_purify_tera_stats(tera_character), true, tera_character.equipped_weapon)
+	_face_story_actor(temp_tera, face_target - stage_position)
+	if temp_tera.has_method("play_idle"):
+		temp_tera.play_idle()
+	return temp_tera
+
+func _start_loop_plot_unlock_sequence(deferred_method: StringName) -> void:
+	if _loop_plot_unlock_sequence_active:
+		return
+	_loop_plot_unlock_sequence_active = true
+	_intro_busy = true
+	player.can_move = false
+	player.direction = Vector2.ZERO
+	Global.show_loop_tutorial_text("")
+	call_deferred(String(deferred_method))
+
+func _finish_loop_plot_unlock_sequence() -> void:
+	_loop_plot_unlock_sequence_active = false
+	_intro_busy = false
+	player.can_move = true
+	player.direction = Vector2.ZERO
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+
+func _maybe_show_first_loop_purify_notice() -> bool:
+	if DemoDirector == null:
+		return false
+	if DemoDirector.has_seen_tutorial(LOOP_FIRST_PURIFY_NOTICE_ID):
+		return false
+	DemoDirector.mark_tutorial_seen(LOOP_FIRST_PURIFY_NOTICE_ID)
+	_show_player_notice("Tera's Bloom pushes the ash back.", 1.8)
+	return true
 
 func _begin_overworld_skippable_cutscene() -> void:
 	_overworld_cutscene_skip_active = true
@@ -469,10 +761,7 @@ func _get_equipment_display_name(item: Resource) -> String:
 	return item.resource_name if item != null else "Item"
 
 func _format_loop_item_name(item_type: int) -> String:
-	var item_keys := Global.Items.keys()
-	if item_type >= 0 and item_type < item_keys.size():
-		return String(item_keys[item_type]).replace("_", " ").to_lower().capitalize()
-	return "Item"
+	return Global.get_item_display_name(item_type)
 
 func _is_loop_night() -> bool:
 	return Global.loop_hub_mode_active and Global.loop_time_phase == Global.LOOP_PHASE_NIGHT
@@ -487,7 +776,7 @@ func _should_play_loop_arrival_intro() -> bool:
 	return Global.loop_hub_mode_active and Global.pending_loop_arrival_intro
 
 func _is_loop_night_vendor_available() -> bool:
-	return Global.loop_hub_mode_active and _is_loop_night() and _is_loop_cabin_repaired() and Global.loop_battle_index >= 3
+	return Global.loop_hub_mode_active and _is_loop_night() and _is_loop_cabin_repaired() and Global.loop_battle_index >= LOOP_NIGHT_VENDOR_UNLOCK_BATTLE_INDEX
 
 func _get_active_cabin_home_pos() -> Vector2:
 	return LOOP_CABIN_HOME_POS if Global.loop_hub_mode_active else CABIN_HOME_POS
@@ -502,6 +791,13 @@ func _get_loop_cabin_interaction_point() -> Vector2:
 	if not _is_loop_cabin_repaired():
 		return plot_center
 	return _get_active_cabin_home_pos() + Vector2(0, -36)
+
+func _get_loop_cabin_repair_exit_point() -> Vector2:
+	var edge := _get_loop_plot_interaction_edge(LOOP_PLOT_CABIN)
+	var edge_start: Vector2 = edge.get("start", _get_active_cabin_home_pos())
+	var edge_end: Vector2 = edge.get("end", _get_active_cabin_home_pos())
+	var edge_mid: Vector2 = (edge_start + edge_end) * 0.5
+	return edge_mid + Vector2(0, -72)
 
 func _set_body_collision_shapes_deferred(body: Node, disabled: bool) -> void:
 	if body == null or not is_instance_valid(body):
@@ -548,12 +844,38 @@ func _set_structure_collision_state_deferred(structure: StaticBody2D, active: bo
 	if shape != null:
 		shape.set_deferred("disabled", not active)
 
+func _get_loop_wagon_seed_shop() -> Dictionary:
+	var shop_variant: Variant = LOOP_WAGON_SEED_SHOPS.get(_get_current_loop_biome_tier(), {})
+	return (shop_variant as Dictionary).duplicate(true) if shop_variant is Dictionary else {}
+
+func _get_loop_night_seed_shop() -> Dictionary:
+	var shop_variant: Variant = LOOP_NIGHT_VENDOR_SEED_SHOPS.get(_get_current_loop_biome_tier(), {})
+	return (shop_variant as Dictionary).duplicate(true) if shop_variant is Dictionary else {}
+
+func _get_loop_night_ingredient_shop() -> Dictionary:
+	var shop_variant: Variant = LOOP_NIGHT_VENDOR_INGREDIENT_SHOPS.get(_get_current_loop_biome_tier(), {})
+	return (shop_variant as Dictionary).duplicate(true) if shop_variant is Dictionary else {}
+
+func _get_loop_night_recipe_offers() -> Array[Dictionary]:
+	var offers: Array[Dictionary] = []
+	for offer_variant in Array(LOOP_NIGHT_VENDOR_RECIPE_OFFERS.get(_get_current_loop_biome_tier(), [])):
+		if offer_variant is Dictionary:
+			offers.append((offer_variant as Dictionary).duplicate(true))
+	return offers
+
+func _get_loop_night_potion_offers() -> Array[Dictionary]:
+	var offers: Array[Dictionary] = []
+	for offer_variant in Array(LOOP_NIGHT_VENDOR_POTION_OFFERS.get(_get_current_loop_biome_tier(), [])):
+		if offer_variant is Dictionary:
+			offers.append((offer_variant as Dictionary).duplicate(true))
+	return offers
+
 func _get_active_loop_seed_shop() -> Dictionary:
-	return LOOP_NIGHT_VENDOR_SEED_SHOP if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT else LOOP_SEED_SHOP
+	return _get_loop_night_seed_shop() if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT else _get_loop_wagon_seed_shop()
 
 func _get_active_loop_merchant_tabs() -> PackedStringArray:
 	if _loop_active_merchant_kind == LOOP_MERCHANT_KIND_NIGHT:
-		return PackedStringArray(["Sell", "Rare Seeds", "Ingredients"])
+		return PackedStringArray(["Sell", "Rare Seeds", "Recipes", "Ingredients", "Potions"])
 	return PackedStringArray(["Sell", "Seeds", "Weapons", "Armor", "Accessories"])
 
 func _set_loop_merchant_detail_text(text: String) -> void:
@@ -562,31 +884,63 @@ func _set_loop_merchant_detail_text(text: String) -> void:
 	_loop_merchant_detail_label.text = text
 
 func _build_loop_merchant_seed_description(seed_item: int, cost: int) -> String:
-	var crop_name := "Crops"
+	var crop_name := "crops"
+	var harvest_item := int(Global.HARVEST_DROPS.get(seed_item, -1))
+	if harvest_item >= 0:
+		crop_name = Global.get_item_display_name(harvest_item).to_lower()
 	var growth_label := Global.get_seed_growth_label(seed_item)
-	match seed_item:
-		Global.Items.CARROT_SEED:
-			crop_name = "Carrots"
-		Global.Items.PARSNIP_SEED:
-			crop_name = "Parsnips"
-		Global.Items.POTATO_SEED:
-			crop_name = "Potatoes"
-		Global.Items.GARLIC_SEED:
-			crop_name = "Garlic"
-		Global.Items.CAULIFLOWER_SEED:
-			crop_name = "Cauliflower"
-		Global.Items.GREEN_BEANS_SEED:
-			crop_name = "Green Beans"
-		Global.Items.STRAWBERRY_SEED:
-			crop_name = "Strawberries"
-		Global.Items.COFFEE_BEAN_SEED:
-			crop_name = "Coffee Beans"
-	return "%d Gold\nGrowth: %s\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, growth_label, crop_name]
+	var biome_name := _get_current_loop_biome_name()
+	return "%d Gold\nBiome: %s\nGrowth: %s\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, biome_name, growth_label, crop_name]
 
 func _build_loop_merchant_inventory_description(item_type: int, cost: int) -> String:
+	if Global.is_battle_tonic(item_type):
+		return "%d Gold\n%s\nSelf-use battle item.\nRestore %d HP and consume the unit's normal action." % [
+			cost,
+			Global.get_item_display_name(item_type),
+			Global.get_tonic_heal_amount(item_type)
+		]
+	if item_type == Global.Items.WATER:
+		return "%d Gold\nFresh Water\nUseful for soups, coolers, tonics, and other late-night meal prep." % cost
 	return "%d Gold\n%s\nUseful for cooking, meal prep, or stocking up before dawn." % [
 		cost,
-		_format_loop_item_name(item_type)
+		Global.get_item_display_name(item_type)
+	]
+
+func _build_loop_merchant_recipe_description(recipe_item: int, cost: int) -> String:
+	var recipe_data: Dictionary = Global.recipes.get(recipe_item, {})
+	var ingredient_data: Dictionary = recipe_data.get("ingredients", {})
+	var ingredient_parts: PackedStringArray = []
+	for ingredient_variant in ingredient_data.keys():
+		var ingredient_item := int(ingredient_variant)
+		var amount := int(ingredient_data[ingredient_variant])
+		ingredient_parts.append("%s x%d" % [Global.get_item_display_name(ingredient_item), amount])
+	var ingredient_text := ", ".join(ingredient_parts)
+	return "%d Gold\n%s\nLearn this recipe permanently.\nIngredients: %s\nPerk: %s" % [
+		cost,
+		String(recipe_data.get("display_name", Global.get_item_display_name(recipe_item))),
+		ingredient_text if not ingredient_text.is_empty() else "Unknown",
+		String(recipe_data.get("buff_preview", "No perk preview"))
+	]
+
+func _get_loop_crop_sale_value(item_type: int, amount: int) -> int:
+	return maxi(amount, 0) * int(LOOP_SELL_PRICES.get(item_type, 0))
+
+func _get_loop_total_harvest_sale_value() -> int:
+	var total_gold := 0
+	for item_variant in LOOP_SELL_PRICES.keys():
+		var item_type := int(item_variant)
+		total_gold += _get_loop_crop_sale_value(item_type, int(Global.inventory.get(item_type, 0)))
+	return total_gold
+
+func _build_loop_crop_sell_description(item_type: int) -> String:
+	var owned := int(Global.inventory.get(item_type, 0))
+	var unit_price := int(LOOP_SELL_PRICES.get(item_type, 0))
+	var total_value := _get_loop_crop_sale_value(item_type, owned)
+	return "%s\nOwned: %d\nSell Price: %d Gold each\nTotal Value: %d Gold" % [
+		Global.get_item_display_name(item_type),
+		owned,
+		unit_price,
+		total_value
 	]
 
 func _build_loop_merchant_item_description(item: Resource, cost: int) -> String:
@@ -649,16 +1003,20 @@ func _get_loop_merchant_tab_detail_text(tab_id: String) -> String:
 			"Sell":
 				return "Night is a good time to cash in the harvest and prepare for morning."
 			"Rare Seeds":
-				return "The night trader carries unusual seeds that can open stronger meal paths."
+				return "The night trader carries unusual %s seeds that open stronger meal paths." % _get_current_loop_biome_name().to_lower()
+			"Recipes":
+				return "Recipe scrolls unlock stronger meal options permanently for the rest of the run."
 			"Ingredients":
-				return "A few hard-to-find cooking supplies show up here after dark."
+				return "A few hard-to-find %s ingredients show up here after dark." % _get_current_loop_biome_name().to_lower()
+			"Potions":
+				return "Emergency tonics restore HP in battle, but they still cost a full action to use."
 			_:
 				return "Browse the night stock before you sleep."
 	match tab_id:
 		"Sell":
 			return "Turn harvested crops into Gold so you can restock seeds and buy stronger gear."
 		"Seeds":
-			return "Plant seeds before battle so crops can grow while you fight."
+			return "Plant %s seeds before battle so crops can grow while you fight." % _get_current_loop_biome_name().to_lower()
 		"Weapons":
 			return "Weapon upgrades improve your party's damage and accuracy. Check the detail panel to see who can equip each one."
 		"Armor":
@@ -694,15 +1052,61 @@ func _get_loop_merchant_default_detail_text() -> String:
 
 func _populate_loop_merchant_sell_tab() -> void:
 	var sell_button := Button.new()
-	sell_button.text = "Sell Harvest"
+	var total_harvest_value := _get_loop_total_harvest_sale_value()
+	sell_button.text = "Sell Harvest (%d Gold)%s" % [total_harvest_value, "" if total_harvest_value > 0 else " [No Crops]"]
+	sell_button.disabled = total_harvest_value <= 0
 	sell_button.pressed.connect(_on_loop_sell_harvest_pressed)
 	sell_button.focus_entered.connect(func() -> void:
-		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds, meals, and better gear.")
+		_set_loop_merchant_detail_text("Sell everything at once for %d Gold.\nUse the crop rows below if you want to keep ingredients for recipes." % total_harvest_value)
 	)
 	sell_button.mouse_entered.connect(func() -> void:
-		_set_loop_merchant_detail_text("Turn harvested crops into Gold so you can restock seeds, meals, and better gear.")
+		_set_loop_merchant_detail_text("Sell everything at once for %d Gold.\nUse the crop rows below if you want to keep ingredients for recipes." % total_harvest_value)
 	)
 	_loop_merchant_actions.add_child(sell_button)
+
+	var any_sellable := false
+	for item_variant in LOOP_SELL_ORDER:
+		var item_type := int(item_variant)
+		var owned := int(Global.inventory.get(item_type, 0))
+		if owned <= 0:
+			continue
+		any_sellable = true
+		var row := HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 8)
+		_loop_merchant_actions.add_child(row)
+
+		var label := Label.new()
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.text = "%s x%d  (%d Gold each / %d total)" % [
+			Global.get_item_display_name(item_type),
+			owned,
+			int(LOOP_SELL_PRICES.get(item_type, 0)),
+			_get_loop_crop_sale_value(item_type, owned)
+		]
+		row.add_child(label)
+
+		var detail_text := _build_loop_crop_sell_description(item_type)
+		var sell_one_button := Button.new()
+		sell_one_button.text = "Sell 1"
+		sell_one_button.pressed.connect(_on_loop_sell_one_crop_pressed.bind(item_type))
+		sell_one_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
+		sell_one_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
+		row.add_child(sell_one_button)
+
+		var sell_all_button := Button.new()
+		sell_all_button.text = "Sell All"
+		sell_all_button.pressed.connect(_on_loop_sell_all_crop_pressed.bind(item_type))
+		sell_all_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
+		sell_all_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
+		row.add_child(sell_all_button)
+
+	if not any_sellable:
+		var empty_label := Label.new()
+		empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty_label.text = "Nothing harvested yet. Grow crops first, then sell exactly what you want to cash in."
+		_loop_merchant_actions.add_child(empty_label)
 
 func _populate_loop_merchant_seed_tab() -> void:
 	var seed_shop := _get_active_loop_seed_shop()
@@ -721,9 +1125,10 @@ func _populate_loop_merchant_seed_tab() -> void:
 		_loop_merchant_actions.add_child(button)
 
 func _populate_loop_night_vendor_ingredients_tab() -> void:
-	for item_variant in LOOP_NIGHT_VENDOR_INGREDIENT_SHOP.keys():
+	var ingredient_shop := _get_loop_night_ingredient_shop()
+	for item_variant in ingredient_shop.keys():
 		var item_type := int(item_variant)
-		var offer: Dictionary = LOOP_NIGHT_VENDOR_INGREDIENT_SHOP[item_type]
+		var offer: Dictionary = ingredient_shop[item_type]
 		var cost := int(offer.get("cost", 0))
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
@@ -734,6 +1139,54 @@ func _populate_loop_night_vendor_ingredients_tab() -> void:
 		]
 		button.modulate = Color(1, 1, 1, 1) if affordable else Color(0.8, 0.8, 0.8, 0.88)
 		button.pressed.connect(_on_loop_buy_inventory_item_pressed.bind(item_type, cost))
+		var description := _build_loop_merchant_inventory_description(item_type, cost)
+		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
+		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(description))
+		_loop_merchant_actions.add_child(button)
+
+func _populate_loop_night_vendor_recipe_tab() -> void:
+	for offer in _get_loop_night_recipe_offers():
+		var recipe_item := int(offer.get("recipe_item", -1))
+		if recipe_item < 0:
+			continue
+		var cost := int(offer.get("cost", 0))
+		var already_known := Global.knows_recipe(recipe_item)
+		var affordable := Global.loop_gold >= cost
+		var button := Button.new()
+		var state_suffix := ""
+		if already_known:
+			state_suffix = " [Learned]"
+		elif not affordable:
+			state_suffix = " [Need More Gold]"
+		button.text = "%s (%d Gold)%s" % [String(offer.get("label", "Recipe Scroll")), cost, state_suffix]
+		button.disabled = already_known
+		button.modulate = Color(1, 1, 1, 1) if not already_known and affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.pressed.connect(_on_loop_buy_recipe_scroll_pressed.bind(recipe_item, cost))
+		var description := _build_loop_merchant_recipe_description(recipe_item, cost)
+		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
+		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(description))
+		_loop_merchant_actions.add_child(button)
+
+func _populate_loop_night_vendor_potions_tab() -> void:
+	Global.ensure_loop_night_vendor_potion_stock_for_biome(_get_current_loop_biome_tier())
+	for offer in _get_loop_night_potion_offers():
+		var item_type := int(offer.get("item_type", -1))
+		if item_type < 0:
+			continue
+		var cost := int(offer.get("cost", 0))
+		var remaining_stock := Global.get_loop_night_vendor_potion_stock(item_type)
+		var sold_out := remaining_stock <= 0
+		var affordable := Global.loop_gold >= cost
+		var button := Button.new()
+		var state_suffix := ""
+		if sold_out:
+			state_suffix = " [Sold Out]"
+		elif not affordable:
+			state_suffix = " [Need More Gold]"
+		button.text = "%s (%d Gold)  Stock %d%s" % [String(offer.get("label", Global.get_item_display_name(item_type))), cost, remaining_stock, state_suffix]
+		button.disabled = sold_out
+		button.modulate = Color(1, 1, 1, 1) if not sold_out and affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.pressed.connect(_on_loop_buy_potion_pressed.bind(item_type, cost))
 		var description := _build_loop_merchant_inventory_description(item_type, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
 		button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(description))
@@ -779,11 +1232,9 @@ func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
 		_loop_merchant_actions.add_child(button)
 
 func _focus_first_loop_merchant_action_button() -> void:
-	if _loop_merchant_actions == null or not is_instance_valid(_loop_merchant_actions):
-		return
-	for child in _loop_merchant_actions.get_children():
-		if child is Button and (child as Button).visible and not (child as Button).disabled:
-			(child as Button).grab_focus()
+	for button in _get_loop_merchant_action_buttons():
+		if button.visible and not button.disabled:
+			button.grab_focus()
 			return
 	_focus_loop_merchant_tab_button(_loop_merchant_active_tab)
 
@@ -796,12 +1247,18 @@ func _get_loop_merchant_action_buttons() -> Array[Button]:
 	var buttons: Array[Button] = []
 	if _loop_merchant_actions == null or not is_instance_valid(_loop_merchant_actions):
 		return buttons
-	for child in _loop_merchant_actions.get_children():
-		var button := child as Button
-		if button == null or not button.visible or button.disabled:
-			continue
-		buttons.append(button)
+	_collect_loop_merchant_action_buttons(_loop_merchant_actions, buttons)
 	return buttons
+
+func _collect_loop_merchant_action_buttons(root: Node, buttons: Array[Button]) -> void:
+	if root == null or not is_instance_valid(root):
+		return
+	for child in root.get_children():
+		var button := child as Button
+		if button != null and button.visible and not button.disabled:
+			buttons.append(button)
+		if child.get_child_count() > 0:
+			_collect_loop_merchant_action_buttons(child, buttons)
 
 func _configure_loop_merchant_focus_graph() -> void:
 	if _loop_merchant_tab_bar == null or not is_instance_valid(_loop_merchant_tab_bar):
@@ -1221,8 +1678,9 @@ func _ensure_loop_prompt() -> void:
 
 func _on_loop_state_ui_changed() -> void:
 	_refresh_loop_merchant_menu()
-	_refresh_loop_objective()
 	_refresh_loop_hud()
+	if not _loop_plot_unlock_sequence_active:
+		_refresh_loop_objective()
 	call_deferred("_refresh_loop_world_state_from_global")
 
 func _refresh_loop_world_state_from_global() -> void:
@@ -1392,9 +1850,10 @@ func _refresh_loop_merchant_menu() -> void:
 	_rebuild_loop_merchant_tab_bar()
 
 	var current_stage := _get_loop_stage()
-	_loop_merchant_status.text = "Stage %d/%d   Gold: %d   Bloom Points: %d\nWood: %d   Stone: %d   Perk: %s" % [
+	_loop_merchant_status.text = "Stage %d/%d   Biome: %s   Gold: %d   Bloom Points: %d\nWood: %d   Stone: %d   Perk: %s" % [
 		current_stage,
 		LOOP_MAX_FOREST_STAGE,
+		_get_current_loop_biome_name(),
 		Global.loop_gold,
 		Global.loop_bloom_points,
 		int(Global.inventory.get(Global.Items.WOOD, 0)),
@@ -1413,8 +1872,12 @@ func _refresh_loop_merchant_menu() -> void:
 			_populate_loop_merchant_sell_tab()
 		"Seeds", "Rare Seeds":
 			_populate_loop_merchant_seed_tab()
+		"Recipes":
+			_populate_loop_night_vendor_recipe_tab()
 		"Ingredients":
 			_populate_loop_night_vendor_ingredients_tab()
+		"Potions":
+			_populate_loop_night_vendor_potions_tab()
 		"Weapons":
 			_populate_loop_merchant_equipment_tab("Weapon")
 		"Armor":
@@ -1464,9 +1927,7 @@ func _refresh_loop_plot_visuals() -> void:
 		var body = _loop_plot_cover_bodies.get(plot_id, null)
 		if body != null and is_instance_valid(body):
 			body.visible = not unlocked
-			for child in body.get_children():
-				if child is CollisionShape2D:
-					(child as CollisionShape2D).disabled = unlocked
+			_set_body_collision_shapes_deferred(body, unlocked)
 
 func _refresh_loop_merchant_visuals() -> void:
 	var merchant_unlocked := Global.has_loop_plot(LOOP_PLOT_MERCHANT)
@@ -1536,7 +1997,7 @@ func _refresh_loop_objective() -> void:
 			objective = LOOP_OBJECTIVE_HARVEST
 		elif not Global.has_loop_equipped_perk() and _has_cookable_loop_meals():
 			objective = LOOP_OBJECTIVE_COOK
-		elif not merchant_open and Global.loop_battle_index >= 3 and Global.loop_bloom_points >= merchant_unlock_cost:
+		elif not merchant_open and Global.loop_battle_index >= LOOP_NIGHT_VENDOR_UNLOCK_BATTLE_INDEX and Global.loop_bloom_points >= merchant_unlock_cost:
 			objective = LOOP_OBJECTIVE_MERCHANT
 		else:
 			objective = LOOP_OBJECTIVE_SETTLE
@@ -1557,7 +2018,7 @@ func _refresh_loop_objective() -> void:
 			objective = "Build Wagon" if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST else "Gather Wood for Wagon"
 		else:
 			objective = LOOP_OBJECTIVE_FIGHT
-	Global.show_tutorial_text(objective)
+	Global.show_loop_tutorial_text(objective)
 
 func _has_any_loop_crops() -> bool:
 	for plant in get_tree().get_nodes_in_group("Plants"):
@@ -1691,15 +2152,11 @@ func _maybe_show_loop_forest_unlock_tutorials() -> void:
 		return
 	_loop_forest_tutorial_active = true
 	player.can_move = false
-	call_deferred("_show_loop_forest_unlock_tutorials")
-
-func _show_loop_forest_unlock_tutorials() -> void:
 	if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_forest_join"):
 		await DemoDirector.show_tutorial_card("loop_forest_join", self)
 	if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_forest_wood"):
 		await DemoDirector.show_tutorial_card("loop_forest_wood", self)
 	_loop_forest_tutorial_active = false
-	player.can_move = true
 
 func _on_loop_crop_harvested(_harvested_item: int) -> void:
 	_autosave_loop_run()
@@ -2017,7 +2474,7 @@ func _on_seed_chosen_from_menu(seed_type: int) -> void:
 		_autosave_loop_run()
 
 func _on_player_seed_use(seed_enum: int, global_pos: Vector2) -> StaticBody2D:
-	var season := CalendarService.get_current_season()
+	var season := Global.get_active_planting_season()
 	if not Global.is_seed_in_season(seed_enum, season):
 		_show_player_notice("That seed is out of season")
 		return null
@@ -2646,7 +3103,7 @@ func _run_loop_arrival_intro() -> void:
 	player.can_move = false
 	player.direction = Vector2.ZERO
 	player.visible = true
-	Global.show_tutorial_text("")
+	Global.show_loop_tutorial_text("")
 
 	player.global_position = LOOP_ARRIVAL_PLAYER_ENTRY_POS
 	if player.has_method("play_cutscene_idle"):
@@ -2929,18 +3386,14 @@ func _set_loop_merchant_structure_highlight(structure: Node2D, highlighted: bool
 
 func _handle_loop_merchant_interaction() -> bool:
 	if not Global.has_loop_plot(LOOP_PLOT_MERCHANT):
+		if _loop_plot_unlock_sequence_active:
+			return true
 		var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))
 		if Global.loop_bloom_points < bloom_cost:
 			_show_player_notice("Need %d BP to purify the merchant plot." % bloom_cost)
 			return true
 		Global.spend_loop_bloom_points(bloom_cost)
-		Global.unlock_loop_plot(LOOP_PLOT_MERCHANT)
-		_run_loop_plot_purified_feedback(LOOP_PLOT_MERCHANT)
-		_show_player_notice("A wagon frame emerges from the ash.")
-		_refresh_loop_plot_visuals()
-		_refresh_loop_merchant_visuals()
-		_refresh_loop_objective()
-		_autosave_loop_run()
+		_start_loop_plot_unlock_sequence(&"_run_loop_merchant_unlock_sequence")
 		return true
 
 	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON):
@@ -2978,21 +3431,15 @@ func _handle_loop_forest_interaction() -> bool:
 		_show_player_notice("The forest path is open. Silas watches the tree line.")
 		return true
 
+	if _loop_plot_unlock_sequence_active:
+		return true
 	var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))
 	if Global.loop_bloom_points < bloom_cost:
 		_show_player_notice("Need %d BP to purify the forest plot." % bloom_cost)
 		return true
 
 	Global.spend_loop_bloom_points(bloom_cost)
-	Global.unlock_loop_plot(LOOP_PLOT_FOREST)
-	if ProgressionService != null and ProgressionService.has_method("ensure_party_member"):
-		ProgressionService.ensure_party_member("Silas")
-	_spawn_loop_forest_content()
-	_run_loop_plot_purified_feedback(LOOP_PLOT_FOREST)
-	_maybe_show_loop_forest_unlock_tutorials()
-	_refresh_loop_plot_visuals()
-	_refresh_loop_objective()
-	_autosave_loop_run()
+	_start_loop_plot_unlock_sequence(&"_run_loop_forest_unlock_sequence")
 	return true
 
 func _handle_loop_cabin_interaction() -> bool:
@@ -3009,6 +3456,9 @@ func _handle_loop_cabin_interaction() -> bool:
 			return true
 		Global.remove_item(Global.Items.WOOD, LOOP_CABIN_REPAIR_WOOD_COST)
 		Global.build_loop_structure(Global.LOOP_STRUCTURE_CABIN_REPAIRED)
+		player.global_position = _get_loop_cabin_repair_exit_point()
+		if player.has_method("face_direction"):
+			player.face_direction(Vector2.DOWN)
 		_sync_shelter_state()
 		_show_player_notice("The cabin is repaired. Sleep here at night to start the next day.")
 		_refresh_loop_objective()
@@ -3084,6 +3534,7 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		if lost_stone > 0:
 			Global.remove_item(Global.Items.STONE, lost_stone)
 		_show_player_notice("Driven back. Raiders stole %d Gold, %d Wood, and %d Stone." % [lost_gold, lost_wood, lost_stone], 2.0)
+	Global.reset_loop_night_vendor_potion_stock_for_biome(_get_current_loop_biome_tier())
 	_refresh_loop_merchant_visuals()
 	await _maybe_show_loop_first_night_tutorial()
 	if is_victory and Global.loop_hub_mode_active and DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_bloom_points"):
@@ -3110,15 +3561,90 @@ func _mature_loop_crops_after_battle() -> void:
 			for _i in range(maxi(LOOP_POST_BATTLE_GROWTH_TICKS, 0)):
 				plant.advance_growth()
 
-func _run_loop_plot_purified_feedback(plot_id: StringName) -> void:
-	var burst_position: Vector2 = LOOP_INTERACTION_POINTS.get(plot_id, player.global_position)
-	var plot_def: Dictionary = LOOP_PLOT_DEFS.get(plot_id, {})
-	if plot_def.has("rect"):
-		var plot_rect: Rect2 = plot_def.get("rect", Rect2())
-		burst_position = plot_rect.get_center()
-	spawn_overworld_burst(burst_position, LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), LOOP_PURIFY_VFX_FRAME_COUNT, 24.0, Vector2(1.45, 1.45))
-	play_overworld_camera_shake(3.0, 0.12)
-	_play_loop_world_sfx(LOOP_PURIFY_SFX, burst_position)
+func _run_loop_forest_unlock_sequence() -> void:
+	await _run_loop_plot_purified_feedback(LOOP_PLOT_FOREST, Callable(self, "_on_loop_forest_plot_revealed"))
+	await get_tree().create_timer(LOOP_PURIFY_POST_REVEAL_SETTLE_SECONDS, true).timeout
+	await _maybe_show_loop_forest_unlock_tutorials()
+	_maybe_show_first_loop_purify_notice()
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_autosave_loop_run()
+	_finish_loop_plot_unlock_sequence()
+
+func _run_loop_merchant_unlock_sequence() -> void:
+	await _run_loop_plot_purified_feedback(LOOP_PLOT_MERCHANT, Callable(self, "_on_loop_merchant_plot_revealed"))
+	await get_tree().create_timer(LOOP_PURIFY_POST_REVEAL_SETTLE_SECONDS, true).timeout
+	var showed_bloom_notice := _maybe_show_first_loop_purify_notice()
+	if showed_bloom_notice:
+		await get_tree().create_timer(1.1, true).timeout
+	_show_player_notice("A wagon frame emerges from the ash.")
+	_refresh_loop_merchant_visuals()
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_autosave_loop_run()
+	_finish_loop_plot_unlock_sequence()
+
+func _on_loop_forest_plot_revealed() -> void:
+	if ProgressionService != null and ProgressionService.has_method("ensure_party_member"):
+		ProgressionService.ensure_party_member("Silas")
+	_spawn_loop_forest_content()
+
+func _on_loop_merchant_plot_revealed() -> void:
+	_refresh_loop_merchant_visuals()
+
+func _run_loop_plot_purified_feedback(plot_id: StringName, on_reveal: Callable = Callable()) -> void:
+	var staging := _get_loop_plot_purify_staging(plot_id)
+	var plot_center: Vector2 = staging.get("plot_center", player.global_position)
+	var temp_tera_pos: Vector2 = staging.get("tera_pos", plot_center)
+	var retreat_pos: Vector2 = staging.get("retreat_pos", player.global_position)
+	var restore_real_tera_visible := false
+
+	if tera_actor != null and is_instance_valid(tera_actor):
+		restore_real_tera_visible = tera_actor.visible
+		if restore_real_tera_visible:
+			tera_actor.visible = false
+
+	var temp_tera := _spawn_loop_plot_purify_tera(temp_tera_pos, plot_center)
+	if player != null and is_instance_valid(player) and player.global_position.distance_to(retreat_pos) > 8.0:
+		await _move_node(player, retreat_pos, LOOP_PURIFY_PLAYER_STEP_BACK_DURATION)
+
+	if temp_tera != null and is_instance_valid(temp_tera):
+		await _focus_cutscene_on_positions([temp_tera.global_position], LOOP_PURIFY_CAMERA_IN_DURATION, CUTSCENE_CLOSE_ZOOM)
+	else:
+		await _focus_cutscene_on_positions([plot_center], LOOP_PURIFY_CAMERA_IN_DURATION, CUTSCENE_CLOSE_ZOOM)
+
+	if temp_tera != null and is_instance_valid(temp_tera):
+		_face_story_actor(temp_tera, plot_center - temp_tera.global_position)
+		if temp_tera.has_method("play_cast"):
+			temp_tera.play_cast()
+		elif temp_tera.has_method("play_attack"):
+			temp_tera.play_attack()
+		spawn_overworld_burst(temp_tera.global_position + Vector2(0, -52), LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), LOOP_PURIFY_VFX_FRAME_COUNT, 20.0, LOOP_PURIFY_CHARGE_SCALE)
+
+	await get_tree().create_timer(LOOP_PURIFY_TERA_FOCUS_HOLD_SECONDS, true).timeout
+	await _focus_cutscene_on_positions([plot_center], LOOP_PURIFY_CAMERA_PAN_DURATION, CUTSCENE_CLOSE_ZOOM)
+	await get_tree().create_timer(LOOP_PURIFY_CAST_LEAD_SECONDS, true).timeout
+
+	_play_loop_purify_flash()
+	spawn_overworld_burst(plot_center, LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), LOOP_PURIFY_VFX_FRAME_COUNT, 26.0, LOOP_PURIFY_MAIN_SCALE)
+	Global.unlock_loop_plot(plot_id)
+	_refresh_loop_plot_visuals()
+	if on_reveal.is_valid():
+		on_reveal.call()
+	play_overworld_camera_shake(LOOP_PURIFY_SHAKE_INTENSITY, LOOP_PURIFY_SHAKE_DURATION)
+	_play_loop_world_sfx(LOOP_PURIFY_SFX, plot_center)
+
+	await get_tree().create_timer(LOOP_PURIFY_FOLLOWUP_DELAY, true).timeout
+	spawn_overworld_burst(plot_center + Vector2(0, -18), LOOP_PURIFY_VFX_TEXTURE, Vector2i(128, 128), LOOP_PURIFY_VFX_FRAME_COUNT, 24.0, LOOP_PURIFY_FOLLOWUP_SCALE)
+
+	await get_tree().create_timer(LOOP_PURIFY_IMPACT_HOLD_SECONDS, true).timeout
+	await _focus_cutscene_on_positions([player.global_position], LOOP_PURIFY_CAMERA_OUT_DURATION, CUTSCENE_GROUP_ZOOM)
+	_restore_player_camera(true)
+
+	if temp_tera != null and is_instance_valid(temp_tera):
+		temp_tera.queue_free()
+	if tera_actor != null and is_instance_valid(tera_actor):
+		tera_actor.visible = restore_real_tera_visible
 
 func _show_loop_sleep_tutorial_after_repair() -> void:
 	await _maybe_show_loop_sleep_tutorial()
@@ -3162,6 +3688,19 @@ func _close_loop_merchant_menu() -> void:
 	_loop_merchant_menu.visible = false
 	player.can_move = true
 
+func _sell_loop_crop_amount(item_type: int, amount: int) -> bool:
+	var current_count := int(Global.inventory.get(item_type, 0))
+	var sell_amount := mini(maxi(amount, 0), current_count)
+	if sell_amount <= 0:
+		return false
+	Global.inventory[item_type] = current_count - sell_amount
+	Global.add_loop_gold(_get_loop_crop_sale_value(item_type, sell_amount))
+	Global.inventory_updated.emit()
+	_refresh_loop_merchant_menu()
+	_refresh_loop_objective()
+	_autosave_loop_run()
+	return true
+
 func _on_loop_sell_harvest_pressed() -> void:
 	var total_gold := 0
 	for item_variant in LOOP_SELL_PRICES.keys():
@@ -3180,6 +3719,19 @@ func _on_loop_sell_harvest_pressed() -> void:
 	_refresh_loop_objective()
 	_show_player_notice("Sold the harvest for %d Gold." % total_gold)
 	_autosave_loop_run()
+
+func _on_loop_sell_one_crop_pressed(item_type: int) -> void:
+	if not _sell_loop_crop_amount(item_type, 1):
+		_show_player_notice("Nothing to sell yet.")
+		return
+	_show_player_notice("Sold 1 %s." % Global.get_item_display_name(item_type))
+
+func _on_loop_sell_all_crop_pressed(item_type: int) -> void:
+	var sold_amount := int(Global.inventory.get(item_type, 0))
+	if not _sell_loop_crop_amount(item_type, sold_amount):
+		_show_player_notice("Nothing to sell yet.")
+		return
+	_show_player_notice("Sold all %s." % Global.get_item_display_name(item_type))
 
 func _on_loop_buy_seed_pressed(seed_item: int) -> void:
 	var seed_shop := _get_active_loop_seed_shop()
@@ -3204,6 +3756,43 @@ func _on_loop_buy_inventory_item_pressed(item_type: int, cost: int) -> void:
 	_refresh_loop_merchant_menu()
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % _format_loop_item_name(item_type))
+	_autosave_loop_run()
+
+func _on_loop_buy_recipe_scroll_pressed(recipe_item: int, cost: int) -> void:
+	if Global.knows_recipe(recipe_item):
+		_show_player_notice("You already know %s." % Global.get_item_display_name(recipe_item))
+		return
+	if Global.loop_gold < cost:
+		_show_player_notice("Not enough Gold.")
+		return
+	Global.spend_loop_gold(cost)
+	if Global.learn_recipe(recipe_item):
+		if DemoDirector != null and DemoDirector.has_method("notify_recipe_learned"):
+			DemoDirector.notify_recipe_learned(recipe_item)
+	_refresh_loop_merchant_menu()
+	_refresh_loop_objective()
+	_show_player_notice("Learned %s." % Global.get_item_display_name(recipe_item))
+	_autosave_loop_run()
+
+func _on_loop_buy_potion_pressed(item_type: int, cost: int) -> void:
+	Global.ensure_loop_night_vendor_potion_stock_for_biome(_get_current_loop_biome_tier())
+	if Global.get_loop_night_vendor_potion_stock(item_type) <= 0:
+		_show_player_notice("That tonic is sold out tonight.")
+		return
+	if Global.loop_gold < cost:
+		_show_player_notice("Not enough Gold.")
+		return
+	if not Global.spend_loop_gold(cost):
+		_show_player_notice("Not enough Gold.")
+		return
+	if not Global.spend_loop_night_vendor_potion_stock(item_type):
+		Global.add_loop_gold(cost)
+		_show_player_notice("That tonic is sold out tonight.")
+		return
+	Global.add_item(item_type, 1)
+	_refresh_loop_merchant_menu()
+	_refresh_loop_objective()
+	_show_player_notice("Purchased %s." % Global.get_item_display_name(item_type))
 	_autosave_loop_run()
 
 func _on_loop_buy_equipment_pressed(item: Resource, cost: int) -> void:
@@ -3381,12 +3970,13 @@ func _play_cutscene_idle(node: Node2D, travel: Vector2) -> void:
 		node.play_idle()
 
 func _face_story_actor(node: Node, direction: Vector2) -> void:
-	if direction == Vector2.UP and node.has_method("face_up"):
+	var cardinal_direction := _cardinalize_direction(direction)
+	if cardinal_direction == Vector2.UP and node.has_method("face_up"):
 		node.face_up()
-	elif direction == Vector2.DOWN and node.has_method("face_down"):
+	elif cardinal_direction == Vector2.DOWN and node.has_method("face_down"):
 		node.face_down()
 	elif node.has_method("face_side"):
-		node.face_side(direction != Vector2.LEFT)
+		node.face_side(cardinal_direction != Vector2.LEFT)
 
 func _cardinalize_direction(direction: Vector2) -> Vector2:
 	if direction == Vector2.ZERO:

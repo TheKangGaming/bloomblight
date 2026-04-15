@@ -254,55 +254,22 @@ func _sync_player_hp_to_global() -> void:
 
 ## Calculates and returns combat math without actually executing the attack
 func get_combat_stats(target: Unit, distance: int = -1) -> Dictionary:
-	var equipped_weapon: WeaponData = null
-	if character_data != null:
-		equipped_weapon = character_data.equipped_weapon
+	if target == null:
+		return {}
 
-	var weapon_might := 2
-	var weapon_hit := 70
-	if equipped_weapon != null:
-		weapon_might = int(equipped_weapon.might)
-		weapon_hit = int(equipped_weapon.hit_rate)
-
-	var hit_chance = clamp(weapon_hit + (dexterity * 2) - (target.speed * 2) + get_combat_modifier("hit"), 0, 100)
-	var crit_chance = clamp(dexterity - int(target.speed / 2.0) + get_combat_modifier("crit"), 0, 100)
-	var is_magic_damage := _uses_magic_damage()
-	var damage_profile := _resolve_damage_stat_profile(is_magic_damage, equipped_weapon)
-	var attack_stat := int(damage_profile.get("attack_stat", 0))
-
-	var defense_stat := target.magic_defense if is_magic_damage else target.defense
-	var actual_damage = max(0, (attack_stat + weapon_might) - defense_stat)
-	if distance > 1 and equipped_weapon != null:
-		actual_damage = max(0, actual_damage - maxi(int(equipped_weapon.ranged_damage_penalty), 0))
-
-	return {
-		"hit": hit_chance,
-		"crit": crit_chance,
-		"damage": actual_damage,
-		"uses_magic_damage": is_magic_damage,
-		"damage_profile": damage_profile
-	}
+	var equipped_weapon: WeaponData = character_data.equipped_weapon if character_data != null else null
+	return CombatCalculator.get_combat_stats_from_snapshot(
+		current_stats,
+		character_data,
+		equipped_weapon,
+		get_combat_modifiers_snapshot(),
+		target.current_stats,
+		distance
+	)
 
 
 func get_attack_preview_data(weapon: WeaponData = null) -> Dictionary:
-	var equipped_weapon := weapon
-	if equipped_weapon == null and character_data != null:
-		equipped_weapon = character_data.equipped_weapon
-
-	var weapon_might := 2
-	if equipped_weapon != null:
-		weapon_might = int(equipped_weapon.might)
-
-	var profile := _resolve_damage_stat_profile(_uses_magic_damage(), equipped_weapon)
-	var attack_stat := int(profile.get("attack_stat", 0))
-	var attack_total := maxi(0, attack_stat + weapon_might)
-
-	return {
-		"attack_total": attack_total,
-		"weapon_might": weapon_might,
-		"attack_stat": attack_stat,
-		"profile": profile
-	}
+	return CombatCalculator.get_attack_preview_data_from_snapshot(current_stats, character_data, weapon)
 
 
 func _resolve_damage_stat_profile(is_magic_damage: bool, _weapon_override: WeaponData = null) -> Dictionary:
@@ -417,6 +384,18 @@ func get_combat_modifier(stat_name: String) -> int:
 		var modifiers: Dictionary = effect_state.get("modifiers", {})
 		total += int(modifiers.get(stat_name, 0))
 	return total
+
+func get_combat_modifiers_snapshot() -> Dictionary:
+	var snapshot := {}
+	for effect_state_variant in active_combat_effects.values():
+		if effect_state_variant is not Dictionary:
+			continue
+		var effect_state: Dictionary = effect_state_variant
+		var modifiers: Dictionary = effect_state.get("modifiers", {})
+		for modifier_key_variant in modifiers.keys():
+			var modifier_key := String(modifier_key_variant)
+			snapshot[modifier_key] = int(snapshot.get(modifier_key, 0)) + int(modifiers.get(modifier_key_variant, 0))
+	return snapshot
 
 func apply_timed_combat_effect(effect_id: StringName, modifiers: Dictionary, turns: int) -> void:
 	if effect_id.is_empty() or turns <= 0:

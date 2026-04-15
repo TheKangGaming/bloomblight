@@ -26,7 +26,7 @@ func _ensure_sprite() -> void:
 
 	_sprite = AnimatedSprite2D.new()
 	_sprite.centered = true
-	_sprite.position = Vector2(0, -24)
+	_sprite.position = Vector2(0, -14)
 	_sprite.modulate = Color(0.96, 1.0, 0.98, 1.0)
 	add_child(_sprite)
 

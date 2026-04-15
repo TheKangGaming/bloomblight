@@ -24,6 +24,18 @@ func _ready() -> void:
 	var board = get_parent()
 
 	_attack_button.disabled = unit == null or not board._unit_has_available_main_action(unit)
+	var items_available: bool = unit != null and bool(board._unit_has_usable_battle_items(unit))
+	_items_button.disabled = not items_available
+	if unit == null:
+		_items_button.text = "Items"
+	elif not board._unit_has_available_main_action(unit):
+		_items_button.text = "Items (Used)"
+	elif unit.health >= unit.max_health:
+		_items_button.text = "Items (Full HP)"
+	elif not items_available:
+		_items_button.text = "Items (No Tonics)"
+	else:
+		_items_button.text = "Items"
 	
 	if unit.character_data and not unit.character_data.abilities.is_empty():
 		var ability = unit.character_data.abilities[0]
@@ -78,6 +90,8 @@ func _reset_menu_focus() -> void:
 		_attack_button.grab_focus()
 	elif is_instance_valid(_ability_button) and _ability_button.visible and not _ability_button.disabled:
 		_ability_button.grab_focus()
+	elif is_instance_valid(_items_button) and _items_button.visible and not _items_button.disabled:
+		_items_button.grab_focus()
 	elif is_instance_valid(_wait_button):
 		_wait_button.grab_focus()
 	elif is_instance_valid(_cancel_button):
@@ -111,7 +125,7 @@ func _on_ability_button_pressed(ability: AbilityData) -> void:
 	queue_free()
 	
 func _on_items_pressed() -> void:
-	pass
+	get_parent().open_battle_item_menu()
 
 
 func _on_trade_button_pressed() -> void:

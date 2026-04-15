@@ -84,6 +84,7 @@ func _ready():
 	item_map[Global.Items.GRAPE] = [SHEET_FARM, Vector2i(30, 13)]
 	item_map[Global.Items.WOOD] = [SHEET_LOOT, Vector2i(5, 4)]
 	item_map[Global.Items.STONE] = [SHEET_LOOT, Vector2i(5, 2)] 
+	item_map[Global.Items.WATER] = [SHEET_FURNITURE, Vector2i(21,4)]
 	item_map[Global.Items.ROASTED_CORN] = [SHEET_FURNITURE, Vector2i(23,4)]
 	item_map[Global.Items.TOMATO_SOUP] = [SHEET_FURNITURE, Vector2i(21,4)]
 	item_map[Global.Items.HERBAL_HASH] = [SHEET_FURNITURE, Vector2i(22,4)]
@@ -95,13 +96,24 @@ func _ready():
 	item_map[Global.Items.STRAWBERRY_ENERGY_BOWL] = [SHEET_FURNITURE, Vector2i(28,4)]
 	item_map[Global.Items.MORNING_COFFEE] = [SHEET_FURNITURE, Vector2i(29,4)]
 	item_map[Global.Items.PARSNIP_SOUP] = [SHEET_FURNITURE, Vector2i(30,4)]
+	item_map[Global.Items.PEPPER_STIR_FRY] = [SHEET_FURNITURE, Vector2i(27,4)]
+	item_map[Global.Items.MELON_COOLER] = [SHEET_FURNITURE, Vector2i(29,4)]
+	item_map[Global.Items.CABBAGE_SKILLET] = [SHEET_FURNITURE, Vector2i(26,4)]
+	item_map[Global.Items.PUMPKIN_STEW] = [SHEET_FURNITURE, Vector2i(21,4)]
+	item_map[Global.Items.BROCCOLI_BAKE] = [SHEET_FURNITURE, Vector2i(23,4)]
+	item_map[Global.Items.BOK_CHOY_STIR_FRY] = [SHEET_FURNITURE, Vector2i(27,4)]
+	item_map[Global.Items.EGGPLANT_ROAST] = [SHEET_FURNITURE, Vector2i(25,4)]
+	item_map[Global.Items.GRAPE_TONIC] = [SHEET_FURNITURE, Vector2i(29,4)]
+	item_map[Global.Items.MINOR_TONIC] = [SHEET_FURNITURE, Vector2i(29,4)]
+	item_map[Global.Items.FIELD_TONIC] = [SHEET_FURNITURE, Vector2i(29,4)]
+	item_map[Global.Items.RESTORATIVE_DRAFT] = [SHEET_FURNITURE, Vector2i(29,4)]
 	
 
 
 func setup(item_enum: Global.Items, quantity: int):
 	
 	stored_item_enum = item_enum
-	var item_name = Global.Items.keys()[item_enum].replace("_", " ").capitalize()
+	var item_name = Global.get_item_display_name(item_enum)
 	_focus_tooltip_text = "%s\nQuantity: %d" % [item_name, quantity]
 	tooltip_text = ""
 	if has_focus():
@@ -123,7 +135,6 @@ func setup(item_enum: Global.Items, quantity: int):
 		icon.texture = atlas
 	else:
 		icon.texture = null
-		printerr("No icon definition found for: ", item_name)
 		
 
 func _exit_tree() -> void:

@@ -28,8 +28,9 @@ func _validate_early_food_balance() -> void:
 		for stat_name in ["VIT", "STR", "DEF", "DEX", "INT", "SPD", "MOV"]:
 			total_points += int(meal_stats.get(stat_name, 0))
 
-		if total_points != EARLY_FOOD_TOTAL_POWER_POINTS:
-			push_warning("%s is off early food budget (%d != %d)." % [Items.keys()[meal_item], total_points, EARLY_FOOD_TOTAL_POWER_POINTS])
+		var max_budget := EARLY_FOOD_TOTAL_POWER_POINTS if movement_bonus > 0 else LATE_FOOD_TOTAL_POWER_CAP
+		if total_points > max_budget:
+			push_warning("%s exceeds food power budget (%d > %d)." % [Items.keys()[meal_item], total_points, max_budget])
 
 signal inventory_updated
 signal recipe_knowledge_updated
@@ -48,6 +49,8 @@ var loop_time_phase := &"day"
 var loop_unlocked_plots: Dictionary = {}
 var loop_built_structures: Dictionary = {}
 var loop_equipped_perk_item: int = -1
+var loop_night_vendor_potion_stock: Dictionary = {}
+var loop_night_vendor_potion_stock_biome_tier := 0
 var pending_loop_arrival_intro := false
 var pending_intro_forest_visit := false
 var pending_intro_forest_return := false
@@ -76,6 +79,7 @@ signal tutorial_updated(text: String)
 var tutorial_step: int = 0
 const MAX_TUTORIAL_STEP := 15
 var tutorial_enabled := true
+var _loop_tutorial_text := ""
 var intro_sequence_complete := false
 const DEMO_CABIN_WOOD_REQUIRED := 10
 const DEMO_CABIN_STONE_REQUIRED := 10
@@ -117,34 +121,42 @@ func set_tutorial_step(step: int) -> void:
 func show_tutorial_text(text: String) -> void:
 	tutorial_updated.emit(text)
 
+func show_loop_tutorial_text(text: String) -> void:
+	_loop_tutorial_text = text
+	tutorial_updated.emit(text)
+
 func update_tutorial_ui() -> void:
 	if DemoDirector and DemoDirector.is_demo_active():
 		DemoDirector.refresh_current_prompt()
 		return
 
+	if loop_hub_mode_active:
+		tutorial_updated.emit(_loop_tutorial_text)
+		return
+
 	if not tutorial_enabled:
-		tutorial_updated.emit("")
+		show_tutorial_text("")
 		return
 
 	match tutorial_step:
-		0: tutorial_updated.emit("Quest: Use W, A, S, D to move around.")
-		1: tutorial_updated.emit("Quest: Walk up to the sign and read it. (Press E)")
-		2: tutorial_updated.emit("Quest: Open the nearby chest. Follow the signs!")
-		3: tutorial_updated.emit("Quest: Equip your Hoe (Scroll Mouse Wheel or Press 1).")
-		4: tutorial_updated.emit("Quest: Plow some soil (Press Space on the dirt).")
-		5: tutorial_updated.emit("Quest: Plant a seed (Press E near plowed soil).")
-		6: tutorial_updated.emit("Quest: Equip your Watering Can and water the seed!")
-		7: tutorial_updated.emit("Quest: Equip your Axe and chop a tree for Wood.")
-		8: tutorial_updated.emit("Quest: Press T to skip to the next day.")
-		9: tutorial_updated.emit("Quest: Harvest your fully grown crop (Walk over it).")
-		10: tutorial_updated.emit("Quest: Walk up to the Campfire, then press Interact/Confirm to light it.")
-		11: tutorial_updated.emit("Quest: Cook a meal using your harvested crop!")
-		12: tutorial_updated.emit("Quest: Open inventory (Tab) and eat the meal.")
-		13: tutorial_updated.emit("Quest: Sleep to trigger the battle warning, then press Defend the Sanctuary!")
-		14: tutorial_updated.emit("Quest: Defeat the enemy and return to the farm!")
-		15: tutorial_updated.emit("")
+		0: show_tutorial_text("Quest: Use W, A, S, D to move around.")
+		1: show_tutorial_text("Quest: Walk up to the sign and read it. (Press E)")
+		2: show_tutorial_text("Quest: Open the nearby chest. Follow the signs!")
+		3: show_tutorial_text("Quest: Equip your Hoe (Scroll Mouse Wheel or Press 1).")
+		4: show_tutorial_text("Quest: Plow some soil (Press Space on the dirt).")
+		5: show_tutorial_text("Quest: Plant a seed (Press E near plowed soil).")
+		6: show_tutorial_text("Quest: Equip your Watering Can and water the seed!")
+		7: show_tutorial_text("Quest: Equip your Axe and chop a tree for Wood.")
+		8: show_tutorial_text("Quest: Press T to skip to the next day.")
+		9: show_tutorial_text("Quest: Harvest your fully grown crop (Walk over it).")
+		10: show_tutorial_text("Quest: Walk up to the Campfire, then press Interact/Confirm to light it.")
+		11: show_tutorial_text("Quest: Cook a meal using your harvested crop!")
+		12: show_tutorial_text("Quest: Open inventory (Tab) and eat the meal.")
+		13: show_tutorial_text("Quest: Sleep to trigger the battle warning, then press Defend the Sanctuary!")
+		14: show_tutorial_text("Quest: Defeat the enemy and return to the farm!")
+		15: show_tutorial_text("")
 		_:
-			tutorial_updated.emit("")
+			show_tutorial_text("")
 
 var combat_transition := {
 	"started_at_unix": 0.0
@@ -174,7 +186,10 @@ enum Items {
 	ROASTED_CORN, TOMATO_SOUP, HERBAL_HASH,
 	GARLIC_MASHED_POTATOES, GLAZED_CARROTS, ROASTED_ROOT_MEDLEY,
 	CAULIFLOWER_STEAK, GREEN_BEAN_SAUTE, STRAWBERRY_ENERGY_BOWL,
-	MORNING_COFFEE, PARSNIP_SOUP
+	MORNING_COFFEE, PARSNIP_SOUP,
+	PEPPER_STIR_FRY, MELON_COOLER, CABBAGE_SKILLET,
+	PUMPKIN_STEW, BROCCOLI_BAKE, BOK_CHOY_STIR_FRY, EGGPLANT_ROAST, GRAPE_TONIC,
+	MINOR_TONIC, FIELD_TONIC, RESTORATIVE_DRAFT
 }
 
 const HARVEST_DROPS = {
@@ -206,6 +221,29 @@ const SPRING := &"spring"
 const SUMMER := &"summer"
 const FALL := &"fall"
 const WINTER := &"winter"
+const LOOP_BIOME_SPRING := 1
+const LOOP_BIOME_SUMMER := 2
+const LOOP_BIOME_FALL := 3
+const LOOP_PLANTING_SEASON_BY_BIOME := {
+	LOOP_BIOME_SPRING: SPRING,
+	LOOP_BIOME_SUMMER: SUMMER,
+	LOOP_BIOME_FALL: FALL,
+}
+const BATTLE_TONIC_ITEM_ORDER := [
+	Items.MINOR_TONIC,
+	Items.FIELD_TONIC,
+	Items.RESTORATIVE_DRAFT,
+]
+const TONIC_HEAL_AMOUNTS := {
+	Items.MINOR_TONIC: 8,
+	Items.FIELD_TONIC: 10,
+	Items.RESTORATIVE_DRAFT: 12,
+}
+const LOOP_NIGHT_VENDOR_POTION_STOCK_BY_BIOME := {
+	LOOP_BIOME_SPRING: {Items.MINOR_TONIC: 2},
+	LOOP_BIOME_SUMMER: {Items.FIELD_TONIC: 2},
+	LOOP_BIOME_FALL: {Items.RESTORATIVE_DRAFT: 1},
+}
 
 # Seed metadata used by farm planting and seed menu UI.
 # "seasons" controls when a seed can be planted.
@@ -261,6 +299,86 @@ const SEED_GROWTH_SPEEDS := {
 }
 
 const LOOP_PERK_RULE_TEXT := "Meals grant a perk that lasts until your next battle."
+
+func get_loop_biome_tier_for_stage(stage: int) -> int:
+	if stage <= 3:
+		return LOOP_BIOME_SPRING
+	if stage <= 6:
+		return LOOP_BIOME_SUMMER
+	return LOOP_BIOME_FALL
+
+func get_current_loop_biome_tier() -> int:
+	return get_loop_biome_tier_for_stage(maxi(loop_battle_index, 1))
+
+func get_loop_biome_season(biome_tier: int) -> StringName:
+	return StringName(LOOP_PLANTING_SEASON_BY_BIOME.get(biome_tier, SPRING))
+
+func get_active_planting_season() -> StringName:
+	if loop_hub_mode_active:
+		return get_loop_biome_season(get_current_loop_biome_tier())
+	if CalendarService != null:
+		return CalendarService.get_current_season()
+	return SPRING
+
+func get_item_display_name(item_type: int) -> String:
+	if recipes.has(item_type):
+		var recipe_data: Dictionary = recipes.get(item_type, {})
+		return String(recipe_data.get("display_name", "Item"))
+
+	match item_type:
+		Items.MINOR_TONIC:
+			return "Minor Tonic"
+		Items.FIELD_TONIC:
+			return "Field Tonic"
+		Items.RESTORATIVE_DRAFT:
+			return "Restorative Draft"
+		_:
+			var item_keys := Items.keys()
+			if item_type >= 0 and item_type < item_keys.size():
+				var words := String(item_keys[item_type]).to_lower().split("_")
+				for index in range(words.size()):
+					words[index] = String(words[index]).capitalize()
+				return " ".join(words)
+	return "Item"
+
+func is_battle_tonic(item_type: int) -> bool:
+	return TONIC_HEAL_AMOUNTS.has(item_type)
+
+func get_tonic_heal_amount(item_type: int) -> int:
+	return int(TONIC_HEAL_AMOUNTS.get(item_type, 0))
+
+func get_battle_tonic_items() -> Array[int]:
+	var tonics: Array[int] = []
+	for item_variant in BATTLE_TONIC_ITEM_ORDER:
+		tonics.append(int(item_variant))
+	return tonics
+
+func reset_loop_night_vendor_potion_stock_for_biome(biome_tier: int) -> void:
+	loop_night_vendor_potion_stock_biome_tier = biome_tier
+	loop_night_vendor_potion_stock = {}
+	var stock_template: Dictionary = LOOP_NIGHT_VENDOR_POTION_STOCK_BY_BIOME.get(biome_tier, {})
+	for item_variant in stock_template.keys():
+		loop_night_vendor_potion_stock[int(item_variant)] = int(stock_template[item_variant])
+	loop_state_changed.emit()
+
+func ensure_loop_night_vendor_potion_stock_for_biome(biome_tier: int) -> void:
+	if biome_tier <= 0:
+		return
+	if loop_night_vendor_potion_stock_biome_tier != biome_tier or loop_night_vendor_potion_stock.is_empty():
+		reset_loop_night_vendor_potion_stock_for_biome(biome_tier)
+
+func get_loop_night_vendor_potion_stock(item_type: int) -> int:
+	return int(loop_night_vendor_potion_stock.get(item_type, 0))
+
+func spend_loop_night_vendor_potion_stock(item_type: int, amount: int = 1) -> bool:
+	var remaining := get_loop_night_vendor_potion_stock(item_type)
+	if amount <= 0:
+		return true
+	if remaining < amount:
+		return false
+	loop_night_vendor_potion_stock[item_type] = remaining - amount
+	loop_state_changed.emit()
+	return true
 
 func get_seed_seasons(seed_type: Items) -> Array:
 	if not SEED_PLANTING_RULES.has(seed_type):
@@ -357,6 +475,17 @@ var inventory = {
 	Items.STRAWBERRY_ENERGY_BOWL: 0,
 	Items.MORNING_COFFEE: 0,
 	Items.PARSNIP_SOUP: 0,
+	Items.PEPPER_STIR_FRY: 0,
+	Items.MELON_COOLER: 0,
+	Items.CABBAGE_SKILLET: 0,
+	Items.PUMPKIN_STEW: 0,
+	Items.BROCCOLI_BAKE: 0,
+	Items.BOK_CHOY_STIR_FRY: 0,
+	Items.EGGPLANT_ROAST: 0,
+	Items.GRAPE_TONIC: 0,
+	Items.MINOR_TONIC: 0,
+	Items.FIELD_TONIC: 0,
+	Items.RESTORATIVE_DRAFT: 0,
 }
 
 # Early-game meal tuning notes:
@@ -364,6 +493,7 @@ var inventory = {
 # - Early movement is capped at +1 MOV max; any extra power should flow into SPD/DEX/VIT instead.
 const EARLY_FOOD_TOTAL_POWER_POINTS := 4
 const EARLY_FOOD_MOVEMENT_CAP := 1
+const LATE_FOOD_TOTAL_POWER_CAP := 5
 
 var recipes = {
 	Items.ROASTED_CORN: {
@@ -406,14 +536,14 @@ var recipes = {
 		"ingredients": {Items.POTATO: 1, Items.CARROT: 1, Items.PARSNIP: 1}
 	},
 	Items.CAULIFLOWER_STEAK: {
-		"display_name": "Cauliflower \"Steak\"",
+		"display_name": "Cauliflower Steak",
 		"buff_preview": "+3 INT, +1 DEF",
 		"role_tag": "Purifier",
 		"strategy_note": "Boosts Tera's magic/purifying power and keeps her safe.",
 		"ingredients": {Items.CAULIFLOWER: 1, Items.GARLIC: 1}
 	},
 	Items.GREEN_BEAN_SAUTE: {
-		"display_name": "Green Bean Sauté",
+		"display_name": "Green Bean Saute",
 		"buff_preview": "+2 VIT, +2 SPD",
 		"role_tag": "Archer",
 		"strategy_note": "Perfect for dodging or repositioning.",
@@ -439,6 +569,62 @@ var recipes = {
 		"role_tag": "Generalist",
 		"strategy_note": "A balanced meal for hybrid support/tanking.",
 		"ingredients": {Items.PARSNIP: 1, Items.POTATO: 1}
+	},
+	Items.PEPPER_STIR_FRY: {
+		"display_name": "Pepper Stir Fry",
+		"buff_preview": "+2 SPD, +1 STR, +1 DEX",
+		"role_tag": "Archer",
+		"strategy_note": "A fast, aggressive prep meal for units that want initiative and accuracy.",
+		"ingredients": {Items.HOT_PEPPER: 1, Items.WHEAT: 1}
+	},
+	Items.MELON_COOLER: {
+		"display_name": "Melon Cooler",
+		"buff_preview": "+2 VIT, +1 DEF, +1 SPD",
+		"role_tag": "Generalist",
+		"strategy_note": "Keeps the whole party steadier through longer fights.",
+		"ingredients": {Items.MELON: 1, Items.WATER: 1}
+	},
+	Items.CABBAGE_SKILLET: {
+		"display_name": "Cabbage Skillet",
+		"buff_preview": "+2 DEF, +1 STR, +1 VIT",
+		"role_tag": "Frontliner",
+		"strategy_note": "Reliable bulk and pressure for tougher enemy lines.",
+		"ingredients": {Items.RED_CABBAGE: 1, Items.TOMATO: 1}
+	},
+	Items.PUMPKIN_STEW: {
+		"display_name": "Pumpkin Stew",
+		"buff_preview": "+3 DEF, +2 VIT",
+		"role_tag": "Frontliner",
+		"strategy_note": "Late-run defense spike for surviving the hardest battles.",
+		"ingredients": {Items.PUMPKIN: 1, Items.WATER: 1}
+	},
+	Items.BROCCOLI_BAKE: {
+		"display_name": "Broccoli Bake",
+		"buff_preview": "+2 INT, +1 DEF, +1 VIT",
+		"role_tag": "Purifier",
+		"strategy_note": "Supportive magic prep with a little extra staying power.",
+		"ingredients": {Items.BROCCOLI: 1, Items.BOK_CHOY: 1}
+	},
+	Items.BOK_CHOY_STIR_FRY: {
+		"display_name": "Bok Choy Stir Fry",
+		"buff_preview": "+2 DEF, +1 SPD, +1 DEX",
+		"role_tag": "Archer",
+		"strategy_note": "A nimble defensive meal for safer ranged play.",
+		"ingredients": {Items.BOK_CHOY: 1, Items.EGGPLANT: 1}
+	},
+	Items.EGGPLANT_ROAST: {
+		"display_name": "Eggplant Roast",
+		"buff_preview": "+2 STR, +1 DEF, +1 SPD",
+		"role_tag": "Frontliner",
+		"strategy_note": "Balanced pressure and durability for melee turns.",
+		"ingredients": {Items.EGGPLANT: 1, Items.ARTICHOKE: 1}
+	},
+	Items.GRAPE_TONIC: {
+		"display_name": "Grape Tonic",
+		"buff_preview": "+2 DEX, +2 SPD, +1 VIT",
+		"role_tag": "Archer",
+		"strategy_note": "A sharp late-game accuracy and tempo tonic.",
+		"ingredients": {Items.GRAPE: 1, Items.WATER: 1}
 	}
 }
 
@@ -495,6 +681,8 @@ func get_progression_save_data() -> Dictionary:
 		"loop_unlocked_plots": loop_unlocked_plots.duplicate(true),
 		"loop_built_structures": loop_built_structures.duplicate(true),
 		"loop_equipped_perk_item": loop_equipped_perk_item,
+		"loop_night_vendor_potion_stock": loop_night_vendor_potion_stock.duplicate(true),
+		"loop_night_vendor_potion_stock_biome_tier": loop_night_vendor_potion_stock_biome_tier,
 		"player_permanent_stats": player_permanent_stats.duplicate(true),
 		"active_food_buff": active_food_buff.duplicate(true)
 	}
@@ -529,6 +717,14 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 		loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
 		loop_unlocked_plots[String(LOOP_PLOT_CABIN)] = true
 	loop_equipped_perk_item = int(save_data.get("loop_equipped_perk_item", loop_equipped_perk_item))
+	loop_night_vendor_potion_stock.clear()
+	var saved_potion_stock = save_data.get("loop_night_vendor_potion_stock", loop_night_vendor_potion_stock)
+	if saved_potion_stock is Dictionary:
+		for item_variant in (saved_potion_stock as Dictionary).keys():
+			loop_night_vendor_potion_stock[int(item_variant)] = int((saved_potion_stock as Dictionary).get(item_variant, 0))
+	loop_night_vendor_potion_stock_biome_tier = int(save_data.get("loop_night_vendor_potion_stock_biome_tier", 0))
+	if loop_hub_mode_active and loop_time_phase == LOOP_PHASE_NIGHT and loop_night_vendor_potion_stock.is_empty():
+		ensure_loop_night_vendor_potion_stock_for_biome(get_current_loop_biome_tier())
 	if save_data.has("player_permanent_stats") and save_data.player_permanent_stats is Dictionary:
 		player_permanent_stats = save_data.player_permanent_stats.duplicate(true)
 		ensure_player_stat_formats()
@@ -629,6 +825,9 @@ func reset_demo_state() -> void:
 	loop_unlocked_plots.clear()
 	loop_built_structures.clear()
 	loop_equipped_perk_item = -1
+	loop_night_vendor_potion_stock.clear()
+	loop_night_vendor_potion_stock_biome_tier = 0
+	_loop_tutorial_text = ""
 	pending_loop_arrival_intro = false
 	pending_intro_forest_visit = false
 	pending_intro_forest_return = false
@@ -667,7 +866,10 @@ func begin_loop_hub_run() -> void:
 	loop_bloom_points = 0
 	loop_battle_index = 1
 	loop_time_phase = LOOP_PHASE_DAY
+	_loop_tutorial_text = ""
 	pending_loop_arrival_intro = true
+	loop_night_vendor_potion_stock.clear()
+	loop_night_vendor_potion_stock_biome_tier = 0
 	loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
 	loop_unlocked_plots[String(LOOP_PLOT_CABIN)] = true
 	inventory[Items.WOOD] = 0
@@ -902,7 +1104,15 @@ var food_stats = {
 	Items.GREEN_BEAN_SAUTE: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 2, "MOV": 0},
 	Items.STRAWBERRY_ENERGY_BOWL: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 0, "SPD": 1, "MOV": 1},
 	Items.MORNING_COFFEE: {"VIT": 0, "STR": 0, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 2, "MOV": 1},
-	Items.PARSNIP_SOUP: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 2, "SPD": 0, "MOV": 0}
+	Items.PARSNIP_SOUP: {"VIT": 2, "STR": 0, "DEF": 0, "DEX": 0, "INT": 2, "SPD": 0, "MOV": 0},
+	Items.PEPPER_STIR_FRY: {"VIT": 0, "STR": 1, "DEF": 0, "DEX": 1, "INT": 0, "SPD": 2, "MOV": 0},
+	Items.MELON_COOLER: {"VIT": 2, "STR": 0, "DEF": 1, "DEX": 0, "INT": 0, "SPD": 1, "MOV": 0},
+	Items.CABBAGE_SKILLET: {"VIT": 1, "STR": 1, "DEF": 2, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.PUMPKIN_STEW: {"VIT": 2, "STR": 0, "DEF": 3, "DEX": 0, "INT": 0, "SPD": 0, "MOV": 0},
+	Items.BROCCOLI_BAKE: {"VIT": 1, "STR": 0, "DEF": 1, "DEX": 0, "INT": 2, "SPD": 0, "MOV": 0},
+	Items.BOK_CHOY_STIR_FRY: {"VIT": 0, "STR": 0, "DEF": 2, "DEX": 1, "INT": 0, "SPD": 1, "MOV": 0},
+	Items.EGGPLANT_ROAST: {"VIT": 0, "STR": 2, "DEF": 1, "DEX": 0, "INT": 0, "SPD": 1, "MOV": 0},
+	Items.GRAPE_TONIC: {"VIT": 1, "STR": 0, "DEF": 0, "DEX": 2, "INT": 0, "SPD": 2, "MOV": 0}
 	# Add future meals here (respect early MOV cap and total power budget).
 }
 
