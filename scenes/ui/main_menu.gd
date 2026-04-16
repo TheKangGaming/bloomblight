@@ -276,6 +276,8 @@ func set_status_tab_highlight(enabled: bool) -> void:
 func update_inventory() -> void:
 	if inventory_grid == null:
 		return
+	if not is_inside_tree():
+		return
 
 	_clear_container_children(inventory_grid)
 

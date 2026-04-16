@@ -1017,8 +1017,8 @@ func cancel_battle_item_menu() -> void:
 func try_use_battle_item_on_active_unit(item_type: int) -> bool:
 	if _battle_ended or _active_unit == null:
 		return false
-	if not _unit_has_available_main_action(_active_unit):
-		_show_overlay_notice("That unit has already used its main action.")
+	if _active_unit.main_action_used:
+		_show_overlay_notice("That unit has already used their item.")
 		return false
 	if not Global.is_battle_tonic(item_type):
 		_show_overlay_notice("That item can't be used in battle.")

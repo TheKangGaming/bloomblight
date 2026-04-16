@@ -68,7 +68,7 @@ character_data = ExtResource("3_data")
 [node name="Visuals" type="Node2D" parent="PathFollow2D" parent_id_path=PackedInt32Array(1761215674) index="1"]
 
 [node name="Sprite2D" type="Sprite2D" parent="PathFollow2D/Visuals" index="0"]
-position = Vector2(0, -25)
+position = Vector2(0, -23)
 scale = Vector2(1.25, 1.25)
 texture = ExtResource("2_tex")
 hframes = 11

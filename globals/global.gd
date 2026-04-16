@@ -301,11 +301,7 @@ const SEED_GROWTH_SPEEDS := {
 const LOOP_PERK_RULE_TEXT := "Meals grant a perk that lasts until your next battle."
 
 func get_loop_biome_tier_for_stage(stage: int) -> int:
-	if stage <= 3:
-		return LOOP_BIOME_SPRING
-	if stage <= 6:
-		return LOOP_BIOME_SUMMER
-	return LOOP_BIOME_FALL
+	return LOOP_BIOME_SPRING  # Only Forest (Spring) biome implemented; expand when new biomes are added
 
 func get_current_loop_biome_tier() -> int:
 	return get_loop_biome_tier_for_stage(maxi(loop_battle_index, 1))

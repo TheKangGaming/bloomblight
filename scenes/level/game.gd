@@ -433,7 +433,7 @@ func _get_loop_stage() -> int:
 	return clampi(maxi(Global.loop_battle_index, 1), 1, LOOP_MAX_FOREST_STAGE)
 
 func _get_current_loop_biome_tier() -> int:
-	return Global.get_current_loop_biome_tier() if Global != null and Global.has_method("get_current_loop_biome_tier") else 1
+	return 1  # Only Forest (Spring) biome implemented; expand when new biomes are added
 
 func _get_current_loop_biome_name() -> String:
 	return String(LOOP_BIOME_NAMES.get(_get_current_loop_biome_tier(), "Spring"))
@@ -742,14 +742,14 @@ func _restore_loop_crop(crop: Dictionary) -> void:
 	var plant := plant_scene.instantiate() as StaticBody2D
 	if plant == null:
 		return
+	objects_root.add_child(plant)
+	plant.position = plant_pos
 	if plant.has_method("restore_state"):
 		plant.restore_state(seed_type, grid_pos, float(crop.get("age", 1.0)))
 	else:
 		plant.setup(seed_type, grid_pos)
 		if plant.get("age") != null:
 			plant.age = float(crop.get("age", 1.0))
-	objects_root.add_child(plant)
-	plant.position = plant_pos
 
 func _get_equipment_display_name(item: Resource) -> String:
 	if item is WeaponData:
@@ -1677,6 +1677,8 @@ func _ensure_loop_prompt() -> void:
 	_loop_prompt_label = label
 
 func _on_loop_state_ui_changed() -> void:
+	if not is_inside_tree():
+		return
 	_refresh_loop_merchant_menu()
 	_refresh_loop_hud()
 	if not _loop_plot_unlock_sequence_active:
@@ -3023,6 +3025,8 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	if is_instance_valid(combat_music):
 		combat_music.autoplay = false
 		combat_music.stop()
+		if _get_loop_stage() >= LOOP_MAX_FOREST_STAGE:
+			combat_music.stream = preload("res://audio/music/Music_MasterFight.wav")
 
 	scene_tree.root.add_child(combat_scene)
 	scene_tree.current_scene = combat_scene
@@ -3534,6 +3538,7 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		if lost_stone > 0:
 			Global.remove_item(Global.Items.STONE, lost_stone)
 		_show_player_notice("Driven back. Raiders stole %d Gold, %d Wood, and %d Stone." % [lost_gold, lost_wood, lost_stone], 2.0)
+		Global.set_player_unbuffed_hp(int(Global.get_player_permanent_totals().get("MAX_HP", 20)))
 	Global.reset_loop_night_vendor_potion_stock_for_biome(_get_current_loop_biome_tier())
 	_refresh_loop_merchant_visuals()
 	await _maybe_show_loop_first_night_tutorial()
