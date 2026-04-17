@@ -20,6 +20,9 @@ const LOOP_ARRIVAL_PLAYER_ENTRY_POS := Vector2(922, 1688)
 const LOOP_ARRIVAL_PLAYER_STOP := Vector2(922, 1416)
 const LOOP_ARRIVAL_TERA_ENTRY_POS := Vector2(994, 1688)
 const LOOP_ARRIVAL_TERA_STOP := Vector2(994, 1408)
+const LOOP_ARRIVAL_CAMERA_OFFSET := Vector2(0, -88)
+const LOOP_ARRIVAL_DIALOGUE_OFFSET := Vector2(0, -120)
+const LOOP_ARRIVAL_CABIN_DIALOGUE_OFFSET := Vector2(0, -72)
 const LOOP_ARRIVAL_TERA_GATE_POS := Vector2(960, 1300)
 const LOOP_ARRIVAL_TERA_CABIN_APPROACH_POS := Vector2(960, 1200)
 const LOOP_ARRIVAL_TERA_REST_POS := Vector2(960, 1120)
@@ -129,39 +132,39 @@ const LOOP_WAGON_SEED_SHOPS := {
 }
 const LOOP_NIGHT_VENDOR_SEED_SHOPS := {
 	1: {
-		Global.Items.CAULIFLOWER_SEED: {"cost": 8, "label": "Cauliflower Seeds x1"},
-		Global.Items.GREEN_BEANS_SEED: {"cost": 8, "label": "Green Bean Seeds x1"},
-		Global.Items.STRAWBERRY_SEED: {"cost": 10, "label": "Strawberry Seeds x1"},
-		Global.Items.COFFEE_BEAN_SEED: {"cost": 11, "label": "Coffee Beans x1"},
+		Global.Items.CAULIFLOWER_SEED: {"cost": 7, "label": "Cauliflower Seeds x1"},
+		Global.Items.GREEN_BEANS_SEED: {"cost": 6, "label": "Green Bean Seeds x1"},
+		Global.Items.STRAWBERRY_SEED: {"cost": 9, "label": "Strawberry Seeds x1"},
+		Global.Items.COFFEE_BEAN_SEED: {"cost": 10, "label": "Coffee Beans x1"},
 	},
 	2: {
-		Global.Items.CORN_SEED: {"cost": 7, "label": "Corn Seeds x1"},
-		Global.Items.TOMATO_SEED: {"cost": 7, "label": "Tomato Seeds x1"},
-		Global.Items.MELON_SEED: {"cost": 9, "label": "Melon Seeds x1"},
-		Global.Items.RED_CABBAGE_SEED: {"cost": 10, "label": "Red Cabbage Seeds x1"},
+		Global.Items.CORN_SEED: {"cost": 6, "label": "Corn Seeds x1"},
+		Global.Items.TOMATO_SEED: {"cost": 6, "label": "Tomato Seeds x1"},
+		Global.Items.MELON_SEED: {"cost": 8, "label": "Melon Seeds x1"},
+		Global.Items.RED_CABBAGE_SEED: {"cost": 9, "label": "Red Cabbage Seeds x1"},
 	},
 	3: {
-		Global.Items.GRAPE_SEED: {"cost": 9, "label": "Grape Seeds x1"},
-		Global.Items.PUMPKIN_SEED: {"cost": 11, "label": "Pumpkin Seeds x1"},
+		Global.Items.GRAPE_SEED: {"cost": 8, "label": "Grape Seeds x1"},
+		Global.Items.PUMPKIN_SEED: {"cost": 10, "label": "Pumpkin Seeds x1"},
 	},
 }
 const LOOP_NIGHT_VENDOR_INGREDIENT_SHOPS := {
 	1: {
-		Global.Items.CAULIFLOWER: {"cost": 9, "label": "Cauliflower x1"},
-		Global.Items.STRAWBERRY: {"cost": 10, "label": "Strawberry x1"},
-		Global.Items.COFFEE_BEAN: {"cost": 8, "label": "Coffee Bean x1"},
+		Global.Items.CAULIFLOWER: {"cost": 13, "label": "Cauliflower x1"},
+		Global.Items.STRAWBERRY: {"cost": 15, "label": "Strawberry x1"},
+		Global.Items.COFFEE_BEAN: {"cost": 16, "label": "Coffee Bean x1"},
 		Global.Items.WATER: {"cost": 3, "label": "Fresh Water x1"},
 	},
 	2: {
-		Global.Items.CORN: {"cost": 8, "label": "Corn x1"},
-		Global.Items.TOMATO: {"cost": 8, "label": "Tomato x1"},
-		Global.Items.MELON: {"cost": 10, "label": "Melon x1"},
+		Global.Items.CORN: {"cost": 12, "label": "Corn x1"},
+		Global.Items.TOMATO: {"cost": 12, "label": "Tomato x1"},
+		Global.Items.MELON: {"cost": 15, "label": "Melon x1"},
 		Global.Items.WATER: {"cost": 4, "label": "Fresh Water x1"},
 	},
 	3: {
-		Global.Items.PUMPKIN: {"cost": 12, "label": "Pumpkin x1"},
-		Global.Items.GRAPE: {"cost": 10, "label": "Grape x1"},
-		Global.Items.ARTICHOKE: {"cost": 9, "label": "Artichoke x1"},
+		Global.Items.PUMPKIN: {"cost": 18, "label": "Pumpkin x1"},
+		Global.Items.GRAPE: {"cost": 15, "label": "Grape x1"},
+		Global.Items.ARTICHOKE: {"cost": 13, "label": "Artichoke x1"},
 		Global.Items.WATER: {"cost": 4, "label": "Fresh Water x1"},
 	},
 }
@@ -308,6 +311,7 @@ const LOOP_MERCHANT_KIND_WAGON := "wagon"
 const LOOP_MERCHANT_KIND_NIGHT := "night"
 const LOOP_MERCHANT_TAB_SWITCH_COOLDOWN_MS := 150
 const WORLD_PICKUP_POPUP_SCRIPT := preload("res://scenes/ui/world_pickup_popup.gd")
+const LOOP_TONIC_ICON := preload("res://graphics/loot/fc85.png")
 
 enum IntroState {
 	INACTIVE,
@@ -820,10 +824,10 @@ func _sync_loop_campfire_state() -> void:
 		camp_fire.visible = true
 		camp_fire.set_deferred("collision_layer", 1)
 		_set_body_collision_shapes_deferred(camp_fire, false)
-		var interact_area := camp_fire.get_node_or_null("InteractArea") as Area2D
-		if interact_area != null:
-			interact_area.set_deferred("collision_mask", 2)
-			_set_area_collision_shapes_deferred(interact_area, false)
+		var default_interact_area := camp_fire.get_node_or_null("InteractArea") as Area2D
+		if default_interact_area != null:
+			default_interact_area.set_deferred("collision_mask", 2)
+			_set_area_collision_shapes_deferred(default_interact_area, false)
 		return
 
 	var campfire_available := _is_loop_cabin_repaired()
@@ -1178,6 +1182,7 @@ func _populate_loop_night_vendor_potions_tab() -> void:
 		var sold_out := remaining_stock <= 0
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
+		button.icon = LOOP_TONIC_ICON
 		var state_suffix := ""
 		if sold_out:
 			state_suffix = " [Sold Out]"
@@ -2629,7 +2634,7 @@ func _begin_intro_sequence() -> void:
 		{"speaker": "Tera", "text": "Yeah. But I've never been this far out before. I don't know where we are."},
 		{"speaker": "Savannah", "text": "It's quiet. That's all that matters. We stop here."},
 		{"speaker": "Tera", "text": "Wait. Look over there. By the treeline. Is that a roof?"}
-	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
+	], [], CUTSCENE_CLOSE_ZOOM)
 
 	await _focus_cutscene_on_nodes([tera_actor], 0.25, CUTSCENE_CLOSE_ZOOM)
 	await _move_node(tera_actor, _marker_pos(&"TeraWander", INTRO_TERA_WANDER_POS), 0.7)
@@ -2990,6 +2995,8 @@ func _launch_direct_combat_scene(combat_scene_path: String) -> void:
 	if DemoDirector and not Global.loop_hub_mode_active:
 		DemoDirector.prepare_day_two_battle_intro()
 
+	Global.clear_pending_loop_battle_resolution()
+
 	var scene_tree := get_tree()
 	Global.saved_farm_scene = self
 	Global.begin_combat_transition()
@@ -3121,7 +3128,7 @@ func _run_loop_arrival_intro() -> void:
 	if silas_actor != null:
 		silas_actor.visible = false
 
-	var intro_cam_target := (LOOP_ARRIVAL_PLAYER_STOP + LOOP_ARRIVAL_TERA_STOP) / 2.0
+	var intro_cam_target := ((LOOP_ARRIVAL_PLAYER_STOP + LOOP_ARRIVAL_TERA_STOP) / 2.0) + LOOP_ARRIVAL_CAMERA_OFFSET
 	cutscene_camera.position_smoothing_enabled = false
 	cutscene_camera.global_position = intro_cam_target
 	cutscene_camera.zoom = CUTSCENE_GROUP_ZOOM
@@ -3130,17 +3137,24 @@ func _run_loop_arrival_intro() -> void:
 		cutscene_camera.reset_smoothing()
 	cutscene_camera.position_smoothing_enabled = true
 
-	await _focus_cutscene_on_positions([LOOP_ARRIVAL_PLAYER_STOP, LOOP_ARRIVAL_TERA_STOP], 0.35, CUTSCENE_GROUP_ZOOM)
+	await _focus_cutscene_on_positions([
+		LOOP_ARRIVAL_PLAYER_STOP + LOOP_ARRIVAL_CAMERA_OFFSET,
+		LOOP_ARRIVAL_TERA_STOP + LOOP_ARRIVAL_CAMERA_OFFSET
+	], 0.35, CUTSCENE_GROUP_ZOOM)
 	await _move_story_group(
 		[player, tera_actor],
 		[LOOP_ARRIVAL_PLAYER_STOP, LOOP_ARRIVAL_TERA_STOP],
 		1.55
 	)
+	await _focus_cutscene_on_positions([
+		LOOP_ARRIVAL_PLAYER_STOP + LOOP_ARRIVAL_DIALOGUE_OFFSET,
+		LOOP_ARRIVAL_TERA_STOP + LOOP_ARRIVAL_DIALOGUE_OFFSET
+	], 0.18, CUTSCENE_GROUP_ZOOM)
 	await _play_story_dialogue([
 		{"speaker": "Tera", "text": "We actually made it out. I didn't think..."},
 		{"speaker": "Savannah", "text": "Keep your voice down. Deserting is one thing, but getting caught is another. The search parties won't be far behind."},
 		{"speaker": "Tera", "text": "I know. It's just... wait. Savannah, look. By the treeline."}
-	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
+	], [], CUTSCENE_GROUP_ZOOM)
 
 	await _focus_cutscene_on_positions([LOOP_ARRIVAL_TERA_CABIN_APPROACH_POS, _get_active_cabin_home_pos()], 0.25, CUTSCENE_CLOSE_ZOOM)
 	await _move_node(tera_actor, LOOP_ARRIVAL_TERA_GATE_POS, 0.4)
@@ -3148,6 +3162,10 @@ func _run_loop_arrival_intro() -> void:
 	await _move_node(tera_actor, LOOP_ARRIVAL_TERA_REST_POS, 0.3)
 	tera_actor.face_down()
 	tera_actor.play_idle()
+	await _focus_cutscene_on_positions([
+		player.global_position + LOOP_ARRIVAL_CABIN_DIALOGUE_OFFSET,
+		tera_actor.global_position + LOOP_ARRIVAL_CABIN_DIALOGUE_OFFSET
+	], 0.16, CUTSCENE_CLOSE_ZOOM)
 	await _play_story_dialogue([
 		{"speaker": "Tera", "text": "A farmhouse. Or what's left of one."},
 		{"speaker": "Savannah", "text": "The roof is mostly rot, but the walls still stand. It'll keep the wind off us for tonight."},
@@ -3163,6 +3181,9 @@ func _run_loop_arrival_intro() -> void:
 	_refresh_loop_objective()
 	await _release_overworld_control()
 	_log_run_start("Control returned")
+
+func is_overworld_cutscene_skip_active() -> bool:
+	return _overworld_cutscene_skip_active
 
 func _get_active_planting_layer() -> TileMapLayer:
 	if Global.loop_hub_mode_active and plowed_layer != null:
@@ -3512,12 +3533,23 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 	Global.set_loop_time_phase(Global.LOOP_PHASE_NIGHT)
 	_refresh_loop_phase_presentation(true)
 	_refresh_loop_plot_visuals()
+	var resolution := Global.consume_pending_loop_battle_resolution()
+	var has_resolution := not resolution.is_empty()
 	if is_victory:
-		var bp_reward := _get_loop_battle_reward(LOOP_BATTLE_BP_REWARDS, LOOP_BATTLE_BP_BASE_REWARD, LOOP_BATTLE_BP_STEP)
-		var gold_reward := _get_loop_battle_reward(LOOP_BATTLE_GOLD_REWARDS, LOOP_BATTLE_GOLD_BASE_REWARD, LOOP_BATTLE_GOLD_STEP) + (enemies_defeated * 2)
+		var bp_reward := int(resolution.get("bp_reward", 0)) if has_resolution else _get_loop_battle_reward(LOOP_BATTLE_BP_REWARDS, LOOP_BATTLE_BP_BASE_REWARD, LOOP_BATTLE_BP_STEP)
+		var gold_reward := int(resolution.get("gold_reward", 0)) if has_resolution else _get_loop_battle_reward(LOOP_BATTLE_GOLD_REWARDS, LOOP_BATTLE_GOLD_BASE_REWARD, LOOP_BATTLE_GOLD_STEP) + (enemies_defeated * 2)
+		var bonus_gold_reward := int(resolution.get("bonus_gold_reward", 0)) if has_resolution else 0
+		var total_gold_reward := gold_reward + bonus_gold_reward
 		Global.add_loop_bloom_points(bp_reward)
-		Global.add_loop_gold(gold_reward)
-		Global.apply_player_auto_levels(1)
+		Global.add_loop_gold(total_gold_reward)
+		if has_resolution:
+			var level_up_entries := Array(resolution.get("level_up_entries", []))
+			if ProgressionService != null and ProgressionService.has_method("apply_loop_party_level_up_entries") and not level_up_entries.is_empty():
+				ProgressionService.apply_loop_party_level_up_entries(level_up_entries)
+			else:
+				Global.apply_player_auto_levels(1)
+		else:
+			Global.apply_player_auto_levels(1)
 		Global.loop_battle_index += 1
 		Global.stats_updated.emit()
 		Global.loop_state_changed.emit()
@@ -3527,11 +3559,15 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		if Global.has_loop_plot(LOOP_PLOT_FOREST):
 			_spawn_loop_forest_content()
 		var reward_label := "Bloom Points" if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_bloom_points") else "BP"
-		_show_player_notice("Victory. +%d %s, +%d Gold." % [bp_reward, reward_label, gold_reward], 1.8)
+		var bonus_objective: Dictionary = resolution.get("bonus_objective", {}) if has_resolution else {}
+		if has_resolution and bool(bonus_objective.get("complete", false)) and bonus_gold_reward > 0:
+			_show_player_notice("Victory. +%d %s, +%d Gold. Bonus objective complete: +%d Gold." % [bp_reward, reward_label, gold_reward, bonus_gold_reward], 2.1)
+		else:
+			_show_player_notice("Victory. +%d %s, +%d Gold." % [bp_reward, reward_label, total_gold_reward], 1.8)
 	else:
-		var lost_gold := mini(int(ceil(float(Global.loop_gold) * LOOP_RAID_LOSS_RATIO)), Global.loop_gold)
-		var lost_wood := mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.WOOD, 0)))
-		var lost_stone := mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.STONE, 0)))
+		var lost_gold := int(resolution.get("lost_gold", 0)) if has_resolution else mini(int(ceil(float(Global.loop_gold) * LOOP_RAID_LOSS_RATIO)), Global.loop_gold)
+		var lost_wood := int(resolution.get("lost_wood", 0)) if has_resolution else mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.WOOD, 0)))
+		var lost_stone := int(resolution.get("lost_stone", 0)) if has_resolution else mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.STONE, 0)))
 		Global.add_loop_gold(-lost_gold)
 		if lost_wood > 0:
 			Global.remove_item(Global.Items.WOOD, lost_wood)

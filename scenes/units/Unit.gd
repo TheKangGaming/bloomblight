@@ -24,6 +24,7 @@ var active_combat_effects: Dictionary = {}
 @export var is_wait := false
 var main_action_used := false
 var bonus_action_used := false
+var runtime_growth_delta: Dictionary = {}
 
 var move_range: int:
 	get:
@@ -222,9 +223,18 @@ func walk_along(path: PackedVector2Array) -> void:
 
 func _initialize_unit_data() -> void:
 	current_stats.apply_class_progression(character_data)
+	if is_player:
+		return
+
+	if runtime_growth_delta.is_empty():
+		current_stats.apply_delta(_build_runtime_equipment_delta())
+		if character_data != null and level > 1:
+			current_stats.apply_auto_levels(level - 1)
+		return
+
+	current_stats.apply_delta(runtime_growth_delta)
 	current_stats.apply_delta(_build_runtime_equipment_delta())
-	if not is_player and character_data != null and level > 1:
-		current_stats.apply_auto_levels(level - 1)
+	current_stats.clamp_to_caps()
 
 
 func _load_player_stats() -> void:

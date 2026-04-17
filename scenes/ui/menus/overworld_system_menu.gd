@@ -56,6 +56,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_toggle_input(event: InputEvent) -> bool:
 	if _management_menu != null and _management_menu.visible:
 		return false
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("is_overworld_cutscene_skip_active"):
+		if bool(current_scene.call("is_overworld_cutscene_skip_active")):
+			return false
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		if visible:

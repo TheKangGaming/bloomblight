@@ -145,10 +145,10 @@ _data = {
 [node name="EnemyBattleActorBase" unique_id=1793351383 instance=ExtResource("1_base")]
 
 [node name="EffectAnchor" parent="." index="0" unique_id=2022233145]
-position = Vector2(0, -24)
+position = Vector2(0, -17)
 
 [node name="DamageAnchor" parent="." index="1" unique_id=726271048]
-position = Vector2(0, -24)
+position = Vector2(0, -29)
 
 [node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
 position = Vector2(-2.9999998, 13.000001)

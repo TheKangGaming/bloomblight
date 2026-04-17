@@ -10,6 +10,8 @@ const SILAS_PATH := "res://data/units/Silas/silas_data.tres"
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var current_seed: int = 0
 var party_roster: Array[CharacterData] = []
+var party_runtime_levels: Dictionary = {}
+var party_runtime_growth_deltas: Dictionary = {}
 
 var _character_library: Dictionary = {}
 var _equipment_catalog := {
@@ -31,6 +33,8 @@ func reset_demo_roster() -> void:
 		"Accessory": [],
 	}
 	party_roster.clear()
+	party_runtime_levels.clear()
+	party_runtime_growth_deltas.clear()
 
 	var savannah_data := _load_character_data(SAVANNAH_PATH)
 	var tera_data := _load_character_data(TERA_PATH)
@@ -40,6 +44,8 @@ func reset_demo_roster() -> void:
 	if tera_data != null:
 		party_roster.append(tera_data)
 		_register_character_equipment(tera_data)
+
+	_initialize_runtime_profiles()
 
 	_sync_player_equipment_to_global()
 	party_roster_changed.emit()
@@ -66,10 +72,20 @@ func get_save_data() -> Dictionary:
 				saved_resources.append(String((item as Resource).resource_path))
 		owned_equipment[slot_name] = saved_resources
 
+	var saved_runtime_levels := {}
+	for key in party_runtime_levels.keys():
+		saved_runtime_levels[String(key)] = int(party_runtime_levels.get(key, 1))
+
+	var saved_runtime_growth_deltas := {}
+	for key in party_runtime_growth_deltas.keys():
+		saved_runtime_growth_deltas[String(key)] = _normalize_runtime_growth_delta(party_runtime_growth_deltas.get(key, {}))
+
 	return {
 		"seed": current_seed,
 		"roster": roster,
 		"owned_equipment": owned_equipment,
+		"runtime_levels": saved_runtime_levels,
+		"runtime_growth_deltas": saved_runtime_growth_deltas,
 	}
 
 func apply_save_data(save_data: Dictionary) -> void:
@@ -83,6 +99,8 @@ func apply_save_data(save_data: Dictionary) -> void:
 		"Accessory": [],
 	}
 	party_roster.clear()
+	party_runtime_levels.clear()
+	party_runtime_growth_deltas.clear()
 
 	var saved_seed := int(save_data.get("seed", current_seed))
 	if saved_seed != 0:
@@ -117,6 +135,24 @@ func apply_save_data(save_data: Dictionary) -> void:
 		if member == null:
 			continue
 		_register_character_equipment(member)
+
+	var saved_runtime_levels: Variant = save_data.get("runtime_levels", {})
+	if saved_runtime_levels is Dictionary:
+		for raw_key in (saved_runtime_levels as Dictionary).keys():
+			var normalized_key := _member_key(String(raw_key))
+			if normalized_key.is_empty():
+				continue
+			party_runtime_levels[normalized_key] = maxi(int((saved_runtime_levels as Dictionary).get(raw_key, 1)), 1)
+
+	var saved_runtime_growth_deltas: Variant = save_data.get("runtime_growth_deltas", {})
+	if saved_runtime_growth_deltas is Dictionary:
+		for raw_key in (saved_runtime_growth_deltas as Dictionary).keys():
+			var normalized_key := _member_key(String(raw_key))
+			if normalized_key.is_empty():
+				continue
+			party_runtime_growth_deltas[normalized_key] = _normalize_runtime_growth_delta((saved_runtime_growth_deltas as Dictionary).get(raw_key, {}))
+
+	_initialize_runtime_profiles()
 
 	_sync_player_equipment_to_global()
 	party_roster_changed.emit()
@@ -173,6 +209,7 @@ func ensure_party_member(display_name: String) -> CharacterData:
 
 	party_roster.append(character)
 	_register_character_equipment(character)
+	_ensure_runtime_profile_for_member(character, true)
 	party_roster_changed.emit()
 	equipment_catalog_changed.emit()
 	return character
@@ -261,7 +298,72 @@ func sync_runtime_party_to_scene(scene_root: Node) -> void:
 		var unit := scene_root.get_node_or_null("GameBoard/%s" % String(member.display_name))
 		if unit != null:
 			unit.character_data = member
-			unit.level = Global.get_player_level() if Global != null else 1
+			if _is_player_member(member):
+				unit.level = Global.get_player_level() if Global != null else 1
+				unit.runtime_growth_delta = {}
+			else:
+				_ensure_runtime_profile_for_member(member, true)
+				unit.level = get_member_runtime_level(String(member.display_name))
+				unit.runtime_growth_delta = get_member_runtime_growth_delta(String(member.display_name))
+
+func build_loop_party_level_up_entries(member_names: Array[String] = []) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for member in _resolve_party_members_in_order(member_names):
+		if member == null:
+			continue
+		var display_name := String(member.display_name)
+		if _is_player_member(member):
+			var before_player_level := Global.get_player_level() if Global != null else 1
+			var player_gains := Global.roll_player_level_gains(1) if Global != null else {}
+			entries.append({
+				"name": display_name,
+				"before_level": before_player_level,
+				"after_level": before_player_level + 1,
+				"gains": player_gains.duplicate(true),
+				"is_player": true,
+			})
+			continue
+
+		_ensure_runtime_profile_for_member(member, true)
+		var before_level := get_member_runtime_level(display_name)
+		var growth_delta := get_member_runtime_growth_delta(display_name)
+		var preview_stats := UnitStats.new()
+		preview_stats.apply_class_progression(member)
+		preview_stats.apply_delta(growth_delta)
+		preview_stats.clamp_to_caps()
+		var gains := preview_stats.apply_auto_levels(1, rng)
+		entries.append({
+			"name": display_name,
+			"before_level": before_level,
+			"after_level": before_level + 1,
+			"gains": gains.duplicate(true),
+			"is_player": false,
+		})
+	return entries
+
+func apply_loop_party_level_up_entries(entries: Array[Dictionary]) -> void:
+	for entry_variant in entries:
+		if entry_variant is not Dictionary:
+			continue
+		var entry: Dictionary = entry_variant
+		var display_name := String(entry.get("name", ""))
+		if display_name.is_empty():
+			continue
+
+		var levels_gained := maxi(int(entry.get("after_level", 1)) - int(entry.get("before_level", 1)), 0)
+		var gains := _normalize_runtime_growth_delta(entry.get("gains", {}))
+		if bool(entry.get("is_player", false)):
+			if Global != null:
+				Global.apply_player_level_gains(gains, levels_gained)
+			continue
+
+		var member := get_party_member_by_name(display_name)
+		if member == null:
+			continue
+		_ensure_runtime_profile_for_member(member, true)
+		var member_key := _member_key(display_name)
+		party_runtime_levels[member_key] = maxi(int(party_runtime_levels.get(member_key, 1)) + levels_gained, 1)
+		party_runtime_growth_deltas[member_key] = _merge_growth_delta(party_runtime_growth_deltas.get(member_key, {}), gains)
 
 func print_class_growth_debug_summary(characters: Array[CharacterData], levels_to_simulate: int = 20, simulations_per_class: int = 250) -> void:
 	if characters.is_empty():
@@ -411,6 +513,85 @@ func _sync_player_equipment_to_global() -> void:
 	if Global.has_method("_refresh_equipment_temporary_modifiers"):
 		Global.call("_refresh_equipment_temporary_modifiers")
 	Global.stats_updated.emit()
+
+func get_member_runtime_level(display_name: String) -> int:
+	var member_key := _member_key(display_name)
+	if member_key.is_empty():
+		return 1
+	return maxi(int(party_runtime_levels.get(member_key, 1)), 1)
+
+func get_member_runtime_growth_delta(display_name: String) -> Dictionary:
+	return _normalize_runtime_growth_delta(party_runtime_growth_deltas.get(_member_key(display_name), {}))
+
+func _initialize_runtime_profiles() -> void:
+	for member in party_roster:
+		_ensure_runtime_profile_for_member(member, true)
+
+func _ensure_runtime_profile_for_member(character: CharacterData, catch_up_to_player_level: bool = false) -> void:
+	if character == null or _is_player_member(character):
+		return
+
+	var member_key := _member_key(String(character.display_name))
+	if member_key.is_empty():
+		return
+	if party_runtime_levels.has(member_key) and party_runtime_growth_deltas.has(member_key):
+		return
+
+	var target_level := 1
+	if catch_up_to_player_level and Global != null:
+		target_level = Global.get_player_level()
+	party_runtime_levels[member_key] = maxi(target_level, 1)
+	party_runtime_growth_deltas[member_key] = _empty_runtime_growth_delta()
+
+	if target_level > 1:
+		var preview_stats := UnitStats.new()
+		preview_stats.apply_class_progression(character)
+		party_runtime_growth_deltas[member_key] = _normalize_runtime_growth_delta(preview_stats.apply_auto_levels(target_level - 1, rng))
+
+func _resolve_party_members_in_order(member_names: Array[String]) -> Array[CharacterData]:
+	if member_names.is_empty():
+		return party_roster.duplicate()
+
+	var ordered_members: Array[CharacterData] = []
+	for member_name in member_names:
+		var member := get_party_member_by_name(member_name)
+		if member != null and not ordered_members.has(member):
+			ordered_members.append(member)
+	return ordered_members
+
+func _member_key(display_name: String) -> String:
+	return display_name.strip_edges().to_lower()
+
+func _is_player_member(character: CharacterData) -> bool:
+	return character != null and _member_key(String(character.display_name)) == "savannah"
+
+func _empty_runtime_growth_delta() -> Dictionary:
+	return {
+		"MAX_HP": 0,
+		"STR": 0,
+		"DEF": 0,
+		"MDEF": 0,
+		"DEX": 0,
+		"INT": 0,
+		"SPD": 0,
+		"MOV": 0,
+		"ATK_RNG": 0,
+	}
+
+func _normalize_runtime_growth_delta(raw_delta: Variant) -> Dictionary:
+	var normalized := _empty_runtime_growth_delta()
+	if raw_delta is not Dictionary:
+		return normalized
+	for stat_key in normalized.keys():
+		normalized[stat_key] = int((raw_delta as Dictionary).get(stat_key, 0))
+	return normalized
+
+func _merge_growth_delta(existing_delta: Variant, new_delta: Variant) -> Dictionary:
+	var merged := _normalize_runtime_growth_delta(existing_delta)
+	var normalized_new := _normalize_runtime_growth_delta(new_delta)
+	for stat_key in merged.keys():
+		merged[stat_key] = int(merged.get(stat_key, 0)) + int(normalized_new.get(stat_key, 0))
+	return merged
 
 func _resource_path_or_empty(item: Resource) -> String:
 	if item == null:

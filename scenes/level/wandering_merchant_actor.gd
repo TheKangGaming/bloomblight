@@ -40,7 +40,7 @@ func _build_animation(anim_name: StringName, texture: Texture2D, loops: bool, fp
 	var frame_height := int(texture_size.y)
 	if frame_height <= 0:
 		return
-	var frame_count := maxi(int(texture_size.x) / frame_height, 1)
+	var frame_count := maxi(int(texture_size.x / float(frame_height)), 1)
 
 	var frames := animated_sprite.sprite_frames
 	if frames == null:

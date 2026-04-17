@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c1hotny1egluy"]
 
-[ext_resource type="PackedScene" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="1_base"]
-[ext_resource type="Texture2D" path="res://graphics/enemies/bandits/Assassin-Sheet.png" id="2_tex"]
+[ext_resource type="PackedScene" uid="uid://ceqn8w1yyldvk" path="res://scenes/battle/enemy_battle_actor_base.tscn" id="1_base"]
+[ext_resource type="Texture2D" uid="uid://nxy0l5y11bt3" path="res://graphics/enemies/bandits/Assassin-Sheet.png" id="2_tex"]
 
 [sub_resource type="Animation" id="Animation_attack"]
 resource_name = "attack"
@@ -173,16 +173,16 @@ _data = {
 &"run_start": SubResource("Animation_run_start")
 }
 
-[node name="EnemyBattleActorBase" instance=ExtResource("1_base")]
+[node name="EnemyBattleActorBase" unique_id=1074665321 instance=ExtResource("1_base")]
 
-[node name="EffectAnchor" parent="." index="0"]
-position = Vector2(6, -28)
+[node name="EffectAnchor" parent="." index="0" unique_id=2022233145]
+position = Vector2(0, -15)
 
-[node name="DamageAnchor" parent="." index="1"]
+[node name="DamageAnchor" parent="." index="1" unique_id=726271048]
 position = Vector2(0, -24)
 
-[node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0"]
-position = Vector2(0, 13)
+[node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
+position = Vector2(-1.9999999, 13.000001)
 scale = Vector2(1.4, 1.4)
 texture = ExtResource("2_tex")
 offset = Vector2(0, -26)
@@ -190,6 +190,6 @@ hframes = 11
 vframes = 8
 region_enabled = false
 
-[node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1"]
+[node name="AnimationPlayer" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="1" unique_id=414594588]
 libraries/ = SubResource("AnimationLibrary_assassin")
 autoplay = &"idle"

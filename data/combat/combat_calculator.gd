@@ -147,7 +147,7 @@ static func resolve_combat_from_payload(payload: CombatPayload) -> Array[CombatS
 		get_attack_kind(payload.defender_weapon, payload.distance)
 	)
 
-static func _build_forecast_from_snapshots(attacker_stats: UnitStats, attacker_data: CharacterData, attacker_weapon: WeaponData, attacker_modifiers: Dictionary, attacker_attack_range: int, attacker_min_attack_range: int, defender_stats: UnitStats, defender_data: CharacterData, defender_weapon: WeaponData, defender_modifiers: Dictionary, defender_attack_range: int, defender_min_attack_range: int, distance: int) -> CombatForecast:
+static func _build_forecast_from_snapshots(attacker_stats: UnitStats, attacker_data: CharacterData, attacker_weapon: WeaponData, attacker_modifiers: Dictionary, _attacker_attack_range: int, _attacker_min_attack_range: int, defender_stats: UnitStats, defender_data: CharacterData, defender_weapon: WeaponData, defender_modifiers: Dictionary, defender_attack_range: int, defender_min_attack_range: int, distance: int) -> CombatForecast:
 	var forecast := CombatForecast.new()
 	var attacker_preview := get_combat_stats_from_snapshot(attacker_stats, attacker_data, attacker_weapon, attacker_modifiers, defender_stats, distance)
 	var defender_preview := get_combat_stats_from_snapshot(defender_stats, defender_data, defender_weapon, defender_modifiers, attacker_stats, distance)

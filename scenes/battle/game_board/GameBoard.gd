@@ -16,6 +16,7 @@ const BattleItemMenu = preload("res://scenes/ui/menus/BattleItemMenu.tscn")
 const STORY_DIALOGUE_SCENE = preload("res://scenes/ui/story_dialogue_box.tscn")
 const OVERLAY_SCENE = preload("res://scenes/ui/overlay.tscn")
 const HEALFLOWER_TEXTURE = preload("res://graphics/interactables/items-flowers1_0.png")
+const LEVEL_UP_BURST_TEXTURE = preload("res://graphics/animations/vfx/Magic Bursts/directional_particle_burst_001/directional_particle_burst_001_large_yellow/spritesheet.png")
 const BOW_SELECT_SFX = preload("res://audio/sfx/Bow Take Out 1.wav")
 const SWORD_SELECT_SFX = preload("res://audio/sfx/Sword Unsheath 1.wav")
 @export var grid: Resource
@@ -23,8 +24,11 @@ const SWORD_SELECT_SFX = preload("res://audio/sfx/Sword Unsheath 1.wav")
 const DEFAULT_BATTLE_SCENE = preload("res://scenes/battle/battle_scene.tscn")
 @export var battle_scene: PackedScene = DEFAULT_BATTLE_SCENE
 
-enum TurnPhase { PLAYER, ENEMY }
+enum TurnPhase { DEPLOYMENT, PLAYER, ENEMY }
 var current_phase: TurnPhase = TurnPhase.PLAYER
+var deployment_enabled := false
+var deployment_cells: Array[Vector2] = []
+var bonus_objective_config: Dictionary = {}
 
 signal demo_first_unit_selected(unit: Unit)
 signal demo_first_move_completed(unit: Unit)
@@ -75,6 +79,24 @@ var _battle_camera: Camera2D = null
 var _default_camera_focus := Vector2.ZERO
 var _selection_sfx_player: AudioStreamPlayer = null
 var _camera_follow_node: Node2D = null
+var _deployment_overlay_layer: CanvasLayer = null
+var _deployment_overlay_panel: PanelContainer = null
+var _deployment_overlay_label: RichTextLabel = null
+var _bonus_objective_card_panel: PanelContainer = null
+var _bonus_objective_card_label: RichTextLabel = null
+var _bonus_objective_chip_panel: PanelContainer = null
+var _bonus_objective_chip_label: RichTextLabel = null
+var _deployment_selected_unit: Unit = null
+var _bonus_objective_state: Dictionary = {}
+var _bonus_objective_completion_announced := false
+var _player_phase_count: int = 0
+var _battle_party_member_names: Array[String] = []
+var _level_up_overlay_layer: CanvasLayer = null
+var _level_up_overlay_root: Control = null
+var _level_up_burst_frames: SpriteFrames = null
+var _level_up_burst_loop_frames: SpriteFrames = null
+var _level_up_sequence_active := false
+var _level_up_advance_requested := false
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -110,6 +132,10 @@ func _finish_demo_battle_setup() -> void:
 	if DemoDirector and DemoDirector.consume_pending_day_two_battle_intro():
 		_demo_battle_active = true
 		call_deferred("_run_demo_battle_opening")
+		return
+
+	if deployment_enabled and Global.loop_hub_mode_active:
+		call_deferred("_start_deployment_phase")
 
 func _sync_scene_music_to_manager() -> void:
 	var scene_root := get_parent()
@@ -142,6 +168,22 @@ func _sync_scene_music_to_manager() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _battle_tutorial_open:
+		return
+	if _level_up_sequence_active:
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact") or event.is_action_pressed("menu_toggle"):
+			_level_up_advance_requested = true
+			get_viewport().set_input_as_handled()
+			return
+		return
+	if current_phase == TurnPhase.DEPLOYMENT:
+		if event.is_action_pressed("menu_toggle"):
+			_begin_player_phase_from_deployment()
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
+			_clear_deployment_selection()
+			get_viewport().set_input_as_handled()
+			return
 		return
 	if event.is_action_pressed("menu_toggle"):
 		_hide_unit_hover_tooltip()
@@ -416,6 +458,12 @@ func get_attackable_cells(walkable_cells: Array, attack_range: int, unit: Unit, 
 
 func _reinitialize() -> void:
 	_units.clear()
+	_enemies_defeated = 0
+	_player_phase_count = 0
+	_battle_party_member_names.clear()
+	_bonus_objective_state = _build_bonus_objective_state()
+	_bonus_objective_completion_announced = false
+	_clear_deployment_selection()
 
 	for child in get_children():
 		var unit := child as Unit
@@ -424,12 +472,342 @@ func _reinitialize() -> void:
 			
 		unit.cell = unit.cell.round()
 		_units[unit.cell] = unit
+		unit.is_wait = false
+		unit.reset_turn_action_state()
+		if not unit.is_enemy:
+			_battle_party_member_names.append(String(unit.name))
 		
 		if not unit.died.is_connected(_on_unit_died):
 			unit.died.connect(_on_unit_died)
 
 	if Global.loop_hub_mode_active:
 		_apply_loop_battle_perk()
+
+	_draw_deployment_cells()
+
+func _build_bonus_objective_state() -> Dictionary:
+	if bonus_objective_config.is_empty():
+		return {}
+
+	return {
+		"id": String(bonus_objective_config.get("id", "")),
+		"label": String(bonus_objective_config.get("label", "")),
+		"gold_reward": maxi(int(bonus_objective_config.get("gold_reward", 0)), 0),
+		"turn_limit": maxi(int(bonus_objective_config.get("turn_limit", 0)), 0),
+		"complete": false,
+		"failed": false,
+	}
+
+func _deployment_active() -> bool:
+	return deployment_enabled and current_phase == TurnPhase.DEPLOYMENT
+
+func _draw_deployment_cells() -> void:
+	if _unit_overlay == null:
+		return
+	if deployment_enabled and not deployment_cells.is_empty():
+		_unit_overlay.clear()
+		_unit_overlay.draw_walkable_cells(deployment_cells)
+	elif _deployment_selected_unit == null:
+		_unit_overlay.clear()
+
+func _start_deployment_phase() -> void:
+	current_phase = TurnPhase.DEPLOYMENT
+	_cursor.is_active = true
+	_cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	_cursor.show()
+	_hide_unit_hover_tooltip()
+	_deselect_active_unit()
+	_clear_deployment_selection()
+	_draw_deployment_cells()
+	await _focus_battle_camera(_default_camera_focus, 0.18)
+	_handoff_to_cursor_camera(_default_camera_focus)
+	_show_deployment_overlay()
+
+func _begin_player_phase_from_deployment() -> void:
+	if not _deployment_active():
+		return
+	_clear_deployment_selection()
+	_draw_deployment_cells()
+	await _transition_bonus_objective_to_chip()
+	start_player_phase()
+
+func _clear_deployment_selection() -> void:
+	if _deployment_selected_unit != null and is_instance_valid(_deployment_selected_unit):
+		_deployment_selected_unit.is_selected = false
+	_deployment_selected_unit = null
+	_draw_deployment_cells()
+
+func _show_deployment_overlay() -> void:
+	var layer := _ensure_deployment_overlay_layer()
+	if layer == null or _deployment_overlay_label == null:
+		return
+
+	var prep_lines: PackedStringArray = ["[center][b]Battle Prep[/b][/center]"]
+	prep_lines.append("[center]Swap allies between the marked slots.[/center]")
+	prep_lines.append("[center][color=#f4d35e]Press %s to begin[/color][/center]" % _get_battle_action_label(&"menu_toggle"))
+	_deployment_overlay_label.text = "\n".join(prep_lines)
+	_deployment_overlay_panel.visible = true
+	_update_bonus_objective_ui(true)
+
+func _hide_deployment_overlay() -> void:
+	if _deployment_overlay_panel != null and is_instance_valid(_deployment_overlay_panel):
+		_deployment_overlay_panel.visible = false
+
+func _ensure_deployment_overlay_layer() -> CanvasLayer:
+	if _deployment_overlay_layer != null and is_instance_valid(_deployment_overlay_layer):
+		return _deployment_overlay_layer
+
+	_deployment_overlay_layer = CanvasLayer.new()
+	_deployment_overlay_layer.layer = 118
+	add_child(_deployment_overlay_layer)
+
+	_bonus_objective_card_panel = PanelContainer.new()
+	_bonus_objective_card_panel.visible = false
+	_bonus_objective_card_panel.anchor_left = 0.5
+	_bonus_objective_card_panel.anchor_right = 0.5
+	_bonus_objective_card_panel.anchor_top = 0.0
+	_bonus_objective_card_panel.anchor_bottom = 0.0
+	_bonus_objective_card_panel.offset_left = -280
+	_bonus_objective_card_panel.offset_right = 280
+	_bonus_objective_card_panel.offset_top = 18
+	_bonus_objective_card_panel.offset_bottom = 122
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color = Color(0.12, 0.09, 0.03, 0.95)
+	card_style.border_width_left = 3
+	card_style.border_width_top = 3
+	card_style.border_width_right = 3
+	card_style.border_width_bottom = 3
+	card_style.border_color = Color(1.0, 0.87, 0.38, 1.0)
+	card_style.corner_radius_top_left = 14
+	card_style.corner_radius_top_right = 14
+	card_style.corner_radius_bottom_left = 14
+	card_style.corner_radius_bottom_right = 14
+	_bonus_objective_card_panel.add_theme_stylebox_override("panel", card_style)
+	_deployment_overlay_layer.add_child(_bonus_objective_card_panel)
+
+	var card_margin := MarginContainer.new()
+	card_margin.add_theme_constant_override("margin_left", 18)
+	card_margin.add_theme_constant_override("margin_right", 18)
+	card_margin.add_theme_constant_override("margin_top", 12)
+	card_margin.add_theme_constant_override("margin_bottom", 12)
+	_bonus_objective_card_panel.add_child(card_margin)
+
+	_bonus_objective_card_label = RichTextLabel.new()
+	_bonus_objective_card_label.bbcode_enabled = true
+	_bonus_objective_card_label.fit_content = true
+	_bonus_objective_card_label.scroll_active = false
+	_bonus_objective_card_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bonus_objective_card_label.add_theme_font_size_override("normal_font_size", 24)
+	card_margin.add_child(_bonus_objective_card_label)
+
+	_bonus_objective_chip_panel = PanelContainer.new()
+	_bonus_objective_chip_panel.visible = false
+	_bonus_objective_chip_panel.anchor_left = 0.5
+	_bonus_objective_chip_panel.anchor_right = 0.5
+	_bonus_objective_chip_panel.anchor_top = 0.0
+	_bonus_objective_chip_panel.anchor_bottom = 0.0
+	_bonus_objective_chip_panel.offset_left = -220
+	_bonus_objective_chip_panel.offset_right = 220
+	_bonus_objective_chip_panel.offset_top = 16
+	_bonus_objective_chip_panel.offset_bottom = 74
+	var chip_style := StyleBoxFlat.new()
+	chip_style.bg_color = Color(0.08, 0.08, 0.1, 0.92)
+	chip_style.border_width_left = 2
+	chip_style.border_width_top = 2
+	chip_style.border_width_right = 2
+	chip_style.border_width_bottom = 2
+	chip_style.border_color = Color(0.96, 0.8, 0.34, 0.96)
+	chip_style.corner_radius_top_left = 10
+	chip_style.corner_radius_top_right = 10
+	chip_style.corner_radius_bottom_left = 10
+	chip_style.corner_radius_bottom_right = 10
+	_bonus_objective_chip_panel.add_theme_stylebox_override("panel", chip_style)
+	_deployment_overlay_layer.add_child(_bonus_objective_chip_panel)
+
+	var chip_margin := MarginContainer.new()
+	chip_margin.add_theme_constant_override("margin_left", 14)
+	chip_margin.add_theme_constant_override("margin_right", 14)
+	chip_margin.add_theme_constant_override("margin_top", 8)
+	chip_margin.add_theme_constant_override("margin_bottom", 8)
+	_bonus_objective_chip_panel.add_child(chip_margin)
+
+	_bonus_objective_chip_label = RichTextLabel.new()
+	_bonus_objective_chip_label.bbcode_enabled = true
+	_bonus_objective_chip_label.fit_content = true
+	_bonus_objective_chip_label.scroll_active = false
+	_bonus_objective_chip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bonus_objective_chip_label.add_theme_font_size_override("normal_font_size", 20)
+	chip_margin.add_child(_bonus_objective_chip_label)
+
+	_deployment_overlay_panel = PanelContainer.new()
+	_deployment_overlay_panel.visible = false
+	_deployment_overlay_panel.anchor_left = 0.0
+	_deployment_overlay_panel.anchor_right = 0.0
+	_deployment_overlay_panel.anchor_top = 0.0
+	_deployment_overlay_panel.anchor_bottom = 0.0
+	_deployment_overlay_panel.offset_left = 18
+	_deployment_overlay_panel.offset_right = 432
+	_deployment_overlay_panel.offset_top = 20
+	_deployment_overlay_panel.offset_bottom = 128
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.06, 0.09, 0.94)
+	panel_style.border_width_left = 3
+	panel_style.border_width_top = 3
+	panel_style.border_width_right = 3
+	panel_style.border_width_bottom = 3
+	panel_style.border_color = Color(0.96, 0.8, 0.34, 0.92)
+	panel_style.corner_radius_top_left = 12
+	panel_style.corner_radius_top_right = 12
+	panel_style.corner_radius_bottom_left = 12
+	panel_style.corner_radius_bottom_right = 12
+	panel_style.shadow_size = 10
+	panel_style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
+	_deployment_overlay_panel.add_theme_stylebox_override("panel", panel_style)
+	_deployment_overlay_layer.add_child(_deployment_overlay_panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	_deployment_overlay_panel.add_child(margin)
+
+	_deployment_overlay_label = RichTextLabel.new()
+	_deployment_overlay_label.bbcode_enabled = true
+	_deployment_overlay_label.fit_content = true
+	_deployment_overlay_label.scroll_active = false
+	_deployment_overlay_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_deployment_overlay_label.custom_minimum_size = Vector2(390, 0)
+	_deployment_overlay_label.add_theme_font_size_override("normal_font_size", 26)
+	margin.add_child(_deployment_overlay_label)
+
+	return _deployment_overlay_layer
+
+func _update_bonus_objective_ui(show_card: bool) -> void:
+	var has_objective := not _bonus_objective_state.is_empty()
+	if _bonus_objective_card_panel != null and is_instance_valid(_bonus_objective_card_panel):
+		_bonus_objective_card_panel.visible = has_objective and show_card
+		_bonus_objective_card_panel.modulate.a = 1.0
+		_bonus_objective_card_panel.scale = Vector2.ONE
+	if _bonus_objective_chip_panel != null and is_instance_valid(_bonus_objective_chip_panel):
+		var chip_should_show := has_objective and not show_card and not _battle_ended and not _bonus_objective_completion_announced
+		_bonus_objective_chip_panel.visible = chip_should_show
+		_bonus_objective_chip_panel.modulate.a = 1.0
+		_bonus_objective_chip_panel.scale = Vector2.ONE
+	if not has_objective:
+		_hide_bonus_objective_ui()
+		return
+
+	var objective_label := String(_bonus_objective_state.get("label", ""))
+	var reward_amount := int(_bonus_objective_state.get("gold_reward", 0))
+	var is_complete := bool(_bonus_objective_state.get("complete", false))
+	if _bonus_objective_card_label != null and is_instance_valid(_bonus_objective_card_label):
+		_bonus_objective_card_label.text = "[center][b]Bonus Objective[/b]\n%s\n[color=#f4d35e]+%d Gold[/color][/center]" % [objective_label, reward_amount]
+	if _bonus_objective_chip_label != null and is_instance_valid(_bonus_objective_chip_label):
+		if is_complete:
+			_bonus_objective_chip_label.text = "[center][color=#baf7a8][b]Objective Complete![/b][/color]\n%s  [color=#f4d35e]+%d Gold[/color][/center]" % [objective_label, reward_amount]
+		else:
+			_bonus_objective_chip_label.text = "[center][b]Bonus Objective:[/b] %s  [color=#f4d35e]+%d Gold[/color][/center]" % [objective_label, reward_amount]
+
+func _transition_bonus_objective_to_chip() -> void:
+	if _bonus_objective_state.is_empty():
+		_hide_deployment_overlay()
+		_hide_bonus_objective_ui()
+		return
+	_update_bonus_objective_ui(false)
+	if _bonus_objective_chip_panel != null and is_instance_valid(_bonus_objective_chip_panel):
+		_bonus_objective_chip_panel.modulate.a = 0.0
+		var tween := create_tween()
+		tween.set_parallel(true)
+		if _bonus_objective_card_panel != null and is_instance_valid(_bonus_objective_card_panel):
+			tween.tween_property(_bonus_objective_card_panel, "modulate:a", 0.0, 0.14)
+		tween.tween_property(_bonus_objective_chip_panel, "modulate:a", 1.0, 0.18)
+		await tween.finished
+	if _bonus_objective_card_panel != null and is_instance_valid(_bonus_objective_card_panel):
+		_bonus_objective_card_panel.visible = false
+		_bonus_objective_card_panel.modulate.a = 1.0
+	_hide_deployment_overlay()
+
+func _hide_bonus_objective_ui() -> void:
+	if _bonus_objective_card_panel != null and is_instance_valid(_bonus_objective_card_panel):
+		_bonus_objective_card_panel.visible = false
+		_bonus_objective_card_panel.modulate.a = 1.0
+		_bonus_objective_card_panel.scale = Vector2.ONE
+	if _bonus_objective_chip_panel != null and is_instance_valid(_bonus_objective_chip_panel):
+		_bonus_objective_chip_panel.visible = false
+		_bonus_objective_chip_panel.modulate.a = 1.0
+		_bonus_objective_chip_panel.scale = Vector2.ONE
+
+func _announce_bonus_objective_completion() -> void:
+	if _bonus_objective_state.is_empty() or _bonus_objective_completion_announced:
+		return
+	_bonus_objective_completion_announced = true
+	_update_bonus_objective_ui(false)
+	if _bonus_objective_chip_panel == null or not is_instance_valid(_bonus_objective_chip_panel):
+		return
+
+	_bonus_objective_chip_panel.visible = true
+	_bonus_objective_chip_panel.modulate.a = 1.0
+	_bonus_objective_chip_panel.scale = Vector2.ONE
+	var completion_tween := create_tween()
+	completion_tween.set_trans(Tween.TRANS_SINE)
+	completion_tween.set_ease(Tween.EASE_OUT)
+	completion_tween.tween_property(_bonus_objective_chip_panel, "scale", Vector2(1.08, 1.08), 0.14)
+	completion_tween.tween_property(_bonus_objective_chip_panel, "scale", Vector2.ONE, 0.16)
+	completion_tween.tween_property(_bonus_objective_chip_panel, "scale", Vector2(1.06, 1.06), 0.12)
+	completion_tween.tween_property(_bonus_objective_chip_panel, "scale", Vector2.ONE, 0.14)
+	await completion_tween.finished
+	await get_tree().create_timer(0.6).timeout
+	if _bonus_objective_chip_panel == null or not is_instance_valid(_bonus_objective_chip_panel):
+		return
+	var fade_tween := create_tween()
+	fade_tween.set_parallel(true)
+	fade_tween.tween_property(_bonus_objective_chip_panel, "modulate:a", 0.0, 0.32)
+	fade_tween.tween_property(_bonus_objective_chip_panel, "scale", Vector2(0.96, 0.96), 0.32)
+	await fade_tween.finished
+	if _bonus_objective_chip_panel != null and is_instance_valid(_bonus_objective_chip_panel):
+		_bonus_objective_chip_panel.visible = false
+		_bonus_objective_chip_panel.modulate.a = 1.0
+		_bonus_objective_chip_panel.scale = Vector2.ONE
+
+func _get_battle_action_label(action_name: StringName) -> String:
+	if DemoDirector != null and DemoDirector.has_method("get_action_label"):
+		return String(DemoDirector.get_action_label(action_name))
+	return String(action_name).capitalize()
+
+func _handle_deployment_accept(cell: Vector2) -> void:
+	if not deployment_cells.has(cell):
+		_show_overlay_notice("Choose one of the marked deployment slots.")
+		return
+
+	var target_unit := _get_unit_at_cell(cell)
+	if _deployment_selected_unit == null:
+		if target_unit == null or target_unit.is_enemy:
+			return
+		_deployment_selected_unit = target_unit
+		_deployment_selected_unit.is_selected = true
+		return
+
+	if _deployment_selected_unit.cell == cell:
+		_clear_deployment_selection()
+		return
+
+	var selected_unit := _deployment_selected_unit
+	var from_cell := selected_unit.cell
+	if target_unit != null and target_unit.is_enemy:
+		return
+
+	if target_unit != null:
+		target_unit.position = grid.calculate_map_position(from_cell)
+		target_unit.cell = from_cell
+		_units[from_cell] = target_unit
+	else:
+		_units.erase(from_cell)
+
+	selected_unit.position = grid.calculate_map_position(cell)
+	selected_unit.cell = cell
+	_units[cell] = selected_unit
+	_clear_deployment_selection()
 
 func _apply_loop_battle_perk() -> void:
 	var perk_stats: Dictionary = Global.consume_loop_equipped_perk_stats()
@@ -780,9 +1158,7 @@ func _clear_active_unit_selection(rewind_movement: bool) -> void:
 		
 		_deselect_active_unit()
 		
-	_cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	_cursor.show()
-	_cursor.is_active = true
+	_restore_cursor_control()
 	_hide_targeting_hint()
 
 
@@ -820,6 +1196,9 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _battle_tutorial_open:
 		return
 	if _battle_ended:
+		return
+	if _deployment_active():
+		_handle_deployment_accept(cell)
 		return
 
 	if _target_unit_for_forecast != null:
@@ -925,6 +1304,13 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _battle_tutorial_open:
 		return
+	if _deployment_active():
+		var hovered_unit := _get_unit_at_cell(new_cell)
+		if hovered_unit != null:
+			_show_unit_hover_tooltip(hovered_unit, new_cell)
+		else:
+			_hide_unit_hover_tooltip()
+		return
 	if _active_unit and _active_unit.is_selected:
 		_hide_unit_hover_tooltip()
 		if _walkable_cells.has(new_cell):
@@ -963,6 +1349,8 @@ func _on_unit_died(unit: Unit) -> void:
 		
 	if unit.is_enemy:
 		_enemies_defeated += 1
+	elif String(_bonus_objective_state.get("id", "")) == "no_ally_falls":
+		_bonus_objective_state["failed"] = true
 		
 	_check_win_loss()
 	
@@ -1049,7 +1437,7 @@ func _resume_player_phase_after_active_unit_loss() -> void:
 	if _are_all_player_units_waiting():
 		end_player_phase()
 	else:
-		_cursor.is_active = true
+		_restore_cursor_control()
 
 
 ## To be called by the Action Menu when the player chooses "Wait"
@@ -1079,7 +1467,7 @@ func finish_unit_turn() -> void:
 	if _are_all_player_units_waiting():
 		end_player_phase()
 	else:
-		_cursor.is_active = true
+		_restore_cursor_control()
 	
 ## Called when the player presses "End Turn" or all player units are exhausted
 func end_player_phase() -> void:
@@ -1263,6 +1651,7 @@ func start_player_phase() -> void:
 		return
 
 	current_phase = TurnPhase.PLAYER
+	_player_phase_count += 1
 	
 	# Fire the Blue Banner!
 	await _show_phase_banner("PLAYER PHASE", Color(0.1, 0.4, 0.8))
@@ -1277,7 +1666,9 @@ func start_player_phase() -> void:
 			if visuals:
 				visuals.modulate = Color.WHITE 
 
-	_cursor.is_active = true
+	if not _deployment_active():
+		_update_bonus_objective_ui(false)
+	_restore_cursor_control()
 	
 ## Enters the targeting state, drawing red squares around the unit's current position
 func enter_attack_targeting() -> void:
@@ -1610,40 +2001,93 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 	_phase_banner_layer.layer = 100 # Ensure it sits above all other UI
 	add_child(_phase_banner_layer)
 	
-	var screen_size = get_viewport_rect().size
-	
-	var band = ColorRect.new()
-	band.color = bg_color
-	band.color.a = 0.8
-	band.size = Vector2(screen_size.x, 100)
-	
-	# Start completely off-screen to the right
-	band.position = Vector2(screen_size.x, (screen_size.y / 2.0) - 50)
-	_phase_banner_layer.add_child(band)
-	
-	var label = Label.new()
+	var banner_root := Control.new()
+	banner_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_phase_banner_layer.add_child(banner_root)
+
+	var banner := PanelContainer.new()
+	banner.anchor_left = 0.5
+	banner.anchor_right = 0.5
+	banner.anchor_top = 0.5
+	banner.anchor_bottom = 0.5
+	banner.offset_left = -340
+	banner.offset_right = 340
+	banner.offset_top = -56
+	banner.offset_bottom = 56
+	banner.scale = Vector2(0.94, 0.94)
+	banner.modulate.a = 0.0
+	var banner_style := StyleBoxFlat.new()
+	banner_style.bg_color = Color(0.06, 0.07, 0.1, 0.95)
+	banner_style.border_width_left = 4
+	banner_style.border_width_top = 4
+	banner_style.border_width_right = 4
+	banner_style.border_width_bottom = 4
+	banner_style.border_color = bg_color.lightened(0.12)
+	banner_style.corner_radius_top_left = 14
+	banner_style.corner_radius_top_right = 14
+	banner_style.corner_radius_bottom_left = 14
+	banner_style.corner_radius_bottom_right = 14
+	banner_style.shadow_size = 12
+	banner_style.shadow_color = Color(0.0, 0.0, 0.0, 0.32)
+	banner.add_theme_stylebox_override("panel", banner_style)
+	banner_root.add_child(banner)
+
+	var accent := ColorRect.new()
+	accent.color = bg_color.lightened(0.06)
+	accent.anchor_left = 0.0
+	accent.anchor_right = 0.0
+	accent.anchor_top = 0.0
+	accent.anchor_bottom = 0.0
+	accent.offset_left = 0
+	accent.offset_right = 12
+	accent.offset_top = 0
+	accent.offset_bottom = 112
+	banner.add_child(accent)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 28)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 14)
+	banner.add_child(margin)
+
+	var text_box := VBoxContainer.new()
+	text_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	text_box.add_theme_constant_override("separation", 2)
+	margin.add_child(text_box)
+
+	var subtitle := Label.new()
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.text = "TURN START"
+	subtitle.add_theme_font_size_override("font_size", 18)
+	subtitle.add_theme_color_override("font_color", Color(0.88, 0.9, 0.96, 0.72))
+	text_box.add_child(subtitle)
+
+	var label := Label.new()
 	label.text = text
-	label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 90)
-	label.add_theme_color_override("font_color", Color.WHITE)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 6)
-	band.add_child(label)
-	
-	var tween = create_tween()
-	var center_x = 0
-	var end_x = -screen_size.x
-	
-	# Slide in fast
-	tween.tween_property(band, "position:x", center_x, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	# Hold for the player to read
-	tween.tween_interval(1.0)
-	# Slide out fast
-	tween.tween_property(band, "position:x", end_x, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	
-	await tween.finished
+	label.add_theme_font_size_override("font_size", 54)
+	label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.55))
+	label.add_theme_constant_override("outline_size", 10)
+	text_box.add_child(label)
+
+	var fade_in := create_tween()
+	fade_in.set_parallel(true)
+	fade_in.tween_property(banner, "modulate:a", 1.0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	fade_in.tween_property(banner, "scale", Vector2.ONE, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await fade_in.finished
+
+	await get_tree().create_timer(2.0).timeout
+
+	var fade_out := create_tween()
+	fade_out.set_parallel(true)
+	fade_out.tween_property(banner, "modulate:a", 0.0, 0.42).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	fade_out.tween_property(banner, "scale", Vector2(1.03, 1.03), 0.42).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await fade_out.finished
+
 	if is_instance_valid(_phase_banner_layer):
 		_phase_banner_layer.queue_free()
 		_phase_banner_layer = null
@@ -1695,10 +2139,382 @@ func _check_win_loss() -> void:
 		_battle_ended = true
 		_show_results_screen(false)
 
+func _get_loop_battle_base_rewards(battle_index: int) -> Dictionary:
+	var bp_rewards: Array[int] = [8, 10, 12, 14, 20]
+	var gold_rewards: Array[int] = [4, 6, 8, 10, 14]
+	var reward_index: int = maxi(battle_index - 1, 0)
+	var bp_reward: int = bp_rewards[reward_index] if reward_index < bp_rewards.size() else bp_rewards.back() + ((reward_index - bp_rewards.size() + 1) * 2)
+	var gold_reward: int = (gold_rewards[reward_index] if reward_index < gold_rewards.size() else gold_rewards.back() + ((reward_index - gold_rewards.size() + 1) * 2)) + (_enemies_defeated * 2)
+	return {
+		"bp_reward": bp_reward,
+		"gold_reward": gold_reward,
+	}
+
+func _calculate_loop_defeat_losses() -> Dictionary:
+	return {
+		"lost_gold": mini(int(ceil(float(Global.loop_gold) * 0.25)), Global.loop_gold),
+		"lost_wood": mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * 0.25)), int(Global.inventory.get(Global.Items.WOOD, 0))),
+		"lost_stone": mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * 0.25)), int(Global.inventory.get(Global.Items.STONE, 0))),
+	}
+
+func _evaluate_bonus_objective_result(is_victory: bool) -> Dictionary:
+	if _bonus_objective_state.is_empty():
+		return {}
+
+	var objective_id := String(_bonus_objective_state.get("id", ""))
+	var completed := false
+	match objective_id:
+		"no_ally_falls":
+			completed = is_victory and not bool(_bonus_objective_state.get("failed", false))
+		"turn_limit":
+			completed = is_victory and _player_phase_count > 0 and _player_phase_count <= int(_bonus_objective_state.get("turn_limit", 0))
+		"use_bloom_once":
+			completed = is_victory and bool(_bonus_objective_state.get("complete", false))
+		"above_half_hp":
+			if is_victory:
+				completed = true
+				var living_allies := 0
+				for unit_variant in _units.values():
+					var unit := unit_variant as Unit
+					if unit == null or unit.is_enemy or unit.health <= 0:
+						continue
+					living_allies += 1
+					if unit.health * 2 <= unit.max_health:
+						completed = false
+						break
+				completed = completed and living_allies > 0
+
+	return {
+		"id": objective_id,
+		"label": String(_bonus_objective_state.get("label", "")),
+		"gold_reward": int(_bonus_objective_state.get("gold_reward", 0)),
+		"complete": completed,
+	}
+
+func _ensure_loop_battle_resolution(is_victory: bool) -> Dictionary:
+	if Global.has_pending_loop_battle_resolution():
+		return Global.get_pending_loop_battle_resolution()
+
+	var resolution := {
+		"victory": is_victory,
+		"enemies_defeated": _enemies_defeated,
+		"bp_reward": 0,
+		"gold_reward": 0,
+		"bonus_objective": {},
+		"bonus_gold_reward": 0,
+		"level_up_entries": [],
+		"lost_gold": 0,
+		"lost_wood": 0,
+		"lost_stone": 0,
+	}
+
+	if is_victory:
+		var base_rewards := _get_loop_battle_base_rewards(maxi(Global.loop_battle_index, 1))
+		var bonus_result := _evaluate_bonus_objective_result(true)
+		var level_entries: Array[Dictionary] = []
+		if ProgressionService != null and ProgressionService.has_method("build_loop_party_level_up_entries"):
+			level_entries = ProgressionService.build_loop_party_level_up_entries(_battle_party_member_names)
+		resolution["bp_reward"] = int(base_rewards.get("bp_reward", 0))
+		resolution["gold_reward"] = int(base_rewards.get("gold_reward", 0))
+		resolution["bonus_objective"] = bonus_result.duplicate(true)
+		resolution["bonus_gold_reward"] = int(bonus_result.get("gold_reward", 0)) if bool(bonus_result.get("complete", false)) else 0
+		resolution["level_up_entries"] = level_entries.duplicate(true)
+	else:
+		var losses := _calculate_loop_defeat_losses()
+		resolution["lost_gold"] = int(losses.get("lost_gold", 0))
+		resolution["lost_wood"] = int(losses.get("lost_wood", 0))
+		resolution["lost_stone"] = int(losses.get("lost_stone", 0))
+
+	Global.set_pending_loop_battle_resolution(resolution)
+	return resolution
+
+func _format_level_up_gains(gains: Dictionary) -> PackedStringArray:
+	var stat_lines := PackedStringArray()
+	for stat_key in ["MAX_HP", "STR", "DEF", "MDEF", "DEX", "INT", "SPD", "MOV", "ATK_RNG"]:
+		var gain_amount := int(gains.get(stat_key, 0))
+		if gain_amount <= 0:
+			continue
+		var display_key: String = "HP" if stat_key == "MAX_HP" else String(stat_key)
+		stat_lines.append("+%d %s" % [gain_amount, display_key])
+	if stat_lines.is_empty():
+		stat_lines.append("No stat gains")
+	return stat_lines
+
+func _get_level_up_burst_frames(looped: bool = false) -> SpriteFrames:
+	if looped and _level_up_burst_loop_frames != null:
+		return _level_up_burst_loop_frames
+	if not looped and _level_up_burst_frames != null:
+		return _level_up_burst_frames
+
+	var frames := SpriteFrames.new()
+	frames.set_animation_speed("default", 24.0)
+	frames.set_animation_loop("default", looped)
+	for frame_index in range(16):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = LEVEL_UP_BURST_TEXTURE
+		atlas.region = Rect2(frame_index * 128, 0, 128, 128)
+		frames.add_frame("default", atlas)
+	if looped:
+		_level_up_burst_loop_frames = frames
+	else:
+		_level_up_burst_frames = frames
+	return frames
+
+func _run_level_up_sequence(entries: Array[Dictionary]) -> void:
+	if entries.is_empty():
+		return
+
+	await _return_camera_to_player_side()
+	var overlay := _build_level_up_overlay(entries)
+	if overlay == null:
+		return
+
+	var dim_rect: ColorRect = overlay.get("dim_rect", null)
+	var card_map: Dictionary = overlay.get("cards", {})
+	_level_up_sequence_active = true
+	_level_up_advance_requested = false
+	if dim_rect != null:
+		dim_rect.modulate.a = 0.0
+		var fade_in := create_tween()
+		fade_in.tween_property(dim_rect, "modulate:a", 0.68, 0.2)
+		await fade_in.finished
+
+	for entry_variant in entries:
+		if entry_variant is not Dictionary:
+			continue
+		_play_level_up_overlay_entry(card_map, entry_variant)
+		await get_tree().create_timer(1.05).timeout
+
+	await _wait_for_level_up_continue()
+	await get_tree().create_timer(0.22).timeout
+	if _level_up_overlay_root != null and is_instance_valid(_level_up_overlay_root):
+		var fade_out := create_tween()
+		fade_out.tween_property(_level_up_overlay_root, "modulate:a", 0.0, 0.18)
+		await fade_out.finished
+	if _level_up_overlay_layer != null and is_instance_valid(_level_up_overlay_layer):
+		_level_up_overlay_layer.queue_free()
+	_level_up_overlay_layer = null
+	_level_up_overlay_root = null
+	_level_up_sequence_active = false
+	_level_up_advance_requested = false
+
+func _build_level_up_overlay(entries: Array[Dictionary]) -> Dictionary:
+	if _level_up_overlay_layer != null and is_instance_valid(_level_up_overlay_layer):
+		_level_up_overlay_layer.queue_free()
+	_level_up_overlay_layer = CanvasLayer.new()
+	_level_up_overlay_layer.layer = 119
+	add_child(_level_up_overlay_layer)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.modulate.a = 1.0
+	_level_up_overlay_layer.add_child(root)
+	_level_up_overlay_root = root
+
+	var dim_rect := ColorRect.new()
+	dim_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim_rect.color = Color(0.0, 0.0, 0.0, 1.0)
+	dim_rect.modulate.a = 0.68
+	root.add_child(dim_rect)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(center)
+
+	var content := VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 18)
+	center.add_child(content)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 22)
+	content.add_child(row)
+
+	var cards := {}
+	for entry_variant in entries:
+		if entry_variant is not Dictionary:
+			continue
+		var entry: Dictionary = entry_variant
+		var card := _create_level_up_card(entry)
+		row.add_child(card.get("panel"))
+		cards[String(entry.get("name", ""))] = card
+
+	var continue_hint := Label.new()
+	continue_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	continue_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	continue_hint.text = "Press Confirm to continue"
+	continue_hint.add_theme_font_size_override("font_size", 22)
+	continue_hint.modulate = Color(1.0, 0.97, 0.82, 0.92)
+	continue_hint.custom_minimum_size = Vector2(420, 32)
+	content.add_child(continue_hint)
+
+	return {
+		"dim_rect": dim_rect,
+		"cards": cards,
+	}
+
+func _create_level_up_card(entry: Dictionary) -> Dictionary:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(270, 410)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.11, 0.95)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.4, 0.46, 0.54, 0.95)
+	panel_style.corner_radius_top_left = 14
+	panel_style.corner_radius_top_right = 14
+	panel_style.corner_radius_bottom_left = 14
+	panel_style.corner_radius_bottom_right = 14
+	panel.add_theme_stylebox_override("panel", panel_style)
+	panel.modulate = Color(0.72, 0.72, 0.76, 0.92)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	panel.add_child(margin)
+
+	var layout := VBoxContainer.new()
+	layout.alignment = BoxContainer.ALIGNMENT_CENTER
+	layout.add_theme_constant_override("separation", 8)
+	margin.add_child(layout)
+
+	var name_label := Label.new()
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.text = String(entry.get("name", ""))
+	layout.add_child(name_label)
+
+	var portrait_holder := Control.new()
+	portrait_holder.custom_minimum_size = Vector2(220, 190)
+	layout.add_child(portrait_holder)
+
+	var portrait := TextureRect.new()
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait.offset_left = 20
+	portrait.offset_top = 8
+	portrait.offset_right = -20
+	portrait.offset_bottom = -22
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var portrait_texture := _build_level_up_unit_texture(String(entry.get("name", "")))
+	if portrait_texture != null:
+		portrait.texture = portrait_texture
+	portrait_holder.add_child(portrait)
+
+	var burst := AnimatedSprite2D.new()
+	burst.position = Vector2(110, 92)
+	burst.centered = true
+	burst.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	burst.sprite_frames = _get_level_up_burst_frames(true)
+	burst.visible = false
+	portrait_holder.add_child(burst)
+
+	var level_label := Label.new()
+	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	level_label.add_theme_font_size_override("font_size", 22)
+	level_label.text = "Ready to level"
+	layout.add_child(level_label)
+
+	var gains_label := RichTextLabel.new()
+	gains_label.bbcode_enabled = true
+	gains_label.fit_content = true
+	gains_label.scroll_active = false
+	gains_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	gains_label.custom_minimum_size = Vector2(220, 96)
+	gains_label.add_theme_font_size_override("normal_font_size", 20)
+	gains_label.text = "[center]Stat gains will appear here.[/center]"
+	layout.add_child(gains_label)
+
+	return {
+		"panel": panel,
+		"panel_style": panel_style,
+		"portrait": portrait,
+		"burst": burst,
+		"level_label": level_label,
+		"gains_label": gains_label,
+	}
+
+func _build_level_up_unit_texture(unit_name: String) -> Texture2D:
+	var unit := get_node_or_null(unit_name) as Unit
+	if unit == null:
+		return null
+	var sprite := unit.get_node_or_null("PathFollow2D/Visuals/Sprite2D") as Sprite2D
+	if sprite == null or sprite.texture == null:
+		return null
+	if sprite.hframes <= 1 and sprite.vframes <= 1:
+		return sprite.texture
+
+	var texture_size := sprite.texture.get_size()
+	var frame_size := Vector2(texture_size.x / float(sprite.hframes), texture_size.y / float(sprite.vframes))
+	var frame_coords := Vector2i.ZERO
+	if sprite.vframes >= 16:
+		frame_coords = Vector2i(0, 0)
+	elif sprite.frame_coords != Vector2i.ZERO or sprite.frame > 0:
+		frame_coords = sprite.frame_coords
+		if frame_coords == Vector2i.ZERO and sprite.frame > 0:
+			frame_coords = Vector2i(sprite.frame % sprite.hframes, int(sprite.frame / float(sprite.hframes)))
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sprite.texture
+	atlas.region = Rect2(Vector2(frame_coords.x, frame_coords.y) * frame_size, frame_size)
+	return atlas
+
+func _play_level_up_overlay_entry(card_map: Dictionary, entry: Dictionary) -> void:
+	var active_name := String(entry.get("name", ""))
+	for card_key_variant in card_map.keys():
+		var card: Dictionary = card_map.get(card_key_variant, {})
+		var panel := card.get("panel", null) as PanelContainer
+		var panel_style := card.get("panel_style", null) as StyleBoxFlat
+		var burst := card.get("burst", null) as AnimatedSprite2D
+		if panel == null or panel_style == null:
+			continue
+		var is_active := String(card_key_variant) == active_name
+		panel.modulate = Color(1, 1, 1, 1) if is_active else Color(0.72, 0.72, 0.76, 0.92)
+		panel_style.border_color = Color(1.0, 0.88, 0.4, 1.0) if is_active else Color(0.4, 0.46, 0.54, 0.95)
+		if burst != null:
+			burst.visible = is_active
+			if is_active:
+				burst.play("default")
+			else:
+				burst.stop()
+
+	var active_card: Dictionary = card_map.get(active_name, {})
+	var level_label := active_card.get("level_label", null) as Label
+	var gains_label := active_card.get("gains_label", null) as RichTextLabel
+	if level_label != null:
+		level_label.text = "Lv %d -> Lv %d" % [int(entry.get("before_level", 1)), int(entry.get("after_level", 1))]
+	if gains_label != null:
+		gains_label.text = "[center]%s[/center]" % "\n".join(_format_level_up_gains(entry.get("gains", {})))
+
+	var active_panel := active_card.get("panel", null) as PanelContainer
+	if active_panel != null:
+		var pulse := create_tween()
+		pulse.set_parallel(true)
+		pulse.tween_property(active_panel, "scale", Vector2(1.04, 1.04), 0.16)
+		pulse.tween_property(active_panel, "scale", Vector2.ONE, 0.16).set_delay(0.16)
+
+func _wait_for_level_up_continue() -> void:
+	_level_up_advance_requested = false
+	while not _level_up_advance_requested:
+		await get_tree().process_frame
+	_level_up_advance_requested = false
+
 
 func _show_results_screen(is_victory: bool) -> void:
 	_cursor.is_active = false 
-	
+	_hide_deployment_overlay()
+	_hide_bonus_objective_ui()
+
+	if Global.loop_hub_mode_active:
+		var resolution := _ensure_loop_battle_resolution(is_victory)
+		if is_victory:
+			await _run_level_up_sequence(Array(resolution.get("level_up_entries", [])))
+
 	if MusicManager and MusicManager.has_method("fade_to_silence"):
 		MusicManager.fade_to_silence(0.5)
 	
@@ -1769,19 +2585,31 @@ func _show_results_screen(is_victory: bool) -> void:
 
 func _build_results_summary_text(is_victory: bool) -> String:
 	if Global.loop_hub_mode_active:
+		var resolution := Global.get_pending_loop_battle_resolution() if Global.has_pending_loop_battle_resolution() else {}
 		if is_victory:
-			var current_battle_index: int = maxi(Global.loop_battle_index, 1)
-			var bp_rewards: Array[int] = [8, 10, 12, 14, 20]
-			var gold_rewards: Array[int] = [4, 6, 8, 10, 14]
-			var reward_index: int = current_battle_index - 1
-			var bp_reward: int = bp_rewards[reward_index] if reward_index < bp_rewards.size() else bp_rewards.back() + ((reward_index - bp_rewards.size() + 1) * 2)
-			var gold_reward: int = (gold_rewards[reward_index] if reward_index < gold_rewards.size() else gold_rewards.back() + ((reward_index - gold_rewards.size() + 1) * 2)) + (_enemies_defeated * 2)
-			return "Enemies Defeated: %d\n\nRewards:\n+ %d BP\n+ %d Gold" % [_enemies_defeated, bp_reward, gold_reward]
+			var summary_lines: PackedStringArray = [
+				"Enemies Defeated: %d" % int(resolution.get("enemies_defeated", _enemies_defeated)),
+				"",
+				"Rewards:",
+				"+ %d BP" % int(resolution.get("bp_reward", 0)),
+				"+ %d Gold" % int(resolution.get("gold_reward", 0)),
+			]
+			var bonus_objective: Dictionary = resolution.get("bonus_objective", {})
+			if not bonus_objective.is_empty():
+				summary_lines.append("")
+				summary_lines.append("Bonus Objective: %s" % String(bonus_objective.get("label", "")))
+				if bool(bonus_objective.get("complete", false)):
+					summary_lines.append("Bonus Objective Complete: +%d Gold" % int(resolution.get("bonus_gold_reward", 0)))
+				else:
+					summary_lines.append("Bonus Objective Failed")
+			return "\n".join(summary_lines)
 
-		var lost_gold: int = mini(int(ceil(float(Global.loop_gold) * 0.25)), Global.loop_gold)
-		var lost_wood: int = mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * 0.25)), int(Global.inventory.get(Global.Items.WOOD, 0)))
-		var lost_stone: int = mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * 0.25)), int(Global.inventory.get(Global.Items.STONE, 0)))
-		return "Enemies Defeated: %d\n\nRaid Losses:\n- %d Gold\n- %d Wood\n- %d Stone" % [_enemies_defeated, lost_gold, lost_wood, lost_stone]
+		return "Enemies Defeated: %d\n\nRaid Losses:\n- %d Gold\n- %d Wood\n- %d Stone" % [
+			int(resolution.get("enemies_defeated", _enemies_defeated)),
+			int(resolution.get("lost_gold", 0)),
+			int(resolution.get("lost_wood", 0)),
+			int(resolution.get("lost_stone", 0))
+		]
 
 	return "Enemies Defeated: %d\n\nLoot Acquired:\n- None (Yet)" % _enemies_defeated
 	
@@ -1948,6 +2776,12 @@ func _execute_bloom_wave(_caster: Unit, center_cell: Vector2, radius: int) -> bo
 		demo_bloom_used.emit()
 		if DemoDirector:
 			DemoDirector.set_stage(DemoDirector.DemoStage.BLOOM_TUTORIAL)
+
+	if String(_bonus_objective_state.get("id", "")) == "use_bloom_once":
+		var was_complete := bool(_bonus_objective_state.get("complete", false))
+		_bonus_objective_state["complete"] = true
+		if not was_complete:
+			_announce_bonus_objective_completion()
 		
 	return true
 
@@ -2182,6 +3016,18 @@ func _focus_battle_camera(target_position: Vector2, duration: float) -> void:
 	var tween := create_tween()
 	tween.tween_property(_battle_camera, "global_position", target_position, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+func _restore_cursor_control() -> void:
+	if _cursor == null:
+		return
+
+	_cursor.is_mouse = false
+	_cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	_cursor.show()
+	_cursor.is_active = true
+
+	if _cursor_camera != null and grid != null:
+		_handoff_to_cursor_camera(grid.calculate_map_position(_cursor.cell))
 
 func _handoff_to_cursor_camera(target_position: Vector2) -> void:
 	if _cursor == null or _cursor_camera == null or grid == null:

@@ -145,13 +145,13 @@ _data = {
 [node name="EnemyBattleActorBase" unique_id=827029539 instance=ExtResource("1_base")]
 
 [node name="EffectAnchor" parent="." index="0" unique_id=2022233145]
-position = Vector2(12, -28)
+position = Vector2(0, -16)
 
 [node name="DamageAnchor" parent="." index="1" unique_id=726271048]
 position = Vector2(0, -24)
 
 [node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
-position = Vector2(-5, 15.000001)
+position = Vector2(-5.0000005, 16)
 scale = Vector2(1.3, 1.3)
 texture = ExtResource("2_tex")
 offset = Vector2(0, -28)

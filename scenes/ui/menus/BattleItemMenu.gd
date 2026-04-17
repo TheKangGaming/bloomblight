@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const TONIC_ICON := preload("res://graphics/loot/fc85.png")
+
 @onready var cursor: Cursor = get_parent()._cursor
 @onready var _title_label: Label = $Panel/MarginContainer/VBoxContainer/TitleLabel
 @onready var _items_list: VBoxContainer = $Panel/MarginContainer/VBoxContainer/ItemsList
@@ -55,6 +57,7 @@ func refresh_for_current_unit() -> void:
 			var heal_amount := Global.get_tonic_heal_amount(item_type)
 			var button := Button.new()
 			button.custom_minimum_size = Vector2(0, 52)
+			button.icon = TONIC_ICON
 			button.text = "%s x%d  (Heal %d)" % [Global.get_item_display_name(item_type), count, heal_amount]
 			button.pressed.connect(_on_item_pressed.bind(item_type))
 			_wire_browse_sound(button)

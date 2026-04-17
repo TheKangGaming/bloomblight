@@ -20,6 +20,11 @@ const FOREST_ENEMY_CELLS := [
 	Vector2(12, 12),
 	Vector2(13, 11),
 ]
+const FOREST_DEPLOYMENT_CELLS := [
+	Vector2(11, 3),
+	Vector2(12, 4),
+	Vector2(13, 3),
+]
 
 const ENEMY_TYPE_WARRIOR := &"warrior"
 const ENEMY_TYPE_ARCHER := &"archer"
@@ -60,6 +65,17 @@ const ENEMY_LEVEL_BONUS_BY_TYPE := {
 }
 
 const LEGACY_ENEMY_NODE_NAMES := [&"BanditWarrior", &"BanditMarauder", &"BanditArcher"]
+const LOOP_BONUS_OBJECTIVES := {
+	2: {"id": "no_ally_falls", "label": "No ally falls", "gold_reward": 6},
+	3: {"id": "turn_limit", "label": "Win within 4 player turns", "gold_reward": 8, "turn_limit": 4},
+	4: {"id": "use_bloom_once", "label": "Use Bloom at least once", "gold_reward": 8},
+	5: {"id": "no_ally_falls", "label": "No ally falls", "gold_reward": 10},
+	6: {"id": "turn_limit", "label": "Win within 5 player turns", "gold_reward": 10, "turn_limit": 5},
+	7: {"id": "use_bloom_once", "label": "Use Bloom at least once", "gold_reward": 12},
+	8: {"id": "above_half_hp", "label": "Finish with all allies above 50% HP", "gold_reward": 12},
+	9: {"id": "no_ally_falls", "label": "No ally falls", "gold_reward": 14},
+	10: {"id": "turn_limit", "label": "Win within 6 player turns", "gold_reward": 16, "turn_limit": 6},
+}
 
 func _enter_tree() -> void:
 	var battle_root := get_node_or_null("BattleRoot")
@@ -97,9 +113,21 @@ func _attach_forest_backdrop(battle_root: Node) -> void:
 	battle_root.move_child(forest_backdrop, 0)
 
 func _apply_grid_overrides(battle_root: Node, forest_grid: Grid) -> void:
-	var game_board := battle_root.get_node_or_null("GameBoard")
+	var game_board := battle_root.get_node_or_null("GameBoard") as GameBoard
 	if game_board != null:
+		var deployment_slots: Array[Vector2] = []
+		for cell in FOREST_DEPLOYMENT_CELLS:
+			deployment_slots.append(cell)
+		var empty_slots: Array[Vector2] = []
 		game_board.grid = forest_grid
+		if Global.loop_hub_mode_active:
+			game_board.deployment_enabled = true
+			game_board.deployment_cells = deployment_slots
+			game_board.bonus_objective_config = _get_loop_bonus_objective_config()
+		else:
+			game_board.deployment_enabled = false
+			game_board.deployment_cells = empty_slots
+			game_board.bonus_objective_config = {}
 
 	var cursor := battle_root.get_node_or_null("GameBoard/Cursor")
 	if cursor != null:
@@ -180,3 +208,8 @@ func _remove_unit(battle_root: Node, unit_name: String) -> void:
 	if unit_parent != null:
 		unit_parent.remove_child(unit)
 	unit.queue_free()
+
+func _get_loop_bonus_objective_config() -> Dictionary:
+	if not Global.loop_hub_mode_active:
+		return {}
+	return Dictionary(LOOP_BONUS_OBJECTIVES.get(clampi(Global.loop_battle_index, 1, 10), {})).duplicate(true)

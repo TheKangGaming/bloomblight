@@ -56,11 +56,11 @@ func _ready() -> void:
 	_apply_closed_rest_state()
 	set_built(false)
 
-func set_built(is_built: bool) -> void:
-	_built = is_built
-	visible = is_built
-	process_mode = Node.PROCESS_MODE_INHERIT if is_built else Node.PROCESS_MODE_DISABLED
-	if not is_built:
+func set_built(built_state: bool) -> void:
+	_built = built_state
+	visible = built_state
+	process_mode = Node.PROCESS_MODE_INHERIT if built_state else Node.PROCESS_MODE_DISABLED
+	if not built_state:
 		_player_in_range = false
 		_is_open = false
 		_is_animating = false

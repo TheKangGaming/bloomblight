@@ -25,15 +25,17 @@ func _ready() -> void:
 
 	_attack_button.disabled = unit == null or not board._unit_has_available_main_action(unit)
 	var items_available: bool = unit != null and bool(board._unit_has_usable_battle_items(unit))
-	_items_button.disabled = not items_available
+	var item_action_used: bool = unit != null and unit.main_action_used
+	var item_target_full_hp: bool = unit != null and unit.health >= unit.max_health
+	_items_button.disabled = unit == null or item_action_used or not items_available or item_target_full_hp
 	if unit == null:
 		_items_button.text = "Items"
-	elif not board._unit_has_available_main_action(unit):
+	elif item_action_used:
 		_items_button.text = "Items (Used)"
-	elif unit.health >= unit.max_health:
-		_items_button.text = "Items (Full HP)"
 	elif not items_available:
 		_items_button.text = "Items (No Tonics)"
+	elif item_target_full_hp:
+		_items_button.text = "Items (Full HP)"
 	else:
 		_items_button.text = "Items"
 	

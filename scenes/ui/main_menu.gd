@@ -317,30 +317,15 @@ func _wire_navigation_buttons() -> void:
 	party_button.pressed.connect(func() -> void: _set_section(MenuSection.PARTY))
 	inventory_button.pressed.connect(func() -> void: _set_section(MenuSection.INVENTORY))
 	calendar_button.pressed.connect(func() -> void: _set_section(MenuSection.CALENDAR))
-	party_button.focus_entered.connect(func() -> void: _set_section(MenuSection.PARTY))
-	inventory_button.focus_entered.connect(func() -> void: _set_section(MenuSection.INVENTORY))
-	calendar_button.focus_entered.connect(func() -> void: _set_section(MenuSection.CALENDAR))
-	party_button.mouse_entered.connect(func() -> void: _set_section(MenuSection.PARTY))
-	inventory_button.mouse_entered.connect(func() -> void: _set_section(MenuSection.INVENTORY))
-	calendar_button.mouse_entered.connect(func() -> void: _set_section(MenuSection.CALENDAR))
 
 func _wire_party_controls() -> void:
 	_wire_browse_sound(status_subtab_button, false)
 	_wire_browse_sound(equipment_subtab_button, false)
 	_wire_browse_sound(skills_subtab_button, false)
 	_wire_browse_sound(status_text, false)
-	status_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.STATUS))
+	status_subtab_button.pressed.connect(_on_status_subtab_pressed)
 	equipment_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
 	skills_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
-	status_subtab_button.focus_entered.connect(func() -> void:
-		_set_party_subview(PartySubview.STATUS)
-		_complete_status_review_if_needed()
-	)
-	equipment_subtab_button.focus_entered.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
-	skills_subtab_button.focus_entered.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
-	status_subtab_button.mouse_entered.connect(func() -> void: _set_party_subview(PartySubview.STATUS))
-	equipment_subtab_button.mouse_entered.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
-	skills_subtab_button.mouse_entered.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
 	if not status_text.focus_entered.is_connected(_on_status_text_focus_entered):
 		status_text.focus_entered.connect(_on_status_text_focus_entered)
 
@@ -361,13 +346,13 @@ func _wire_inventory_controls() -> void:
 	_wire_browse_sound(equipment_inventory_subtab_button, false)
 	items_subtab_button.pressed.connect(func() -> void: _set_inventory_subview(InventorySubview.ITEMS))
 	equipment_inventory_subtab_button.pressed.connect(func() -> void: _set_inventory_subview(InventorySubview.EQUIPMENT))
-	items_subtab_button.focus_entered.connect(func() -> void: _set_inventory_subview(InventorySubview.ITEMS))
-	equipment_inventory_subtab_button.focus_entered.connect(func() -> void: _set_inventory_subview(InventorySubview.EQUIPMENT))
-	items_subtab_button.mouse_entered.connect(func() -> void: _set_inventory_subview(InventorySubview.ITEMS))
-	equipment_inventory_subtab_button.mouse_entered.connect(func() -> void: _set_inventory_subview(InventorySubview.EQUIPMENT))
 
 func _wire_calendar_controls() -> void:
 	_wire_browse_sound(calendar_legend_panel, false)
+
+func _on_status_subtab_pressed() -> void:
+	_set_party_subview(PartySubview.STATUS)
+	_complete_status_review_if_needed()
 
 func _set_section(section: int) -> void:
 	if _current_section == section:
@@ -1287,7 +1272,6 @@ func _rebuild_inventory_focus_graph() -> void:
 		var slots := _get_inventory_slot_controls()
 		_link_inventory_grid_focus(slots)
 		if not slots.is_empty():
-			var first_slot := slots[0]
 			_set_focus_neighbor(items_subtab_button, Vector2.RIGHT, items_subtab_button)
 			_set_focus_neighbor(items_subtab_button, Vector2.DOWN, items_subtab_button)
 			_set_focus_neighbor(equipment_inventory_subtab_button, Vector2.DOWN, equipment_inventory_subtab_button)

@@ -10,6 +10,7 @@ const SHEET_FARM = preload("res://graphics/plants/Atlas-Props4-crops update.png"
 const SHEET_LOOT = preload("res://graphics/loot/loot-drops.png") 
 const SHEET_FURNITURE = preload("res://graphics/tilesets/furniture_and_props.png")
 const IMG_APPLE = preload("res://graphics/plants/apple.png")
+const IMG_POTION = preload("res://graphics/loot/fc85.png")
 
 var item_map: Dictionary = {}
 var _focus_tooltip: ItemTooltip
@@ -104,9 +105,6 @@ func _ready():
 	item_map[Global.Items.BOK_CHOY_STIR_FRY] = [SHEET_FURNITURE, Vector2i(27,4)]
 	item_map[Global.Items.EGGPLANT_ROAST] = [SHEET_FURNITURE, Vector2i(25,4)]
 	item_map[Global.Items.GRAPE_TONIC] = [SHEET_FURNITURE, Vector2i(29,4)]
-	item_map[Global.Items.MINOR_TONIC] = [SHEET_FURNITURE, Vector2i(29,4)]
-	item_map[Global.Items.FIELD_TONIC] = [SHEET_FURNITURE, Vector2i(29,4)]
-	item_map[Global.Items.RESTORATIVE_DRAFT] = [SHEET_FURNITURE, Vector2i(29,4)]
 	
 
 
@@ -121,6 +119,8 @@ func setup(item_enum: Global.Items, quantity: int):
 	
 	if item_enum == Global.Items.APPLE:
 		icon.texture = IMG_APPLE
+	elif Global.is_battle_tonic(int(item_enum)):
+		icon.texture = IMG_POTION
 		
 	elif item_enum in item_map:
 		var data = item_map[item_enum]

@@ -66,6 +66,7 @@ var last_battle_result := {
 	"enemies_defeated": 0,
 	"returned_at_unix": 0
 }
+var pending_loop_battle_resolution: Dictionary = {}
 
 @warning_ignore("unused_signal")
 signal day_changed(new_day: int)
@@ -173,6 +174,23 @@ func consume_combat_elapsed_seconds() -> float:
 	var elapsed = max(Time.get_unix_time_from_system() - combat_transition.started_at_unix, 0.0)
 	combat_transition.started_at_unix = 0.0
 	return elapsed
+
+func set_pending_loop_battle_resolution(resolution: Dictionary) -> void:
+	pending_loop_battle_resolution = resolution.duplicate(true)
+
+func has_pending_loop_battle_resolution() -> bool:
+	return not pending_loop_battle_resolution.is_empty()
+
+func get_pending_loop_battle_resolution() -> Dictionary:
+	return pending_loop_battle_resolution.duplicate(true)
+
+func consume_pending_loop_battle_resolution() -> Dictionary:
+	var resolution := get_pending_loop_battle_resolution()
+	clear_pending_loop_battle_resolution()
+	return resolution
+
+func clear_pending_loop_battle_resolution() -> void:
+	pending_loop_battle_resolution.clear()
 
 
 enum Items {
@@ -300,7 +318,7 @@ const SEED_GROWTH_SPEEDS := {
 
 const LOOP_PERK_RULE_TEXT := "Meals grant a perk that lasts until your next battle."
 
-func get_loop_biome_tier_for_stage(stage: int) -> int:
+func get_loop_biome_tier_for_stage(_stage: int) -> int:
 	return LOOP_BIOME_SPRING  # Only Forest (Spring) biome implemented; expand when new biomes are added
 
 func get_current_loop_biome_tier() -> int:
@@ -726,6 +744,7 @@ func apply_progression_save_data(save_data: Dictionary) -> void:
 		ensure_player_stat_formats()
 	if save_data.has("active_food_buff") and save_data.active_food_buff is Dictionary:
 		active_food_buff = save_data.active_food_buff.duplicate(true)
+	clear_pending_loop_battle_resolution()
 	inventory_updated.emit()
 	recipe_knowledge_updated.emit()
 	stats_updated.emit()
@@ -841,6 +860,7 @@ func reset_demo_state() -> void:
 		"enemies_defeated": 0,
 		"returned_at_unix": 0
 	}
+	clear_pending_loop_battle_resolution()
 	reset_known_recipes_to_defaults()
 	active_food_buff.item = null
 	active_food_buff.stats = _build_stat_template()
@@ -864,6 +884,7 @@ func begin_loop_hub_run() -> void:
 	loop_time_phase = LOOP_PHASE_DAY
 	_loop_tutorial_text = ""
 	pending_loop_arrival_intro = true
+	clear_pending_loop_battle_resolution()
 	loop_night_vendor_potion_stock.clear()
 	loop_night_vendor_potion_stock_biome_tier = 0
 	loop_unlocked_plots[String(LOOP_PLOT_STARTING_FARM)] = true
@@ -875,9 +896,7 @@ func begin_loop_hub_run() -> void:
 	inventory[Items.POTATO_SEED] = 4
 	inventory[Items.GARLIC_SEED] = 4
 	unlocked_tools = [Tools.AXE]
-	learn_recipe(Items.GARLIC_MASHED_POTATOES, false)
 	learn_recipe(Items.GLAZED_CARROTS, false)
-	learn_recipe(Items.ROASTED_ROOT_MEDLEY, false)
 	if ProgressionService and ProgressionService.has_method("reset_demo_roster"):
 		ProgressionService.reset_demo_roster()
 	inventory_updated.emit()
@@ -1283,10 +1302,9 @@ func set_player_class_name(new_class_name: String) -> void:
 	if player_class_name.is_empty():
 		player_class_name = "Unknown"
 
-func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
+func roll_player_level_gains(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
 	ensure_player_stat_formats()
 	var resolved_levels := maxi(level_count, 0)
-
 	var gained_stats := _build_stat_template()
 	for _level in range(resolved_levels):
 		for stat_name in growth_rates.keys():
@@ -1300,14 +1318,35 @@ func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYE
 			if not _roll_growth(int(growth_rates[stat_name])):
 				continue
 
-			player_permanent_stats.level_derived[normalized_stat] = int(player_permanent_stats.level_derived.get(normalized_stat, 0)) + 1
 			gained_stats[normalized_stat] = int(gained_stats.get(normalized_stat, 0)) + 1
+	return gained_stats
+
+func apply_player_level_gains(gained_stats: Dictionary, level_count: int = 1) -> Dictionary:
+	ensure_player_stat_formats()
+	var resolved_levels := maxi(level_count, 0)
+	var normalized_gains := _build_stat_template()
+	for raw_key in gained_stats.keys():
+		var normalized_stat := String(raw_key)
+		if normalized_stat == "HP":
+			normalized_stat = "MAX_HP"
+		if not player_permanent_stats.level_derived.has(normalized_stat):
+			continue
+		var gain_amount := maxi(int(gained_stats.get(raw_key, 0)), 0)
+		if gain_amount <= 0:
+			continue
+		player_permanent_stats.level_derived[normalized_stat] = int(player_permanent_stats.level_derived.get(normalized_stat, 0)) + gain_amount
+		normalized_gains[normalized_stat] = int(normalized_gains.get(normalized_stat, 0)) + gain_amount
 
 	var permanent := _compute_permanent_totals()
 	player_permanent_stats.current_hp = int(permanent.get("MAX_HP", player_permanent_stats.current_hp))
 	player_level = maxi(player_level + resolved_levels, 1)
 	_sync_legacy_player_stats_snapshot()
-	return gained_stats
+	return normalized_gains
+
+func apply_player_auto_levels(level_count: int, growth_rates: Dictionary = PLAYER_GROWTH_RATES) -> Dictionary:
+	var resolved_levels := maxi(level_count, 0)
+	var gained_stats := roll_player_level_gains(resolved_levels, growth_rates)
+	return apply_player_level_gains(gained_stats, resolved_levels)
 
 
 func _roll_growth(chance_percent: int) -> bool:

@@ -151,7 +151,7 @@ position = Vector2(0, -18)
 position = Vector2(0, -28)
 
 [node name="Sprite2D" parent="VisualDriver" parent_id_path=PackedInt32Array(660136953) index="0" unique_id=259081032]
-position = Vector2(0, 13)
+position = Vector2(-2, 13)
 scale = Vector2(1.4, 1.4)
 texture = ExtResource("2_h1td7")
 offset = Vector2(0, -26)
