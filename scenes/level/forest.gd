@@ -250,6 +250,8 @@ func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 		var interaction_anchor: Vector2 = tree.get_interaction_anchor_global_position()
 		if interaction_anchor.distance_squared_to(global_pos) < 2025.0:
 			tree.hit()
+			if player != null and player.has_method("play_axe_hit_feedback"):
+				player.play_axe_hit_feedback(global_pos)
 			break
 
 func _on_inventory_updated() -> void:

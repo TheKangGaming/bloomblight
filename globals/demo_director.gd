@@ -94,7 +94,10 @@ func begin_loop_tutorial_run() -> void:
 	_manual_prompt_id = ""
 	_manual_prompt_replacements.clear()
 	_story_harvests.clear()
-	_seen_tutorial_cards.clear()
+	for card_id_variant in _seen_tutorial_cards.keys():
+		var card_id := String(card_id_variant)
+		if card_id.begins_with("loop_") or card_id.begins_with("battle_"):
+			_seen_tutorial_cards.erase(card_id_variant)
 
 func _input(event: InputEvent) -> void:
 	if event == null:

@@ -2441,26 +2441,31 @@ func _create_level_up_card(entry: Dictionary) -> Dictionary:
 	}
 
 func _build_level_up_unit_texture(unit_name: String) -> Texture2D:
-	var unit := get_node_or_null(unit_name) as Unit
-	if unit == null:
-		return null
-	var sprite := unit.get_node_or_null("PathFollow2D/Visuals/Sprite2D") as Sprite2D
-	if sprite == null or sprite.texture == null:
-		return null
-	if sprite.hframes <= 1 and sprite.vframes <= 1:
-		return sprite.texture
+	var texture_path := ""
+	match unit_name:
+		"Savannah":
+			texture_path = "res://graphics/characters/Savannah.png"
+		"Tera":
+			texture_path = "res://graphics/characters/Tera.png"
+		"Silas":
+			texture_path = "res://graphics/characters/Silas.png"
+		_:
+			return null
 
-	var texture_size := sprite.texture.get_size()
-	var frame_size := Vector2(texture_size.x / float(sprite.hframes), texture_size.y / float(sprite.vframes))
-	var frame_coords := Vector2i.ZERO
-	if sprite.vframes >= 16:
-		frame_coords = Vector2i(0, 0)
-	elif sprite.frame_coords != Vector2i.ZERO or sprite.frame > 0:
-		frame_coords = sprite.frame_coords
-		if frame_coords == Vector2i.ZERO and sprite.frame > 0:
-			frame_coords = Vector2i(sprite.frame % sprite.hframes, int(sprite.frame / float(sprite.hframes)))
+	var texture := load(texture_path) as Texture2D
+	if texture == null:
+		return null
+
+	var hframes := 16
+	var vframes := 16
+	var texture_size := texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return texture
+	var frame_size := Vector2(texture_size.x / float(hframes), texture_size.y / float(vframes))
+	var frame_index := 134
+	var frame_coords := Vector2i(frame_index % hframes, int(frame_index / hframes))
 	var atlas := AtlasTexture.new()
-	atlas.atlas = sprite.texture
+	atlas.atlas = texture
 	atlas.region = Rect2(Vector2(frame_coords.x, frame_coords.y) * frame_size, frame_size)
 	return atlas
 

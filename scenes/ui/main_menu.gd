@@ -167,16 +167,28 @@ func _handle_manual_menu_accept(event: InputEvent) -> bool:
 	if focus_owner == null or not _is_in_active_content(focus_owner):
 		return false
 	if _is_section_root_focus(focus_owner):
-		var inward_target := _get_section_entry_target(_current_section)
+		var focused_section: int = _get_section_from_root_button(focus_owner)
+		if focused_section >= 0 and _current_section != focused_section:
+			_set_section(focused_section)
+			return true
+		var inward_target := _get_section_entry_target(focused_section if focused_section >= 0 else _current_section)
 		if inward_target != null and inward_target != focus_owner:
 			inward_target.grab_focus()
 			return true
-	if _is_active_party_subtab_focus(focus_owner):
+	if _is_party_subtab_focus(focus_owner):
+		var focused_party_subview: int = _get_party_subview_from_button(focus_owner)
+		if focused_party_subview >= 0 and _current_party_subview != focused_party_subview:
+			_set_party_subview(focused_party_subview)
+			return true
 		var party_detail_target := _get_party_detail_entry_target()
 		if party_detail_target != null and party_detail_target != focus_owner:
 			party_detail_target.grab_focus()
 			return true
-	if _is_active_inventory_subtab_focus(focus_owner):
+	if _is_inventory_subtab_focus(focus_owner):
+		var focused_inventory_subview: int = _get_inventory_subview_from_button(focus_owner)
+		if focused_inventory_subview >= 0 and _current_inventory_subview != focused_inventory_subview:
+			_set_inventory_subview(focused_inventory_subview)
+			return true
 		var inventory_detail_target := _get_inventory_detail_entry_target()
 		if inventory_detail_target != null and inventory_detail_target != focus_owner:
 			inventory_detail_target.grab_focus()
@@ -1300,6 +1312,15 @@ func _get_section_root_button(section: MenuSection) -> Button:
 			return calendar_button
 	return null
 
+func _get_section_from_root_button(button: Control) -> int:
+	if button == party_button:
+		return MenuSection.PARTY
+	if button == inventory_button:
+		return MenuSection.INVENTORY
+	if button == calendar_button:
+		return MenuSection.CALENDAR
+	return -1
+
 func _get_section_entry_target(section: MenuSection) -> Control:
 	match section:
 		MenuSection.PARTY:
@@ -1325,6 +1346,22 @@ func _get_active_party_subtab_button() -> Button:
 
 func _get_active_inventory_subtab_button() -> Button:
 	return items_subtab_button if _current_inventory_subview == InventorySubview.ITEMS else equipment_inventory_subtab_button
+
+func _get_party_subview_from_button(button: Control) -> int:
+	if button == status_subtab_button:
+		return PartySubview.STATUS
+	if button == equipment_subtab_button:
+		return PartySubview.EQUIPMENT
+	if button == skills_subtab_button:
+		return PartySubview.SKILLS
+	return -1
+
+func _get_inventory_subview_from_button(button: Control) -> int:
+	if button == items_subtab_button:
+		return InventorySubview.ITEMS
+	if button == equipment_inventory_subtab_button:
+		return InventorySubview.EQUIPMENT
+	return -1
 
 func _get_party_detail_entry_target() -> Control:
 	match _current_party_subview:
@@ -1538,6 +1575,12 @@ func _is_inventory_header_focus(control: Control) -> bool:
 
 func _is_section_root_focus(control: Control) -> bool:
 	return control == party_button or control == inventory_button or control == calendar_button
+
+func _is_party_subtab_focus(control: Control) -> bool:
+	return control == status_subtab_button or control == equipment_subtab_button or control == skills_subtab_button
+
+func _is_inventory_subtab_focus(control: Control) -> bool:
+	return control == items_subtab_button or control == equipment_inventory_subtab_button
 
 func _is_active_party_subtab_focus(control: Control) -> bool:
 	return control == _get_active_party_subtab_button()

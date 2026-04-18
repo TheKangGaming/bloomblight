@@ -412,6 +412,8 @@ var _loop_hud_stats_label: Label = null
 var _loop_hud_perk_label: Label = null
 var _loop_prompt_root: PanelContainer = null
 var _loop_prompt_label: Label = null
+var _loop_objective_prompt_seen: Dictionary = {}
+var _loop_objective_prompt_serial := 0
 var _loop_hub_entry_uses_transition_handoff: bool = false
 var _loop_battle_launch_pending := false
 var _loop_plant_tutorial_active := false
@@ -1059,6 +1061,7 @@ func _populate_loop_merchant_sell_tab() -> void:
 	var total_harvest_value := _get_loop_total_harvest_sale_value()
 	sell_button.text = "Sell Harvest (%d Gold)%s" % [total_harvest_value, "" if total_harvest_value > 0 else " [No Crops]"]
 	sell_button.disabled = total_harvest_value <= 0
+	sell_button.set_meta("loop_merchant_focus_key", "sell:harvest")
 	sell_button.pressed.connect(_on_loop_sell_harvest_pressed)
 	sell_button.focus_entered.connect(func() -> void:
 		_set_loop_merchant_detail_text("Sell everything at once for %d Gold.\nUse the crop rows below if you want to keep ingredients for recipes." % total_harvest_value)
@@ -1094,6 +1097,7 @@ func _populate_loop_merchant_sell_tab() -> void:
 		var detail_text := _build_loop_crop_sell_description(item_type)
 		var sell_one_button := Button.new()
 		sell_one_button.text = "Sell 1"
+		sell_one_button.set_meta("loop_merchant_focus_key", "sell_one:%d" % item_type)
 		sell_one_button.pressed.connect(_on_loop_sell_one_crop_pressed.bind(item_type))
 		sell_one_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
 		sell_one_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
@@ -1101,6 +1105,7 @@ func _populate_loop_merchant_sell_tab() -> void:
 
 		var sell_all_button := Button.new()
 		sell_all_button.text = "Sell All"
+		sell_all_button.set_meta("loop_merchant_focus_key", "sell_all:%d" % item_type)
 		sell_all_button.pressed.connect(_on_loop_sell_all_crop_pressed.bind(item_type))
 		sell_all_button.focus_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
 		sell_all_button.mouse_entered.connect(_set_loop_merchant_detail_text.bind(detail_text))
@@ -1122,6 +1127,7 @@ func _populate_loop_merchant_seed_tab() -> void:
 		var button := Button.new()
 		button.text = "%s (%d Gold)%s" % [String(offer.get("label", "Seeds")), cost, "" if affordable else " [Need More Gold]"]
 		button.modulate = Color(1, 1, 1, 1) if affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.set_meta("loop_merchant_focus_key", "seed:%d" % seed_item)
 		button.pressed.connect(_on_loop_buy_seed_pressed.bind(seed_item))
 		var seed_description := _build_loop_merchant_seed_description(seed_item, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(seed_description))
@@ -1142,6 +1148,7 @@ func _populate_loop_night_vendor_ingredients_tab() -> void:
 			"" if affordable else " [Need More Gold]"
 		]
 		button.modulate = Color(1, 1, 1, 1) if affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.set_meta("loop_merchant_focus_key", "ingredient:%d" % item_type)
 		button.pressed.connect(_on_loop_buy_inventory_item_pressed.bind(item_type, cost))
 		var description := _build_loop_merchant_inventory_description(item_type, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
@@ -1165,6 +1172,7 @@ func _populate_loop_night_vendor_recipe_tab() -> void:
 		button.text = "%s (%d Gold)%s" % [String(offer.get("label", "Recipe Scroll")), cost, state_suffix]
 		button.disabled = already_known
 		button.modulate = Color(1, 1, 1, 1) if not already_known and affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.set_meta("loop_merchant_focus_key", "recipe:%d" % recipe_item)
 		button.pressed.connect(_on_loop_buy_recipe_scroll_pressed.bind(recipe_item, cost))
 		var description := _build_loop_merchant_recipe_description(recipe_item, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
@@ -1191,6 +1199,7 @@ func _populate_loop_night_vendor_potions_tab() -> void:
 		button.text = "%s (%d Gold)  Stock %d%s" % [String(offer.get("label", Global.get_item_display_name(item_type))), cost, remaining_stock, state_suffix]
 		button.disabled = sold_out
 		button.modulate = Color(1, 1, 1, 1) if not sold_out and affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.set_meta("loop_merchant_focus_key", "potion:%d" % item_type)
 		button.pressed.connect(_on_loop_buy_potion_pressed.bind(item_type, cost))
 		var description := _build_loop_merchant_inventory_description(item_type, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(description))
@@ -1230,6 +1239,7 @@ func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
 			state_suffix = " [Need More Gold]"
 		button.text = "%s (%d Gold)%s" % [item_name, cost, state_suffix]
 		button.modulate = Color(1, 1, 1, 1) if not already_owned and affordable else Color(0.8, 0.8, 0.8, 0.88)
+		button.set_meta("loop_merchant_focus_key", "equipment:%s" % item.resource_path)
 		button.pressed.connect(_on_loop_buy_equipment_pressed.bind(item, cost))
 		var gear_description := _build_loop_merchant_item_description(item, cost)
 		button.focus_entered.connect(_set_loop_merchant_detail_text.bind(gear_description))
@@ -1242,6 +1252,16 @@ func _focus_first_loop_merchant_action_button() -> void:
 			button.grab_focus()
 			return
 	_focus_loop_merchant_tab_button(_loop_merchant_active_tab)
+
+func _restore_loop_merchant_focus(preferred_focus_key: String = "") -> void:
+	if preferred_focus_key != "":
+		for button in _get_loop_merchant_action_buttons():
+			if not button.visible or button.disabled:
+				continue
+			if String(button.get_meta("loop_merchant_focus_key", "")) == preferred_focus_key:
+				button.grab_focus()
+				return
+	_focus_first_loop_merchant_action_button()
 
 func _focus_loop_merchant_tab_button(tab_id: String) -> void:
 	var button := _loop_merchant_tab_buttons.get(tab_id, null) as Button
@@ -1394,6 +1414,8 @@ func _setup_loop_hub_mode() -> void:
 	_log_run_start("Loop hub setup begin")
 	_intro_busy = false
 	_intro_state = IntroState.INACTIVE
+	_loop_objective_prompt_seen.clear()
+	_loop_objective_prompt_serial += 1
 	Global.tutorial_enabled = false
 	Global.intro_sequence_complete = false
 	Global.pending_day_transition = false
@@ -1441,6 +1463,7 @@ func _setup_loop_hub_mode() -> void:
 	_refresh_loop_phase_presentation(true)
 	_refresh_loop_plot_visuals()
 	_refresh_loop_merchant_visuals()
+	Global.show_loop_tutorial_text("")
 	_refresh_loop_objective()
 	_refresh_loop_hud()
 	_prepare_loop_hub_entry_transition()
@@ -1496,6 +1519,7 @@ func _play_loop_hub_entry_transition() -> void:
 		call_deferred("_run_loop_arrival_intro")
 		return
 	player.can_move = true
+	_refresh_loop_objective()
 	_log_run_start("Control returned")
 
 func _ensure_loop_plot_covers() -> void:
@@ -1984,48 +2008,88 @@ func _get_loop_wood_count() -> int:
 	return int(Global.inventory.get(Global.Items.WOOD, 0))
 
 func _refresh_loop_objective() -> void:
+	if _intro_busy or _should_play_loop_arrival_intro():
+		return
+	var objective_prompt := _get_loop_objective_prompt_data()
+	if objective_prompt.is_empty():
+		return
+
+	var prompt_key := String(objective_prompt.get("key", ""))
+	var prompt_text := String(objective_prompt.get("text", ""))
+	if prompt_key.is_empty() or prompt_text.is_empty():
+		return
+	if bool(_loop_objective_prompt_seen.get(prompt_key, false)):
+		return
+
+	_loop_objective_prompt_seen[prompt_key] = true
+	_show_loop_objective_prompt_once(prompt_text)
+
+func _get_loop_objective_prompt_data() -> Dictionary:
 	var forest_open := Global.has_loop_plot(LOOP_PLOT_FOREST)
 	var merchant_open := Global.has_loop_plot(LOOP_PLOT_MERCHANT)
 	var merchant_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON)
 	var cabin_repaired := _is_loop_cabin_repaired()
 	var ready_crops := _has_ready_loop_crops()
+	var has_crops := _has_any_loop_crops()
 	var wood_count := _get_loop_wood_count()
 	var merchant_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))
-	var objective := LOOP_OBJECTIVE_FIGHT
+	var forest_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))
 
 	if _is_loop_night():
-		if not forest_open:
-			objective = LOOP_OBJECTIVE_FOREST
-		elif not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
-			objective = LOOP_OBJECTIVE_CABIN
-		elif not cabin_repaired:
-			objective = LOOP_OBJECTIVE_REPAIR
-		elif ready_crops:
-			objective = LOOP_OBJECTIVE_HARVEST
-		elif not Global.has_loop_equipped_perk() and _has_cookable_loop_meals():
-			objective = LOOP_OBJECTIVE_COOK
-		elif not merchant_open and Global.loop_battle_index >= LOOP_NIGHT_VENDOR_UNLOCK_BATTLE_INDEX and Global.loop_bloom_points >= merchant_unlock_cost:
-			objective = LOOP_OBJECTIVE_MERCHANT
-		else:
-			objective = LOOP_OBJECTIVE_SETTLE
-	else:
-		if not _has_any_loop_crops():
-			objective = LOOP_OBJECTIVE_PLANT
-		elif ready_crops:
-			objective = LOOP_OBJECTIVE_HARVEST
-		elif not forest_open:
-			objective = LOOP_OBJECTIVE_FIGHT if Global.loop_bloom_points < int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0)) else LOOP_OBJECTIVE_FOREST
-		elif not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
-			objective = LOOP_OBJECTIVE_CABIN
-		elif not cabin_repaired:
-			objective = LOOP_OBJECTIVE_REPAIR
-		elif not merchant_open:
-			objective = LOOP_OBJECTIVE_FIGHT if Global.loop_bloom_points < merchant_unlock_cost else LOOP_OBJECTIVE_MERCHANT
-		elif merchant_open and not merchant_built:
-			objective = "Build Wagon" if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST else "Gather Wood for Wagon"
-		else:
-			objective = LOOP_OBJECTIVE_FIGHT
-	Global.show_loop_tutorial_text(objective)
+		if not forest_open and Global.loop_bloom_points >= forest_unlock_cost:
+			return {"key": "unlock_forest", "text": LOOP_OBJECTIVE_FOREST}
+		if forest_open and not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
+			return {"key": "gather_wood_cabin", "text": LOOP_OBJECTIVE_CABIN}
+		if forest_open and not cabin_repaired:
+			return {"key": "repair_cabin", "text": LOOP_OBJECTIVE_REPAIR}
+		if ready_crops:
+			return {"key": "harvest_crops", "text": LOOP_OBJECTIVE_HARVEST}
+		if not Global.has_loop_equipped_perk() and _has_cookable_loop_meals():
+			return {"key": "cook_meal", "text": LOOP_OBJECTIVE_COOK}
+		if not merchant_open and Global.loop_battle_index >= LOOP_NIGHT_VENDOR_UNLOCK_BATTLE_INDEX and Global.loop_bloom_points >= merchant_unlock_cost:
+			return {"key": "unlock_merchant", "text": LOOP_OBJECTIVE_MERCHANT}
+		return {"key": "sleep_cabin", "text": LOOP_OBJECTIVE_SETTLE}
+
+	if not has_crops and _has_any_loop_seeds():
+		return {"key": "plant_seeds", "text": LOOP_OBJECTIVE_PLANT}
+	if ready_crops:
+		return {"key": "harvest_crops", "text": LOOP_OBJECTIVE_HARVEST}
+	if not forest_open:
+		if Global.loop_bloom_points >= forest_unlock_cost:
+			return {"key": "unlock_forest", "text": LOOP_OBJECTIVE_FOREST}
+		if has_crops:
+			return {"key": "to_battle", "text": LOOP_OBJECTIVE_FIGHT}
+		return {}
+	if not cabin_repaired and wood_count < LOOP_CABIN_REPAIR_WOOD_COST:
+		return {"key": "gather_wood_cabin", "text": LOOP_OBJECTIVE_CABIN}
+	if not cabin_repaired:
+		return {"key": "repair_cabin", "text": LOOP_OBJECTIVE_REPAIR}
+	if not merchant_open and Global.loop_bloom_points >= merchant_unlock_cost:
+		return {"key": "unlock_merchant", "text": LOOP_OBJECTIVE_MERCHANT}
+	if merchant_open and not merchant_built:
+		if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST:
+			return {"key": "build_wagon", "text": "Build Wagon"}
+		return {"key": "gather_wood_wagon", "text": "Gather Wood for Wagon"}
+	return {}
+
+func _has_any_loop_seeds() -> bool:
+	for seed_variant in Global.HARVEST_DROPS.keys():
+		var seed_item := int(seed_variant)
+		if int(Global.inventory.get(seed_item, 0)) > 0:
+			return true
+	return false
+
+func _show_loop_objective_prompt_once(text: String) -> void:
+	_loop_objective_prompt_serial += 1
+	var prompt_serial := _loop_objective_prompt_serial
+	Global.show_loop_tutorial_text(text)
+	call_deferred("_clear_loop_objective_prompt_after_delay", prompt_serial)
+
+func _clear_loop_objective_prompt_after_delay(prompt_serial: int) -> void:
+	await get_tree().create_timer(3.0, true).timeout
+	if prompt_serial != _loop_objective_prompt_serial:
+		return
+	Global.show_loop_tutorial_text("")
 
 func _has_any_loop_crops() -> bool:
 	for plant in get_tree().get_nodes_in_group("Plants"):
@@ -2423,6 +2487,8 @@ func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 			var interaction_anchor: Vector2 = tree.get_interaction_anchor_global_position()
 			if interaction_anchor.distance_squared_to(global_pos) < 2025.0:
 				tree.hit()
+				if player != null and player.has_method("play_axe_hit_feedback"):
+					player.play_axe_hit_feedback(global_pos)
 				break
 
 func _on_player_menu_requested(target_pos: Vector2) -> void:
@@ -3178,8 +3244,8 @@ func _run_loop_arrival_intro() -> void:
 	], [player, tera_actor], CUTSCENE_GROUP_ZOOM)
 
 	_end_overworld_skippable_cutscene()
-	_refresh_loop_objective()
 	await _release_overworld_control()
+	_refresh_loop_objective()
 	_log_run_start("Control returned")
 
 func is_overworld_cutscene_skip_active() -> bool:
@@ -3729,7 +3795,7 @@ func _close_loop_merchant_menu() -> void:
 	_loop_merchant_menu.visible = false
 	player.can_move = true
 
-func _sell_loop_crop_amount(item_type: int, amount: int) -> bool:
+func _sell_loop_crop_amount(item_type: int, amount: int, focus_key: String = "") -> bool:
 	var current_count := int(Global.inventory.get(item_type, 0))
 	var sell_amount := mini(maxi(amount, 0), current_count)
 	if sell_amount <= 0:
@@ -3738,6 +3804,7 @@ func _sell_loop_crop_amount(item_type: int, amount: int) -> bool:
 	Global.add_loop_gold(_get_loop_crop_sale_value(item_type, sell_amount))
 	Global.inventory_updated.emit()
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", focus_key if focus_key != "" else "sell_one:%d" % item_type)
 	_refresh_loop_objective()
 	_autosave_loop_run()
 	return true
@@ -3757,19 +3824,20 @@ func _on_loop_sell_harvest_pressed() -> void:
 	Global.add_loop_gold(total_gold)
 	Global.inventory_updated.emit()
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", "sell:harvest")
 	_refresh_loop_objective()
 	_show_player_notice("Sold the harvest for %d Gold." % total_gold)
 	_autosave_loop_run()
 
 func _on_loop_sell_one_crop_pressed(item_type: int) -> void:
-	if not _sell_loop_crop_amount(item_type, 1):
+	if not _sell_loop_crop_amount(item_type, 1, "sell_one:%d" % item_type):
 		_show_player_notice("Nothing to sell yet.")
 		return
 	_show_player_notice("Sold 1 %s." % Global.get_item_display_name(item_type))
 
 func _on_loop_sell_all_crop_pressed(item_type: int) -> void:
 	var sold_amount := int(Global.inventory.get(item_type, 0))
-	if not _sell_loop_crop_amount(item_type, sold_amount):
+	if not _sell_loop_crop_amount(item_type, sold_amount, "sell_all:%d" % item_type):
 		_show_player_notice("Nothing to sell yet.")
 		return
 	_show_player_notice("Sold all %s." % Global.get_item_display_name(item_type))
@@ -3784,6 +3852,7 @@ func _on_loop_buy_seed_pressed(seed_item: int) -> void:
 	Global.spend_loop_gold(cost)
 	Global.add_item(seed_item, 1)
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", "seed:%d" % seed_item)
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % String(offer.get("label", "seed bundle")))
 	_autosave_loop_run()
@@ -3795,6 +3864,7 @@ func _on_loop_buy_inventory_item_pressed(item_type: int, cost: int) -> void:
 	Global.spend_loop_gold(cost)
 	Global.add_item(item_type, 1)
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", "ingredient:%d" % item_type)
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % _format_loop_item_name(item_type))
 	_autosave_loop_run()
@@ -3811,6 +3881,7 @@ func _on_loop_buy_recipe_scroll_pressed(recipe_item: int, cost: int) -> void:
 		if DemoDirector != null and DemoDirector.has_method("notify_recipe_learned"):
 			DemoDirector.notify_recipe_learned(recipe_item)
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", "recipe:%d" % recipe_item)
 	_refresh_loop_objective()
 	_show_player_notice("Learned %s." % Global.get_item_display_name(recipe_item))
 	_autosave_loop_run()
@@ -3832,6 +3903,7 @@ func _on_loop_buy_potion_pressed(item_type: int, cost: int) -> void:
 		return
 	Global.add_item(item_type, 1)
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", "potion:%d" % item_type)
 	_refresh_loop_objective()
 	_show_player_notice("Purchased %s." % Global.get_item_display_name(item_type))
 	_autosave_loop_run()
@@ -3851,6 +3923,7 @@ func _on_loop_buy_equipment_pressed(item: Resource, cost: int) -> void:
 
 	Global.spend_loop_gold(cost)
 	_refresh_loop_merchant_menu()
+	call_deferred("_restore_loop_merchant_focus", "equipment:%s" % item.resource_path)
 	_refresh_loop_hud()
 	_show_player_notice("Purchased %s." % _get_equipment_display_name(item))
 	_autosave_loop_run()

@@ -271,11 +271,12 @@ func axe_use():
 	var player_center = global_position + Vector2(0, -chest_offset)
 	var target_pos = player_center + (last_direction * tool_direction_offset)
 
+	tool_use.emit(Global.Tools.AXE, target_pos)
+
+func play_axe_hit_feedback(target_pos: Vector2) -> void:
 	tool_particles.global_position = target_pos
 	tool_particles.color = Color("#e3c298")
 	tool_particles.emitting = true
-
-	tool_use.emit(Global.Tools.AXE, target_pos)
 	$Sounds/AxeSound.play()
 
 
