@@ -2480,6 +2480,8 @@ func _on_player_tool_use(tool: Global.Tools, global_pos: Vector2) -> void:
 		if player != null:
 			player_ground_y = player.global_position.y
 		for tree in get_tree().get_nodes_in_group("Trees"):
+			if Global.loop_hub_mode_active and not _loop_spawned_forest_nodes.has(tree):
+				continue
 			if not tree.has_method("get_interaction_anchor_global_position"):
 				continue
 			if absf(tree.global_position.y - player_ground_y) > 48.0:

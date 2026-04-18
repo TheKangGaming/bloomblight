@@ -457,7 +457,6 @@ func _refresh_roster_buttons() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_wire_browse_sound(button, false)
 		button.focus_entered.connect(_on_roster_button_focused.bind(index))
-		button.mouse_entered.connect(_on_roster_button_focused.bind(index))
 		button.pressed.connect(_on_roster_button_pressed.bind(index))
 		roster_list.add_child(button)
 		_update_button_state(button, index == _selected_party_index)

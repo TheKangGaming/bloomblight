@@ -279,7 +279,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to move or attack.\n\nKeep her between the enemy and the rest of the party, and Harvest adjacent Healflowers when she needs HP back."
 		"battle_silas":
 			title = "Tutorial: Silas"
-			template = "Silas attacks from range and wants a clear lane to fire.\n\nKeep him behind Savannah, avoid exposing him, and pick off enemies from safety."
+			template = "Silas attacks from range and wants a clear lane to fire.\n\nHunt is a bonus action that gives him +15 Hit and +20 Crit for this turn and the next one. Use it before key shots, keep him behind Savannah, and pick off enemies from safety."
 		"battle_tera_bloom":
 			title = "Tutorial: Tera"
 			template = "Tera is fragile, but Bloom can shape the fight.\n\nUse Bloom to grow Healflowers near the front line so Savannah can Harvest them when the pressure starts."
