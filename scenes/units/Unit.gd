@@ -230,11 +230,13 @@ func _initialize_unit_data() -> void:
 		current_stats.apply_delta(_build_runtime_equipment_delta())
 		if character_data != null and level > 1:
 			current_stats.apply_auto_levels(level - 1)
+		current_stats.hp = current_stats.max_hp
 		return
 
 	current_stats.apply_delta(runtime_growth_delta)
 	current_stats.apply_delta(_build_runtime_equipment_delta())
 	current_stats.clamp_to_caps()
+	current_stats.hp = current_stats.max_hp
 
 
 func _load_player_stats() -> void:

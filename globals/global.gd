@@ -866,6 +866,40 @@ func reset_demo_state() -> void:
 		"enemies_defeated": 0,
 		"returned_at_unix": 0
 	}
+	player_level = ProgressionService.get_starting_player_level() if ProgressionService and ProgressionService.has_method("get_starting_player_level") else 1
+	player_class_name = "Deserter"
+	player_stats = {
+		"MAX_HP": 20,
+		"HP": 20,
+		"VIT": 10,
+		"STR": 5,
+		"DEF": 2,
+		"DEX": 5,
+		"INT": 5,
+		"SPD": 5,
+		"MOV": 4,
+		"ATK_RNG": 1
+	}
+	player_permanent_stats = {
+		"base": {
+			"MAX_HP": 20,
+			"VIT": 10,
+			"STR": 5,
+			"DEF": 2,
+			"DEX": 5,
+			"INT": 5,
+			"SPD": 5,
+			"MOV": 4,
+			"ATK_RNG": 1
+		},
+		"level_derived": _build_stat_template(),
+		"current_hp": 20
+	}
+	equipment = {
+		"Weapon": null,
+		"Armor": null,
+		"Accessory": null
+	}
 	clear_pending_loop_battle_resolution()
 	reset_known_recipes_to_defaults()
 	active_food_buff.item = null
