@@ -37,6 +37,8 @@ signal recipe_knowledge_updated
 @warning_ignore('unused_signal')
 signal stats_updated
 signal loop_state_changed
+# Legacy narrative/day-transition flow still uses this handoff when returning from
+# warning-ui/day-two style battles. Keep until the loop build no longer depends on it.
 var saved_farm_scene: Node = null
 
 
@@ -72,8 +74,10 @@ var pending_loop_battle_resolution: Dictionary = {}
 signal day_changed(new_day: int)
 
 var current_day: int = 1
+# Legacy day->warning_ui->combat pipeline. Preserve for compatibility with the
+# old narrative flow until that path is explicitly retired.
 var pending_day_transition: bool = false
-var resolved_encounters: Array = [] 
+var resolved_encounters: Array = []
 var pending_combat_scene_path: String = ""
 
 signal tutorial_updated(text: String)
@@ -96,6 +100,8 @@ const LOOP_STRUCTURE_CABIN_REPAIRED := &"cabin_repaired"
 # Warm the launch path before the title screen becomes interactive so Start never races scene loading.
 const LAUNCH_GAME_SCENE: PackedScene = preload("res://scenes/level/game.tscn")
 const LAUNCH_FOREST_BATTLE_SCENE: PackedScene = preload("res://scenes/level/forest_battle.tscn")
+# Legacy preloaded battle used by the narrative/calendar flow. Kept because the
+# current project can still route through that scene via old encounter plumbing.
 const LAUNCH_DAY_TWO_BATTLE_SCENE: PackedScene = preload("res://scenes/level/day_two_battle.tscn")
 
 func get_preloaded_launch_scene(scene_path: String) -> PackedScene:

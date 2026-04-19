@@ -628,6 +628,8 @@ func _spawn_damage_text(text_value: String, is_crit: bool = false, is_miss: bool
 func _setup_hp_bar() -> void:
 	_hp_bar = ProgressBar.new()
 	_hp_bar.show_percentage = false # Hide the default Godot text
+	_hp_bar.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_hp_bar.clip_contents = true
 
 	# Sizing and positioning (Centered nicely above a 32x32 sprite)
 	_hp_bar.custom_minimum_size = Vector2(24, 4)
@@ -643,18 +645,20 @@ func _setup_hp_bar() -> void:
 	bg_style.border_width_top = 1
 	bg_style.border_width_bottom = 1
 	bg_style.border_color = Color(0.08, 0.05, 0.03) # Darker carved border
-	bg_style.corner_radius_top_left = 2
-	bg_style.corner_radius_top_right = 2
-	bg_style.corner_radius_bottom_left = 2
-	bg_style.corner_radius_bottom_right = 2
+	bg_style.corner_radius_top_left = 1
+	bg_style.corner_radius_top_right = 1
+	bg_style.corner_radius_bottom_left = 1
+	bg_style.corner_radius_bottom_right = 1
+	bg_style.anti_aliasing = false
 	_hp_bar.add_theme_stylebox_override("background", bg_style)
 
 	# 2. The Sap Fill
 	_hp_fill_style = StyleBoxFlat.new()
-	_hp_fill_style.corner_radius_top_left = 1
-	_hp_fill_style.corner_radius_top_right = 1
-	_hp_fill_style.corner_radius_bottom_left = 1
-	_hp_fill_style.corner_radius_bottom_right = 1
+	_hp_fill_style.corner_radius_top_left = 0
+	_hp_fill_style.corner_radius_top_right = 0
+	_hp_fill_style.corner_radius_bottom_left = 0
+	_hp_fill_style.corner_radius_bottom_right = 0
+	_hp_fill_style.anti_aliasing = false
 	_hp_bar.add_theme_stylebox_override("fill", _hp_fill_style)
 
 	_hp_bar.max_value = max_health

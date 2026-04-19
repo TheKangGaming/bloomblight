@@ -525,11 +525,15 @@ func _update_particle_layout() -> void:
 		mat.emission_box_extents = Vector3(screen_size.x / 2.0, screen_size.y / 2.0, 1.0)
 
 func _get_confirm_hint_text() -> String:
+	# DemoDirector still owns the shared input-label helpers used by both the
+	# modern loop UI and the legacy narrative/tutorial flow.
 	if DemoDirector != null:
 		return DemoDirector.get_confirm_label()
 	return "Enter"
 
 func _get_cancel_hint_text() -> String:
+	# Keep this DemoDirector dependency until input-label helpers are extracted
+	# into a loop-safe shared service.
 	if DemoDirector != null and DemoDirector.current_input_mode == DemoDirector.InputMode.CONTROLLER:
 		return "B"
 	return "Esc"

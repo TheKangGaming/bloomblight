@@ -2659,6 +2659,8 @@ func _on_return_button_pressed(btn: Button) -> void:
 	if Global.tutorial_step == 14 and is_victory:
 		Global.advance_tutorial()
 
+	# Legacy return path for warning-ui/day-two style battles. Preserve until the
+	# current loop flow no longer relies on the old farm-scene handoff.
 	if Global.saved_farm_scene:
 		var elapsed_seconds = Global.consume_combat_elapsed_seconds()
 		var farm = Global.saved_farm_scene

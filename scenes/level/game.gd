@@ -357,6 +357,8 @@ var _merchant_wagon_naked_scene: PackedScene = preload("res://scenes/level/merch
 var _merchant_wagon_complete_scene: PackedScene = preload("res://scenes/level/merchant_wagon_complete.tscn")
 var _overworld_burst_scene: PackedScene = preload("res://scenes/level/overworld_burst_vfx.tscn")
 var _overworld_system_menu_scene: PackedScene = preload("res://scenes/ui/menus/overworld_system_menu.tscn")
+# Legacy narrative scenes still used by the old intro/materials run. Keep these
+# references until the current hub/battle flow is fully decoupled from that mode.
 var _combat_scene_path := "res://scenes/level/day_two_battle.tscn"
 var _forest_scene_path := "res://scenes/level/forest.tscn"
 var _bandit_tension_music: AudioStream = preload("res://audio/music/Music_Anxiety.wav")
@@ -377,6 +379,7 @@ var pending_plant_pos: Vector2
 var _day_timer_cycle_seconds := 0.0
 var _grow_timer_cycle_seconds := 0.0
 var _player_camera_default_zoom := Vector2(2, 2)
+# Legacy warning handoff for the calendar/day-transition combat flow.
 var _warning_ui_scene: PackedScene = preload("res://scenes/ui/warning_ui.tscn")
 var _intro_state := IntroState.INACTIVE
 var _intro_busy := false
@@ -734,6 +737,25 @@ func _refresh_loop_phase_presentation(force := false) -> void:
 	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
 	if hud != null and hud.has_method("_update_view"):
 		hud._update_view(force)
+
+func _crossfade_loop_phase_music(fade_duration: float) -> void:
+	if not Global.loop_hub_mode_active or MusicManager == null or not MusicManager.has_method("crossfade_to"):
+		return
+	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
+	if hud == null:
+		return
+
+	var target_music: AudioStream = null
+	var target_volume := -4.0
+	if _is_loop_night():
+		if "night_music" in hud:
+			target_music = hud.night_music
+	else:
+		if "day_music" in hud:
+			target_music = hud.day_music
+
+	if target_music != null:
+		MusicManager.crossfade_to(target_music, fade_duration, target_volume)
 
 func _clear_loop_crops() -> void:
 	for plant_variant in get_tree().get_nodes_in_group("Plants"):
@@ -1590,12 +1612,11 @@ func _play_loop_hub_entry_transition() -> void:
 		hud_tween.tween_interval(LOOP_HUB_ENTRY_HUD_DELAY)
 		hud_tween.tween_property(_loop_hud_root, "modulate:a", 1.0, LOOP_HUB_ENTRY_HUD_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
-	var hud = get_node_or_null("CanvasLayer/DayTimeHUD")
-	if hud != null and "day_music" in hud and hud.day_music and MusicManager and MusicManager.has_method("crossfade_to"):
+	if MusicManager and MusicManager.has_method("crossfade_to"):
 		var music_tween := create_tween()
 		music_tween.tween_interval(LOOP_HUB_ENTRY_MUSIC_DELAY)
 		music_tween.tween_callback(func():
-			MusicManager.crossfade_to(hud.day_music, LOOP_HUB_ENTRY_MUSIC_FADE, -4.0)
+			_crossfade_loop_phase_music(LOOP_HUB_ENTRY_MUSIC_FADE)
 		)
 
 	if reveal_tween != null:
@@ -2697,6 +2718,8 @@ func _process_night_transition() -> void:
 
 		level_reset()
 
+		# Legacy narrative handoff: preserve until the old calendar/warning flow is
+		# retired and replaced with a single loop-only battle launch path.
 		var main_tree = get_tree()
 		var main_root = main_tree.root
 		Global.saved_farm_scene = self
