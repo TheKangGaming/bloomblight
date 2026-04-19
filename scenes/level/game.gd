@@ -170,6 +170,8 @@ const LOOP_NIGHT_VENDOR_INGREDIENT_SHOPS := {
 }
 const LOOP_NIGHT_VENDOR_RECIPE_OFFERS := {
 	1: [
+		{"recipe_item": Global.Items.GARLIC_MASHED_POTATOES, "cost": 9, "label": "Recipe Scroll: Garlic Mashed Potatoes"},
+		{"recipe_item": Global.Items.ROASTED_ROOT_MEDLEY, "cost": 10, "label": "Recipe Scroll: Roasted Root Medley"},
 		{"recipe_item": Global.Items.PARSNIP_SOUP, "cost": 10, "label": "Recipe Scroll: Parsnip Soup"},
 		{"recipe_item": Global.Items.CAULIFLOWER_STEAK, "cost": 12, "label": "Recipe Scroll: Cauliflower Steak"},
 		{"recipe_item": Global.Items.GREEN_BEAN_SAUTE, "cost": 12, "label": "Recipe Scroll: Green Bean Saute"},
@@ -310,8 +312,13 @@ const OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS := 0.45
 const LOOP_MERCHANT_KIND_WAGON := "wagon"
 const LOOP_MERCHANT_KIND_NIGHT := "night"
 const LOOP_MERCHANT_TAB_SWITCH_COOLDOWN_MS := 150
+const LOOP_MERCHANT_CONTROLLER_SCROLL_THRESHOLD := 0.35
+const LOOP_MERCHANT_CONTROLLER_SCROLL_STEP := 42.0
 const WORLD_PICKUP_POPUP_SCRIPT := preload("res://scenes/ui/world_pickup_popup.gd")
 const LOOP_TONIC_ICON := preload("res://graphics/loot/fc85.png")
+const LOOP_RECIPE_SCROLL_ICON := preload("res://graphics/loot/BAS18.png")
+const LOOP_FARM_ICON_SHEET := preload("res://graphics/plants/Atlas-Props4-crops update.png")
+const LOOP_FURNITURE_ICON_SHEET := preload("res://graphics/tilesets/furniture_and_props.png")
 
 enum IntroState {
 	INACTIVE,
@@ -766,6 +773,11 @@ func _get_equipment_display_name(item: Resource) -> String:
 		return String((item as AccessoryData).accessory_name)
 	return item.resource_name if item != null else "Item"
 
+func _get_equipment_icon(item: Resource) -> Texture2D:
+	if item == null:
+		return null
+	return item.get("icon") as Texture2D
+
 func _format_loop_item_name(item_type: int) -> String:
 	return Global.get_item_display_name(item_type)
 
@@ -897,6 +909,75 @@ func _build_loop_merchant_seed_description(seed_item: int, cost: int) -> String:
 	var growth_label := Global.get_seed_growth_label(seed_item)
 	var biome_name := _get_current_loop_biome_name()
 	return "%d Gold\nBiome: %s\nGrowth: %s\nPlant these on plowed soil before a battle. They keep growing while you fight and harvest into %s for cooking or selling." % [cost, biome_name, growth_label, crop_name]
+
+func _build_loop_item_icon(item_type: int) -> Texture2D:
+	var farm_coords := {
+		Global.Items.BLUEBERRY_SEED: Vector2i(3, 17),
+		Global.Items.WHEAT_SEED: Vector2i(4, 17),
+		Global.Items.MELON_SEED: Vector2i(5, 17),
+		Global.Items.CORN_SEED: Vector2i(6, 17),
+		Global.Items.HOT_PEPPER_SEED: Vector2i(7, 17),
+		Global.Items.RADISH_SEED: Vector2i(8, 17),
+		Global.Items.RED_CABBAGE_SEED: Vector2i(9, 17),
+		Global.Items.TOMATO_SEED: Vector2i(10, 17),
+		Global.Items.CARROT_SEED: Vector2i(13, 17),
+		Global.Items.CAULIFLOWER_SEED: Vector2i(14, 17),
+		Global.Items.POTATO_SEED: Vector2i(15, 17),
+		Global.Items.PARSNIP_SEED: Vector2i(16, 17),
+		Global.Items.GARLIC_SEED: Vector2i(17, 17),
+		Global.Items.GREEN_BEANS_SEED: Vector2i(18, 17),
+		Global.Items.STRAWBERRY_SEED: Vector2i(19, 17),
+		Global.Items.COFFEE_BEAN_SEED: Vector2i(20, 17),
+		Global.Items.PUMPKIN_SEED: Vector2i(24, 17),
+		Global.Items.BROCCOLI_SEED: Vector2i(25, 17),
+		Global.Items.ARTICHOKE_SEED: Vector2i(26, 17),
+		Global.Items.EGGPLANT_SEED: Vector2i(27, 17),
+		Global.Items.BOK_CHOY_SEED: Vector2i(28, 17),
+		Global.Items.GRAPE_SEED: Vector2i(29, 17),
+		Global.Items.BLUEBERRY: Vector2i(10, 8),
+		Global.Items.WHEAT: Vector2i(10, 9),
+		Global.Items.MELON: Vector2i(10, 10),
+		Global.Items.CORN: Vector2i(10, 11),
+		Global.Items.HOT_PEPPER: Vector2i(10, 12),
+		Global.Items.RADISH: Vector2i(10, 13),
+		Global.Items.RED_CABBAGE: Vector2i(10, 14),
+		Global.Items.TOMATO: Vector2i(10, 15),
+		Global.Items.CARROT: Vector2i(20, 8),
+		Global.Items.CAULIFLOWER: Vector2i(20, 9),
+		Global.Items.POTATO: Vector2i(20, 10),
+		Global.Items.PARSNIP: Vector2i(20, 11),
+		Global.Items.GARLIC: Vector2i(20, 12),
+		Global.Items.GREEN_BEANS: Vector2i(20, 13),
+		Global.Items.STRAWBERRY: Vector2i(20, 14),
+		Global.Items.COFFEE_BEAN: Vector2i(20, 15),
+		Global.Items.PUMPKIN: Vector2i(30, 8),
+		Global.Items.BROCCOLI: Vector2i(30, 9),
+		Global.Items.ARTICHOKE: Vector2i(30, 10),
+		Global.Items.EGGPLANT: Vector2i(30, 11),
+		Global.Items.BOK_CHOY: Vector2i(30, 12),
+		Global.Items.GRAPE: Vector2i(30, 13),
+	}
+	if farm_coords.has(item_type):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = LOOP_FARM_ICON_SHEET
+		var coords: Vector2i = farm_coords[item_type]
+		atlas.region = Rect2(coords.x * 32, coords.y * 32, 32, 32)
+		return atlas
+	if item_type == Global.Items.WATER:
+		var water_atlas := AtlasTexture.new()
+		water_atlas.atlas = LOOP_FURNITURE_ICON_SHEET
+		water_atlas.region = Rect2(21 * 32, 4 * 32, 32, 32)
+		return water_atlas
+	if Global.is_battle_tonic(item_type):
+		return LOOP_TONIC_ICON
+	return null
+
+func _apply_loop_shop_button_icon(button: Button, icon: Texture2D) -> void:
+	if button == null:
+		return
+	button.icon = icon
+	button.expand_icon = false
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
 func _build_loop_merchant_inventory_description(item_type: int, cost: int) -> String:
 	if Global.is_battle_tonic(item_type):
@@ -1125,6 +1206,7 @@ func _populate_loop_merchant_seed_tab() -> void:
 		var cost := int(offer.get("cost", 0))
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
+		_apply_loop_shop_button_icon(button, _build_loop_item_icon(seed_item))
 		button.text = "%s (%d Gold)%s" % [String(offer.get("label", "Seeds")), cost, "" if affordable else " [Need More Gold]"]
 		button.modulate = Color(1, 1, 1, 1) if affordable else Color(0.8, 0.8, 0.8, 0.88)
 		button.set_meta("loop_merchant_focus_key", "seed:%d" % seed_item)
@@ -1142,6 +1224,7 @@ func _populate_loop_night_vendor_ingredients_tab() -> void:
 		var cost := int(offer.get("cost", 0))
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
+		_apply_loop_shop_button_icon(button, _build_loop_item_icon(item_type))
 		button.text = "%s (%d Gold)%s" % [
 			String(offer.get("label", _format_loop_item_name(item_type))),
 			cost,
@@ -1164,6 +1247,7 @@ func _populate_loop_night_vendor_recipe_tab() -> void:
 		var already_known := Global.knows_recipe(recipe_item)
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
+		_apply_loop_shop_button_icon(button, LOOP_RECIPE_SCROLL_ICON)
 		var state_suffix := ""
 		if already_known:
 			state_suffix = " [Learned]"
@@ -1190,7 +1274,7 @@ func _populate_loop_night_vendor_potions_tab() -> void:
 		var sold_out := remaining_stock <= 0
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
-		button.icon = LOOP_TONIC_ICON
+		_apply_loop_shop_button_icon(button, LOOP_TONIC_ICON)
 		var state_suffix := ""
 		if sold_out:
 			state_suffix = " [Sold Out]"
@@ -1232,6 +1316,7 @@ func _populate_loop_merchant_equipment_tab(slot_name: String) -> void:
 		var cost := int(offer.get("cost", 0))
 		var affordable := Global.loop_gold >= cost
 		var button := Button.new()
+		_apply_loop_shop_button_icon(button, _get_equipment_icon(item))
 		var state_suffix := ""
 		if already_owned:
 			state_suffix = " [Owned]"
@@ -2669,6 +2754,16 @@ func _input(event: InputEvent) -> void:
 		return
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu) or not _loop_merchant_menu.visible:
 		return
+	if event is InputEventJoypadMotion:
+		var joy_motion := event as InputEventJoypadMotion
+		if joy_motion.axis == JOY_AXIS_RIGHT_Y and absf(joy_motion.axis_value) >= LOOP_MERCHANT_CONTROLLER_SCROLL_THRESHOLD:
+			if _loop_merchant_action_scroll != null and is_instance_valid(_loop_merchant_action_scroll):
+				_loop_merchant_action_scroll.scroll_vertical = maxi(
+					0,
+					_loop_merchant_action_scroll.scroll_vertical + int(round(joy_motion.axis_value * LOOP_MERCHANT_CONTROLLER_SCROLL_STEP))
+				)
+				get_viewport().set_input_as_handled()
+				return
 	if event.is_action_pressed("tool_backward") and _can_switch_loop_merchant_tabs():
 		_cycle_loop_merchant_tab(-1)
 		get_viewport().set_input_as_handled()

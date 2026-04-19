@@ -1918,6 +1918,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	
 	vbox.add_child(_create_stat_row("HP", str(attacker.health) + "/" + str(attacker.max_health)))
 	vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(forecast.attacker_damage, forecast.attacker_can_double)))
+	vbox.add_child(_create_stat_row("STRIKES", "2" if forecast.attacker_can_double else "1"))
 	vbox.add_child(_create_stat_row("HIT", str(forecast.attacker_hit_chance) + "%"))
 	vbox.add_child(_create_stat_row("CRIT", str(forecast.attacker_crit_chance) + "%"))
 	
@@ -1935,6 +1936,7 @@ func _show_combat_forecast(attacker: Unit, defender: Unit) -> void:
 	
 	if forecast.defender_can_counter:
 		vbox.add_child(_create_stat_row("DMG", _format_forecast_damage(forecast.defender_damage, forecast.defender_can_double)))
+		vbox.add_child(_create_stat_row("STRIKES", "2" if forecast.defender_can_double else "1"))
 		vbox.add_child(_create_stat_row("HIT", str(forecast.defender_hit_chance) + "%"))
 		vbox.add_child(_create_stat_row("CRIT", str(forecast.defender_crit_chance) + "%"))
 	else:
@@ -2080,7 +2082,7 @@ func _show_phase_banner(text: String, bg_color: Color) -> void:
 	fade_in.tween_property(banner, "scale", Vector2.ONE, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await fade_in.finished
 
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(1.0).timeout
 
 	var fade_out := create_tween()
 	fade_out.set_parallel(true)
@@ -2441,32 +2443,57 @@ func _create_level_up_card(entry: Dictionary) -> Dictionary:
 	}
 
 func _build_level_up_unit_texture(unit_name: String) -> Texture2D:
-	var texture_path := ""
+	if ProgressionService != null and ProgressionService.has_method("get_party_member_by_name"):
+		var member := ProgressionService.get_party_member_by_name(unit_name) as CharacterData
+		if member != null:
+			var member_texture := _resolve_level_up_texture_for_character(member)
+			if member_texture != null:
+				return member_texture
+
+	var character_data_path := ""
 	match unit_name:
 		"Savannah":
-			texture_path = "res://graphics/characters/Savannah.png"
+			character_data_path = "res://data/units/Savannah/savannah_data.tres"
 		"Tera":
-			texture_path = "res://graphics/characters/Tera.png"
+			character_data_path = "res://data/units/Tera/tera_data.tres"
 		"Silas":
-			texture_path = "res://graphics/characters/Silas.png"
+			character_data_path = "res://data/units/Silas/silas_data.tres"
 		_:
 			return null
 
-	var texture := load(texture_path) as Texture2D
-	if texture == null:
-		return null
+	var character_data := load(character_data_path) as CharacterData
+	return _resolve_level_up_texture_for_character(character_data)
 
-	var hframes := 16
-	var vframes := 16
-	var texture_size := texture.get_size()
-	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
-		return texture
-	var frame_size := Vector2(texture_size.x / float(hframes), texture_size.y / float(vframes))
-	var frame_index := 134
-	var frame_coords := Vector2i(frame_index % hframes, int(frame_index / hframes))
+func _resolve_level_up_texture_for_character(character_data: CharacterData) -> Texture2D:
+	if character_data == null:
+		return null
+	if character_data.portrait != null:
+		return character_data.portrait
+	return _build_level_up_actor_frame_texture(character_data)
+
+func _build_level_up_actor_frame_texture(character_data: CharacterData) -> Texture2D:
+	if character_data == null or character_data.battle_actor_scene == null:
+		return null
+	var actor_root := character_data.battle_actor_scene.instantiate()
+	if actor_root == null:
+		return null
+	var body_sprite := actor_root.get_node_or_null("VisualDriver/Player/SpriteLayers/01body") as Sprite2D
+	if body_sprite == null or body_sprite.texture == null:
+		actor_root.free()
+		return null
+	var texture_size := body_sprite.texture.get_size()
+	var frame_width := int(texture_size.x / max(1, body_sprite.hframes))
+	var frame_height := int(texture_size.y / max(1, body_sprite.vframes))
+	if frame_width <= 0 or frame_height <= 0:
+		actor_root.free()
+		return body_sprite.texture
+	var frame_index := maxi(body_sprite.frame, 0)
+	var frame_x: int = frame_index % max(1, body_sprite.hframes)
+	var frame_y: int = int(frame_index / max(1, body_sprite.hframes))
 	var atlas := AtlasTexture.new()
-	atlas.atlas = texture
-	atlas.region = Rect2(Vector2(frame_coords.x, frame_coords.y) * frame_size, frame_size)
+	atlas.atlas = body_sprite.texture
+	atlas.region = Rect2(frame_x * frame_width, frame_y * frame_height, frame_width, frame_height)
+	actor_root.free()
 	return atlas
 
 func _play_level_up_overlay_entry(card_map: Dictionary, entry: Dictionary) -> void:

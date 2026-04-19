@@ -51,6 +51,9 @@ var _new_game_confirm_open := false
 var _new_game_confirm_overlay: Control = null
 var _new_game_confirm_button: Button = null
 var _new_game_cancel_button: Button = null
+var _title_notice_root: PanelContainer = null
+var _title_notice_label: Label = null
+var _title_notice_tween: Tween = null
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
@@ -85,6 +88,7 @@ func _ready() -> void:
 	quit_button.scale = START_BUTTON_IDLE_SCALE
 	continue_button.visible = _can_continue()
 	_build_new_game_overwrite_prompt()
+	_build_title_notice()
 
 	_cached_game_scene = Global.get_preloaded_launch_scene(GAME_SCENE_PATH)
 	if title_music:
@@ -213,6 +217,72 @@ func _build_new_game_overwrite_prompt() -> void:
 	_new_game_cancel_button = cancel_button
 	_new_game_confirm_button = confirm_button
 
+func _build_title_notice() -> void:
+	if _title_notice_root != null and is_instance_valid(_title_notice_root):
+		return
+
+	var notice_panel := PanelContainer.new()
+	notice_panel.name = "TitleNotice"
+	notice_panel.visible = false
+	notice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	notice_panel.anchor_left = 0.5
+	notice_panel.anchor_right = 0.5
+	notice_panel.anchor_top = 1.0
+	notice_panel.anchor_bottom = 1.0
+	notice_panel.offset_left = -260.0
+	notice_panel.offset_right = 260.0
+	notice_panel.offset_top = -132.0
+	notice_panel.offset_bottom = -52.0
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.08, 0.08, 0.1, 0.94)
+	panel_style.border_color = Color(0.96, 0.78, 0.44, 0.96)
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.corner_radius_top_left = 10
+	panel_style.corner_radius_top_right = 10
+	panel_style.corner_radius_bottom_left = 10
+	panel_style.corner_radius_bottom_right = 10
+	notice_panel.add_theme_stylebox_override("panel", panel_style)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	notice_panel.add_child(margin)
+
+	var label := Label.new()
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 20)
+	margin.add_child(label)
+
+	add_child(notice_panel)
+	_title_notice_root = notice_panel
+	_title_notice_label = label
+
+func _show_title_notice(text: String, duration: float = 2.2) -> void:
+	if _title_notice_root == null or not is_instance_valid(_title_notice_root) or _title_notice_label == null:
+		return
+
+	if _title_notice_tween != null and is_instance_valid(_title_notice_tween):
+		_title_notice_tween.kill()
+
+	_title_notice_label.text = text
+	_title_notice_root.visible = true
+	_title_notice_root.modulate.a = 0.0
+	_title_notice_tween = create_tween()
+	_title_notice_tween.tween_property(_title_notice_root, "modulate:a", 1.0, 0.18)
+	_title_notice_tween.tween_interval(maxf(duration, 0.2))
+	_title_notice_tween.tween_property(_title_notice_root, "modulate:a", 0.0, 0.22)
+	_title_notice_tween.tween_callback(func() -> void:
+		if _title_notice_root != null and is_instance_valid(_title_notice_root):
+			_title_notice_root.visible = false
+	)
+
 func _open_new_game_overwrite_prompt() -> void:
 	if _new_game_confirm_overlay == null or not is_instance_valid(_new_game_confirm_overlay):
 		return
@@ -295,6 +365,11 @@ func _on_continue_pressed() -> void:
 		continue_button.disabled = not _can_continue()
 		settings_button.disabled = false
 		quit_button.disabled = false
+		_show_title_notice("Continue failed. The current save could not be loaded.")
+		if _can_continue():
+			continue_button.grab_focus()
+		else:
+			start_button.grab_focus()
 		return
 
 	_play_start_transition()
