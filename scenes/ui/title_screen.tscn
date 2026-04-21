@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://glj0a3o7b0b7" path="res://scenes/ui/title_screen.gd" id="1_eb34j"]
 [ext_resource type="AudioStream" uid="uid://ceemgel5gw566" path="res://audio/music/Sea of stars.wav" id="2_aqpy5"]
 [ext_resource type="FontFile" uid="uid://dpwruyc8g7s5n" path="res://assets/fonts/Cinzel-VariableFont_wght.ttf" id="4_a4ium"]
+[ext_resource type="Texture2D" path="res://blight_&_bloom_logo.png" id="5_r18t0"]
 
 [sub_resource type="Gradient" id="Gradient_r23qo"]
 colors = PackedColorArray(0.18543339, 2.8685927e-05, 0.7077556, 1, 0, 0, 0, 1)
@@ -32,14 +33,6 @@ gravity = Vector3(0, -10, 0)
 scale_min = 2.0
 scale_max = 6.0
 color = Color(0.24699152, 0.07583184, 0.51259595, 0.54901963)
-
-[sub_resource type="LabelSettings" id="LabelSettings_r23qo"]
-font = ExtResource("4_a4ium")
-font_size = 96
-outline_size = 2
-outline_color = Color(0.52906674, 0.5290667, 0.5290667, 1)
-shadow_color = Color(0, 0, 0, 0.753)
-shadow_offset = Vector2(4, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxEmpty_cfe2f"]
 bg_color = Color(1, 1, 1, 0)
@@ -190,20 +183,23 @@ theme_override_constants/margin_bottom = 64
 layout_mode = 2
 alignment = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer" unique_id=2136734402]
-texture_filter = 2
+[node name="LogoHolder" type="CenterContainer" parent="MarginContainer/VBoxContainer" unique_id=2136734402]
 layout_mode = 2
 size_flags_horizontal = 4
-size_flags_vertical = 1
-theme_override_font_sizes/font_size = 96
-text = "BLIGHT & BLOOM"
-label_settings = SubResource("LabelSettings_r23qo")
-horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 390)
+
+[node name="Logo" type="TextureRect" parent="MarginContainer/VBoxContainer/LogoHolder"]
+texture_filter = 2
+layout_mode = 2
+custom_minimum_size = Vector2(520, 374)
+expand_mode = 1
+stretch_mode = 5
+texture = ExtResource("5_r18t0")
 
 [node name="Buttons" type="VBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=101251817]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="StartButton" type="Button" parent="MarginContainer/VBoxContainer/Buttons" unique_id=475952342]
 texture_filter = 2

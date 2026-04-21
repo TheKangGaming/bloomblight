@@ -2153,10 +2153,11 @@ func _get_loop_battle_base_rewards(battle_index: int) -> Dictionary:
 	}
 
 func _calculate_loop_defeat_losses() -> Dictionary:
+	var raid_loss_ratio := Global.get_loop_raid_loss_ratio()
 	return {
-		"lost_gold": mini(int(ceil(float(Global.loop_gold) * 0.25)), Global.loop_gold),
-		"lost_wood": mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * 0.25)), int(Global.inventory.get(Global.Items.WOOD, 0))),
-		"lost_stone": mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * 0.25)), int(Global.inventory.get(Global.Items.STONE, 0))),
+		"lost_gold": mini(int(ceil(float(Global.loop_gold) * raid_loss_ratio)), Global.loop_gold),
+		"lost_wood": mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * raid_loss_ratio)), int(Global.inventory.get(Global.Items.WOOD, 0))),
+		"lost_stone": mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * raid_loss_ratio)), int(Global.inventory.get(Global.Items.STONE, 0))),
 	}
 
 func _evaluate_bonus_objective_result(is_victory: bool) -> Dictionary:

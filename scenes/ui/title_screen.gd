@@ -6,7 +6,7 @@ const TITLE_MUSIC_FADE_IN := 0.32
 const START_BUTTON_PRESS_SCALE := Vector2(0.94, 0.94)
 const START_BUTTON_IDLE_SCALE := Vector2.ONE
 const TITLE_BUTTON_HOVER_SCALE := Vector2(1.04, 1.04)
-const TITLE_LABEL_PULSE_SCALE := Vector2(1.02, 1.02)
+const TITLE_LOGO_PULSE_SCALE := Vector2(1.02, 1.02)
 const TITLE_FLASH_DURATION := 0.09
 const TITLE_FLASH_RECOVERY := 0.22
 const TITLE_START_OVERLAP_DELAY := 0.025
@@ -28,7 +28,7 @@ const OPENING_LINES := [
 @onready var continue_button: Button = $MarginContainer/VBoxContainer/Buttons/ContinueButton
 @onready var settings_button: Button = $MarginContainer/VBoxContainer/Buttons/SettingsButton
 @onready var quit_button: Button = $MarginContainer/VBoxContainer/Buttons/QuitButton
-@onready var title_label: Label = $MarginContainer/VBoxContainer/Label
+@onready var title_logo: Control = $MarginContainer/VBoxContainer/LogoHolder
 @onready var fade_rect: ColorRect = $FadeRect
 @onready var atmosphere_particles: GPUParticles2D = $AtmosphereParticles
 @onready var intro_overlay: Control = $IntroOverlay
@@ -75,8 +75,8 @@ func _ready() -> void:
 	continue_button.modulate.a = 0.0
 	settings_button.modulate.a = 0.0
 	quit_button.modulate.a = 0.0
-	title_label.modulate.a = 0.0
-	title_label.scale = Vector2.ONE
+	title_logo.modulate.a = 0.0
+	title_logo.scale = Vector2.ONE
 	menu_root.modulate.a = 1.0
 	intro_overlay.visible = false
 	intro_overlay.modulate.a = 0.0
@@ -97,7 +97,7 @@ func _ready() -> void:
 	_fade_tween = create_tween()
 	_fade_tween.tween_property(fade_rect, "modulate:a", 0.0, TITLE_FADE_IN_DURATION)
 	
-	_fade_tween.parallel().tween_property(title_label, "modulate:a", 1.0, 0.28).set_delay(0.04)
+	_fade_tween.parallel().tween_property(title_logo, "modulate:a", 1.0, 0.28).set_delay(0.04)
 	_fade_tween.parallel().tween_property(start_button, "modulate:a", 1.0, 0.2).set_delay(0.08)
 	_fade_tween.parallel().tween_property(continue_button, "modulate:a", 1.0 if _can_continue() else 0.0, 0.2).set_delay(0.08 + TITLE_BUTTON_STAGGER)
 	_fade_tween.parallel().tween_property(settings_button, "modulate:a", 1.0, 0.2).set_delay(0.08 + (TITLE_BUTTON_STAGGER * 2.0))
@@ -507,10 +507,10 @@ func _animate_title_button(button: Button, highlighted: bool) -> void:
 	if button == null:
 		return
 	var target_scale := TITLE_BUTTON_HOVER_SCALE if highlighted and not button.disabled else START_BUTTON_IDLE_SCALE
-	var label_scale := TITLE_LABEL_PULSE_SCALE if highlighted else Vector2.ONE
+	var label_scale := TITLE_LOGO_PULSE_SCALE if highlighted else Vector2.ONE
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(button, "scale", target_scale, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(title_label, "scale", label_scale, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(title_logo, "scale", label_scale, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _on_quit_pressed() -> void:
 	if _is_transitioning:

@@ -91,6 +91,11 @@ const LOOP_PLOT_QUARRY := &"quarry"
 const LOOP_PLOT_BLOOM_SHRINE := &"bloom_shrine"
 const LOOP_MERCHANT_BUILD_WOOD_COST := 8
 const LOOP_CABIN_REPAIR_WOOD_COST := Global.DEMO_CABIN_WOOD_REQUIRED
+const LOOP_QUARRY_DAILY_STONE_YIELD := 4
+const LOOP_WORKSHOP_BUILD_WOOD_COST := 8
+const LOOP_WORKSHOP_BUILD_STONE_COST := 6
+const LOOP_CABIN_FORTIFY_WOOD_COST := 10
+const LOOP_CABIN_FORTIFY_STONE_COST := 8
 const LOOP_BATTLE_BP_REWARDS: Array[int] = [8, 10, 12, 14, 20]
 const LOOP_BATTLE_GOLD_REWARDS: Array[int] = [4, 6, 8, 10, 14]
 const LOOP_BATTLE_BP_BASE_REWARD := 8
@@ -98,7 +103,6 @@ const LOOP_BATTLE_GOLD_BASE_REWARD := 4
 const LOOP_BATTLE_BP_STEP := 2
 const LOOP_BATTLE_GOLD_STEP := 2
 const LOOP_POST_BATTLE_GROWTH_TICKS := 2
-const LOOP_RAID_LOSS_RATIO := 0.25
 const LOOP_HUB_ENTRY_FADE_ALPHA := 0.54
 const LOOP_HUB_ENTRY_FADE_DURATION := 0.4
 const LOOP_HUB_ENTRY_HUD_DURATION := 0.24
@@ -269,10 +273,10 @@ const LOOP_MERCHANT_GEAR_OFFERS := [
 	{"stage": 8, "cost": 34, "item": preload("res://data/items/Accessories/ForestCrest.tres"), "slot": "Accessory"},
 ]
 const LOOP_PLOT_DEFS := {
-	LOOP_PLOT_WATCHTOWER: {"rect": Rect2(Vector2(0, 0), LOOP_PLOT_SIZE), "unlock_cost": 8},
-	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(640, 0), LOOP_PLOT_SIZE), "unlock_cost": 7},
+	LOOP_PLOT_WATCHTOWER: {"rect": Rect2(Vector2(640, 0), LOOP_PLOT_SIZE), "unlock_cost": 8},
+	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 7},
 	LOOP_PLOT_BLOOM_SHRINE: {"rect": Rect2(Vector2(1280, 0), LOOP_PLOT_SIZE), "unlock_cost": 9},
-	LOOP_PLOT_GARDEN: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 6},
+	LOOP_PLOT_GARDEN: {"rect": Rect2(Vector2(0, 0), LOOP_PLOT_SIZE), "unlock_cost": 6},
 	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": 0},
 	LOOP_PLOT_WORKSHOP: {"rect": Rect2(Vector2(1280, 480), LOOP_PLOT_SIZE), "unlock_cost": 8},
 	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 10},
@@ -281,10 +285,22 @@ const LOOP_PLOT_DEFS := {
 }
 const LOOP_NIGHT_VENDOR_UNLOCK_BATTLE_INDEX := 4
 const LOOP_INTERACTION_POINTS := {
+	LOOP_PLOT_QUARRY: Vector2(320, 788),
+	LOOP_PLOT_WORKSHOP: Vector2(1600, 852),
 	LOOP_PLOT_MERCHANT: Vector2(700, 1200),
 	LOOP_PLOT_FOREST: Vector2(1220, 1200),
 	&"bridge_battle": LOOP_BRIDGE_BATTLE_POS,
 }
+const LOOP_QUARRY_ENTRANCE_POS := Vector2(320, 732)
+const LOOP_QUARRY_ROCK_PLACEMENTS := [
+	{"texture_index": 0, "position": Vector2(238, 804)},
+	{"texture_index": 1, "position": Vector2(414, 794)},
+	{"texture_index": 2, "position": Vector2(214, 718)},
+	{"texture_index": 3, "position": Vector2(444, 722)},
+	{"texture_index": 4, "position": Vector2(318, 830)},
+]
+const LOOP_WORKSHOP_BUILDING_POS := Vector2(1568, 664)
+const LOOP_WORKSHOP_BUILDING_REGION := Rect2(81, 240, 607, 307)
 const LOOP_MERCHANT_STRUCTURE_POS := Vector2(360, 1216)
 const LOOP_MERCHANT_NPC_POS := Vector2(374, 1288)
 const LOOP_MERCHANT_INTERACTION_POS := Vector2(392, 1200)
@@ -307,6 +323,10 @@ const LOOP_OBJECTIVE_MERCHANT := "Purify Merchant"
 const LOOP_OBJECTIVE_FOREST := "Unlock Forest"
 const LOOP_OBJECTIVE_REPAIR := "Repair Cabin"
 const LOOP_OBJECTIVE_CABIN := "Gather Wood for Cabin"
+const LOOP_OBJECTIVE_QUARRY := "Purify Quarry"
+const LOOP_OBJECTIVE_MINE_STONE := "Mine Stone"
+const LOOP_OBJECTIVE_BUILD_WORKSHOP := "Build Workshop"
+const LOOP_OBJECTIVE_FORTIFY_CABIN := "Fortify Cabin"
 const LOOP_OBJECTIVE_SETTLE := "Sleep in the cabin"
 const OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS := 0.45
 const LOOP_MERCHANT_KIND_WAGON := "wagon"
@@ -317,6 +337,15 @@ const LOOP_MERCHANT_CONTROLLER_SCROLL_STEP := 42.0
 const WORLD_PICKUP_POPUP_SCRIPT := preload("res://scenes/ui/world_pickup_popup.gd")
 const LOOP_TONIC_ICON := preload("res://graphics/loot/fc85.png")
 const LOOP_RECIPE_SCROLL_ICON := preload("res://graphics/loot/BAS18.png")
+const LOOP_QUARRY_ENTRANCE_TEXTURE := preload("res://graphics/interactables/mine entrance - standalone.png")
+const LOOP_WORKSHOP_TEXTURE_SHEET := preload("res://graphics/buildings/blacksmith-building.png")
+const LOOP_QUARRY_ROCK_TEXTURES: Array[Texture2D] = [
+	preload("res://graphics/environment/rocks on grass - color scheme 3 - 1.png"),
+	preload("res://graphics/environment/rocks on grass - color scheme 3 - 2.png"),
+	preload("res://graphics/environment/rocks on grass - color scheme 3 - 3.png"),
+	preload("res://graphics/environment/rocks on grass - color scheme 3 - 4.png"),
+	preload("res://graphics/environment/rocks on grass - color scheme 3 - 5.png"),
+]
 const LOOP_FARM_ICON_SHEET := preload("res://graphics/plants/Atlas-Props4-crops update.png")
 const LOOP_FURNITURE_ICON_SHEET := preload("res://graphics/tilesets/furniture_and_props.png")
 
@@ -401,6 +430,10 @@ var _loop_plot_cover_root: Node2D = null
 var _loop_plot_cover_polygons: Dictionary = {}
 var _loop_plot_cover_bodies: Dictionary = {}
 var _loop_plot_outline_lines: Dictionary = {}
+var _loop_quarry_root: Node2D = null
+var _loop_quarry_entrance: StaticBody2D = null
+var _loop_workshop_root: Node2D = null
+var _loop_workshop_structure: StaticBody2D = null
 var _loop_merchant_structure_naked: StaticBody2D = null
 var _loop_merchant_structure_complete: StaticBody2D = null
 var _loop_merchant_menu: PanelContainer = null
@@ -417,6 +450,8 @@ var _loop_active_merchant_kind := LOOP_MERCHANT_KIND_WAGON
 var _loop_merchant_tab_switch_cooldown_until_msec := 0
 var _loop_night_vendor_actor = null
 var _loop_spawned_forest_nodes: Array[Node2D] = []
+var _loop_workshop_building_texture: Texture2D = null
+var _loop_quarry_claimed_today := false
 var _loop_hud_root: PanelContainer = null
 var _loop_hud_stats_label: Label = null
 var _loop_hud_perk_label: Label = null
@@ -704,6 +739,7 @@ func get_loop_run_save_state() -> Dictionary:
 	return {
 		"player_position": {"x": player.global_position.x, "y": player.global_position.y},
 		"crops": crops,
+		"quarry_claimed_today": _loop_quarry_claimed_today,
 	}
 
 func apply_loop_run_save_state(save_data: Dictionary) -> void:
@@ -716,6 +752,7 @@ func apply_loop_run_save_state(save_data: Dictionary) -> void:
 			float((player_position as Dictionary).get("x", player.global_position.x)),
 			float((player_position as Dictionary).get("y", player.global_position.y))
 		)
+	_loop_quarry_claimed_today = bool(save_data.get("quarry_claimed_today", _loop_quarry_claimed_today))
 
 	_clear_loop_crops()
 	for crop_variant in Array(save_data.get("crops", [])):
@@ -883,6 +920,116 @@ func _set_structure_collision_state_deferred(structure: StaticBody2D, active: bo
 	var shape := structure.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape != null:
 		shape.set_deferred("disabled", not active)
+
+func _get_loop_workshop_building_texture() -> Texture2D:
+	if _loop_workshop_building_texture != null:
+		return _loop_workshop_building_texture
+	var atlas := AtlasTexture.new()
+	atlas.atlas = LOOP_WORKSHOP_TEXTURE_SHEET
+	atlas.region = LOOP_WORKSHOP_BUILDING_REGION
+	_loop_workshop_building_texture = atlas
+	return _loop_workshop_building_texture
+
+func _build_loop_structure_body(name: String, texture: Texture2D, collision_size: Vector2, collision_offset := Vector2.ZERO) -> StaticBody2D:
+	var body := StaticBody2D.new()
+	body.name = name
+	body.collision_layer = 0
+	body.collision_mask = 0
+
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	sprite.texture = texture
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	body.add_child(sprite)
+
+	var collision_shape := CollisionShape2D.new()
+	collision_shape.name = "CollisionShape2D"
+	var rect := RectangleShape2D.new()
+	rect.size = collision_size
+	collision_shape.shape = rect
+	collision_shape.position = collision_offset
+	body.add_child(collision_shape)
+	return body
+
+func _ensure_loop_quarry_nodes() -> void:
+	if objects_root == null:
+		return
+	if _loop_quarry_root == null or not is_instance_valid(_loop_quarry_root):
+		_loop_quarry_root = Node2D.new()
+		_loop_quarry_root.name = "LoopQuarry"
+		_loop_quarry_root.y_sort_enabled = true
+		objects_root.add_child(_loop_quarry_root)
+
+	if _loop_quarry_entrance == null or not is_instance_valid(_loop_quarry_entrance):
+		_loop_quarry_entrance = _build_loop_structure_body(
+			"QuarryEntrance",
+			LOOP_QUARRY_ENTRANCE_TEXTURE,
+			Vector2(112, 38),
+			Vector2(0, 18)
+		)
+		_loop_quarry_entrance.position = LOOP_QUARRY_ENTRANCE_POS
+		_loop_quarry_root.add_child(_loop_quarry_entrance)
+
+	if _loop_quarry_root.get_child_count() <= 1:
+		for rock_data_variant in LOOP_QUARRY_ROCK_PLACEMENTS:
+			var rock_data: Dictionary = rock_data_variant
+			var rock_index := clampi(int(rock_data.get("texture_index", 0)), 0, LOOP_QUARRY_ROCK_TEXTURES.size() - 1)
+			var rock := Sprite2D.new()
+			rock.texture = LOOP_QUARRY_ROCK_TEXTURES[rock_index]
+			rock.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			rock.position = rock_data.get("position", Vector2.ZERO)
+			rock.z_index = -1
+			_loop_quarry_root.add_child(rock)
+
+func _ensure_loop_workshop_nodes() -> void:
+	if objects_root == null:
+		return
+	if _loop_workshop_root == null or not is_instance_valid(_loop_workshop_root):
+		_loop_workshop_root = Node2D.new()
+		_loop_workshop_root.name = "LoopWorkshop"
+		_loop_workshop_root.y_sort_enabled = true
+		objects_root.add_child(_loop_workshop_root)
+
+	if _loop_workshop_structure == null or not is_instance_valid(_loop_workshop_structure):
+		_loop_workshop_structure = _build_loop_structure_body(
+			"WorkshopStructure",
+			_get_loop_workshop_building_texture(),
+			Vector2(530, 160),
+			Vector2(0, 78)
+		)
+		_loop_workshop_structure.position = LOOP_WORKSHOP_BUILDING_POS
+		_loop_workshop_root.add_child(_loop_workshop_structure)
+
+func _refresh_loop_quarry_visuals() -> void:
+	if _loop_quarry_root == null or not is_instance_valid(_loop_quarry_root):
+		return
+	var quarry_unlocked := Global.has_loop_plot(LOOP_PLOT_QUARRY)
+	_loop_quarry_root.visible = quarry_unlocked
+	if _loop_quarry_entrance != null and is_instance_valid(_loop_quarry_entrance):
+		_set_structure_collision_state_deferred(_loop_quarry_entrance, quarry_unlocked)
+		var entrance_sprite := _loop_quarry_entrance.get_node_or_null("Sprite2D") as Sprite2D
+		if entrance_sprite != null:
+			entrance_sprite.self_modulate = Color.WHITE
+
+func _refresh_loop_workshop_visuals() -> void:
+	if _loop_workshop_root == null or not is_instance_valid(_loop_workshop_root):
+		return
+	var workshop_unlocked := Global.has_loop_plot(LOOP_PLOT_WORKSHOP)
+	var workshop_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT)
+	var cabin_fortified := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED)
+	_loop_workshop_root.visible = workshop_unlocked
+	if _loop_workshop_structure != null and is_instance_valid(_loop_workshop_structure):
+		_set_structure_collision_state_deferred(_loop_workshop_structure, workshop_unlocked)
+		var workshop_sprite := _loop_workshop_structure.get_node_or_null("Sprite2D") as Sprite2D
+		if workshop_sprite != null:
+			if not workshop_unlocked:
+				workshop_sprite.self_modulate = Color(1, 1, 1, 0)
+			elif not workshop_built:
+				workshop_sprite.self_modulate = Color(0.62, 0.62, 0.68, 0.78)
+			elif cabin_fortified:
+				workshop_sprite.self_modulate = Color(1.06, 1.02, 0.94, 1.0)
+			else:
+				workshop_sprite.self_modulate = Color.WHITE
 
 func _get_loop_wagon_seed_shop() -> Dictionary:
 	var shop_variant: Variant = LOOP_WAGON_SEED_SHOPS.get(_get_current_loop_biome_tier(), {})
@@ -1547,6 +1694,7 @@ func _setup_loop_hub_mode() -> void:
 	if _cabin_home != null and is_instance_valid(_cabin_home):
 		_cabin_home.queue_free()
 	_cabin_home = null
+	_loop_quarry_claimed_today = false
 
 	player.can_move = true
 	player.direction = Vector2.ZERO
@@ -1561,6 +1709,8 @@ func _setup_loop_hub_mode() -> void:
 	_restore_player_camera()
 	_ensure_story_setpieces()
 	_ensure_loop_plot_covers()
+	_ensure_loop_quarry_nodes()
+	_ensure_loop_workshop_nodes()
 	_ensure_loop_merchant_nodes()
 	_ensure_loop_hud()
 	_ensure_loop_prompt()
@@ -1823,6 +1973,7 @@ func _on_loop_state_ui_changed() -> void:
 func _refresh_loop_world_state_from_global() -> void:
 	_sync_shelter_state()
 	_refresh_loop_phase_presentation()
+	_refresh_loop_plot_visuals()
 	_refresh_loop_merchant_visuals()
 
 func _build_loop_merchant_menu() -> void:
@@ -2065,6 +2216,8 @@ func _refresh_loop_plot_visuals() -> void:
 		if body != null and is_instance_valid(body):
 			body.visible = not unlocked
 			_set_body_collision_shapes_deferred(body, unlocked)
+	_refresh_loop_quarry_visuals()
+	_refresh_loop_workshop_visuals()
 
 func _refresh_loop_merchant_visuals() -> void:
 	var merchant_unlocked := Global.has_loop_plot(LOOP_PLOT_MERCHANT)
@@ -2113,6 +2266,12 @@ func _refresh_loop_hud() -> void:
 func _get_loop_wood_count() -> int:
 	return int(Global.inventory.get(Global.Items.WOOD, 0))
 
+func _get_loop_stone_count() -> int:
+	return int(Global.inventory.get(Global.Items.STONE, 0))
+
+func _has_loop_materials(wood_cost: int, stone_cost: int) -> bool:
+	return _get_loop_wood_count() >= wood_cost and _get_loop_stone_count() >= stone_cost
+
 func _refresh_loop_objective() -> void:
 	if _intro_busy or _should_play_loop_arrival_intro():
 		return
@@ -2134,12 +2293,18 @@ func _get_loop_objective_prompt_data() -> Dictionary:
 	var forest_open := Global.has_loop_plot(LOOP_PLOT_FOREST)
 	var merchant_open := Global.has_loop_plot(LOOP_PLOT_MERCHANT)
 	var merchant_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_MERCHANT_WAGON)
+	var quarry_open := Global.has_loop_plot(LOOP_PLOT_QUARRY)
+	var workshop_open := Global.has_loop_plot(LOOP_PLOT_WORKSHOP)
+	var workshop_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT)
+	var cabin_fortified := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED)
 	var cabin_repaired := _is_loop_cabin_repaired()
 	var ready_crops := _has_ready_loop_crops()
 	var has_crops := _has_any_loop_crops()
 	var wood_count := _get_loop_wood_count()
+	var stone_count := _get_loop_stone_count()
 	var merchant_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))
 	var forest_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))
+	var quarry_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_QUARRY].get("unlock_cost", 0))
 
 	if _is_loop_night():
 		if not forest_open and Global.loop_bloom_points >= forest_unlock_cost:
@@ -2176,6 +2341,14 @@ func _get_loop_objective_prompt_data() -> Dictionary:
 		if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST:
 			return {"key": "build_wagon", "text": "Build Wagon"}
 		return {"key": "gather_wood_wagon", "text": "Gather Wood for Wagon"}
+	if merchant_built and not quarry_open and Global.loop_bloom_points >= quarry_unlock_cost:
+		return {"key": "unlock_quarry", "text": LOOP_OBJECTIVE_QUARRY}
+	if quarry_open and not _loop_quarry_claimed_today:
+		return {"key": "mine_stone", "text": LOOP_OBJECTIVE_MINE_STONE}
+	if workshop_open and not workshop_built and wood_count >= LOOP_WORKSHOP_BUILD_WOOD_COST and stone_count >= LOOP_WORKSHOP_BUILD_STONE_COST:
+		return {"key": "build_workshop", "text": LOOP_OBJECTIVE_BUILD_WORKSHOP}
+	if workshop_built and not cabin_fortified and cabin_repaired and wood_count >= LOOP_CABIN_FORTIFY_WOOD_COST and stone_count >= LOOP_CABIN_FORTIFY_STONE_COST:
+		return {"key": "fortify_cabin", "text": LOOP_OBJECTIVE_FORTIFY_CABIN}
 	return {}
 
 func _has_any_loop_seeds() -> bool:
@@ -3388,6 +3561,10 @@ func _try_handle_loop_plot_interaction() -> bool:
 			return _handle_loop_night_vendor_interaction()
 		"forest":
 			return _handle_loop_forest_interaction()
+		"quarry":
+			return _handle_loop_quarry_interaction()
+		"workshop":
+			return _handle_loop_workshop_interaction()
 		"cabin":
 			return _handle_loop_cabin_interaction()
 		"bridge_battle":
@@ -3430,6 +3607,24 @@ func _get_current_loop_interaction() -> Dictionary:
 			"radius": LOOP_INTERACTION_RADIUS_PLOT,
 			"label": _build_loop_forest_prompt(),
 			"highlight_plot": String(LOOP_PLOT_FOREST) if not Global.has_loop_plot(LOOP_PLOT_FOREST) else ""
+		},
+		{
+			"target": "quarry",
+			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_QUARRY],
+			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_QUARRY).get("start", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_QUARRY) else Vector2.ZERO,
+			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_QUARRY).get("end", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_QUARRY) else Vector2.ZERO,
+			"radius": LOOP_INTERACTION_RADIUS_STRUCTURE if Global.has_loop_plot(LOOP_PLOT_QUARRY) else LOOP_INTERACTION_RADIUS_PLOT,
+			"label": _build_loop_quarry_prompt(),
+			"highlight_plot": String(LOOP_PLOT_QUARRY) if not Global.has_loop_plot(LOOP_PLOT_QUARRY) else ""
+		},
+		{
+			"target": "workshop",
+			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_WORKSHOP],
+			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_WORKSHOP).get("start", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else Vector2.ZERO,
+			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_WORKSHOP).get("end", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else Vector2.ZERO,
+			"radius": LOOP_INTERACTION_RADIUS_STRUCTURE if Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else LOOP_INTERACTION_RADIUS_PLOT,
+			"label": _build_loop_workshop_prompt(),
+			"highlight_plot": String(LOOP_PLOT_WORKSHOP) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else ""
 		},
 		{
 			"target": "cabin",
@@ -3482,6 +3677,16 @@ func _get_loop_plot_interaction_edge(plot_id: StringName) -> Dictionary:
 				"start": Vector2(rect.position.x, rect.position.y + margin),
 				"end": Vector2(rect.position.x, rect.position.y + rect.size.y - margin)
 			}
+		LOOP_PLOT_QUARRY:
+			return {
+				"start": Vector2(rect.position.x + margin, rect.position.y + rect.size.y),
+				"end": Vector2(rect.position.x + rect.size.x - margin, rect.position.y + rect.size.y)
+			}
+		LOOP_PLOT_WORKSHOP:
+			return {
+				"start": Vector2(rect.position.x, rect.position.y + margin),
+				"end": Vector2(rect.position.x, rect.position.y + rect.size.y - margin)
+			}
 		LOOP_PLOT_CABIN:
 			return {
 				"start": Vector2(rect.position.x + margin, rect.position.y + rect.size.y),
@@ -3518,6 +3723,26 @@ func _build_loop_forest_prompt() -> String:
 	if Global.has_loop_plot(LOOP_PLOT_FOREST):
 		return ""
 	return "%s  Purify Forest (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))]
+
+func _build_loop_quarry_prompt() -> String:
+	var confirm_label := _get_loop_confirm_label()
+	if not Global.has_loop_plot(LOOP_PLOT_QUARRY):
+		return "%s  Purify Quarry (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_QUARRY].get("unlock_cost", 0))]
+	if _is_loop_night():
+		return "%s  Returns Stone at Dawn" % confirm_label
+	if _loop_quarry_claimed_today:
+		return "%s  Quarry Exhausted" % confirm_label
+	return "%s  Mine Stone" % confirm_label
+
+func _build_loop_workshop_prompt() -> String:
+	var confirm_label := _get_loop_confirm_label()
+	if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP):
+		return "%s  Purify Workshop (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_WORKSHOP].get("unlock_cost", 0))]
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
+		return "%s  Build Workshop (%d Wood, %d Stone)" % [confirm_label, LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST]
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED):
+		return "%s  Fortify Cabin (%d Wood, %d Stone)" % [confirm_label, LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST]
+	return "%s  Workshop Complete" % confirm_label
 
 func _build_loop_cabin_prompt() -> String:
 	var confirm_label := _get_loop_confirm_label()
@@ -3653,6 +3878,83 @@ func _handle_loop_forest_interaction() -> bool:
 	_start_loop_plot_unlock_sequence(&"_run_loop_forest_unlock_sequence")
 	return true
 
+func _handle_loop_quarry_interaction() -> bool:
+	if not Global.has_loop_plot(LOOP_PLOT_QUARRY):
+		if _loop_plot_unlock_sequence_active:
+			return true
+		var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_QUARRY].get("unlock_cost", 0))
+		if Global.loop_bloom_points < bloom_cost:
+			_show_player_notice("Need %d BP to purify the quarry." % bloom_cost)
+			return true
+		Global.spend_loop_bloom_points(bloom_cost)
+		_start_loop_plot_unlock_sequence(&"_run_loop_quarry_unlock_sequence")
+		return true
+
+	if _is_loop_night():
+		_show_player_notice("The quarry will return stone at dawn.")
+		return true
+
+	if _loop_quarry_claimed_today:
+		_show_player_notice("The quarry is exhausted until tomorrow.")
+		return true
+
+	Global.add_item(Global.Items.STONE, LOOP_QUARRY_DAILY_STONE_YIELD)
+	_loop_quarry_claimed_today = true
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_show_player_notice("You haul %d Stone from the quarry." % LOOP_QUARRY_DAILY_STONE_YIELD)
+	_autosave_loop_run()
+	return true
+
+func _handle_loop_workshop_interaction() -> bool:
+	if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP):
+		if _loop_plot_unlock_sequence_active:
+			return true
+		var bloom_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_WORKSHOP].get("unlock_cost", 0))
+		if Global.loop_bloom_points < bloom_cost:
+			_show_player_notice("Need %d BP to purify the workshop plot." % bloom_cost)
+			return true
+		Global.spend_loop_bloom_points(bloom_cost)
+		_start_loop_plot_unlock_sequence(&"_run_loop_workshop_unlock_sequence")
+		return true
+
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
+		if not _has_loop_materials(LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST):
+			if not Global.has_loop_plot(LOOP_PLOT_QUARRY) and _get_loop_stone_count() < LOOP_WORKSHOP_BUILD_STONE_COST:
+				_show_player_notice("Need %d Wood and %d Stone. Purify the Quarry to start gathering stone." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
+			else:
+				_show_player_notice("Need %d Wood and %d Stone to build the workshop." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
+			return true
+		Global.remove_item(Global.Items.WOOD, LOOP_WORKSHOP_BUILD_WOOD_COST)
+		Global.remove_item(Global.Items.STONE, LOOP_WORKSHOP_BUILD_STONE_COST)
+		Global.build_loop_structure(Global.LOOP_STRUCTURE_WORKSHOP_BUILT)
+		_refresh_loop_plot_visuals()
+		_refresh_loop_hud()
+		_refresh_loop_objective()
+		_show_player_notice("The workshop is rebuilt. You can fortify the cabin here.")
+		_autosave_loop_run()
+		return true
+
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED):
+		if not _is_loop_cabin_repaired():
+			_show_player_notice("Repair the cabin before reinforcing it.")
+			return true
+		if not _has_loop_materials(LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST):
+			_show_player_notice("Need %d Wood and %d Stone to fortify the cabin." % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST])
+			return true
+		Global.remove_item(Global.Items.WOOD, LOOP_CABIN_FORTIFY_WOOD_COST)
+		Global.remove_item(Global.Items.STONE, LOOP_CABIN_FORTIFY_STONE_COST)
+		Global.build_loop_structure(Global.LOOP_STRUCTURE_CABIN_FORTIFIED)
+		_refresh_loop_plot_visuals()
+		_refresh_loop_hud()
+		_refresh_loop_objective()
+		_show_player_notice("The cabin is fortified. Future defeats will cost fewer supplies.")
+		_autosave_loop_run()
+		return true
+
+	_show_player_notice("The workshop's current projects are complete.")
+	return true
+
 func _handle_loop_cabin_interaction() -> bool:
 	if not Global.has_loop_plot(LOOP_PLOT_CABIN):
 		Global.unlock_loop_plot(LOOP_PLOT_CABIN)
@@ -3751,9 +4053,10 @@ func handle_loop_battle_result(is_victory: bool, enemies_defeated: int) -> void:
 		else:
 			_show_player_notice("Victory. +%d %s, +%d Gold." % [bp_reward, reward_label, total_gold_reward], 1.8)
 	else:
-		var lost_gold := int(resolution.get("lost_gold", 0)) if has_resolution else mini(int(ceil(float(Global.loop_gold) * LOOP_RAID_LOSS_RATIO)), Global.loop_gold)
-		var lost_wood := int(resolution.get("lost_wood", 0)) if has_resolution else mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.WOOD, 0)))
-		var lost_stone := int(resolution.get("lost_stone", 0)) if has_resolution else mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * LOOP_RAID_LOSS_RATIO)), int(Global.inventory.get(Global.Items.STONE, 0)))
+		var raid_loss_ratio := Global.get_loop_raid_loss_ratio()
+		var lost_gold := int(resolution.get("lost_gold", 0)) if has_resolution else mini(int(ceil(float(Global.loop_gold) * raid_loss_ratio)), Global.loop_gold)
+		var lost_wood := int(resolution.get("lost_wood", 0)) if has_resolution else mini(int(ceil(float(int(Global.inventory.get(Global.Items.WOOD, 0))) * raid_loss_ratio)), int(Global.inventory.get(Global.Items.WOOD, 0)))
+		var lost_stone := int(resolution.get("lost_stone", 0)) if has_resolution else mini(int(ceil(float(int(Global.inventory.get(Global.Items.STONE, 0))) * raid_loss_ratio)), int(Global.inventory.get(Global.Items.STONE, 0)))
 		Global.add_loop_gold(-lost_gold)
 		if lost_wood > 0:
 			Global.remove_item(Global.Items.WOOD, lost_wood)
@@ -3811,6 +4114,30 @@ func _run_loop_merchant_unlock_sequence() -> void:
 	_autosave_loop_run()
 	_finish_loop_plot_unlock_sequence()
 
+func _run_loop_quarry_unlock_sequence() -> void:
+	await _run_loop_plot_purified_feedback(LOOP_PLOT_QUARRY, Callable(self, "_on_loop_quarry_plot_revealed"))
+	await get_tree().create_timer(LOOP_PURIFY_POST_REVEAL_SETTLE_SECONDS, true).timeout
+	var showed_bloom_notice := _maybe_show_first_loop_purify_notice()
+	if showed_bloom_notice:
+		await get_tree().create_timer(1.1, true).timeout
+	_show_player_notice("A quarry seam breaks through the ash.")
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_autosave_loop_run()
+	_finish_loop_plot_unlock_sequence()
+
+func _run_loop_workshop_unlock_sequence() -> void:
+	await _run_loop_plot_purified_feedback(LOOP_PLOT_WORKSHOP, Callable(self, "_on_loop_workshop_plot_revealed"))
+	await get_tree().create_timer(LOOP_PURIFY_POST_REVEAL_SETTLE_SECONDS, true).timeout
+	var showed_bloom_notice := _maybe_show_first_loop_purify_notice()
+	if showed_bloom_notice:
+		await get_tree().create_timer(1.1, true).timeout
+	_show_player_notice("A workshop shell stands ready to be rebuilt.")
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_autosave_loop_run()
+	_finish_loop_plot_unlock_sequence()
+
 func _on_loop_forest_plot_revealed() -> void:
 	if ProgressionService != null and ProgressionService.has_method("ensure_party_member"):
 		ProgressionService.ensure_party_member("Silas")
@@ -3818,6 +4145,12 @@ func _on_loop_forest_plot_revealed() -> void:
 
 func _on_loop_merchant_plot_revealed() -> void:
 	_refresh_loop_merchant_visuals()
+
+func _on_loop_quarry_plot_revealed() -> void:
+	_refresh_loop_plot_visuals()
+
+func _on_loop_workshop_plot_revealed() -> void:
+	_refresh_loop_plot_visuals()
 
 func _run_loop_plot_purified_feedback(plot_id: StringName, on_reveal: Callable = Callable()) -> void:
 	var staging := _get_loop_plot_purify_staging(plot_id)
@@ -3886,11 +4219,13 @@ func _run_loop_sleep_transition() -> void:
 	Global.current_day += 1
 	Global.day_changed.emit(Global.current_day)
 	Global.set_loop_time_phase(Global.LOOP_PHASE_DAY)
+	_loop_quarry_claimed_today = false
 	if _cabin_home != null and is_instance_valid(_cabin_home) and _cabin_home.has_method("close_for_exit") and _cabin_home.has_method("is_open") and bool(_cabin_home.call("is_open")):
 		await _cabin_home.close_for_exit()
 	await _fade_from_black(0.38)
 	_show_player_notice("Dawn breaks over the farm.")
 	player.can_move = true
+	_refresh_loop_plot_visuals()
 	_refresh_loop_objective()
 	_autosave_loop_run()
 

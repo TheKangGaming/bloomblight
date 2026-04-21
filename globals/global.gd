@@ -88,12 +88,16 @@ var _loop_tutorial_text := ""
 var intro_sequence_complete := false
 const DEMO_CABIN_WOOD_REQUIRED := 10
 const DEMO_CABIN_STONE_REQUIRED := 10
+const LOOP_DEFAULT_RAID_LOSS_RATIO := 0.25
+const LOOP_FORTIFIED_RAID_LOSS_RATIO := 0.15
 const LOOP_PHASE_DAY := &"day"
 const LOOP_PHASE_NIGHT := &"night"
 const LOOP_PLOT_STARTING_FARM := &"starting_farm"
 const LOOP_PLOT_MERCHANT := &"merchant"
 const LOOP_PLOT_FOREST := &"forest"
 const LOOP_PLOT_CABIN := &"cabin"
+const LOOP_STRUCTURE_WORKSHOP_BUILT := &"workshop_built"
+const LOOP_STRUCTURE_CABIN_FORTIFIED := &"cabin_fortified"
 const LOOP_STRUCTURE_MERCHANT_WAGON := &"merchant_wagon"
 const LOOP_STRUCTURE_CABIN_REPAIRED := &"cabin_repaired"
 
@@ -957,6 +961,11 @@ func is_loop_structure_built(structure_id: StringName) -> bool:
 func build_loop_structure(structure_id: StringName) -> void:
 	loop_built_structures[String(structure_id)] = true
 	loop_state_changed.emit()
+
+func get_loop_raid_loss_ratio() -> float:
+	if is_loop_structure_built(LOOP_STRUCTURE_CABIN_FORTIFIED):
+		return LOOP_FORTIFIED_RAID_LOSS_RATIO
+	return LOOP_DEFAULT_RAID_LOSS_RATIO
 
 func set_loop_time_phase(phase: StringName) -> void:
 	var normalized_phase := phase
