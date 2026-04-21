@@ -246,7 +246,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Stand on plowed soil and press {plant} to plant a seed.\n\nPlant before battle. Crops grow while you fight, then come back ready to harvest."
 		"loop_battle":
 			title = "Tutorial: Next Step"
-			template = "Plant a few seeds, then head to the bridge and press {confirm} to start a battle.\n\nWinning battles earns Bloom Points and Gold."
+			template = "Once you've planted, head to the bridge and press {confirm} to start a battle.\n\nWinning battles earns Bloom Points and Gold."
 		"loop_first_night":
 			title = "Tutorial: Night"
 			template = "Battles advance time. Night is your reward phase.\n\nHarvest, cook, trade, and sleep when you're ready for the next day."
@@ -273,7 +273,7 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 			template = "Cycle tools with {tool_cycle}. Use the Hoe or Watering Can with {action}.\n\nTo plant, face a tilled soil tile and press {plant} to open the seed menu, then choose a seed."
 		"meal_buff":
 			title = "Tutorial: Meal Buffs"
-			template = "{loop_perk_rule}\n\nPress {inventory} to open the menu, switch to the Status tab, review the prepared perk, then close the menu when you're ready to continue."
+			template = "{loop_perk_rule}\n\nPress {inventory} to open the menu, review the prepared perk in Party, then close the menu when you're ready to continue."
 		"battle_savannah":
 			title = "Tutorial: Savannah"
 			template = "Savannah is your front line. Use {battle_cursor} to select her, then {battle_confirm} to move or attack.\n\nKeep her between the enemy and the rest of the party, and Harvest adjacent Healflowers when she needs HP back."
@@ -455,7 +455,7 @@ func _get_stage_prompt_text(stage: DemoStage) -> String:
 		DemoStage.EAT_MEAL:
 			return "Objective: Eat the Glazed Carrots from the menu. Press %s to open it." % get_action_label("menu_toggle")
 		DemoStage.MEAL_REVIEW:
-			return "Objective: Review your prepared perk in the Status tab. Press %s to open the menu." % get_action_label("menu_toggle")
+			return "Objective: Review your prepared perk in Party. Press %s to open the menu." % get_action_label("menu_toggle")
 		DemoStage.BATTLE_TUTORIAL, DemoStage.BLOOM_TUTORIAL:
 			return "Objective: Drive off the bandits."
 		DemoStage.GATHER_MATERIALS:

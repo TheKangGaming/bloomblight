@@ -2403,7 +2403,7 @@ func _create_level_up_card(entry: Dictionary) -> Dictionary:
 	portrait.offset_top = 8
 	portrait.offset_right = -20
 	portrait.offset_bottom = -22
-	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var portrait_texture := _build_level_up_unit_texture(String(entry.get("name", "")))
 	if portrait_texture != null:
 		portrait.texture = portrait_texture
@@ -2468,32 +2468,35 @@ func _build_level_up_unit_texture(unit_name: String) -> Texture2D:
 func _resolve_level_up_texture_for_character(character_data: CharacterData) -> Texture2D:
 	if character_data == null:
 		return null
-	if character_data.portrait != null:
-		return character_data.portrait
-	return _build_level_up_actor_frame_texture(character_data)
+	return _build_level_up_idle_texture(character_data, character_data.portrait)
 
-func _build_level_up_actor_frame_texture(character_data: CharacterData) -> Texture2D:
+func _build_level_up_idle_texture(character_data: CharacterData, source_texture: Texture2D = null) -> Texture2D:
 	if character_data == null or character_data.battle_actor_scene == null:
-		return null
+		return source_texture
 	var actor_root := character_data.battle_actor_scene.instantiate()
 	if actor_root == null:
-		return null
+		return source_texture
 	var body_sprite := actor_root.get_node_or_null("VisualDriver/Player/SpriteLayers/01body") as Sprite2D
 	if body_sprite == null or body_sprite.texture == null:
 		actor_root.free()
-		return null
-	var texture_size := body_sprite.texture.get_size()
-	var frame_width := int(texture_size.x / max(1, body_sprite.hframes))
-	var frame_height := int(texture_size.y / max(1, body_sprite.vframes))
+		return source_texture
+	var texture_source := source_texture if source_texture != null else body_sprite.texture
+	if body_sprite.hframes <= 1 and body_sprite.vframes <= 1:
+		actor_root.free()
+		return texture_source
+	var source_size := texture_source.get_size()
+	var actor_size := body_sprite.texture.get_size()
+	if source_size != actor_size:
+		actor_root.free()
+		return texture_source
+	var frame_width := int(actor_size.x / max(1, body_sprite.hframes))
+	var frame_height := int(actor_size.y / max(1, body_sprite.vframes))
 	if frame_width <= 0 or frame_height <= 0:
 		actor_root.free()
-		return body_sprite.texture
-	var frame_index := maxi(body_sprite.frame, 0)
-	var frame_x: int = frame_index % max(1, body_sprite.hframes)
-	var frame_y: int = int(frame_index / max(1, body_sprite.hframes))
+		return texture_source
 	var atlas := AtlasTexture.new()
-	atlas.atlas = body_sprite.texture
-	atlas.region = Rect2(frame_x * frame_width, frame_y * frame_height, frame_width, frame_height)
+	atlas.atlas = texture_source
+	atlas.region = Rect2(0, 0, frame_width, frame_height)
 	actor_root.free()
 	return atlas
 

@@ -6,6 +6,7 @@
 [ext_resource type="Resource" uid="uid://cg352yl12xq5f" path="res://data/units/Archer.tres" id="2_ver7o"]
 [ext_resource type="Resource" uid="uid://dehkp6o7rc8w8" path="res://data/items/Armor/LeatherVest.tres" id="3_5b2ij"]
 [ext_resource type="Resource" uid="uid://bt8r218v5t4mw" path="res://data/items/Weapons/TrainingBow.tres" id="4_qsq73"]
+[ext_resource type="Texture2D" path="res://graphics/characters/Silas.png" id="5_portrait"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="5_a8dig"]
 
 [resource]
@@ -13,6 +14,7 @@ script = ExtResource("5_a8dig")
 display_name = "Silas"
 class_data = ExtResource("2_ver7o")
 abilities = Array[ExtResource("1_sux24")]([ExtResource("1_xxv81")])
+portrait = ExtResource("5_portrait")
 battle_actor_scene = ExtResource("2_5b2ij")
 equipped_weapon = ExtResource("4_qsq73")
 equipped_armor = ExtResource("3_5b2ij")

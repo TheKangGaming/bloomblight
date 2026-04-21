@@ -96,6 +96,10 @@ const LOOP_WORKSHOP_BUILD_WOOD_COST := 8
 const LOOP_WORKSHOP_BUILD_STONE_COST := 6
 const LOOP_CABIN_FORTIFY_WOOD_COST := 10
 const LOOP_CABIN_FORTIFY_STONE_COST := 8
+const LOOP_WORKSHOP_MENU_WIDTH := 860.0
+const LOOP_WORKSHOP_MENU_HEIGHT := 420.0
+const LOOP_WORKSHOP_PROJECT_BUILD := "build_workshop"
+const LOOP_WORKSHOP_PROJECT_FORTIFY := "fortify_cabin"
 const LOOP_BATTLE_BP_REWARDS: Array[int] = [8, 10, 12, 14, 20]
 const LOOP_BATTLE_GOLD_REWARDS: Array[int] = [4, 6, 8, 10, 14]
 const LOOP_BATTLE_BP_BASE_REWARD := 8
@@ -274,11 +278,11 @@ const LOOP_MERCHANT_GEAR_OFFERS := [
 ]
 const LOOP_PLOT_DEFS := {
 	LOOP_PLOT_WATCHTOWER: {"rect": Rect2(Vector2(640, 0), LOOP_PLOT_SIZE), "unlock_cost": 8},
-	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 7},
+	LOOP_PLOT_QUARRY: {"rect": Rect2(Vector2(0, 480), LOOP_PLOT_SIZE), "unlock_cost": 14},
 	LOOP_PLOT_BLOOM_SHRINE: {"rect": Rect2(Vector2(1280, 0), LOOP_PLOT_SIZE), "unlock_cost": 9},
 	LOOP_PLOT_GARDEN: {"rect": Rect2(Vector2(0, 0), LOOP_PLOT_SIZE), "unlock_cost": 6},
 	LOOP_PLOT_CABIN: {"rect": Rect2(Vector2(640, 480), LOOP_PLOT_SIZE), "unlock_cost": 0},
-	LOOP_PLOT_WORKSHOP: {"rect": Rect2(Vector2(1280, 480), LOOP_PLOT_SIZE), "unlock_cost": 8},
+	LOOP_PLOT_WORKSHOP: {"rect": Rect2(Vector2(1280, 480), LOOP_PLOT_SIZE), "unlock_cost": 12},
 	LOOP_PLOT_MERCHANT: {"rect": Rect2(Vector2(0, 960), LOOP_PLOT_SIZE), "unlock_cost": 10},
 	LOOP_PLOT_STARTING_FARM: {"rect": Rect2(Vector2(640, 960), LOOP_PLOT_SIZE), "unlock_cost": 0},
 	LOOP_PLOT_FOREST: {"rect": Rect2(Vector2(1280, 960), LOOP_PLOT_SIZE), "unlock_cost": 8},
@@ -432,8 +436,16 @@ var _loop_plot_cover_bodies: Dictionary = {}
 var _loop_plot_outline_lines: Dictionary = {}
 var _loop_quarry_root: Node2D = null
 var _loop_quarry_entrance: StaticBody2D = null
+var _loop_quarry_rocks: Array[Sprite2D] = []
 var _loop_workshop_root: Node2D = null
 var _loop_workshop_structure: StaticBody2D = null
+var _loop_workshop_menu: PanelContainer = null
+var _loop_workshop_title_label: Label = null
+var _loop_workshop_status_label: Label = null
+var _loop_workshop_detail_label: Label = null
+var _loop_workshop_action_scroll: ScrollContainer = null
+var _loop_workshop_actions: VBoxContainer = null
+var _loop_workshop_close_button: Button = null
 var _loop_merchant_structure_naked: StaticBody2D = null
 var _loop_merchant_structure_complete: StaticBody2D = null
 var _loop_merchant_menu: PanelContainer = null
@@ -970,16 +982,21 @@ func _ensure_loop_quarry_nodes() -> void:
 		_loop_quarry_entrance.position = LOOP_QUARRY_ENTRANCE_POS
 		_loop_quarry_root.add_child(_loop_quarry_entrance)
 
-	if _loop_quarry_root.get_child_count() <= 1:
-		for rock_data_variant in LOOP_QUARRY_ROCK_PLACEMENTS:
-			var rock_data: Dictionary = rock_data_variant
-			var rock_index := clampi(int(rock_data.get("texture_index", 0)), 0, LOOP_QUARRY_ROCK_TEXTURES.size() - 1)
+	_loop_quarry_rocks = _loop_quarry_rocks.filter(func(rock: Sprite2D) -> bool:
+		return rock != null and is_instance_valid(rock)
+	)
+	if _loop_quarry_rocks.size() < LOOP_QUARRY_ROCK_PLACEMENTS.size():
+		for rock_idx in range(_loop_quarry_rocks.size(), LOOP_QUARRY_ROCK_PLACEMENTS.size()):
+			var rock_data: Dictionary = LOOP_QUARRY_ROCK_PLACEMENTS[rock_idx]
+			var rock_texture_index := clampi(int(rock_data.get("texture_index", 0)), 0, LOOP_QUARRY_ROCK_TEXTURES.size() - 1)
 			var rock := Sprite2D.new()
-			rock.texture = LOOP_QUARRY_ROCK_TEXTURES[rock_index]
+			rock.name = "QuarryRock%d" % rock_idx
+			rock.texture = LOOP_QUARRY_ROCK_TEXTURES[rock_texture_index]
 			rock.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			rock.position = rock_data.get("position", Vector2.ZERO)
-			rock.z_index = -1
+			rock.z_index = 0
 			_loop_quarry_root.add_child(rock)
+			_loop_quarry_rocks.append(rock)
 
 func _ensure_loop_workshop_nodes() -> void:
 	if objects_root == null:
@@ -1010,6 +1027,9 @@ func _refresh_loop_quarry_visuals() -> void:
 		var entrance_sprite := _loop_quarry_entrance.get_node_or_null("Sprite2D") as Sprite2D
 		if entrance_sprite != null:
 			entrance_sprite.self_modulate = Color.WHITE
+	for rock in _loop_quarry_rocks:
+		if rock != null and is_instance_valid(rock):
+			rock.visible = quarry_unlocked
 
 func _refresh_loop_workshop_visuals() -> void:
 	if _loop_workshop_root == null or not is_instance_valid(_loop_workshop_root):
@@ -1965,6 +1985,7 @@ func _on_loop_state_ui_changed() -> void:
 	if not is_inside_tree():
 		return
 	_refresh_loop_merchant_menu()
+	_refresh_loop_workshop_menu()
 	_refresh_loop_hud()
 	if not _loop_plot_unlock_sequence_active:
 		_refresh_loop_objective()
@@ -2107,6 +2128,132 @@ func _build_loop_merchant_menu() -> void:
 	_loop_merchant_menu = panel
 	_refresh_loop_merchant_menu()
 
+func _build_loop_workshop_menu() -> void:
+	var canvas_layer := get_node_or_null("CanvasLayer")
+	if canvas_layer == null:
+		return
+
+	var panel := PanelContainer.new()
+	panel.name = "LoopWorkshopMenu"
+	panel.visible = false
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -LOOP_WORKSHOP_MENU_WIDTH * 0.5
+	panel.offset_right = LOOP_WORKSHOP_MENU_WIDTH * 0.5
+	panel.offset_top = -LOOP_WORKSHOP_MENU_HEIGHT * 0.5
+	panel.offset_bottom = LOOP_WORKSHOP_MENU_HEIGHT * 0.5
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 0.97)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.84, 0.73, 0.52, 0.96)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	panel.add_theme_stylebox_override("panel", style)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_bottom", 14)
+	panel.add_child(margin)
+
+	var root_row := HBoxContainer.new()
+	root_row.add_theme_constant_override("separation", 14)
+	margin.add_child(root_row)
+
+	var left_column := VBoxContainer.new()
+	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_column.add_theme_constant_override("separation", 10)
+	root_row.add_child(left_column)
+
+	var detail_panel := PanelContainer.new()
+	detail_panel.custom_minimum_size = Vector2(300, 0)
+	var detail_style := StyleBoxFlat.new()
+	detail_style.bg_color = Color(0.11, 0.12, 0.16, 0.98)
+	detail_style.border_width_left = 2
+	detail_style.border_width_top = 2
+	detail_style.border_width_right = 2
+	detail_style.border_width_bottom = 2
+	detail_style.border_color = Color(0.62, 0.76, 0.68, 0.9)
+	detail_style.corner_radius_top_left = 10
+	detail_style.corner_radius_top_right = 10
+	detail_style.corner_radius_bottom_left = 10
+	detail_style.corner_radius_bottom_right = 10
+	detail_panel.add_theme_stylebox_override("panel", detail_style)
+	root_row.add_child(detail_panel)
+
+	var detail_margin := MarginContainer.new()
+	detail_margin.add_theme_constant_override("margin_left", 14)
+	detail_margin.add_theme_constant_override("margin_right", 14)
+	detail_margin.add_theme_constant_override("margin_top", 12)
+	detail_margin.add_theme_constant_override("margin_bottom", 12)
+	detail_panel.add_child(detail_margin)
+
+	var detail_layout := VBoxContainer.new()
+	detail_layout.add_theme_constant_override("separation", 8)
+	detail_margin.add_child(detail_layout)
+
+	_loop_workshop_title_label = Label.new()
+	_loop_workshop_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loop_workshop_title_label.add_theme_font_size_override("font_size", 24)
+	left_column.add_child(_loop_workshop_title_label)
+
+	_loop_workshop_status_label = Label.new()
+	_loop_workshop_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loop_workshop_status_label.add_theme_font_size_override("font_size", 18)
+	left_column.add_child(_loop_workshop_status_label)
+
+	var detail_title := Label.new()
+	detail_title.text = "Project Details"
+	detail_title.add_theme_font_size_override("font_size", 20)
+	detail_layout.add_child(detail_title)
+
+	_loop_workshop_detail_label = Label.new()
+	_loop_workshop_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loop_workshop_detail_label.custom_minimum_size = Vector2(0, 220)
+	_loop_workshop_detail_label.add_theme_font_size_override("font_size", 17)
+	_loop_workshop_detail_label.modulate = Color(0.94, 0.96, 0.88, 0.96)
+	detail_layout.add_child(_loop_workshop_detail_label)
+
+	_loop_workshop_action_scroll = ScrollContainer.new()
+	_loop_workshop_action_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_loop_workshop_action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_loop_workshop_action_scroll.custom_minimum_size = Vector2(0, 220)
+	_loop_workshop_action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	left_column.add_child(_loop_workshop_action_scroll)
+
+	_loop_workshop_actions = VBoxContainer.new()
+	_loop_workshop_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_loop_workshop_actions.add_theme_constant_override("separation", 6)
+	_loop_workshop_action_scroll.add_child(_loop_workshop_actions)
+
+	var close_button := Button.new()
+	close_button.text = "Close"
+	close_button.focus_entered.connect(func() -> void:
+		_set_loop_workshop_detail_text(_get_loop_workshop_default_detail_text())
+	)
+	close_button.pressed.connect(_close_loop_workshop_menu)
+	left_column.add_child(close_button)
+	_loop_workshop_close_button = close_button
+
+	var close_hint := Label.new()
+	close_hint.text = "Press Cancel to close"
+	close_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	left_column.add_child(close_hint)
+
+	canvas_layer.add_child(panel)
+	_loop_workshop_menu = panel
+	_refresh_loop_workshop_menu()
+
 func _rebuild_loop_merchant_tab_bar() -> void:
 	if _loop_merchant_tab_bar == null or not is_instance_valid(_loop_merchant_tab_bar):
 		return
@@ -2176,6 +2323,191 @@ func _refresh_loop_merchant_menu() -> void:
 			_populate_loop_merchant_seed_tab()
 
 	_configure_loop_merchant_focus_graph()
+
+func _get_loop_workshop_project_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var workshop_built := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT)
+	var cabin_fortified := Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED)
+	var cabin_repaired := _is_loop_cabin_repaired()
+	var wood_count := _get_loop_wood_count()
+	var stone_count := _get_loop_stone_count()
+
+	var build_ready := wood_count >= LOOP_WORKSHOP_BUILD_WOOD_COST and stone_count >= LOOP_WORKSHOP_BUILD_STONE_COST
+	var build_status := "Completed" if workshop_built else ("Ready" if build_ready else "Need Materials")
+	var build_detail_lines := PackedStringArray([
+		"Restore the workshop so it can support permanent settlement upgrades.",
+		"",
+		"Cost: %d Wood, %d Stone" % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST],
+		"Effect: Unlock workshop construction projects."
+	])
+	if not workshop_built and not Global.has_loop_plot(LOOP_PLOT_QUARRY) and stone_count < LOOP_WORKSHOP_BUILD_STONE_COST:
+		build_detail_lines.append("Hint: Purify the Quarry first so you can gather stone each day.")
+	build_detail_lines.append("Status: %s" % build_status)
+	entries.append({
+		"id": LOOP_WORKSHOP_PROJECT_BUILD,
+		"title": "Rebuild Workshop",
+		"button_text": "Rebuild Workshop (%d Wood, %d Stone)%s" % [
+			LOOP_WORKSHOP_BUILD_WOOD_COST,
+			LOOP_WORKSHOP_BUILD_STONE_COST,
+			" [Complete]" if workshop_built else ("" if build_ready else " [Need Materials]")
+		],
+		"disabled": workshop_built or not build_ready,
+		"detail": "\n".join(build_detail_lines),
+	})
+
+	var fortify_ready := workshop_built and cabin_repaired and wood_count >= LOOP_CABIN_FORTIFY_WOOD_COST and stone_count >= LOOP_CABIN_FORTIFY_STONE_COST
+	var fortify_status := "Completed" if cabin_fortified else ("Ready" if fortify_ready else "Locked")
+	var fortify_detail_lines := PackedStringArray([
+		"Reinforce the cabin so failed raids take fewer supplies from the settlement.",
+		"",
+		"Cost: %d Wood, %d Stone" % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST],
+		"Effect: Raid loss ratio improves from 25%% to 15%%."
+	])
+	if not workshop_built:
+		fortify_detail_lines.append("Requirement: Rebuild the workshop first.")
+	elif not cabin_repaired:
+		fortify_detail_lines.append("Requirement: Repair the cabin before fortifying it.")
+	fortify_detail_lines.append("Status: %s" % fortify_status)
+	entries.append({
+		"id": LOOP_WORKSHOP_PROJECT_FORTIFY,
+		"title": "Fortify Cabin",
+		"button_text": "Fortify Cabin (%d Wood, %d Stone)%s" % [
+			LOOP_CABIN_FORTIFY_WOOD_COST,
+			LOOP_CABIN_FORTIFY_STONE_COST,
+			" [Complete]" if cabin_fortified else ("" if fortify_ready else " [Locked]")
+		],
+		"disabled": cabin_fortified or not fortify_ready,
+		"detail": "\n".join(fortify_detail_lines),
+	})
+
+	return entries
+
+func _get_loop_workshop_default_detail_text() -> String:
+	return "Choose a workshop project to preview its cost, requirements, and permanent effect on the run."
+
+func _set_loop_workshop_detail_text(text: String) -> void:
+	if _loop_workshop_detail_label != null and is_instance_valid(_loop_workshop_detail_label):
+		_loop_workshop_detail_label.text = text
+
+func _refresh_loop_workshop_menu() -> void:
+	if _loop_workshop_menu == null or not is_instance_valid(_loop_workshop_menu):
+		return
+	if _loop_workshop_status_label == null or _loop_workshop_actions == null:
+		return
+
+	_loop_workshop_title_label.text = "Workshop"
+	_loop_workshop_status_label.text = "Wood: %d   Stone: %d\nWorkshop: %s   Cabin Fortified: %s" % [
+		_get_loop_wood_count(),
+		_get_loop_stone_count(),
+		"Built" if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT) else "Not Built",
+		"Yes" if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED) else "No"
+	]
+	_set_loop_workshop_detail_text(_get_loop_workshop_default_detail_text())
+
+	for child in _loop_workshop_actions.get_children():
+		_loop_workshop_actions.remove_child(child)
+		child.queue_free()
+
+	for entry in _get_loop_workshop_project_entries():
+		var project_id := String(entry.get("id", ""))
+		var detail_text := String(entry.get("detail", ""))
+		var button := Button.new()
+		button.text = String(entry.get("button_text", project_id))
+		button.disabled = bool(entry.get("disabled", false))
+		button.set_meta("loop_workshop_focus_key", project_id)
+		button.focus_entered.connect(_set_loop_workshop_detail_text.bind(detail_text))
+		button.mouse_entered.connect(_set_loop_workshop_detail_text.bind(detail_text))
+		button.pressed.connect(_on_loop_workshop_project_pressed.bind(project_id))
+		_loop_workshop_actions.add_child(button)
+
+func _open_loop_workshop_menu() -> void:
+	if _loop_workshop_menu == null or not is_instance_valid(_loop_workshop_menu):
+		_build_loop_workshop_menu()
+	if _loop_workshop_menu == null or not is_instance_valid(_loop_workshop_menu):
+		return
+	_refresh_loop_workshop_menu()
+	_loop_workshop_menu.visible = true
+	player.can_move = false
+	_focus_first_loop_workshop_action_button()
+
+func _close_loop_workshop_menu() -> void:
+	if _loop_workshop_menu == null or not is_instance_valid(_loop_workshop_menu):
+		return
+	_loop_workshop_menu.visible = false
+	player.can_move = true
+
+func _focus_first_loop_workshop_action_button() -> void:
+	if _loop_workshop_actions != null and is_instance_valid(_loop_workshop_actions):
+		for child in _loop_workshop_actions.get_children():
+			if child is Button and not (child as Button).disabled:
+				(child as Button).grab_focus()
+				return
+	if _loop_workshop_close_button != null and is_instance_valid(_loop_workshop_close_button):
+		_loop_workshop_close_button.grab_focus()
+
+func _on_loop_workshop_project_pressed(project_id: String) -> void:
+	match project_id:
+		LOOP_WORKSHOP_PROJECT_BUILD:
+			_try_build_loop_workshop()
+		LOOP_WORKSHOP_PROJECT_FORTIFY:
+			_try_fortify_loop_cabin()
+		_:
+			return
+	_refresh_loop_workshop_menu()
+	call_deferred("_restore_loop_workshop_focus", project_id)
+
+func _restore_loop_workshop_focus(project_id: String = "") -> void:
+	if _loop_workshop_menu == null or not is_instance_valid(_loop_workshop_menu) or not _loop_workshop_menu.visible:
+		return
+	if project_id != "" and _loop_workshop_actions != null and is_instance_valid(_loop_workshop_actions):
+		for child in _loop_workshop_actions.get_children():
+			if child is Button and String((child as Button).get_meta("loop_workshop_focus_key", "")) == project_id:
+				(child as Button).grab_focus()
+				return
+	_focus_first_loop_workshop_action_button()
+
+func _try_build_loop_workshop() -> bool:
+	if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
+		_show_player_notice("The workshop is already rebuilt.")
+		return false
+	if not _has_loop_materials(LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST):
+		if not Global.has_loop_plot(LOOP_PLOT_QUARRY) and _get_loop_stone_count() < LOOP_WORKSHOP_BUILD_STONE_COST:
+			_show_player_notice("Need %d Wood and %d Stone. Purify the Quarry to start gathering stone." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
+		else:
+			_show_player_notice("Need %d Wood and %d Stone to build the workshop." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
+		return false
+	Global.remove_item(Global.Items.WOOD, LOOP_WORKSHOP_BUILD_WOOD_COST)
+	Global.remove_item(Global.Items.STONE, LOOP_WORKSHOP_BUILD_STONE_COST)
+	Global.build_loop_structure(Global.LOOP_STRUCTURE_WORKSHOP_BUILT)
+	_refresh_loop_plot_visuals()
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_show_player_notice("The workshop is rebuilt. New upgrades can be planned here.")
+	_autosave_loop_run()
+	return true
+
+func _try_fortify_loop_cabin() -> bool:
+	if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED):
+		_show_player_notice("The cabin is already fortified.")
+		return false
+	if not _is_loop_cabin_repaired():
+		_show_player_notice("Repair the cabin before reinforcing it.")
+		return false
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
+		_show_player_notice("Rebuild the workshop before taking on fortification projects.")
+		return false
+	if not _has_loop_materials(LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST):
+		_show_player_notice("Need %d Wood and %d Stone to fortify the cabin." % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST])
+		return false
+	Global.remove_item(Global.Items.WOOD, LOOP_CABIN_FORTIFY_WOOD_COST)
+	Global.remove_item(Global.Items.STONE, LOOP_CABIN_FORTIFY_STONE_COST)
+	Global.build_loop_structure(Global.LOOP_STRUCTURE_CABIN_FORTIFIED)
+	_refresh_loop_plot_visuals()
+	_refresh_loop_hud()
+	_refresh_loop_objective()
+	_show_player_notice("The cabin is fortified. Future defeats will cost fewer supplies.")
+	_autosave_loop_run()
+	return true
 
 func _spawn_loop_forest_content() -> void:
 	for node in _loop_spawned_forest_nodes:
@@ -2934,6 +3266,11 @@ func _on_grow_timer_timeout() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not Global.loop_hub_mode_active:
 		return
+	if _loop_workshop_menu != null and is_instance_valid(_loop_workshop_menu) and _loop_workshop_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel"):
+			_close_loop_workshop_menu()
+			get_viewport().set_input_as_handled()
+		return
 	if _loop_merchant_menu != null and is_instance_valid(_loop_merchant_menu) and _loop_merchant_menu.visible:
 		if event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel"):
 			_close_loop_merchant_menu()
@@ -2947,6 +3284,21 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _input(event: InputEvent) -> void:
 	if not Global.loop_hub_mode_active:
+		return
+	if _loop_workshop_menu != null and is_instance_valid(_loop_workshop_menu) and _loop_workshop_menu.visible:
+		if event is InputEventJoypadMotion:
+			var workshop_joy_motion := event as InputEventJoypadMotion
+			if workshop_joy_motion.axis == JOY_AXIS_RIGHT_Y and absf(workshop_joy_motion.axis_value) >= LOOP_MERCHANT_CONTROLLER_SCROLL_THRESHOLD:
+				if _loop_workshop_action_scroll != null and is_instance_valid(_loop_workshop_action_scroll):
+					_loop_workshop_action_scroll.scroll_vertical = maxi(
+						0,
+						_loop_workshop_action_scroll.scroll_vertical + int(round(workshop_joy_motion.axis_value * LOOP_MERCHANT_CONTROLLER_SCROLL_STEP))
+					)
+					get_viewport().set_input_as_handled()
+					return
+		if event.is_action_pressed("cancel") or event.is_action_pressed("ui_cancel"):
+			_close_loop_workshop_menu()
+			get_viewport().set_input_as_handled()
 		return
 	if _loop_merchant_menu == null or not is_instance_valid(_loop_merchant_menu) or not _loop_merchant_menu.visible:
 		return
@@ -3679,8 +4031,8 @@ func _get_loop_plot_interaction_edge(plot_id: StringName) -> Dictionary:
 			}
 		LOOP_PLOT_QUARRY:
 			return {
-				"start": Vector2(rect.position.x + margin, rect.position.y + rect.size.y),
-				"end": Vector2(rect.position.x + rect.size.x - margin, rect.position.y + rect.size.y)
+				"start": Vector2(rect.position.x + rect.size.x, rect.position.y),
+				"end": Vector2(rect.position.x + rect.size.x, rect.position.y + rect.size.y)
 			}
 		LOOP_PLOT_WORKSHOP:
 			return {
@@ -3738,11 +4090,7 @@ func _build_loop_workshop_prompt() -> String:
 	var confirm_label := _get_loop_confirm_label()
 	if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP):
 		return "%s  Purify Workshop (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_WORKSHOP].get("unlock_cost", 0))]
-	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
-		return "%s  Build Workshop (%d Wood, %d Stone)" % [confirm_label, LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST]
-	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED):
-		return "%s  Fortify Cabin (%d Wood, %d Stone)" % [confirm_label, LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST]
-	return "%s  Workshop Complete" % confirm_label
+	return "%s  Workshop Projects" % confirm_label
 
 func _build_loop_cabin_prompt() -> String:
 	var confirm_label := _get_loop_confirm_label()
@@ -3918,41 +4266,7 @@ func _handle_loop_workshop_interaction() -> bool:
 		_start_loop_plot_unlock_sequence(&"_run_loop_workshop_unlock_sequence")
 		return true
 
-	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
-		if not _has_loop_materials(LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST):
-			if not Global.has_loop_plot(LOOP_PLOT_QUARRY) and _get_loop_stone_count() < LOOP_WORKSHOP_BUILD_STONE_COST:
-				_show_player_notice("Need %d Wood and %d Stone. Purify the Quarry to start gathering stone." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
-			else:
-				_show_player_notice("Need %d Wood and %d Stone to build the workshop." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
-			return true
-		Global.remove_item(Global.Items.WOOD, LOOP_WORKSHOP_BUILD_WOOD_COST)
-		Global.remove_item(Global.Items.STONE, LOOP_WORKSHOP_BUILD_STONE_COST)
-		Global.build_loop_structure(Global.LOOP_STRUCTURE_WORKSHOP_BUILT)
-		_refresh_loop_plot_visuals()
-		_refresh_loop_hud()
-		_refresh_loop_objective()
-		_show_player_notice("The workshop is rebuilt. You can fortify the cabin here.")
-		_autosave_loop_run()
-		return true
-
-	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED):
-		if not _is_loop_cabin_repaired():
-			_show_player_notice("Repair the cabin before reinforcing it.")
-			return true
-		if not _has_loop_materials(LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST):
-			_show_player_notice("Need %d Wood and %d Stone to fortify the cabin." % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST])
-			return true
-		Global.remove_item(Global.Items.WOOD, LOOP_CABIN_FORTIFY_WOOD_COST)
-		Global.remove_item(Global.Items.STONE, LOOP_CABIN_FORTIFY_STONE_COST)
-		Global.build_loop_structure(Global.LOOP_STRUCTURE_CABIN_FORTIFIED)
-		_refresh_loop_plot_visuals()
-		_refresh_loop_hud()
-		_refresh_loop_objective()
-		_show_player_notice("The cabin is fortified. Future defeats will cost fewer supplies.")
-		_autosave_loop_run()
-		return true
-
-	_show_player_notice("The workshop's current projects are complete.")
+	_open_loop_workshop_menu()
 	return true
 
 func _handle_loop_cabin_interaction() -> bool:

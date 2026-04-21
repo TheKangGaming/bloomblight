@@ -2,56 +2,94 @@
 
 [ext_resource type="Script" uid="uid://du0h6oi8hwsac" path="res://scenes/ui/menus/PauseMenu.gd" id="1_qnjt8"]
 
+[sub_resource type="StyleBoxFlat" id="1_pause_panel"]
+bg_color = Color(0.08, 0.08, 0.08, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.46, 0.36, 0.18, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [node name="PauseMenu" type="CanvasLayer" unique_id=2104104445]
 script = ExtResource("1_qnjt8")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1719305603]
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.52)
+
+[node name="MenuPanel" type="PanelContainer" parent="."]
 texture_filter = 2
 anchors_preset = 6
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -220.0
-offset_bottom = 220.0
+offset_left = -316.0
+offset_top = -250.0
+offset_right = -24.0
+offset_bottom = 250.0
 grow_horizontal = 0
 grow_vertical = 2
-scale = Vector2(1, 1)
+theme_override_styles/panel = SubResource("1_pause_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MenuPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuPanel/MarginContainer" unique_id=1719305603]
+layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="UnitsButton" type="Button" parent="VBoxContainer" unique_id=87751286]
+[node name="MenuLabel" type="Label" parent="MenuPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 34
+horizontal_alignment = 1
+text = "Battle Menu"
+
+[node name="UnitsButton" type="Button" parent="MenuPanel/MarginContainer/VBoxContainer" unique_id=87751286]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
 text = "Units"
 
-[node name="OptionsButton" type="Button" parent="VBoxContainer" unique_id=939150608]
+[node name="OptionsButton" type="Button" parent="MenuPanel/MarginContainer/VBoxContainer" unique_id=939150608]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
 text = "Options"
 
-[node name="TutorialsButton" type="Button" parent="VBoxContainer" unique_id=371110556]
+[node name="TutorialsButton" type="Button" parent="MenuPanel/MarginContainer/VBoxContainer" unique_id=371110556]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
 text = "Tutorials"
 
-[node name="EndTurnButton" type="Button" parent="VBoxContainer" unique_id=785154608]
+[node name="EndTurnButton" type="Button" parent="MenuPanel/MarginContainer/VBoxContainer" unique_id=785154608]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
 text = "End Turn"
 
-[node name="CloseButton" type="Button" parent="VBoxContainer" unique_id=1205323486]
+[node name="CloseButton" type="Button" parent="MenuPanel/MarginContainer/VBoxContainer" unique_id=1205323486]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 56)
 theme_override_font_sizes/font_size = 30
 text = "Close"
 
-[connection signal="pressed" from="VBoxContainer/UnitsButton" to="." method="_on_units_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/TutorialsButton" to="." method="_on_tutorials_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/EndTurnButton" to="." method="_on_end_turn_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="MenuPanel/MarginContainer/VBoxContainer/UnitsButton" to="." method="_on_units_button_pressed"]
+[connection signal="pressed" from="MenuPanel/MarginContainer/VBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]
+[connection signal="pressed" from="MenuPanel/MarginContainer/VBoxContainer/TutorialsButton" to="." method="_on_tutorials_button_pressed"]
+[connection signal="pressed" from="MenuPanel/MarginContainer/VBoxContainer/EndTurnButton" to="." method="_on_end_turn_button_pressed"]
+[connection signal="pressed" from="MenuPanel/MarginContainer/VBoxContainer/CloseButton" to="." method="_on_close_button_pressed"]

@@ -50,6 +50,17 @@ This pass intentionally removes only provably unused files/assets and trims no-r
 - `scenes/ui/1.png` through `scenes/ui/10.png`
   - Unreferenced stray UI images; only their own import metadata referenced them.
 
+- Hidden Party/Items subview scaffolding inside the live menu scene
+  - Removed the unused `PartySubtabs`, `SkillsView`, `InventorySubtabs`, `EquipmentCatalogView`, and related dead script paths from:
+    - [main_menu.tscn](/C:/Users/kang/Desktop/BloomBlight/bloomblight/scenes/ui/main_menu.tscn)
+    - [main_menu.gd](/C:/Users/kang/Desktop/BloomBlight/bloomblight/scenes/ui/main_menu.gd)
+
+- Repo-root runtime leftovers
+  - Removed `clean_quit.log` and `godot_run.log` from the tracked project root.
+
+- Duplicate logo asset
+  - Removed unreferenced `graphics/buildings/blight_&_bloom_logo.png` and its import metadata after the live title screen moved to `res://blight_&_bloom_logo.png`.
+
 ## Future decoupling work before larger deletion
 
 1. Extract shared input-label helpers from `DemoDirector` into a loop-safe UI/input helper.

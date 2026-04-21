@@ -1,23 +1,22 @@
 extends CanvasLayer
 
 @onready var cursor: Cursor = get_parent()._cursor
-@onready var _attack_button: Button = $VBoxContainer/AttackButton
-@onready var _ability_button: Button = $VBoxContainer/AbilityButton
-@onready var _items_button: Button = $VBoxContainer/ItemsButton
-@onready var _trade_button: Button = $VBoxContainer/TradeButton
-@onready var _wait_button: Button = $VBoxContainer/WaitButton
-@onready var _cancel_button: Button = $VBoxContainer/CancelButton
+@onready var _menu_box: VBoxContainer = $MenuPanel/MarginContainer/VBoxContainer
+@onready var _attack_button: Button = $MenuPanel/MarginContainer/VBoxContainer/AttackButton
+@onready var _ability_button: Button = $MenuPanel/MarginContainer/VBoxContainer/AbilityButton
+@onready var _items_button: Button = $MenuPanel/MarginContainer/VBoxContainer/ItemsButton
+@onready var _wait_button: Button = $MenuPanel/MarginContainer/VBoxContainer/WaitButton
+@onready var _cancel_button: Button = $MenuPanel/MarginContainer/VBoxContainer/CancelButton
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
 
 func _ready() -> void:
-	$VBoxContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	$VBoxContainer.move_child(_wait_button, $VBoxContainer.get_child_count() - 1)
+	_menu_box.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_menu_box.move_child(_wait_button, _menu_box.get_child_count() - 1)
 	_wire_browse_sound(_attack_button)
 	_wire_browse_sound(_ability_button)
 	_wire_browse_sound(_items_button)
-	_wire_browse_sound(_trade_button)
 	_wire_browse_sound(_wait_button)
 	_wire_browse_sound(_cancel_button)
 	var unit = get_parent()._active_unit
@@ -128,11 +127,6 @@ func _on_ability_button_pressed(ability: AbilityData) -> void:
 	
 func _on_items_pressed() -> void:
 	get_parent().open_battle_item_menu()
-
-
-func _on_trade_button_pressed() -> void:
-	pass
-
 
 func _on_wait_button_pressed() -> void:
 	get_parent().finish_unit_turn()

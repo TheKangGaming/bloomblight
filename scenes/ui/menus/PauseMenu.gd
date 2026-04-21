@@ -3,9 +3,10 @@ extends CanvasLayer
 const SETTINGS_MODAL_SCENE := preload("res://scenes/ui/settings_modal.tscn")
 
 @onready var cursor: Cursor = get_parent()._cursor
-@onready var _units_button: Button = $VBoxContainer/UnitsButton
-@onready var _options_button: Button = $VBoxContainer/OptionsButton
-@onready var _tutorials_button: Button = $VBoxContainer/TutorialsButton
+@onready var _menu_box: VBoxContainer = $MenuPanel/MarginContainer/VBoxContainer
+@onready var _units_button: Button = $MenuPanel/MarginContainer/VBoxContainer/UnitsButton
+@onready var _options_button: Button = $MenuPanel/MarginContainer/VBoxContainer/OptionsButton
+@onready var _tutorials_button: Button = $MenuPanel/MarginContainer/VBoxContainer/TutorialsButton
 
 var _units_snapshot: Array = []
 var _units_overlay: CanvasLayer = null
@@ -17,7 +18,7 @@ func _ui_sound_manager() -> Node:
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	$VBoxContainer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_menu_box.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_wire_browse_sound(_units_button)
 	_wire_browse_sound(_options_button)
 	_wire_browse_sound(_tutorials_button)

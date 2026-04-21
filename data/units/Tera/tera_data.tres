@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://data/items/Accessories/PrayerBeads.tres" id="4_dgs3p"]
 [ext_resource type="Resource" uid="uid://7wfqs56geyvx" path="res://data/items/Armor/AshenMantle.tres" id="5_yba7b"]
 [ext_resource type="Resource" uid="uid://bmik5reb3ilhq" path="res://data/items/Weapons/CinderRod.tres" id="6_mktlr"]
+[ext_resource type="Texture2D" path="res://graphics/characters/Tera.png" id="7_portrait"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="7_kbec3"]
 
 [resource]
@@ -14,6 +15,7 @@ script = ExtResource("7_kbec3")
 display_name = "Tera"
 class_data = ExtResource("3_mjny1")
 abilities = Array[ExtResource("1_2vpsb")]([ExtResource("2_cu05k")])
+portrait = ExtResource("7_portrait")
 battle_actor_scene = ExtResource("3_cu05k")
 equipped_weapon = ExtResource("6_mktlr")
 equipped_armor = ExtResource("5_yba7b")

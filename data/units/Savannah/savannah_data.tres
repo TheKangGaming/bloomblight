@@ -7,6 +7,7 @@
 [ext_resource type="Resource" uid="uid://2mv5ijnjgfa7" path="res://data/items/Accessories/TravelerCharm.tres" id="4_ssbpe"]
 [ext_resource type="Resource" path="res://data/items/Armor/ScoutBrigandine.tres" id="5_alody"]
 [ext_resource type="Resource" uid="uid://cwbgxc8qsdcpv" path="res://data/items/Weapons/IronShortsword.tres" id="6_mqwgg"]
+[ext_resource type="Texture2D" path="res://graphics/characters/Savannah.png" id="7_portrait"]
 [ext_resource type="Script" uid="uid://dinfajkodigdx" path="res://data/types/character_data.gd" id="7_tthfp"]
 
 [resource]
@@ -14,6 +15,7 @@ script = ExtResource("7_tthfp")
 display_name = "Savannah"
 class_data = ExtResource("3_7a0sv")
 abilities = Array[ExtResource("1_lgm27")]([ExtResource("2_ebqqr")])
+portrait = ExtResource("7_portrait")
 battle_actor_scene = ExtResource("3_ebqqr")
 equipped_weapon = ExtResource("6_mqwgg")
 equipped_armor = ExtResource("5_alody")

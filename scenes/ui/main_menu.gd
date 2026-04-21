@@ -5,8 +5,6 @@ signal menu_closed
 signal status_tab_viewed
 
 const SLOT_SCENE := preload("res://scenes/ui/inventory_slot.tscn")
-const TAB_PREV_ACTIONS: Array[StringName] = [&"tool_backward", &"ui_page_up"]
-const TAB_NEXT_ACTIONS: Array[StringName] = [&"tool_forward", &"ui_page_down"]
 const CONTROLLER_SCROLL_THRESHOLD := 0.35
 const CONTROLLER_SCROLL_STEP := 42.0
 const CALENDAR_GRID_COLUMNS := 7
@@ -19,8 +17,6 @@ const LOOP_STAGE_CHECK_FRAMES := 60
 const LOOP_STAGE_CHECK_HOLD_FRAME := 30
 
 enum MenuSection { PARTY, INVENTORY, CALENDAR }
-enum PartySubview { STATUS, EQUIPMENT, SKILLS }
-enum InventorySubview { ITEMS, EQUIPMENT }
 
 @onready var section_title: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/SectionTitle
 @onready var party_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons/PartyButton
@@ -37,14 +33,8 @@ enum InventorySubview { ITEMS, EQUIPMENT }
 @onready var character_role_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo/CharacterRole
 @onready var character_level_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow/HeaderInfo/CharacterLevel
 @onready var meal_status_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/MealStatus
-@onready var status_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs/StatusSubtabButton
-@onready var equipment_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs/EquipmentSubtabButton
-@onready var skills_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs/SkillsSubtabButton
 @onready var status_view: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/StatusView
-@onready var status_text: RichTextLabel = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/StatusView/StatusText
 @onready var equipment_view: ScrollContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView
-@onready var skills_view: Control = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/SkillsView
-@onready var skills_text: RichTextLabel = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/SkillsView/SkillsText
 @onready var weapon_slot_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots/WeaponSlotButton
 @onready var armor_slot_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots/ArmorSlotButton
 @onready var accessory_slot_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentSlots/AccessorySlotButton
@@ -53,12 +43,8 @@ enum InventorySubview { ITEMS, EQUIPMENT }
 @onready var equipment_choice_list: ItemList = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker/EquipmentChoiceList
 @onready var equipment_detail_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/EquipmentView/EquipmentContent/EquipmentBody/EquipmentPicker/EquipmentDetailLabel
 
-@onready var items_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs/ItemsSubtabButton
-@onready var equipment_inventory_subtab_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs/EquipmentInventorySubtabButton
 @onready var items_view: ScrollContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView
 @onready var inventory_grid: GridContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView/ItemsMargin/Grid
-@onready var equipment_catalog_view: ScrollContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/EquipmentCatalogView
-@onready var equipment_catalog_list: VBoxContainer = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/EquipmentCatalogView/EquipmentCatalogList
 
 @onready var calendar_kicker_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader/CalendarKickerLabel
 @onready var calendar_season_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarHeader/CalendarSeasonLabel
@@ -71,9 +57,7 @@ enum InventorySubview { ITEMS, EQUIPMENT }
 @onready var calendar_today_legend_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow/TodayLegendLabel
 @onready var calendar_upcoming_legend_label: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/CalendarSection/CalendarContent/CalendarPage/CalendarMargin/CalendarLayout/CalendarFooter/CalendarLegendPanel/CalendarLegendMargin/CalendarLegendRow/UpcomingLegendLabel
 
-var _current_section := MenuSection.INVENTORY
-var _current_party_subview := PartySubview.STATUS
-var _current_inventory_subview := InventorySubview.ITEMS
+var _current_section := MenuSection.PARTY
 var _selected_party_index := 0
 var _last_opened_section := MenuSection.PARTY
 var _status_tab_highlight_enabled := false
@@ -140,13 +124,7 @@ func _input(event: InputEvent) -> void:
 	if _is_mouse_wheel_event(event):
 		return
 
-	if _is_action_pressed(event, TAB_PREV_ACTIONS):
-		_cycle_current_subview(-1)
-		get_viewport().set_input_as_handled()
-	elif _is_action_pressed(event, TAB_NEXT_ACTIONS):
-		_cycle_current_subview(1)
-		get_viewport().set_input_as_handled()
-	elif _handle_manual_menu_accept(event):
+	if _handle_manual_menu_accept(event):
 		get_viewport().set_input_as_handled()
 	elif _handle_manual_menu_navigation(event):
 		get_viewport().set_input_as_handled()
@@ -193,24 +171,6 @@ func _handle_manual_menu_accept(event: InputEvent) -> bool:
 		if inward_target != null and inward_target != focus_owner:
 			inward_target.grab_focus()
 			return true
-	if _is_party_subtab_focus(focus_owner):
-		var focused_party_subview: int = _get_party_subview_from_button(focus_owner)
-		if focused_party_subview >= 0 and _current_party_subview != focused_party_subview:
-			_set_party_subview(focused_party_subview)
-			return true
-		var party_detail_target := _get_party_detail_entry_target()
-		if party_detail_target != null and party_detail_target != focus_owner:
-			party_detail_target.grab_focus()
-			return true
-	if _is_inventory_subtab_focus(focus_owner):
-		var focused_inventory_subview: int = _get_inventory_subview_from_button(focus_owner)
-		if focused_inventory_subview >= 0 and _current_inventory_subview != focused_inventory_subview:
-			_set_inventory_subview(focused_inventory_subview)
-			return true
-		var inventory_detail_target := _get_inventory_detail_entry_target()
-		if inventory_detail_target != null and inventory_detail_target != focus_owner:
-			inventory_detail_target.grab_focus()
-			return true
 	if focus_owner == equipment_choice_list:
 		_activate_selected_equipment_choice()
 		return true
@@ -225,12 +185,7 @@ func _handle_manual_menu_navigation(event: InputEvent) -> bool:
 		if roster_target != null:
 			roster_target.grab_focus()
 			return true
-	if _is_active_party_subtab_focus(focus_owner) and _is_action_pressed(event, [&"left", &"ui_left"]):
-		var selected_roster := _get_selected_roster_button()
-		if selected_roster != null:
-			selected_roster.grab_focus()
-			return true
-	if _is_active_inventory_subtab_focus(focus_owner) and _current_inventory_subview == InventorySubview.ITEMS and (_is_action_pressed(event, [&"down", &"ui_down"]) or _is_action_pressed(event, [&"right", &"ui_right"])):
+	if focus_owner == inventory_button and (_is_action_pressed(event, [&"down", &"ui_down"]) or _is_action_pressed(event, [&"right", &"ui_right"])):
 		var inventory_slot := _get_first_inventory_slot()
 		if inventory_slot != null:
 			inventory_slot.grab_focus()
@@ -301,6 +256,7 @@ func open_status_tab() -> void:
 	_party_equipment_picker_open = false
 	_update_section_visibility()
 	_refresh_all_views()
+	_complete_status_review_if_needed()
 	if not was_visible:
 		var ui_sounds := _ui_sound_manager()
 		if ui_sounds:
@@ -319,6 +275,7 @@ func open_menu_to_tab(tab_index: int) -> void:
 		_party_equipment_picker_open = false
 	_update_section_visibility()
 	_refresh_all_views()
+	_complete_status_review_if_needed()
 	if not was_visible:
 		var ui_sounds := _ui_sound_manager()
 		if ui_sounds:
@@ -386,7 +343,6 @@ func _refresh_all_views() -> void:
 	_refresh_roster_buttons()
 	_refresh_party_view()
 	update_inventory()
-	_refresh_inventory_equipment_view()
 	_refresh_calendar_view()
 	_refresh_status_highlight()
 	_rebuild_focus_graph()
@@ -400,16 +356,6 @@ func _wire_navigation_buttons() -> void:
 	calendar_button.pressed.connect(func() -> void: _set_section(MenuSection.CALENDAR))
 
 func _wire_party_controls() -> void:
-	_wire_browse_sound(status_subtab_button, false)
-	_wire_browse_sound(equipment_subtab_button, false)
-	_wire_browse_sound(skills_subtab_button, false)
-	_wire_browse_sound(status_text, false)
-	status_subtab_button.pressed.connect(_on_status_subtab_pressed)
-	equipment_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.EQUIPMENT))
-	skills_subtab_button.pressed.connect(func() -> void: _set_party_subview(PartySubview.SKILLS))
-	if not status_text.focus_entered.is_connected(_on_status_text_focus_entered):
-		status_text.focus_entered.connect(_on_status_text_focus_entered)
-
 	for slot_name in ["Weapon", "Armor", "Accessory"]:
 		var slot_button := _get_equipment_slot_button(slot_name)
 		_wire_browse_sound(slot_button, false)
@@ -423,34 +369,17 @@ func _wire_party_controls() -> void:
 	equipment_choice_list.item_activated.connect(_on_equipment_choice_activated)
 
 func _wire_inventory_controls() -> void:
-	_wire_browse_sound(items_subtab_button, false)
-	_wire_browse_sound(equipment_inventory_subtab_button, false)
-	items_subtab_button.pressed.connect(func() -> void: _set_inventory_subview(InventorySubview.ITEMS))
-	equipment_inventory_subtab_button.pressed.connect(func() -> void: _set_inventory_subview(InventorySubview.EQUIPMENT))
+	pass
 
 func _wire_calendar_controls() -> void:
 	_wire_browse_sound(calendar_legend_panel, false)
 
 func _configure_demo_menu_layout() -> void:
-	if status_subtab_button != null and is_instance_valid(status_subtab_button):
-		status_subtab_button.get_parent().visible = false
-	if items_subtab_button != null and is_instance_valid(items_subtab_button):
-		items_subtab_button.get_parent().visible = false
-	if skills_view != null and is_instance_valid(skills_view):
-		skills_view.visible = false
-	if equipment_catalog_view != null and is_instance_valid(equipment_catalog_view):
-		equipment_catalog_view.visible = false
-	_current_party_subview = PartySubview.STATUS
-	_current_inventory_subview = InventorySubview.ITEMS
 	_refresh_navigation_labels()
 
 func _build_party_overview_ui() -> void:
 	if _party_overview_root != null and is_instance_valid(_party_overview_root):
 		return
-
-	if status_text != null and is_instance_valid(status_text):
-		status_text.visible = false
-		status_text.focus_mode = Control.FOCUS_NONE
 
 	_party_overview_root = ScrollContainer.new()
 	_party_overview_root.follow_focus = true
@@ -532,9 +461,6 @@ func _build_overview_section_panel(title_text: String) -> PanelContainer:
 	layout.add_child(heading)
 	return panel
 
-func _on_status_subtab_pressed() -> void:
-	_close_party_equipment_picker()
-
 func _set_section(section: int) -> void:
 	var next_section := clampi(section, 0, 2) as MenuSection
 	if _current_section == next_section:
@@ -543,7 +469,6 @@ func _set_section(section: int) -> void:
 	_last_opened_section = _current_section
 	if _current_section != MenuSection.PARTY:
 		_party_equipment_picker_open = false
-		_current_party_subview = PartySubview.STATUS
 	var ui_sounds := _ui_sound_manager()
 	if visible and ui_sounds:
 		ui_sounds.play_tab_switch()
@@ -552,28 +477,6 @@ func _set_section(section: int) -> void:
 	_complete_status_review_if_needed()
 	_focus_section_root_deferred()
 
-func _set_party_subview(subview: int) -> void:
-	if subview == PartySubview.EQUIPMENT:
-		_open_party_equipment_picker(_active_equipment_slot)
-		return
-	_close_party_equipment_picker()
-
-func _set_inventory_subview(subview: int) -> void:
-	if subview != InventorySubview.ITEMS:
-		subview = InventorySubview.ITEMS
-	if _current_inventory_subview == subview:
-		return
-	_current_inventory_subview = subview as InventorySubview
-	var ui_sounds := _ui_sound_manager()
-	if visible and ui_sounds:
-		ui_sounds.play_tab_switch()
-	_update_section_visibility()
-	_refresh_all_views()
-	_focus_active_inventory_subtab_deferred()
-
-func _cycle_current_subview(_delta: int) -> void:
-	return
-
 func _update_section_visibility() -> void:
 	party_section.visible = _current_section == MenuSection.PARTY
 	inventory_section.visible = _current_section == MenuSection.INVENTORY
@@ -581,20 +484,13 @@ func _update_section_visibility() -> void:
 
 	status_view.visible = _current_section == MenuSection.PARTY and not _party_equipment_picker_open
 	equipment_view.visible = _current_section == MenuSection.PARTY and _party_equipment_picker_open
-	skills_view.visible = false
 
 	items_view.visible = _current_section == MenuSection.INVENTORY
-	equipment_catalog_view.visible = false
 
 	_refresh_navigation_labels()
 	_update_button_state(party_button, _current_section == MenuSection.PARTY)
 	_update_button_state(inventory_button, _current_section == MenuSection.INVENTORY)
 	_update_button_state(calendar_button, _current_section == MenuSection.CALENDAR)
-	_update_button_state(status_subtab_button, not _party_equipment_picker_open)
-	_update_button_state(equipment_subtab_button, _party_equipment_picker_open)
-	_update_button_state(skills_subtab_button, false)
-	_update_button_state(items_subtab_button, true)
-	_update_button_state(equipment_inventory_subtab_button, false)
 
 func _refresh_navigation_labels() -> void:
 	if inventory_button != null:
@@ -674,7 +570,7 @@ func _refresh_party_view() -> void:
 	character_name_label.text = String(character.display_name)
 	character_role_label.text = _build_character_role_text(character)
 	character_level_label.text = "Level %d" % _resolve_character_level(character)
-	portrait_rect.texture = character.portrait
+	portrait_rect.texture = _resolve_character_portrait(character)
 	meal_status_label.text = _build_meal_status_text(character)
 	_refresh_party_overview(character)
 	_refresh_equipment_panel(character)
@@ -780,7 +676,6 @@ func _open_party_equipment_picker(slot_name: String) -> void:
 		return
 	_active_equipment_slot = normalized_slot
 	_party_equipment_picker_open = true
-	_current_party_subview = PartySubview.EQUIPMENT
 	var ui_sounds := _ui_sound_manager()
 	if visible and ui_sounds:
 		ui_sounds.play_menu_button()
@@ -796,7 +691,6 @@ func _focus_party_equipment_picker() -> void:
 
 func _close_party_equipment_picker() -> void:
 	_party_equipment_picker_open = false
-	_current_party_subview = PartySubview.STATUS
 	_update_section_visibility()
 	_refresh_party_view()
 	_rebuild_focus_graph()
@@ -848,49 +742,6 @@ func _apply_equipment_choice(slot_name: String, index: int) -> void:
 	if ui_sounds:
 		ui_sounds.play_menu_button()
 	_refresh_all_views()
-
-func _refresh_inventory_equipment_view() -> void:
-	if equipment_catalog_view == null or not equipment_catalog_view.visible:
-		return
-	_clear_container_children(equipment_catalog_list)
-
-	for slot_name in ["Weapon", "Armor", "Accessory"]:
-		var heading := Label.new()
-		heading.text = slot_name
-		heading.add_theme_font_size_override("font_size", 24)
-		equipment_catalog_list.add_child(heading)
-
-		var owned_equipment: Array = ProgressionService.get_owned_equipment(slot_name) if ProgressionService != null else []
-		if owned_equipment.is_empty():
-			var empty_label := Label.new()
-			empty_label.text = "No %s stored." % slot_name.to_lower()
-			empty_label.add_theme_font_size_override("font_size", 20)
-			equipment_catalog_list.add_child(empty_label)
-			continue
-
-		for item in owned_equipment:
-			equipment_catalog_list.add_child(_build_equipment_catalog_entry(slot_name, item))
-
-func _build_equipment_catalog_entry(slot_name: String, item: Resource) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-
-	var icon_rect := TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(40, 40)
-	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon_rect.texture = _get_equipment_icon(item)
-	row.add_child(icon_rect)
-
-	var label := Label.new()
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.text = "%s%s" % [_get_equipment_display_name(item, slot_name), _build_equipment_owner_suffix(item, slot_name)]
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 20)
-	row.add_child(label)
-
-	return row
 
 func _build_calendar_grid() -> void:
 	if calendar_grid == null:
@@ -1091,39 +942,6 @@ func _play_stage_check_animation(target: TextureRect) -> void:
 		await get_tree().process_frame
 	_set_stage_check_frame(target, LOOP_STAGE_CHECK_HOLD_FRAME)
 
-func _build_party_status_text(character: CharacterData) -> String:
-	var stats := _build_character_unit_stats(character)
-	var atk_label := _build_attack_label(character, stats)
-	var lines: PackedStringArray = []
-	lines.append("[b]Core Stats[/b]")
-	lines.append("HP: %d/%d" % [stats.hp, stats.max_hp])
-	lines.append("STR: %d    DEF: %d    MDEF: %d" % [stats.str, stats.physical_def, stats.magic_def])
-	lines.append("DEX: %d    INT: %d    SPD: %d" % [stats.dex, stats.int_stat, stats.spd])
-	lines.append("MOV: %d    RNG: %d" % [stats.mov, stats.atk_rng])
-	lines.append("")
-	lines.append("[b]Combat Read[/b]")
-	lines.append(atk_label)
-	lines.append("")
-	lines.append("[b]Equipment[/b]")
-	lines.append("Weapon: %s" % _get_equipment_display_name(character.equipped_weapon, "Weapon"))
-	lines.append("Armor: %s" % _get_equipment_display_name(character.equipped_armor, "Armor"))
-	lines.append("Accessory: %s" % _get_equipment_display_name(character.equipped_accessory, "Accessory"))
-	return "\n".join(lines)
-
-func _build_party_skills_text(character: CharacterData) -> String:
-	if character.abilities.is_empty():
-		return "[b]Skills[/b]\nNo abilities learned yet."
-
-	var lines: PackedStringArray = ["[b]Skills[/b]"]
-	for ability in character.abilities:
-		if ability == null:
-			continue
-		lines.append(String(ability.ability_name))
-		lines.append("Range %d | Radius %d | Cooldown %d" % [int(ability.range), int(ability.radius), int(ability.cooldown_turns)])
-		lines.append(String(ability.description))
-		lines.append("")
-	return "\n".join(lines).strip_edges()
-
 func _build_attack_label(character: CharacterData, stats: UnitStats) -> String:
 	var preview := CombatCalculator.get_attack_preview_data_from_snapshot(stats, character, character.equipped_weapon)
 	var attack_total := int(preview.get("attack_total", 0))
@@ -1162,6 +980,39 @@ func _build_character_unit_stats(character: CharacterData) -> UnitStats:
 	stats.clamp_to_caps()
 	stats.hp = stats.max_hp
 	return stats
+
+func _resolve_character_portrait(character: CharacterData) -> Texture2D:
+	if character == null:
+		return null
+	var source_texture := character.portrait
+	if character.battle_actor_scene == null:
+		return source_texture
+	var actor_root := character.battle_actor_scene.instantiate()
+	if actor_root == null:
+		return source_texture
+	var body_sprite := actor_root.get_node_or_null("VisualDriver/Player/SpriteLayers/01body") as Sprite2D
+	if body_sprite == null or body_sprite.texture == null:
+		actor_root.free()
+		return source_texture
+	var texture_source := source_texture if source_texture != null else body_sprite.texture
+	if body_sprite.hframes <= 1 and body_sprite.vframes <= 1:
+		actor_root.free()
+		return texture_source
+	var source_size := texture_source.get_size()
+	var actor_size := body_sprite.texture.get_size()
+	if source_size != actor_size:
+		actor_root.free()
+		return texture_source
+	var frame_width := int(actor_size.x / max(1, body_sprite.hframes))
+	var frame_height := int(actor_size.y / max(1, body_sprite.vframes))
+	if frame_width <= 0 or frame_height <= 0:
+		actor_root.free()
+		return texture_source
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture_source
+	atlas.region = Rect2(0, 0, frame_width, frame_height)
+	actor_root.free()
+	return atlas
 
 func _extract_equipment_delta(item: Resource) -> Dictionary:
 	var delta := {}
@@ -1424,22 +1275,6 @@ func _focus_selected_roster_button() -> void:
 	if roster_button != null and roster_button.visible:
 		roster_button.grab_focus()
 
-func _focus_active_party_subtab_deferred() -> void:
-	call_deferred("_focus_selected_roster_button")
-
-func _focus_active_party_subtab() -> void:
-	var button := _get_selected_roster_button()
-	if button != null and button.visible:
-		button.grab_focus()
-
-func _focus_active_inventory_subtab_deferred() -> void:
-	call_deferred("_focus_active_inventory_subtab")
-
-func _focus_active_inventory_subtab() -> void:
-	var button := inventory_button
-	if button != null and button.visible:
-		button.grab_focus()
-
 func _clear_container_children(container: Node) -> void:
 	if container == null:
 		return
@@ -1538,28 +1373,6 @@ func _get_section_entry_target(section: MenuSection) -> Control:
 			return null
 	return null
 
-func _get_active_party_subtab_button() -> Button:
-	return _get_selected_roster_button()
-
-func _get_active_inventory_subtab_button() -> Button:
-	return inventory_button
-
-func _get_party_subview_from_button(button: Control) -> int:
-	if button == status_subtab_button:
-		return PartySubview.STATUS
-	if button == equipment_subtab_button:
-		return PartySubview.EQUIPMENT
-	if button == skills_subtab_button:
-		return PartySubview.SKILLS
-	return -1
-
-func _get_inventory_subview_from_button(button: Control) -> int:
-	if button == items_subtab_button:
-		return InventorySubview.ITEMS
-	if button == equipment_inventory_subtab_button:
-		return InventorySubview.EQUIPMENT
-	return -1
-
 func _get_party_detail_entry_target() -> Control:
 	if _party_equipment_picker_open:
 		return _get_equipment_slot_button(_active_equipment_slot)
@@ -1567,9 +1380,7 @@ func _get_party_detail_entry_target() -> Control:
 	return overview_button
 
 func _get_inventory_detail_entry_target() -> Control:
-	if _current_inventory_subview == InventorySubview.ITEMS:
-		return _get_first_inventory_slot()
-	return null
+	return _get_first_inventory_slot()
 
 func _get_roster_buttons() -> Array[Control]:
 	var buttons: Array[Control] = []
@@ -1677,9 +1488,6 @@ func _stop_status_highlight() -> void:
 		_status_tab_highlight_tween = null
 	_update_button_state(party_button, _current_section == MenuSection.PARTY)
 
-func _on_status_text_focus_entered() -> void:
-	_complete_status_review_if_needed()
-
 func _complete_status_review_if_needed(from_close: bool = false) -> void:
 	if not _status_tab_highlight_enabled:
 		return
@@ -1687,10 +1495,6 @@ func _complete_status_review_if_needed(from_close: bool = false) -> void:
 		return
 	if _current_section != MenuSection.PARTY:
 		return
-	if not from_close:
-		var focus_owner := get_viewport().gui_get_focus_owner() as Control
-		if focus_owner != status_text and focus_owner != _get_selected_roster_button():
-			return
 	_status_tab_highlight_enabled = false
 	_stop_status_highlight()
 	status_tab_viewed.emit()
@@ -1776,18 +1580,6 @@ func _is_inventory_header_focus(control: Control) -> bool:
 
 func _is_section_root_focus(control: Control) -> bool:
 	return control == party_button or control == inventory_button or control == calendar_button
-
-func _is_party_subtab_focus(_control: Control) -> bool:
-	return false
-
-func _is_inventory_subtab_focus(_control: Control) -> bool:
-	return false
-
-func _is_active_party_subtab_focus(_control: Control) -> bool:
-	return false
-
-func _is_active_inventory_subtab_focus(_control: Control) -> bool:
-	return false
 
 func _get_overview_equipment_buttons() -> Array[Control]:
 	var buttons: Array[Control] = []

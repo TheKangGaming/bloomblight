@@ -102,7 +102,7 @@ text = "Party"
 custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Inventory"
+text = "Items"
 
 [node name="CalendarButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons"]
 custom_minimum_size = Vector2(0, 58)
@@ -122,11 +122,7 @@ theme_override_constants/separation = 14
 [node name="SectionTitle" type="Label" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
-text = "Inventory"
-
-[node name="SectionSubnav" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn"]
-layout_mode = 2
-theme_override_constants/separation = 10
+text = "Party"
 
 [node name="ContentStack" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn"]
 custom_minimum_size = Vector2(0, 620)
@@ -199,6 +195,7 @@ layout_mode = 2
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
+texture_filter = 1
 
 [node name="HeaderInfo" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/CharacterHeader/HeaderTopRow"]
 layout_mode = 2
@@ -229,28 +226,6 @@ theme_override_font_sizes/font_size = 20
 text = "No meal active."
 autowrap_mode = 3
 
-[node name="PartySubtabs" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="StatusSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Status"
-
-[node name="EquipmentSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Equipment"
-
-[node name="SkillsSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartySubtabs"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Skills"
-
 [node name="PartyDetailStack" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -267,14 +242,6 @@ theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
-
-[node name="StatusText" type="RichTextLabel" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/StatusView"]
-layout_mode = 2
-bbcode_enabled = true
-fit_content = false
-scroll_active = true
-focus_mode = 0
-theme_override_font_sizes/normal_font_size = 22
 
 [node name="EquipmentView" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack"]
 visible = false
@@ -362,26 +329,6 @@ theme_override_font_sizes/font_size = 20
 text = "Select a slot to review what your party is carrying."
 autowrap_mode = 3
 
-[node name="SkillsView" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 6
-
-[node name="SkillsText" type="RichTextLabel" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/PartySection/HBoxContainer/DetailColumn/PartyDetailStack/SkillsView"]
-layout_mode = 2
-bbcode_enabled = true
-fit_content = false
-scroll_active = true
-theme_override_font_sizes/normal_font_size = 22
-
 [node name="InventorySection" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack"]
 layout_mode = 1
 anchors_preset = 15
@@ -398,22 +345,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
-
-[node name="InventorySubtabs" type="HBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="ItemsSubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Items"
-
-[node name="EquipmentInventorySubtabButton" type="Button" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventorySubtabs"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Equipment"
 
 [node name="InventoryDetailStack" type="Control" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer"]
 layout_mode = 2
@@ -439,21 +370,6 @@ theme_override_constants/margin_bottom = 8
 [node name="Grid" type="GridContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/ItemsView/ItemsMargin"]
 layout_mode = 2
 columns = 8
-
-[node name="EquipmentCatalogView" type="ScrollContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-follow_focus = true
-
-[node name="EquipmentCatalogList" type="VBoxContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack/InventorySection/VBoxContainer/InventoryDetailStack/EquipmentCatalogView"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
 
 [node name="CalendarSection" type="MarginContainer" parent="CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/ContentStack"]
 visible = false
