@@ -327,9 +327,12 @@ const LOOP_OBJECTIVE_MERCHANT := "Purify Merchant"
 const LOOP_OBJECTIVE_FOREST := "Unlock Forest"
 const LOOP_OBJECTIVE_REPAIR := "Repair Cabin"
 const LOOP_OBJECTIVE_CABIN := "Gather Wood for Cabin"
-const LOOP_OBJECTIVE_QUARRY := "Purify Quarry"
+const LOOP_OBJECTIVE_QUARRY := "Consider Purifying Quarry"
 const LOOP_OBJECTIVE_MINE_STONE := "Mine Stone"
-const LOOP_OBJECTIVE_BUILD_WORKSHOP := "Build Workshop"
+const LOOP_OBJECTIVE_WORKSHOP := "Consider Purifying Workshop"
+const LOOP_OBJECTIVE_GATHER_WORKSHOP := "Gather Wood and Stone for Workshop"
+const LOOP_OBJECTIVE_BUILD_WORKSHOP := "Rebuild Workshop"
+const LOOP_OBJECTIVE_GATHER_FORTIFY := "Gather Wood and Stone to Fortify Cabin"
 const LOOP_OBJECTIVE_FORTIFY_CABIN := "Fortify Cabin"
 const LOOP_OBJECTIVE_SETTLE := "Sleep in the cabin"
 const OVERWORLD_CUTSCENE_SKIP_HOLD_SECONDS := 0.45
@@ -2341,7 +2344,7 @@ func _get_loop_workshop_project_entries() -> Array[Dictionary]:
 		"Effect: Unlock workshop construction projects."
 	])
 	if not workshop_built and not Global.has_loop_plot(LOOP_PLOT_QUARRY) and stone_count < LOOP_WORKSHOP_BUILD_STONE_COST:
-		build_detail_lines.append("Hint: Purify the Quarry first so you can gather stone each day.")
+		build_detail_lines.append("Hint: The Quarry is one reliable way to gather Stone each day.")
 	build_detail_lines.append("Status: %s" % build_status)
 	entries.append({
 		"id": LOOP_WORKSHOP_PROJECT_BUILD,
@@ -2358,10 +2361,10 @@ func _get_loop_workshop_project_entries() -> Array[Dictionary]:
 	var fortify_ready := workshop_built and cabin_repaired and wood_count >= LOOP_CABIN_FORTIFY_WOOD_COST and stone_count >= LOOP_CABIN_FORTIFY_STONE_COST
 	var fortify_status := "Completed" if cabin_fortified else ("Ready" if fortify_ready else "Locked")
 	var fortify_detail_lines := PackedStringArray([
-		"Reinforce the cabin so failed raids take fewer supplies from the settlement.",
+		"Reinforce the cabin when you want a safer fallback after tough battles.",
 		"",
 		"Cost: %d Wood, %d Stone" % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST],
-		"Effect: Raid loss ratio improves from 25%% to 15%%."
+		"Effect: Failed raids take fewer supplies from the settlement."
 	])
 	if not workshop_built:
 		fortify_detail_lines.append("Requirement: Rebuild the workshop first.")
@@ -2429,12 +2432,39 @@ func _open_loop_workshop_menu() -> void:
 	_loop_workshop_menu.visible = true
 	player.can_move = false
 	_focus_first_loop_workshop_action_button()
+	if _should_show_loop_quarry_tutorial_from_workshop():
+		call_deferred("_show_loop_quarry_tutorial_from_workshop")
 
 func _close_loop_workshop_menu() -> void:
 	if _loop_workshop_menu == null or not is_instance_valid(_loop_workshop_menu):
 		return
 	_loop_workshop_menu.visible = false
 	player.can_move = true
+
+func _should_show_loop_quarry_tutorial_from_workshop() -> bool:
+	if DemoDirector == null or DemoDirector.has_seen_tutorial("loop_quarry"):
+		return false
+	if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP):
+		return false
+	if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
+		return false
+	if Global.has_loop_plot(LOOP_PLOT_QUARRY):
+		return false
+	return _get_loop_stone_count() < LOOP_WORKSHOP_BUILD_STONE_COST
+
+func _show_loop_quarry_tutorial_from_workshop() -> void:
+	if not _should_show_loop_quarry_tutorial_from_workshop():
+		return
+	await DemoDirector.show_tutorial_card("loop_quarry", self)
+
+func _show_loop_fortify_tutorial_after_workshop() -> void:
+	if DemoDirector == null or DemoDirector.has_seen_tutorial("loop_fortify_cabin"):
+		return
+	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
+		return
+	if Global.is_loop_structure_built(Global.LOOP_STRUCTURE_CABIN_FORTIFIED):
+		return
+	await DemoDirector.show_tutorial_card("loop_fortify_cabin", self)
 
 func _focus_first_loop_workshop_action_button() -> void:
 	if _loop_workshop_actions != null and is_instance_valid(_loop_workshop_actions):
@@ -2472,7 +2502,8 @@ func _try_build_loop_workshop() -> bool:
 		return false
 	if not _has_loop_materials(LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST):
 		if not Global.has_loop_plot(LOOP_PLOT_QUARRY) and _get_loop_stone_count() < LOOP_WORKSHOP_BUILD_STONE_COST:
-			_show_player_notice("Need %d Wood and %d Stone. Purify the Quarry to start gathering stone." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
+			_show_player_notice("Need %d Wood and %d Stone. The Quarry is a good place to find Stone." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
+			call_deferred("_show_loop_quarry_tutorial_from_workshop")
 		else:
 			_show_player_notice("Need %d Wood and %d Stone to build the workshop." % [LOOP_WORKSHOP_BUILD_WOOD_COST, LOOP_WORKSHOP_BUILD_STONE_COST])
 		return false
@@ -2484,6 +2515,7 @@ func _try_build_loop_workshop() -> bool:
 	_refresh_loop_objective()
 	_show_player_notice("The workshop is rebuilt. New upgrades can be planned here.")
 	_autosave_loop_run()
+	call_deferred("_show_loop_fortify_tutorial_after_workshop")
 	return true
 
 func _try_fortify_loop_cabin() -> bool:
@@ -2494,10 +2526,10 @@ func _try_fortify_loop_cabin() -> bool:
 		_show_player_notice("Repair the cabin before reinforcing it.")
 		return false
 	if not Global.is_loop_structure_built(Global.LOOP_STRUCTURE_WORKSHOP_BUILT):
-		_show_player_notice("Rebuild the workshop before taking on fortification projects.")
+		_show_player_notice("Rebuild the workshop before planning fortification projects.")
 		return false
 	if not _has_loop_materials(LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST):
-		_show_player_notice("Need %d Wood and %d Stone to fortify the cabin." % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST])
+		_show_player_notice("Need %d Wood and %d Stone to fortify the cabin. It can wait until you have spare supplies." % [LOOP_CABIN_FORTIFY_WOOD_COST, LOOP_CABIN_FORTIFY_STONE_COST])
 		return false
 	Global.remove_item(Global.Items.WOOD, LOOP_CABIN_FORTIFY_WOOD_COST)
 	Global.remove_item(Global.Items.STONE, LOOP_CABIN_FORTIFY_STONE_COST)
@@ -2637,6 +2669,7 @@ func _get_loop_objective_prompt_data() -> Dictionary:
 	var merchant_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_MERCHANT].get("unlock_cost", 0))
 	var forest_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_FOREST].get("unlock_cost", 0))
 	var quarry_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_QUARRY].get("unlock_cost", 0))
+	var workshop_unlock_cost := int(LOOP_PLOT_DEFS[LOOP_PLOT_WORKSHOP].get("unlock_cost", 0))
 
 	if _is_loop_night():
 		if not forest_open and Global.loop_bloom_points >= forest_unlock_cost:
@@ -2673,14 +2706,24 @@ func _get_loop_objective_prompt_data() -> Dictionary:
 		if wood_count >= LOOP_MERCHANT_BUILD_WOOD_COST:
 			return {"key": "build_wagon", "text": "Build Wagon"}
 		return {"key": "gather_wood_wagon", "text": "Gather Wood for Wagon"}
-	if merchant_built and not quarry_open and Global.loop_bloom_points >= quarry_unlock_cost:
-		return {"key": "unlock_quarry", "text": LOOP_OBJECTIVE_QUARRY}
 	if quarry_open and not _loop_quarry_claimed_today:
 		return {"key": "mine_stone", "text": LOOP_OBJECTIVE_MINE_STONE}
-	if workshop_open and not workshop_built and wood_count >= LOOP_WORKSHOP_BUILD_WOOD_COST and stone_count >= LOOP_WORKSHOP_BUILD_STONE_COST:
-		return {"key": "build_workshop", "text": LOOP_OBJECTIVE_BUILD_WORKSHOP}
-	if workshop_built and not cabin_fortified and cabin_repaired and wood_count >= LOOP_CABIN_FORTIFY_WOOD_COST and stone_count >= LOOP_CABIN_FORTIFY_STONE_COST:
-		return {"key": "fortify_cabin", "text": LOOP_OBJECTIVE_FORTIFY_CABIN}
+	if merchant_built and not workshop_open and Global.loop_bloom_points >= workshop_unlock_cost:
+		return {"key": "consider_workshop", "text": LOOP_OBJECTIVE_WORKSHOP}
+	if workshop_open and not workshop_built:
+		if wood_count >= LOOP_WORKSHOP_BUILD_WOOD_COST and stone_count >= LOOP_WORKSHOP_BUILD_STONE_COST:
+			return {"key": "build_workshop", "text": LOOP_OBJECTIVE_BUILD_WORKSHOP}
+		if stone_count < LOOP_WORKSHOP_BUILD_STONE_COST and not quarry_open and Global.loop_bloom_points >= quarry_unlock_cost:
+			return {"key": "consider_quarry_for_workshop", "text": LOOP_OBJECTIVE_QUARRY}
+		return {"key": "gather_workshop_materials", "text": LOOP_OBJECTIVE_GATHER_WORKSHOP}
+	if merchant_built and not quarry_open and Global.loop_bloom_points >= quarry_unlock_cost:
+		return {"key": "consider_quarry", "text": LOOP_OBJECTIVE_QUARRY}
+	if workshop_built and not cabin_fortified and cabin_repaired:
+		if wood_count >= LOOP_CABIN_FORTIFY_WOOD_COST and stone_count >= LOOP_CABIN_FORTIFY_STONE_COST:
+			return {"key": "fortify_cabin", "text": LOOP_OBJECTIVE_FORTIFY_CABIN}
+		if stone_count < LOOP_CABIN_FORTIFY_STONE_COST and not quarry_open and Global.loop_bloom_points >= quarry_unlock_cost:
+			return {"key": "consider_quarry_for_fortify", "text": LOOP_OBJECTIVE_QUARRY}
+		return {"key": "gather_fortify_materials", "text": LOOP_OBJECTIVE_GATHER_FORTIFY}
 	return {}
 
 func _has_any_loop_seeds() -> bool:
@@ -4081,9 +4124,9 @@ func _build_loop_quarry_prompt() -> String:
 	if not Global.has_loop_plot(LOOP_PLOT_QUARRY):
 		return "%s  Purify Quarry (%d BP)" % [confirm_label, int(LOOP_PLOT_DEFS[LOOP_PLOT_QUARRY].get("unlock_cost", 0))]
 	if _is_loop_night():
-		return "%s  Returns Stone at Dawn" % confirm_label
+		return "%s  Mine Stone Tomorrow" % confirm_label
 	if _loop_quarry_claimed_today:
-		return "%s  Quarry Exhausted" % confirm_label
+		return "%s  Quarry Exhausted Until Sleep" % confirm_label
 	return "%s  Mine Stone" % confirm_label
 
 func _build_loop_workshop_prompt() -> String:
@@ -4239,18 +4282,18 @@ func _handle_loop_quarry_interaction() -> bool:
 		return true
 
 	if _is_loop_night():
-		_show_player_notice("The quarry will return stone at dawn.")
+		_show_player_notice("The quarry can be mined during the day. Sleep, then come back tomorrow.")
 		return true
 
 	if _loop_quarry_claimed_today:
-		_show_player_notice("The quarry is exhausted until tomorrow.")
+		_show_player_notice("The quarry is exhausted. It refreshes after you sleep.")
 		return true
 
 	Global.add_item(Global.Items.STONE, LOOP_QUARRY_DAILY_STONE_YIELD)
 	_loop_quarry_claimed_today = true
 	_refresh_loop_hud()
 	_refresh_loop_objective()
-	_show_player_notice("You haul %d Stone from the quarry." % LOOP_QUARRY_DAILY_STONE_YIELD)
+	_show_player_notice("You mine %d Stone from the quarry." % LOOP_QUARRY_DAILY_STONE_YIELD)
 	_autosave_loop_run()
 	return true
 
@@ -4434,7 +4477,9 @@ func _run_loop_quarry_unlock_sequence() -> void:
 	var showed_bloom_notice := _maybe_show_first_loop_purify_notice()
 	if showed_bloom_notice:
 		await get_tree().create_timer(1.1, true).timeout
-	_show_player_notice("A quarry seam breaks through the ash.")
+	_show_player_notice("A quarry seam breaks through the ash. Mine it during the day for Stone.")
+	if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_quarry"):
+		await DemoDirector.show_tutorial_card("loop_quarry", self)
 	_refresh_loop_hud()
 	_refresh_loop_objective()
 	_autosave_loop_run()
@@ -4446,7 +4491,9 @@ func _run_loop_workshop_unlock_sequence() -> void:
 	var showed_bloom_notice := _maybe_show_first_loop_purify_notice()
 	if showed_bloom_notice:
 		await get_tree().create_timer(1.1, true).timeout
-	_show_player_notice("A workshop shell stands ready to be rebuilt.")
+	_show_player_notice("A workshop shell stands ready. Rebuild it when you have Wood and Stone.")
+	if DemoDirector != null and not DemoDirector.has_seen_tutorial("loop_workshop"):
+		await DemoDirector.show_tutorial_card("loop_workshop", self)
 	_refresh_loop_hud()
 	_refresh_loop_objective()
 	_autosave_loop_run()

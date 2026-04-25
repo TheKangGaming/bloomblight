@@ -42,6 +42,8 @@ var _defender_is_melee := false
 var _defender_will_counter := false
 var _attacker_has_advanced := false
 var _defender_has_advanced := false
+var _attacker_moved_for_melee := false
+var _defender_moved_for_melee := false
 var _active_shake_tween: Tween
 var _screen_center := Vector2.ZERO
 var _current_focus := Vector2.ZERO
@@ -57,19 +59,26 @@ const ENTRY_REVEAL_DURATION := 0.18
 const EXIT_HIDE_DURATION := 0.16
 const OPENING_APPROACH_DURATION := 0.78
 const COUNTER_APPROACH_DURATION := 0.56
-const APPROACH_SETTLE_TIME := 0.12
+const APPROACH_SETTLE_TIME := 0.08
 const RETREAT_DURATION := 0.42
-const MELEE_STANDOFF := 80.0
+const MELEE_STANDOFF := 38.0
+const MELEE_POSITION_EPSILON := 2.0
 const IDLE_ZOOM := 3.25
-const MELEE_ZOOM := 4.05
+const MELEE_ZOOM := 4.35
 const RANGED_ZOOM := 3.55
 const MAGIC_ZOOM := 3.7
-const HIT_STOP_NORMAL := 0.08
-const HIT_STOP_CRIT := 0.22
-const SHAKE_DURATION_NORMAL := 0.12
-const SHAKE_DURATION_CRIT := 0.18
-const SHAKE_INTENSITY_NORMAL := 14.0
-const SHAKE_INTENSITY_CRIT := 24.0
+const HIT_STOP_NORMAL := 0.1
+const HIT_STOP_CRIT := 0.26
+const MELEE_HIT_STOP_EXTRA_NORMAL := 0.09
+const MELEE_HIT_STOP_EXTRA_CRIT := 0.1
+const SHAKE_DURATION_NORMAL := 0.15
+const SHAKE_DURATION_CRIT := 0.24
+const SHAKE_INTENSITY_NORMAL := 18.0
+const SHAKE_INTENSITY_CRIT := 32.0
+const MELEE_SHAKE_INTENSITY_EXTRA_NORMAL := 14.0
+const MELEE_SHAKE_INTENSITY_EXTRA_CRIT := 18.0
+const MELEE_IMPACT_FLASH_DURATION := 0.18
+const MELEE_IMPACT_SLASH_DISTANCE := 64.0
 const EFFECT_VERTICAL_OFFSET := Vector2.ZERO
 const LETTERBOX_HEIGHT_RATIO := 0.17
 const LETTERBOX_MAX_HEIGHT := 156.0
@@ -212,6 +221,8 @@ func _execute_battle_sequence() -> void:
 		
 		if strike.is_hit:
 			_debug_combat("Strike %d hit feedback" % strike_index)
+			if strike.attack_kind == CombatStrike.AttackKind.MELEE:
+				_play_melee_impact_flash(striker, target, strike)
 			await _play_hit_feedback(striker, target, strike)
 		
 		# The Reaction
@@ -273,6 +284,8 @@ func _determine_combatants_reach() -> void:
 	)
 	_attacker_has_advanced = false
 	_defender_has_advanced = false
+	_attacker_moved_for_melee = false
+	_defender_moved_for_melee = false
 
 func _ensure_sfx_players() -> void:
 	if _attack_sfx_player == null:
@@ -403,42 +416,20 @@ func _get_weapon_sound_family(weapon: WeaponData) -> String:
 func _play_approach() -> void:
 	_determine_combatants_reach() # Figure out who has swords!
 	
-	var tween: Tween = null
-	var movement_happened = false
-	
-	# Melee-vs-melee uses the center clash anchors. If only the attacker is
-	# melee, close to the defender's actual position instead.
 	if _attacker_is_melee:
-		if tween == null:
-			tween = create_tween().set_parallel(true)
-			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		active_attacker.play_run()
-		tween.tween_property(active_attacker, "position", _get_opening_destination_for_attacker(), OPENING_APPROACH_DURATION)
+		_attacker_moved_for_melee = await _advance_actor_to_melee(
+			active_attacker,
+			_get_opening_destination_for_attacker(),
+			OPENING_APPROACH_DURATION
+		)
 		_attacker_has_advanced = true
-		movement_happened = true
-
-	if _attacker_is_melee and _defender_will_counter and _defender_is_melee:
-		if tween == null:
-			tween = create_tween().set_parallel(true)
-			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		active_defender.play_run()
-		tween.tween_property(active_defender, "position", defender_melee.position, OPENING_APPROACH_DURATION)
-		_defender_has_advanced = true
-		movement_happened = true
-		
-	if movement_happened:
-		await tween.finished
-		if _attacker_is_melee: active_attacker.play_idle()
-		if _defender_will_counter and _defender_is_melee: active_defender.play_idle()
-		await _tween_world_focus(_get_actor_midpoint(), MELEE_ZOOM, 0.14)
-		await get_tree().create_timer(APPROACH_SETTLE_TIME).timeout
 
 func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
 	var tween: Tween = null
 	var movement_happened = false
 	
 	# Only hop back if they actually dashed forward in the first place!
-	if attacker_survived and _attacker_has_advanced and is_instance_valid(active_attacker):
+	if attacker_survived and _attacker_moved_for_melee and is_instance_valid(active_attacker):
 		if tween == null:
 			tween = create_tween().set_parallel(true)
 			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -446,7 +437,7 @@ func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
 		tween.tween_property(active_attacker, "position", attacker_start.position, RETREAT_DURATION)
 		movement_happened = true
 		
-	if defender_survived and _defender_has_advanced and is_instance_valid(active_defender):
+	if defender_survived and _defender_moved_for_melee and is_instance_valid(active_defender):
 		if tween == null:
 			tween = create_tween().set_parallel(true)
 			tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -456,9 +447,9 @@ func _play_retreat(attacker_survived: bool, defender_survived: bool) -> void:
 		
 	if movement_happened:
 		await tween.finished
-		if attacker_survived and _attacker_has_advanced and is_instance_valid(active_attacker):
+		if attacker_survived and _attacker_moved_for_melee and is_instance_valid(active_attacker):
 			active_attacker.play_idle()
-		if defender_survived and _defender_has_advanced and is_instance_valid(active_defender):
+		if defender_survived and _defender_moved_for_melee and is_instance_valid(active_defender):
 			active_defender.play_idle()
 
 func _prepare_striker_for_strike(strike: CombatStrike) -> void:
@@ -468,32 +459,35 @@ func _prepare_striker_for_strike(strike: CombatStrike) -> void:
 	if strike.is_attacker_striking:
 		if _attacker_has_advanced:
 			return
-		await _advance_actor_to_melee(active_attacker, _get_dynamic_melee_destination(true))
+		_attacker_moved_for_melee = await _advance_actor_to_melee(active_attacker, _get_dynamic_melee_destination(true))
 		_attacker_has_advanced = true
 		return
 
 	if _defender_has_advanced:
 		return
 
-	await _advance_actor_to_melee(active_defender, _get_dynamic_melee_destination(false))
+	_defender_moved_for_melee = await _advance_actor_to_melee(active_defender, _get_dynamic_melee_destination(false))
 	_defender_has_advanced = true
 
-func _advance_actor_to_melee(actor: BattleActor, destination: Vector2) -> void:
+func _advance_actor_to_melee(actor: BattleActor, destination: Vector2, duration: float = COUNTER_APPROACH_DURATION) -> bool:
 	if not is_instance_valid(actor):
-		return
+		return false
+
+	if actor.position.distance_to(destination) <= MELEE_POSITION_EPSILON:
+		actor.play_idle()
+		return false
 
 	actor.play_run()
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(actor, "position", destination, COUNTER_APPROACH_DURATION)
+	tween.tween_property(actor, "position", destination, duration)
 	await tween.finished
 	actor.play_idle()
 	await _tween_world_focus(_get_actor_midpoint(), MELEE_ZOOM, 0.1)
 	await get_tree().create_timer(APPROACH_SETTLE_TIME).timeout
+	return true
 
 func _get_opening_destination_for_attacker() -> Vector2:
-	if _defender_will_counter and _defender_is_melee:
-		return attacker_melee.position
 	return _get_dynamic_melee_destination(true)
 
 func _get_dynamic_melee_destination(is_attacker_striking: bool) -> Vector2:
@@ -638,6 +632,10 @@ func _play_hit_feedback(striker: BattleActor, target: BattleActor, strike: Comba
 	var screen_shake_enabled := SettingsManager == null or SettingsManager.is_screen_shake_enabled()
 	var shake_intensity: float = SHAKE_INTENSITY_CRIT if strike.is_crit else SHAKE_INTENSITY_NORMAL
 	var shake_duration: float = SHAKE_DURATION_CRIT if strike.is_crit else SHAKE_DURATION_NORMAL
+	var hit_stop_duration: float = HIT_STOP_CRIT if strike.is_crit else HIT_STOP_NORMAL
+	if strike.attack_kind == CombatStrike.AttackKind.MELEE:
+		shake_intensity += MELEE_SHAKE_INTENSITY_EXTRA_CRIT if strike.is_crit else MELEE_SHAKE_INTENSITY_EXTRA_NORMAL
+		hit_stop_duration += MELEE_HIT_STOP_EXTRA_CRIT if strike.is_crit else MELEE_HIT_STOP_EXTRA_NORMAL
 	if screen_shake_enabled:
 		_play_world_shake(shake_intensity, shake_duration)
 	else:
@@ -646,7 +644,7 @@ func _play_hit_feedback(striker: BattleActor, target: BattleActor, strike: Comba
 	striker.process_mode = Node.PROCESS_MODE_DISABLED
 	target.process_mode = Node.PROCESS_MODE_DISABLED
 	_debug_combat("Hit feedback hit-stop waiting: %s -> %s" % [_actor_name(striker), _actor_name(target)])
-	await get_tree().create_timer(HIT_STOP_CRIT if strike.is_crit else HIT_STOP_NORMAL, true).timeout
+	await get_tree().create_timer(hit_stop_duration, true).timeout
 	_debug_combat("Hit feedback hit-stop done: %s -> %s" % [_actor_name(striker), _actor_name(target)])
 	striker.process_mode = Node.PROCESS_MODE_INHERIT
 	target.process_mode = Node.PROCESS_MODE_INHERIT
@@ -663,7 +661,7 @@ func _play_world_shake(intensity: float, duration: float) -> Tween:
 		return null
 
 	var base_position := _build_world_position(_current_focus, _current_zoom)
-	var step_time := duration / 4.0
+	var step_time := duration / 6.0
 	if is_instance_valid(_active_shake_tween):
 		_active_shake_tween.kill()
 	_apply_world_focus(_current_focus, _current_zoom)
@@ -671,11 +669,48 @@ func _play_world_shake(intensity: float, duration: float) -> Tween:
 	_active_shake_tween = tween
 	tween.tween_property(battle_world, "position", base_position + Vector2(intensity, -intensity * 0.25), step_time)
 	tween.tween_property(battle_world, "position", base_position + Vector2(-intensity * 0.7, intensity * 0.2), step_time)
-	tween.tween_property(battle_world, "position", base_position + Vector2(intensity * 0.45, intensity * 0.12), step_time)
+	tween.tween_property(battle_world, "position", base_position + Vector2(intensity * 0.58, intensity * 0.22), step_time)
+	tween.tween_property(battle_world, "position", base_position + Vector2(-intensity * 0.38, -intensity * 0.14), step_time)
+	tween.tween_property(battle_world, "position", base_position + Vector2(intensity * 0.24, intensity * 0.08), step_time)
 	tween.tween_property(battle_world, "position", base_position, step_time)
 	return tween
 
 # --- VISUAL EFFECTS ---
+func _play_melee_impact_flash(striker: BattleActor, target: BattleActor, strike: CombatStrike) -> void:
+	if not is_instance_valid(striker) or not is_instance_valid(target):
+		return
+
+	var impact_root := Node2D.new()
+	impact_root.name = "MeleeImpactFlash"
+	battle_world.add_child(impact_root)
+	impact_root.global_position = target.get_damage_anchor_position()
+	impact_root.rotation = (target.global_position - striker.global_position).angle()
+
+	var slash := Line2D.new()
+	slash.width = 9.0 if strike.is_crit else 6.0
+	slash.default_color = Color(1.0, 0.94, 0.58, 0.96) if strike.is_crit else Color(1.0, 1.0, 0.88, 0.88)
+	slash.points = PackedVector2Array([
+		Vector2(-MELEE_IMPACT_SLASH_DISTANCE * 0.5, -24.0),
+		Vector2(MELEE_IMPACT_SLASH_DISTANCE * 0.5, 24.0),
+	])
+	impact_root.add_child(slash)
+
+	var cross_slash := Line2D.new()
+	cross_slash.width = slash.width * 0.72
+	cross_slash.default_color = Color(1.0, 0.6, 0.28, 0.76) if strike.is_crit else Color(0.94, 0.72, 0.36, 0.58)
+	cross_slash.points = PackedVector2Array([
+		Vector2(-MELEE_IMPACT_SLASH_DISTANCE * 0.32, 20.0),
+		Vector2(MELEE_IMPACT_SLASH_DISTANCE * 0.32, -18.0),
+	])
+	impact_root.add_child(cross_slash)
+
+	impact_root.scale = Vector2(0.45, 0.45)
+	var tween := create_tween().set_parallel(true)
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(impact_root, "scale", Vector2(1.32, 1.32) if strike.is_crit else Vector2(1.08, 1.08), MELEE_IMPACT_FLASH_DURATION * 0.55)
+	tween.tween_property(impact_root, "modulate:a", 0.0, MELEE_IMPACT_FLASH_DURATION).set_delay(MELEE_IMPACT_FLASH_DURATION * 0.35)
+	tween.chain().tween_callback(impact_root.queue_free)
+
 func _spawn_damage_popup(target: BattleActor, strike: CombatStrike) -> void:
 	var popup = DAMAGE_POPUP_SCRIPT.new()
 	popup.setup_from_strike(strike)

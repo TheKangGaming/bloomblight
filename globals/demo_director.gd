@@ -58,6 +58,9 @@ const TUTORIAL_CARD_ORDER := [
 	"loop_bloom_points",
 	"loop_forest_join",
 	"loop_forest_wood",
+	"loop_workshop",
+	"loop_quarry",
+	"loop_fortify_cabin",
 	"loop_sleep",
 	"loop_cooking",
 	"farm_controls",
@@ -259,6 +262,15 @@ func get_tutorial_card_config(card_id: String) -> Dictionary:
 		"loop_forest_wood":
 			title = "Tutorial: Forest Wood"
 			template = "Now that the forest is open, use your Axe on the trees to chop Wood.\n\nWood repairs the cabin first. Once you can sleep, the farm can roll into a new day."
+		"loop_workshop":
+			title = "Tutorial: Workshop"
+			template = "The workshop is a good next project for the settlement.\n\nRebuilding it takes Wood and Stone. If Stone is short, the quarry can help."
+		"loop_quarry":
+			title = "Tutorial: Quarry"
+			template = "The quarry is a steady source of Stone.\n\nOnce purified, mine it during the day for Stone. It refreshes after you sleep."
+		"loop_fortify_cabin":
+			title = "Tutorial: Fortifying"
+			template = "The rebuilt workshop can fortify the cabin when you have spare Wood and Stone.\n\nIt's optional, but it softens future raid losses if a battle goes badly."
 		"loop_sleep":
 			title = "Tutorial: Cabin Sleep"
 			template = "The cabin is repaired.\n\nAt Night, use the bed to sleep and begin the next day. Battles only open again after you rest."
