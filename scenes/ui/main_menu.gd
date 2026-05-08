@@ -5,6 +5,8 @@ signal menu_closed
 signal status_tab_viewed
 
 const SLOT_SCENE := preload("res://scenes/ui/inventory_slot.tscn")
+const BOOK_MENU_VIEW_SCRIPT := preload("res://scenes/ui/book_menu_view.gd")
+const USE_BOOK_MENU_UI := true
 const CONTROLLER_SCROLL_THRESHOLD := 0.35
 const CONTROLLER_SCROLL_STEP := 42.0
 const CALENDAR_GRID_COLUMNS := 7
@@ -18,6 +20,8 @@ const LOOP_STAGE_CHECK_HOLD_FRAME := 30
 
 enum MenuSection { PARTY, INVENTORY, CALENDAR }
 
+@onready var background_panel: Panel = $Background
+@onready var legacy_center_container: CenterContainer = $CenterContainer
 @onready var section_title: Label = $CenterContainer/MenuPanel/MarginContainer/RootRow/ContentColumn/SectionTitle
 @onready var party_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons/PartyButton
 @onready var inventory_button: Button = $CenterContainer/MenuPanel/MarginContainer/RootRow/NavColumn/NavButtons/InventoryButton
@@ -82,13 +86,51 @@ var _calendar_day_panels: Array[PanelContainer] = []
 var _calendar_day_labels: Array[Label] = []
 var _calendar_day_checks: Array[TextureRect] = []
 var _last_rendered_loop_stage := -1
+var _book_menu_view = null
 
 func _ui_sound_manager() -> Node:
 	return get_node_or_null("/root/UISoundManager")
 
+func _book_menu_enabled() -> bool:
+	return USE_BOOK_MENU_UI and _book_menu_view != null and is_instance_valid(_book_menu_view)
+
+func _ensure_book_menu_view() -> void:
+	if not USE_BOOK_MENU_UI:
+		return
+	if _book_menu_view != null and is_instance_valid(_book_menu_view):
+		return
+	_book_menu_view = BOOK_MENU_VIEW_SCRIPT.new()
+	_book_menu_view.name = "BookMenuView"
+	_book_menu_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_book_menu_view)
+	_book_menu_view.setup(self)
+	_book_menu_view.close_requested.connect(toggle_menu)
+	_book_menu_view.section_requested.connect(_set_section)
+	_book_menu_view.roster_selected.connect(_on_roster_button_pressed)
+	_book_menu_view.equipment_slot_requested.connect(_open_party_equipment_picker)
+	_book_menu_view.equipment_choice_requested.connect(func(index: int) -> void:
+		_apply_equipment_choice(_active_equipment_slot, index)
+	)
+	_book_menu_view.item_equip_requested.connect(_on_book_item_equip_requested)
+	_book_menu_view.item_use_requested.connect(_on_book_item_use_requested)
+
+func _apply_menu_presentation_mode() -> void:
+	if legacy_center_container != null:
+		legacy_center_container.visible = not USE_BOOK_MENU_UI
+	if background_panel != null:
+		background_panel.visible = not USE_BOOK_MENU_UI
+	if _book_menu_view != null:
+		_book_menu_view.visible = USE_BOOK_MENU_UI
+
+func _refresh_book_menu_view() -> void:
+	if _book_menu_enabled():
+		_book_menu_view.refresh()
+
 func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	z_as_relative = false
+	z_index = 180
 	Global.inventory_updated.connect(update_inventory)
 	Global.stats_updated.connect(_refresh_all_views)
 	if ProgressionService != null:
@@ -104,6 +146,8 @@ func _ready() -> void:
 	_wire_inventory_controls()
 	_wire_calendar_controls()
 	_build_calendar_grid()
+	_ensure_book_menu_view()
+	_apply_menu_presentation_mode()
 	_update_section_visibility()
 	_refresh_all_views()
 
@@ -215,6 +259,8 @@ func _handle_controller_scroll(event: InputEvent) -> bool:
 	return true
 
 func _get_active_scroll_container() -> ScrollContainer:
+	if _book_menu_enabled():
+		return _book_menu_view.get_active_scroll_container()
 	match _current_section:
 		MenuSection.PARTY:
 			return equipment_view if _party_equipment_picker_open else _party_overview_root
@@ -322,6 +368,7 @@ func update_inventory() -> void:
 			slot.setup(int(entry.get("item", 0)), int(entry.get("count", 0)))
 			_inventory_slot_cache.append(slot)
 			_inventory_slot_order.append(int(entry.get("item", -1)))
+		_refresh_book_menu_view()
 		return
 
 	for index in range(mini(visible_entries.size(), _inventory_slot_cache.size())):
@@ -329,6 +376,7 @@ func update_inventory() -> void:
 		var slot := _inventory_slot_cache[index]
 		if slot != null and is_instance_valid(slot):
 			slot.setup(int(entry.get("item", 0)), int(entry.get("count", 0)))
+	_refresh_book_menu_view()
 
 func _resolve_inventory_item_enum(raw_item_key: Variant) -> int:
 	if raw_item_key is int:
@@ -339,12 +387,46 @@ func _resolve_inventory_item_enum(raw_item_key: Variant) -> int:
 	var item_keys := Global.Items.keys()
 	return item_keys.find(key_name)
 
+func _on_book_item_equip_requested(entry: Dictionary) -> void:
+	var character := _get_selected_party_member()
+	var item := entry.get("item", null) as Resource
+	var slot_name := _normalize_equipment_slot_name(String(entry.get("slot", "")))
+	if character == null or item == null or slot_name.is_empty():
+		return
+	if ProgressionService == null:
+		return
+	if not ProgressionService.equip_character_item(character, slot_name, item):
+		return
+	_active_equipment_slot = slot_name
+	_refresh_all_views()
+
+func _on_book_item_use_requested(item_type: int) -> void:
+	if Global == null or item_type < 0:
+		return
+	if not Global.food_stats.has(item_type):
+		return
+	if int(Global.inventory.get(item_type, 0)) <= 0:
+		return
+	if not Global.remove_item(item_type, 1):
+		return
+	if Global.tutorial_step == 12:
+		Global.advance_tutorial()
+	Global.active_food_buff.item = item_type
+	var applied_stats: Dictionary = Global.food_stats[item_type].duplicate()
+	applied_stats["MOV"] = mini(int(applied_stats.get("MOV", 0)), Global.EARLY_FOOD_MOVEMENT_CAP)
+	Global.active_food_buff.stats = Global._normalize_temporary_bucket(applied_stats)
+	Global.stats_updated.emit()
+	if DemoDirector:
+		DemoDirector.notify_food_eaten(item_type)
+	_refresh_all_views()
+
 func _refresh_all_views() -> void:
 	_refresh_roster_buttons()
 	_refresh_party_view()
 	update_inventory()
 	_refresh_calendar_view()
 	_refresh_status_highlight()
+	_refresh_book_menu_view()
 	_rebuild_focus_graph()
 
 func _wire_navigation_buttons() -> void:
@@ -491,6 +573,8 @@ func _update_section_visibility() -> void:
 	_update_button_state(party_button, _current_section == MenuSection.PARTY)
 	_update_button_state(inventory_button, _current_section == MenuSection.INVENTORY)
 	_update_button_state(calendar_button, _current_section == MenuSection.CALENDAR)
+	if _book_menu_enabled():
+		_book_menu_view.set_section(_current_section)
 
 func _refresh_navigation_labels() -> void:
 	if inventory_button != null:
@@ -685,6 +769,9 @@ func _open_party_equipment_picker(slot_name: String) -> void:
 	call_deferred("_focus_party_equipment_picker")
 
 func _focus_party_equipment_picker() -> void:
+	if _book_menu_enabled():
+		_book_menu_view.focus_equipment_choice()
+		return
 	var slot_button := _get_equipment_slot_button(_active_equipment_slot)
 	if slot_button != null and slot_button.visible:
 		slot_button.grab_focus()
@@ -696,6 +783,9 @@ func _close_party_equipment_picker() -> void:
 	_rebuild_focus_graph()
 
 func _focus_equipment_choice_list() -> void:
+	if _book_menu_enabled():
+		_book_menu_view.focus_equipment_choice()
+		return
 	if equipment_choice_list == null or equipment_choice_list.item_count <= 0:
 		return
 	equipment_choice_list.grab_focus()
@@ -1266,11 +1356,17 @@ func _focus_section_root_deferred() -> void:
 	call_deferred("_focus_section_root")
 
 func _focus_section_root() -> void:
+	if _book_menu_enabled():
+		_book_menu_view.focus_section_root()
+		return
 	var target := _get_section_root_button(_current_section)
 	if target != null and target.visible:
 		target.grab_focus()
 
 func _focus_selected_roster_button() -> void:
+	if _book_menu_enabled():
+		_book_menu_view.focus_selected_roster()
+		return
 	var roster_button := _get_selected_roster_button()
 	if roster_button != null and roster_button.visible:
 		roster_button.grab_focus()
@@ -1283,6 +1379,11 @@ func _clear_container_children(container: Node) -> void:
 		child.queue_free()
 
 func _get_selected_roster_button() -> Button:
+	if _book_menu_enabled():
+		var roster_buttons: Array = _book_menu_view.get_roster_buttons()
+		if _selected_party_index >= 0 and _selected_party_index < roster_buttons.size():
+			return roster_buttons[_selected_party_index] as Button
+		return null
 	if roster_list == null:
 		return null
 	var buttons := _get_roster_buttons()
@@ -1291,10 +1392,15 @@ func _get_selected_roster_button() -> Button:
 	return buttons[_selected_party_index] as Button
 
 func _get_first_inventory_slot() -> Control:
+	if _book_menu_enabled():
+		return _book_menu_view.get_section_entry_target(MenuSection.INVENTORY)
 	var slots := _get_inventory_slot_controls()
 	return slots[0] if not slots.is_empty() else null
 
 func _rebuild_focus_graph() -> void:
+	if _book_menu_enabled():
+		_book_menu_view.rebuild_focus_graph()
+		return
 	_link_vertical_focus([party_button, inventory_button, calendar_button])
 
 	_set_focus_neighbor(party_button, Vector2.LEFT, party_button)
@@ -1341,7 +1447,9 @@ func _rebuild_inventory_focus_graph() -> void:
 func _rebuild_calendar_focus_graph() -> void:
 	pass
 
-func _get_section_root_button(section: MenuSection) -> Button:
+func _get_section_root_button(section: MenuSection) -> Control:
+	if _book_menu_enabled():
+		return _book_menu_view.get_tab_button(section)
 	match section:
 		MenuSection.PARTY:
 			return party_button
@@ -1352,6 +1460,13 @@ func _get_section_root_button(section: MenuSection) -> Button:
 	return null
 
 func _get_section_from_root_button(button: Control) -> int:
+	if _book_menu_enabled():
+		if button == _book_menu_view.get_tab_button(MenuSection.PARTY):
+			return MenuSection.PARTY
+		if button == _book_menu_view.get_tab_button(MenuSection.INVENTORY):
+			return MenuSection.INVENTORY
+		if button == _book_menu_view.get_tab_button(MenuSection.CALENDAR):
+			return MenuSection.CALENDAR
 	if button == party_button:
 		return MenuSection.PARTY
 	if button == inventory_button:
@@ -1361,6 +1476,8 @@ func _get_section_from_root_button(button: Control) -> int:
 	return -1
 
 func _get_section_entry_target(section: MenuSection) -> Control:
+	if _book_menu_enabled():
+		return _book_menu_view.get_section_entry_target(section)
 	match section:
 		MenuSection.PARTY:
 			var roster_button := _get_selected_roster_button()
@@ -1383,6 +1500,8 @@ func _get_inventory_detail_entry_target() -> Control:
 	return _get_first_inventory_slot()
 
 func _get_roster_buttons() -> Array[Control]:
+	if _book_menu_enabled():
+		return _book_menu_view.get_roster_buttons()
 	var buttons: Array[Control] = []
 	if roster_list == null:
 		return buttons
@@ -1392,6 +1511,8 @@ func _get_roster_buttons() -> Array[Control]:
 	return buttons
 
 func _get_inventory_slot_controls() -> Array[Control]:
+	if _book_menu_enabled():
+		return _book_menu_view.get_item_buttons()
 	var slots: Array[Control] = []
 	if inventory_grid == null:
 		return slots
@@ -1453,6 +1574,8 @@ func _set_focus_neighbor(control: Control, direction: Vector2, neighbor: Control
 func _is_in_active_content(control: Control) -> bool:
 	if control == null or not visible:
 		return false
+	if _book_menu_enabled():
+		return control == _book_menu_view or _book_menu_view.is_ancestor_of(control)
 	if control == party_button or control == inventory_button or control == calendar_button:
 		return true
 
@@ -1504,6 +1627,10 @@ func _try_close_equipment_picker() -> bool:
 		return false
 	if _current_section != MenuSection.PARTY or not _party_equipment_picker_open:
 		return false
+	if _book_menu_enabled():
+		_close_party_equipment_picker()
+		_book_menu_view.focus_equipment_slot(_active_equipment_slot)
+		return true
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
 	if focus_owner != equipment_choice_list:
 		return false
@@ -1518,6 +1645,13 @@ func _try_step_back_within_menu() -> bool:
 		return false
 	var focus_owner: Control = get_viewport().gui_get_focus_owner() as Control
 	if focus_owner == null or not _is_in_active_content(focus_owner):
+		return false
+	if _book_menu_enabled():
+		var tab: Control = _book_menu_view.get_tab_button(_current_section)
+		if focus_owner != tab:
+			if tab != null:
+				tab.grab_focus()
+				return true
 		return false
 
 	match _current_section:
@@ -1579,6 +1713,8 @@ func _is_inventory_header_focus(control: Control) -> bool:
 	return false
 
 func _is_section_root_focus(control: Control) -> bool:
+	if _book_menu_enabled():
+		return control == _book_menu_view.get_tab_button(MenuSection.PARTY) or control == _book_menu_view.get_tab_button(MenuSection.INVENTORY) or control == _book_menu_view.get_tab_button(MenuSection.CALENDAR)
 	return control == party_button or control == inventory_button or control == calendar_button
 
 func _get_overview_equipment_buttons() -> Array[Control]:
