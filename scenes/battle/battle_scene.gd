@@ -33,6 +33,8 @@ var _attacker_stats: UnitStats
 var _defender_stats: UnitStats
 var _attacker_weapon: WeaponData
 var _defender_weapon: WeaponData
+var _attacker_is_player_unit := false
+var _defender_is_player_unit := false
 
 var _combat_strikes: Array[CombatStrike] = []
 var active_attacker: BattleActor
@@ -77,6 +79,7 @@ const SHAKE_INTENSITY_NORMAL := 18.0
 const SHAKE_INTENSITY_CRIT := 32.0
 const MELEE_SHAKE_INTENSITY_EXTRA_NORMAL := 14.0
 const MELEE_SHAKE_INTENSITY_EXTRA_CRIT := 18.0
+const MELEE_HIT_FX_DELAY := 0.08
 const MELEE_IMPACT_FLASH_DURATION := 0.18
 const MELEE_IMPACT_SLASH_DISTANCE := 64.0
 const EFFECT_VERTICAL_OFFSET := Vector2.ZERO
@@ -103,6 +106,8 @@ func _ready() -> void:
 	_defender_stats = payload.defender_stats
 	_attacker_weapon = payload.attacker_weapon
 	_defender_weapon = payload.defender_weapon
+	_attacker_is_player_unit = payload.attacker_is_player
+	_defender_is_player_unit = payload.defender_is_player
 	_combat_strikes = payload.strikes
 	
 	# Save the distance so we know if a counterattack is possible!
@@ -204,6 +209,8 @@ func _execute_battle_sequence() -> void:
 		# Wait for the exact frame the weapon connects, but do not let a missing
 		# impact callback stall the entire battle cut-in.
 		await _await_strike_impact(striker, strike_index)
+		if strike.attack_kind == CombatStrike.AttackKind.MELEE and strike.is_hit and _is_player_unit_strike(strike):
+			await get_tree().create_timer(MELEE_HIT_FX_DELAY, true).timeout
 		
 		# --- DELIVER THE RANGED/MAGIC PAYLOAD ---
 		if strike.attack_kind == CombatStrike.AttackKind.RANGED:
@@ -376,6 +383,9 @@ func _play_orc_death_sfx(target: BattleActor) -> void:
 
 func _get_weapon_for_strike(strike: CombatStrike) -> WeaponData:
 	return _attacker_weapon if strike.is_attacker_striking else _defender_weapon
+
+func _is_player_unit_strike(strike: CombatStrike) -> bool:
+	return _attacker_is_player_unit if strike.is_attacker_striking else _defender_is_player_unit
 
 func _is_orc_actor(actor: BattleActor) -> bool:
 	if actor == null:

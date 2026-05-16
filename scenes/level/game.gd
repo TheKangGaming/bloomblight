@@ -4017,6 +4017,7 @@ func _get_current_loop_interaction() -> Dictionary:
 			"point": LOOP_INTERACTION_POINTS[LOOP_PLOT_WORKSHOP],
 			"segment_start": _get_loop_plot_interaction_edge(LOOP_PLOT_WORKSHOP).get("start", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else Vector2.ZERO,
 			"segment_end": _get_loop_plot_interaction_edge(LOOP_PLOT_WORKSHOP).get("end", Vector2.ZERO) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else Vector2.ZERO,
+			"segments": _get_loop_plot_interaction_segments(LOOP_PLOT_WORKSHOP) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else [],
 			"radius": LOOP_INTERACTION_RADIUS_STRUCTURE if Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else LOOP_INTERACTION_RADIUS_PLOT,
 			"label": _build_loop_workshop_prompt(),
 			"highlight_plot": String(LOOP_PLOT_WORKSHOP) if not Global.has_loop_plot(LOOP_PLOT_WORKSHOP) else ""
@@ -4090,7 +4091,51 @@ func _get_loop_plot_interaction_edge(plot_id: StringName) -> Dictionary:
 		_:
 			return {}
 
+func _get_loop_plot_interaction_segments(plot_id: StringName) -> Array:
+	var rect_variant = LOOP_PLOT_DEFS.get(plot_id, {}).get("rect", Rect2())
+	if not (rect_variant is Rect2):
+		return []
+
+	var rect: Rect2 = rect_variant
+	var margin := LOOP_PLOT_INTERACTION_EDGE_MARGIN
+	match plot_id:
+		LOOP_PLOT_WORKSHOP:
+			return [
+				{
+					"start": Vector2(rect.position.x, rect.position.y + margin),
+					"end": Vector2(rect.position.x, rect.position.y + rect.size.y - margin)
+				},
+				{
+					"start": Vector2(rect.position.x + margin, rect.position.y + rect.size.y),
+					"end": Vector2(rect.position.x + rect.size.x - margin, rect.position.y + rect.size.y)
+				}
+			]
+		_:
+			var edge := _get_loop_plot_interaction_edge(plot_id)
+			if edge.is_empty():
+				return []
+			return [edge]
+
 func _get_loop_interaction_focus_point(interaction: Dictionary, player_pos: Vector2) -> Vector2:
+	var segments_variant = interaction.get("segments", [])
+	if segments_variant is Array and not segments_variant.is_empty():
+		var best_point := interaction.get("point", Vector2.ZERO) as Vector2
+		var best_distance := INF
+		for segment_variant in segments_variant:
+			if not (segment_variant is Dictionary):
+				continue
+			var segment: Dictionary = segment_variant
+			var start: Vector2 = segment.get("start", Vector2.ZERO)
+			var end: Vector2 = segment.get("end", Vector2.ZERO)
+			if start == Vector2.ZERO and end == Vector2.ZERO:
+				continue
+			var point := Geometry2D.get_closest_point_to_segment(player_pos, start, end)
+			var distance := player_pos.distance_to(point)
+			if distance < best_distance:
+				best_distance = distance
+				best_point = point
+		return best_point
+
 	var segment_start: Vector2 = interaction.get("segment_start", Vector2.ZERO)
 	var segment_end: Vector2 = interaction.get("segment_end", Vector2.ZERO)
 	if segment_start != Vector2.ZERO or segment_end != Vector2.ZERO:
